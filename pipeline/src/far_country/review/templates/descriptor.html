@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Descriptor &mdash; {{ row.entity.name }}{% endblock %}
+
+{% block content %}
+<section class="descriptor-detail">
+  <p><a href="/queue">&larr; Back to queue</a></p>
+
+  <ul class="descriptor-list">
+    {% include "_descriptor_row.html" %}
+  </ul>
+
+  <h2>Edit</h2>
+  <form method="post" action="/queue/{{ row.descriptor.id }}/edit" class="edit-form">
+    <label>
+      Statement
+      <textarea name="statement" rows="3" required>{{ row.descriptor.statement }}</textarea>
+    </label>
+
+    <label>
+      Tier
+      <select name="tier">
+        {% for t in ['clear','fuzzy','debated','symbolic'] %}
+          <option value="{{ t }}" {% if row.descriptor.tier == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>
+      Symbolic referent (required when tier is symbolic)
+      <input type="text" name="symbolic_referent" value="{{ row.descriptor.symbolic_referent or '' }}">
+    </label>
+
+    <label>
+      Temporal phase
+      <select name="temporal_phase">
+        <option value="">&mdash;</option>
+        {% for p in ['intermediate','final','either','unspecified'] %}
+          <option value="{{ p }}" {% if row.descriptor.temporal_phase == p %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>
+      Reviewer notes (appended with timestamp)
+      <textarea name="reviewer_notes" rows="2" placeholder="Optional comment"></textarea>
+    </label>
+
+    <button type="submit">Save edits</button>
+    <p class="muted">Editing returns the descriptor to <code>pending</code>.</p>
+  </form>
+</section>
+{% endblock %}

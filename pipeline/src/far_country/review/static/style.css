@@ -1,0 +1,102 @@
+:root {
+  --fg: #1c1c1e;
+  --fg-muted: #6b6b70;
+  --bg: #faf9f7;
+  --card: #ffffff;
+  --border: #e6e3dc;
+  --accent: #4a5d3c;
+  --warn: #b06a1f;
+  --danger: #a13a3a;
+  --discuss: #3a6a8b;
+  --pending: #6b6b70;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.55;
+}
+
+a { color: var(--accent); }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.muted { color: var(--fg-muted); }
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 2rem;
+  padding: 1rem 1.5rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.topbar .brand { font-weight: 600; text-decoration: none; }
+.topbar .navlinks { display: flex; gap: 1rem; }
+.topbar .navlinks a { text-decoration: none; }
+
+main { padding: 1.5rem; max-width: 960px; margin: 0 auto; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0 2rem; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+.card h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--fg-muted); }
+.stats { list-style: none; padding: 0; margin: 0; }
+.stats li { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+.stats li.total { border-top: 1px solid var(--border); padding-top: 0.5rem; margin-top: 0.5rem; font-weight: 600; }
+
+table.runs { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+table.runs th, table.runs td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border); text-align: left; }
+table.runs td.num, table.runs th.num { text-align: right; }
+
+.descriptor-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.descriptor-row { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+.descriptor-row.tier-symbolic { border-left: 4px solid var(--warn); }
+.descriptor-row.tier-debated { border-left: 4px solid var(--danger); }
+.descriptor-row.tier-fuzzy { border-left: 4px solid var(--discuss); }
+.descriptor-row.tier-clear { border-left: 4px solid var(--accent); }
+
+.row-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.entity-link { font-weight: 600; text-decoration: none; }
+.tier-badge, .phase-badge, .status-badge {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #ecebe7;
+  color: var(--fg-muted);
+}
+.status-approved .status-badge { background: #d8e5cc; color: var(--accent); }
+.status-rejected .status-badge { background: #efd1d1; color: var(--danger); }
+.status-needs-discussion .status-badge { background: #d3e3ef; color: var(--discuss); }
+
+.statement { margin: 0.4rem 0; font-size: 1.05rem; }
+.referent { font-size: 0.9rem; color: var(--fg-muted); margin: 0.25rem 0; }
+.citations { list-style: none; padding: 0; margin: 0.25rem 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.citations li code { background: #ecebe7; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85rem; }
+.reviewer-notes { background: #f4f3ef; padding: 0.5rem 0.75rem; border-radius: 4px; font-size: 0.85rem; white-space: pre-wrap; }
+
+.actions { margin-top: 0.6rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.actions button, .actions .button-like {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.actions button:hover, .actions .button-like:hover { background: var(--bg); }
+
+.pager { margin: 1.25rem 0; display: flex; gap: 1.5rem; }
+
+.edit-form { display: flex; flex-direction: column; gap: 0.75rem; max-width: 600px; }
+.edit-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; color: var(--fg-muted); }
+.edit-form textarea, .edit-form input, .edit-form select {
+  font: inherit;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+  background: var(--card);
+}
+.edit-form button[type=submit] { align-self: flex-start; padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; }

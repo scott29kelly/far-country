@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Queue &mdash; Far Country Review{% endblock %}
+
+{% block content %}
+<section class="queue" data-page="{{ page }}" data-status="{{ status_filter }}">
+  <header class="queue-head">
+    <h1>{{ status_filter|capitalize }} queue</h1>
+    <p class="muted">{{ total }} descriptor(s)</p>
+  </header>
+
+  {% if rows %}
+  <ul class="descriptor-list">
+    {% for row in rows %}
+      {% include "_descriptor_row.html" %}
+    {% endfor %}
+  </ul>
+
+  <nav class="pager">
+    {% if page > 1 %}
+      <a href="?status_filter={{ status_filter }}&page={{ page - 1 }}">&larr; Newer</a>
+    {% endif %}
+    {% if (page * 20) < total %}
+      <a href="?status_filter={{ status_filter }}&page={{ page + 1 }}">Older &rarr;</a>
+    {% endif %}
+  </nav>
+  {% else %}
+  <p class="muted">No descriptors in this view. Try a different status filter or run extraction first.</p>
+  {% endif %}
+</section>
+{% endblock %}

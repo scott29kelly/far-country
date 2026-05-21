@@ -1,0 +1,44 @@
+<li class="descriptor-row tier-{{ row.descriptor.tier }} status-{{ row.descriptor.review_status }}"
+    id="row-{{ row.descriptor.id }}">
+  <div class="row-head">
+    <a class="entity-link" href="/entities/{{ row.entity.id }}">{{ row.entity.name }}</a>
+    <span class="tier-badge">{{ row.descriptor.tier }}</span>
+    {% if row.descriptor.temporal_phase %}
+    <span class="phase-badge">{{ row.descriptor.temporal_phase }}</span>
+    {% endif %}
+    <span class="status-badge">{{ row.descriptor.review_status }}</span>
+  </div>
+
+  <p class="statement">{{ row.descriptor.statement }}</p>
+
+  {% if row.descriptor.symbolic_referent %}
+  <p class="referent"><em>Refers to:</em> {{ row.descriptor.symbolic_referent }}</p>
+  {% endif %}
+
+  <ul class="citations">
+    {% for c in row.citations %}
+    <li>
+      {% if c.source_type == 'scripture' %}
+        <code>{{ c.book }} {{ c.chapter }}:{{ c.verse_start }}{% if c.verse_end and c.verse_end != c.verse_start %}&ndash;{{ c.verse_end }}{% endif %}</code>
+      {% elif c.source_type == 'willis' %}
+        <code>Willis ch. {{ c.willis_chapter }}, p. {{ c.willis_page_start }}{% if c.willis_page_end and c.willis_page_end != c.willis_page_start %}&ndash;{{ c.willis_page_end }}{% endif %}</code>
+      {% else %}
+        <code>{{ c.secondary_work }} &mdash; {{ c.secondary_locator }}</code>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% if row.descriptor.reviewer_notes %}
+  <pre class="reviewer-notes">{{ row.descriptor.reviewer_notes }}</pre>
+  {% endif %}
+
+  <div class="actions"
+       hx-target="#row-{{ row.descriptor.id }}"
+       hx-swap="outerHTML">
+    <button hx-post="/queue/{{ row.descriptor.id }}/approve" data-shortcut="a">Approve (a)</button>
+    <button hx-post="/queue/{{ row.descriptor.id }}/reject" data-shortcut="r">Reject (r)</button>
+    <button hx-post="/queue/{{ row.descriptor.id }}/discuss" data-shortcut="d">Discuss (d)</button>
+    <a class="button-like" href="/queue/{{ row.descriptor.id }}" data-shortcut="e">Edit (e)</a>
+  </div>
+</li>

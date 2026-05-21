@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ entity.name }} &mdash; Far Country{% endblock %}
+
+{% block content %}
+<section class="entity-view">
+  <p><a href="/">&larr; Overview</a></p>
+  <h1>{{ entity.name }}</h1>
+  <p class="muted">{{ entity.entity_type }} &middot; <code>{{ entity.id }}</code></p>
+
+  {% if entity.summary %}
+  <p class="summary">{{ entity.summary }}</p>
+  {% endif %}
+
+  <h2>Approved descriptors ({{ rows|length }})</h2>
+  {% if rows %}
+  <ul class="descriptor-list">
+    {% for row in rows %}{% include "_descriptor_row.html" %}{% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">No approved descriptors yet for this entity.</p>
+  {% endif %}
+</section>
+{% endblock %}
