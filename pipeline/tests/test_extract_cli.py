@@ -47,7 +47,7 @@ def test_extract_passage_help_shows_options(monkeypatch: pytest.MonkeyPatch) -> 
     result = runner.invoke(app, ["extract", "passage", "--help"])
     assert result.exit_code == 0, result.stdout
     flat = _normalize_help_output(result.stdout)
-    for expected in ("--model", "--no-dedup"):
+    for expected in ("--model", "--dry-run", "--db-path"):
         assert expected in flat, f"{expected!r} not in help output:\n{result.stdout}"
 
 

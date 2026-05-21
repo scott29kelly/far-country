@@ -9,8 +9,13 @@ Currently exposes:
     far-country extract passage <book:chapter>
     far-country extract entity <slug> --passage <book:chapter> [...]
     far-country extract willis <chapter>
+    far-country verify run <run-id>
 
-Subsequent PRs add `verify` and `export` subcommands.
+`extract` subcommands persist into the canonical SQLite store at
+`data/canonical.sqlite` by default; pass `--db-path` to override or
+`--dry-run` to skip writes. The `verify` subcommand runs the
+keyword-overlap citation check over the descriptors written by a given
+extraction run and prints a JSON report.
 """
 
 from __future__ import annotations
@@ -25,11 +30,25 @@ from far_country.extract import (
     DEFAULT_MODEL,
     Extractor,
     ExtractorError,
+    PersistOutcome,
     dedupe,
     make_anthropic_caller,
+    persist_extraction,
 )
 from far_country.extract.extractor import ExtractionResult
 from far_country.ingest import ESVClient, Passage, load_chapter
+from far_country.store import (
+    DEFAULT_DB_PATH,
+    Descriptor,
+    create_engine_for_path,
+    create_session_factory,
+    init_db,
+)
+from far_country.store.models import Citation, ExtractionRun
+from far_country.verify import (
+    VerificationResult,
+    verify_descriptor,
+)
 
 app = typer.Typer(
     add_completion=False,
@@ -42,6 +61,9 @@ app.add_typer(ingest_app, name="ingest")
 
 extract_app = typer.Typer(no_args_is_help=True, help="LLM-assisted extraction commands.")
 app.add_typer(extract_app, name="extract")
+
+verify_app = typer.Typer(no_args_is_help=True, help="Citation verification commands.")
+app.add_typer(verify_app, name="verify")
 
 
 # ---------------------------------------------------------------- ingest
@@ -140,6 +162,36 @@ def _emit_result(result: ExtractionResult, *, dedup: bool) -> None:
     typer.echo(json.dumps(payload, indent=2))
 
 
+def _emit_persist_outcome(outcome: PersistOutcome, db_path: Path) -> None:
+    typer.echo(
+        f"Persisted to {db_path}: "
+        f"run_id={outcome.run_id} "
+        f"new_entities={len(outcome.inserted_entities)} "
+        f"new_descriptors={len(outcome.inserted_descriptor_ids)} "
+        f"skipped_duplicates={len(outcome.skipped_duplicate_statements)}"
+    )
+
+
+def _persist_or_dry_run(
+    result: ExtractionResult,
+    *,
+    db_path: Path,
+    dry_run: bool,
+) -> None:
+    """Either persist the result or, in dry-run mode, dump candidates as JSON."""
+    if dry_run:
+        _emit_result(result, dedup=True)
+        return
+
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    engine = create_engine_for_path(db_path)
+    init_db(engine)
+    session_factory = create_session_factory(engine)
+    with session_factory() as session:
+        outcome = persist_extraction(session, result)
+    _emit_persist_outcome(outcome, db_path)
+
+
 @extract_app.command("passage")
 def extract_passage(
     ref: Annotated[
@@ -154,9 +206,13 @@ def extract_passage(
         Path | None,
         typer.Option("--cache-dir", help="ESV cache directory override."),
     ] = None,
-    no_dedup: Annotated[
+    db_path: Annotated[
+        Path,
+        typer.Option("--db-path", help="Canonical SQLite DB path."),
+    ] = DEFAULT_DB_PATH,
+    dry_run: Annotated[
         bool,
-        typer.Option("--no-dedup", help="Skip deduplication of the output."),
+        typer.Option("--dry-run", help="Skip DB writes; dump candidates as JSON."),
     ] = False,
 ) -> None:
     """Extract candidate descriptors from a single Scripture passage."""
@@ -168,7 +224,7 @@ def extract_passage(
         result = extractor.extract_from_passage(passage)
     except ExtractorError as exc:
         raise typer.Exit(code=2) from exc
-    _emit_result(result, dedup=not no_dedup)
+    _persist_or_dry_run(result, db_path=db_path, dry_run=dry_run)
 
 
 @extract_app.command("entity")
@@ -184,7 +240,8 @@ def extract_entity(
     ],
     model: Annotated[str, typer.Option("--model")] = DEFAULT_MODEL,
     cache_dir: Annotated[Path | None, typer.Option("--cache-dir")] = None,
-    no_dedup: Annotated[bool, typer.Option("--no-dedup")] = False,
+    db_path: Annotated[Path, typer.Option("--db-path")] = DEFAULT_DB_PATH,
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
 ) -> None:
     """Extract descriptors for one entity across multiple passages."""
     parsed = [_parse_passage_ref(r) for r in passage_refs]
@@ -197,7 +254,7 @@ def extract_entity(
         result = extractor.extract_for_entity(slug, name, passages)
     except ExtractorError as exc:
         raise typer.Exit(code=2) from exc
-    _emit_result(result, dedup=not no_dedup)
+    _persist_or_dry_run(result, db_path=db_path, dry_run=dry_run)
 
 
 @extract_app.command("willis")
@@ -205,7 +262,8 @@ def extract_willis(
     chapter: Annotated[int, typer.Argument(help="Willis chapter number.")],
     willis_dir: Annotated[Path | None, typer.Option("--willis-dir")] = None,
     model: Annotated[str, typer.Option("--model")] = DEFAULT_MODEL,
-    no_dedup: Annotated[bool, typer.Option("--no-dedup")] = False,
+    db_path: Annotated[Path, typer.Option("--db-path")] = DEFAULT_DB_PATH,
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
 ) -> None:
     """Extract candidate descriptors from a Willis chapter."""
     chap = load_chapter(chapter, willis_dir=willis_dir)
@@ -214,7 +272,123 @@ def extract_willis(
         result = extractor.extract_from_willis(chap)
     except ExtractorError as exc:
         raise typer.Exit(code=2) from exc
-    _emit_result(result, dedup=not no_dedup)
+    _persist_or_dry_run(result, db_path=db_path, dry_run=dry_run)
+
+
+# ---------------------------------------------------------------- verify
+
+
+class _ESVOnlyFetcher:
+    """`CitationFetcher` that resolves scripture via a cached `ESVClient`.
+
+    Willis citations are not fetchable here (no Willis text is shipped);
+    the CLI surfaces a clear error if it sees one. A richer
+    multi-source fetcher belongs in a follow-up PR.
+    """
+
+    def __init__(self, client: ESVClient) -> None:
+        self._client = client
+
+    def fetch(self, citation: Citation) -> str:
+        if citation.source_type == "scripture":
+            if citation.book is None or citation.chapter is None:
+                raise ValueError(
+                    f"Scripture citation {citation.id} missing book/chapter; cannot fetch."
+                )
+            passage = self._client.get_passage(citation.book, citation.chapter)
+            return _slice_verses(
+                passage,
+                verse_start=citation.verse_start,
+                verse_end=citation.verse_end,
+            )
+        raise ValueError(
+            f"Citation {citation.id} has unsupported source_type "
+            f"{citation.source_type!r} for this fetcher."
+        )
+
+
+def _slice_verses(
+    passage: Passage,
+    *,
+    verse_start: int | None,
+    verse_end: int | None,
+) -> str:
+    """Return the joined text of the passage's verses within an inclusive range."""
+    if verse_start is None:
+        return passage.raw_text
+    end = verse_end if verse_end is not None else verse_start
+    selected = [v for v in passage.verses if verse_start <= v.verse <= end]
+    return " ".join(v.text for v in selected) if selected else passage.raw_text
+
+
+@verify_app.command("run")
+def verify_run(
+    run_id: Annotated[str, typer.Argument(help="Extraction run id to verify descriptors for.")],
+    db_path: Annotated[Path, typer.Option("--db-path")] = DEFAULT_DB_PATH,
+    cache_dir: Annotated[
+        Path | None,
+        typer.Option("--cache-dir", help="ESV cache directory override."),
+    ] = None,
+) -> None:
+    """Run keyword-overlap citation verification over the descriptors of a run.
+
+    Descriptors are matched by the `run_id` embedded in `descriptor.provenance`.
+    """
+    engine = create_engine_for_path(db_path)
+    init_db(engine)
+    session_factory = create_session_factory(engine)
+    descriptors_by_id: list[Descriptor] = []
+    run_row: ExtractionRun | None = None
+    with session_factory() as session:
+        run_row = session.get(ExtractionRun, run_id)
+        if run_row is None:
+            typer.echo(f"No extraction_run row with id {run_id!r}", err=True)
+            raise typer.Exit(code=2)
+        descriptors_by_id = _descriptors_for_run(session, run_id)
+
+    if not descriptors_by_id:
+        typer.echo(f"No descriptors found for run {run_id}", err=True)
+        raise typer.Exit(code=1)
+
+    results: list[VerificationResult] = []
+    with ESVClient(cache_dir=cache_dir) as client:
+        fetcher = _ESVOnlyFetcher(client)
+        for descriptor in descriptors_by_id:
+            results.extend(verify_descriptor(descriptor, fetcher=fetcher))
+
+    typer.echo(
+        f"Verified {len(descriptors_by_id)} descriptor(s) "
+        f"({len(results)} citation check(s)) for run {run_id}"
+    )
+    typer.echo(
+        json.dumps(
+            [json.loads(r.to_json()) for r in results],
+            indent=2,
+            sort_keys=True,
+        )
+    )
+
+
+def _descriptors_for_run(session, run_id: str) -> list[Descriptor]:
+    """Return descriptors whose provenance JSON references `run_id`.
+
+    Provenance is stored as JSON in a text column, so we do the filter in
+    Python rather than via a JSON1 query — keeps the migration footprint
+    zero and SQLite-version-agnostic.
+    """
+    from sqlalchemy import select
+
+    matches: list[Descriptor] = []
+    for descriptor in session.scalars(select(Descriptor)).unique():
+        if not descriptor.provenance:
+            continue
+        try:
+            payload = json.loads(descriptor.provenance)
+        except json.JSONDecodeError:
+            continue
+        if payload.get("run_id") == run_id:
+            matches.append(descriptor)
+    return matches
 
 
 def main() -> None:

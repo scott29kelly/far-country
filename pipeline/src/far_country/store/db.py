@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Final
 
 from sqlalchemy import Engine, create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from far_country.store.migrations import migration_files
+
+DEFAULT_DB_PATH: Final = Path("data/canonical.sqlite")
 
 
 def create_engine_for_path(db_path: Path | str, *, echo: bool = False) -> Engine:
