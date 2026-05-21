@@ -2,10 +2,15 @@
 
 These verify wiring (subcommand registration, help text, the
 passage-ref parser) without invoking real LLM or ESV calls.
+
+Help-text assertions force `COLUMNS=200` so Rich does not line-wrap
+the option names (e.g. splitting `--model` into `--m` + `odel`),
+which would make the substring assertions flaky in narrow CI shells.
 """
 
 from __future__ import annotations
 
+import pytest
 from typer.testing import CliRunner
 
 from far_country.cli import _parse_passage_ref, app
@@ -13,7 +18,8 @@ from far_country.cli import _parse_passage_ref, app
 runner = CliRunner()
 
 
-def test_extract_help_lists_subcommands() -> None:
+def test_extract_help_lists_subcommands(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("COLUMNS", "200")
     result = runner.invoke(app, ["extract", "--help"])
     assert result.exit_code == 0
     assert "passage" in result.stdout
@@ -21,7 +27,8 @@ def test_extract_help_lists_subcommands() -> None:
     assert "willis" in result.stdout
 
 
-def test_extract_passage_help_shows_options() -> None:
+def test_extract_passage_help_shows_options(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("COLUMNS", "200")
     result = runner.invoke(app, ["extract", "passage", "--help"])
     assert result.exit_code == 0
     assert "--model" in result.stdout
@@ -39,7 +46,6 @@ def test_parse_passage_ref_ignores_verse_range() -> None:
 
 
 def test_parse_passage_ref_rejects_missing_chapter() -> None:
-    import pytest
     import typer
 
     with pytest.raises(typer.BadParameter):
@@ -47,7 +53,6 @@ def test_parse_passage_ref_rejects_missing_chapter() -> None:
 
 
 def test_parse_passage_ref_rejects_non_integer_chapter() -> None:
-    import pytest
     import typer
 
     with pytest.raises(typer.BadParameter):
