@@ -1,0 +1,16 @@
+{
+  "_note": "Synthetic placeholder text — NOT real ESV. ADR 0006 forbids committing ESV text. The LLM is mocked in the smoke test, so the passage content is irrelevant; only the verse-marker shape ([N] ... [N+1] ...) matters for parse_verses.",
+  "query": "Revelation 21",
+  "canonical": "Revelation 21",
+  "parsed": [[66021001, 66021022]],
+  "passage_meta": [
+    {
+      "canonical": "Revelation 21",
+      "chapter_start": [66021001],
+      "chapter_end": [66021022]
+    }
+  ],
+  "passages": [
+    "[1] Placeholder verse one. [2] Placeholder verse two. [3] Placeholder verse three. [4] Placeholder verse four. [5] Placeholder verse five. [6] Placeholder verse six. [7] Placeholder verse seven. [8] Placeholder verse eight. [21] Placeholder verse twenty-one. [22] Placeholder verse twenty-two."
+  ]
+}
