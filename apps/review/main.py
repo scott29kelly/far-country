@@ -20,8 +20,11 @@ from __future__ import annotations
 import os
 
 import uvicorn
+from dotenv import find_dotenv, load_dotenv
 
 from far_country.review.app import create_app
+
+load_dotenv(find_dotenv(usecwd=True))
 
 
 def main() -> None:

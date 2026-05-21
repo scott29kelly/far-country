@@ -17,6 +17,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "uvicorn>=0.30",
     "jsonschema>=4.21",
+    "python-dotenv>=1.0",
 ]
 
 [project.scripts]
