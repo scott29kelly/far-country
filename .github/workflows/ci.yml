@@ -33,7 +33,23 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Test (pytest)
-        run: uv run pytest
+        run: |
+          set -o pipefail
+          uv run pytest -vv --tb=long --color=no 2>&1 | tee pytest-output.txt
+        env:
+          PY_COLORS: "0"
+
+      - name: Surface pytest failures as annotations
+        if: failure()
+        run: |
+          if [ -f pytest-output.txt ]; then
+            echo "::group::Full pytest output"
+            cat pytest-output.txt
+            echo "::endgroup::"
+            grep -E "^(FAILED|ERROR) " pytest-output.txt | while read -r line; do
+              echo "::error::${line}"
+            done
+          fi
 
   init-db-smoke:
     name: init_db smoke

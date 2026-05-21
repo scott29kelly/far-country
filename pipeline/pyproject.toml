@@ -9,7 +9,13 @@ authors = [{ name = "Scott Kelly" }]
 dependencies = [
     "sqlalchemy>=2.0",
     "pydantic>=2.5",
+    "httpx>=0.27",
+    "typer>=0.12",
+    "anthropic>=0.40",
 ]
+
+[project.scripts]
+far-country = "far_country.cli:app"
 
 [project.optional-dependencies]
 dev = [
