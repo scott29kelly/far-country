@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from dotenv import find_dotenv, load_dotenv
 
 from far_country.export import (
     SchemaValidationError,
@@ -60,6 +61,8 @@ from far_country.verify import (
     VerificationResult,
     verify_descriptor,
 )
+
+load_dotenv(find_dotenv(usecwd=True))
 
 app = typer.Typer(
     add_completion=False,
