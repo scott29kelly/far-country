@@ -10,12 +10,14 @@ Currently exposes:
     far-country extract entity <slug> --passage <book:chapter> [...]
     far-country extract willis <chapter>
     far-country verify run <run-id>
+    far-country export
 
 `extract` subcommands persist into the canonical SQLite store at
 `data/canonical.sqlite` by default; pass `--db-path` to override or
 `--dry-run` to skip writes. The `verify` subcommand runs the
 keyword-overlap citation check over the descriptors written by a given
-extraction run and prints a JSON report.
+extraction run and prints a JSON report. `export` writes the canonical
+JSON files consumed by Phase 2.
 """
 
 from __future__ import annotations
@@ -26,6 +28,15 @@ from typing import Annotated
 
 import typer
 
+from far_country.export import (
+    SchemaValidationError,
+    build_canonical_export,
+    build_entity_exports,
+    validate_canonical,
+    validate_entity,
+    write_canonical_export,
+    write_manifest,
+)
 from far_country.extract import (
     DEFAULT_MODEL,
     Extractor,
@@ -64,6 +75,8 @@ app.add_typer(extract_app, name="extract")
 
 verify_app = typer.Typer(no_args_is_help=True, help="Citation verification commands.")
 app.add_typer(verify_app, name="verify")
+
+DEFAULT_EXPORT_DIR = Path("data/exports")
 
 
 # ---------------------------------------------------------------- ingest
@@ -389,6 +402,69 @@ def _descriptors_for_run(session, run_id: str) -> list[Descriptor]:
         if payload.get("run_id") == run_id:
             matches.append(descriptor)
     return matches
+
+
+# ---------------------------------------------------------------- export
+
+
+@app.command("export")
+def export_command(
+    db_path: Annotated[Path, typer.Option("--db-path")] = DEFAULT_DB_PATH,
+    out_dir: Annotated[
+        Path,
+        typer.Option("--out-dir", help="Directory to write JSON exports into."),
+    ] = DEFAULT_EXPORT_DIR,
+    include_pending: Annotated[
+        bool,
+        typer.Option(
+            "--include-pending",
+            help="Include non-approved descriptors (debug snapshots only — never ship).",
+        ),
+    ] = False,
+    skip_validation: Annotated[
+        bool,
+        typer.Option(
+            "--skip-validation",
+            help="Skip JSON Schema validation (use only when iterating on schema changes).",
+        ),
+    ] = False,
+) -> None:
+    """Write canonical.json + per-entity JSON + manifest.json from the store."""
+    engine = create_engine_for_path(db_path)
+    init_db(engine)
+    session_factory = create_session_factory(engine)
+
+    with session_factory() as session:
+        canonical = build_canonical_export(session, include_pending=include_pending)
+        entity_exports = build_entity_exports(session, include_pending=include_pending)
+
+    if not skip_validation:
+        try:
+            validate_canonical(canonical.to_dict())
+            for export in entity_exports:
+                validate_entity(export.to_dict())
+        except SchemaValidationError as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(code=2) from exc
+
+    with session_factory() as session:
+        written = write_canonical_export(session, out_dir, include_pending=include_pending)
+
+    entity_filenames = [
+        f"entities/{name.split(':', 1)[1]}.json" for name in written if name.startswith("entity:")
+    ]
+    manifest_path = write_manifest(out_dir, canonical=canonical, entity_filenames=entity_filenames)
+
+    typer.echo(f"Wrote {written['canonical']}")
+    for label, path in written.items():
+        if label.startswith("entity:"):
+            typer.echo(f"Wrote {path}")
+    typer.echo(f"Wrote {manifest_path}")
+    typer.echo(
+        f"Exported {len(canonical.entities)} entity(ies), "
+        f"{len(canonical.descriptors)} descriptor(s), "
+        f"{len(canonical.citations)} citation(s)."
+    )
 
 
 def main() -> None:
