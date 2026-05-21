@@ -1,0 +1,56 @@
+[
+  {
+    "statement": "The New Jerusalem comes down out of heaven from God, prepared as a bride adorned for her husband.",
+    "entity_id_suggestion": "new-jerusalem",
+    "entity_name_suggestion": "The New Jerusalem",
+    "entity_type_suggestion": "place",
+    "tier": "clear",
+    "symbolic_referent": null,
+    "temporal_phase": "final",
+    "citations": [
+      {
+        "source_type": "scripture",
+        "book": "Revelation",
+        "chapter": 21,
+        "verse_start": 2,
+        "verse_end": null
+      }
+    ]
+  },
+  {
+    "statement": "There is no temple in the New Jerusalem because the Lord God the Almighty and the Lamb are its temple.",
+    "entity_id_suggestion": "new-jerusalem",
+    "entity_name_suggestion": "The New Jerusalem",
+    "entity_type_suggestion": "place",
+    "tier": "clear",
+    "symbolic_referent": null,
+    "temporal_phase": "final",
+    "citations": [
+      {
+        "source_type": "scripture",
+        "book": "Revelation",
+        "chapter": 21,
+        "verse_start": 22,
+        "verse_end": null
+      }
+    ]
+  },
+  {
+    "statement": "The street of the New Jerusalem is pure gold, transparent as glass.",
+    "entity_id_suggestion": "new-jerusalem",
+    "entity_name_suggestion": "The New Jerusalem",
+    "entity_type_suggestion": "place",
+    "tier": "symbolic",
+    "symbolic_referent": "divine glory, supreme value, and purity — gold as the most precious earthly material points to heavenly worth, and transparency underscores that this exceeds ordinary gold.",
+    "temporal_phase": "final",
+    "citations": [
+      {
+        "source_type": "scripture",
+        "book": "Revelation",
+        "chapter": 21,
+        "verse_start": 21,
+        "verse_end": null
+      }
+    ]
+  }
+]
