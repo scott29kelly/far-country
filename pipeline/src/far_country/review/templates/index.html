@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Overview &mdash; Far Country Review{% endblock %}
+
+{% block content %}
+<section class="overview">
+  <h1>Overview</h1>
+  <p class="muted">DB: <code>{{ db_path }}</code></p>
+
+  <div class="cards">
+    <div class="card">
+      <h2>By status</h2>
+      <ul class="stats">
+        <li><span>Pending</span><strong>{{ status_counts.pending }}</strong></li>
+        <li><span>Approved</span><strong>{{ status_counts.approved }}</strong></li>
+        <li><span>Rejected</span><strong>{{ status_counts.rejected }}</strong></li>
+        <li><span>Discuss</span><strong>{{ status_counts.needs_discussion }}</strong></li>
+        <li class="total"><span>Total</span><strong>{{ status_counts.total }}</strong></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>By tier</h2>
+      <ul class="stats">
+        <li><span>Clear</span><strong>{{ tier_counts.clear }}</strong></li>
+        <li><span>Fuzzy</span><strong>{{ tier_counts.fuzzy }}</strong></li>
+        <li><span>Debated</span><strong>{{ tier_counts.debated }}</strong></li>
+        <li><span>Symbolic</span><strong>{{ tier_counts.symbolic }}</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Recent extraction runs</h2>
+  {% if runs %}
+  <table class="runs">
+    <thead>
+      <tr><th>Started</th><th>Scope</th><th>Model</th><th>Prompt</th><th class="num">Descriptors</th></tr>
+    </thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td><time>{{ r.started_at }}</time></td>
+        <td><code>{{ r.source_scope }}</code></td>
+        <td>{{ r.model }}</td>
+        <td>{{ r.prompt_version }}</td>
+        <td class="num">{{ r.descriptor_count if r.descriptor_count is not none else 0 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No extraction runs recorded yet. Try <code>far-country extract passage Revelation:21</code>.</p>
+  {% endif %}
+</section>
+{% endblock %}

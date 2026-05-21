@@ -12,6 +12,10 @@ dependencies = [
     "httpx>=0.27",
     "typer>=0.12",
     "anthropic>=0.40",
+    "fastapi>=0.115",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
+    "uvicorn>=0.30",
 ]
 
 [project.scripts]
@@ -54,3 +58,6 @@ ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B"]
+# FastAPI's standard pattern is `param: T = Depends(...)` / `Form(...)`,
+# which ruff-bugbear flags as B008 ("don't call functions in defaults").
+"src/far_country/review/app.py" = ["B008"]
