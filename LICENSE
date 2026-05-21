@@ -1,0 +1,22 @@
+Far Country — License (Placeholder)
+
+The source code license for this project is TBD. The likely direction is MIT for
+the source code, with separate handling for derivative content drawn from
+copyrighted sources.
+
+Important content notes:
+
+- Scripture quotations are taken from the ESV® Bible (The Holy Bible, English
+  Standard Version®), copyright © 2001 by Crossway, a publishing ministry of
+  Good News Publishers. Use of the ESV is governed by Crossway's permissions
+  policy. Public distribution of this project will require compliance with the
+  ESV permissions / API terms.
+
+- Excerpts and summaries from Janet Willis, *What on Earth Is Heaven Like? A
+  Look at God's City New Jerusalem*, are used here under personal-study / fair
+  use. Public distribution will require explicit permission from the rights
+  holder.
+
+Until a formal license is chosen, all rights are reserved. See
+docs/adr/0006-source-licensing-posture.md for the project's licensing
+posture and known prerequisites for public release.
