@@ -156,7 +156,7 @@ The phase is complete when all of:
 
 These need a decision before the relevant PR opens. Resolved decisions land as ADRs.
 
-- **E1. Embedding provider.** Anthropic does not currently ship a first-party embedding model. Candidates: OpenAI `text-embedding-3-small`, Voyage AI `voyage-3` (Anthropic-recommended), or a local model (e.g., `bge-small`) at build time. **Default: OpenAI `text-embedding-3-small`** — reuses the maintainer's existing OpenAI subscription, and the quality gap vs. Voyage is in the noise on a dataset of this size (hundreds to low thousands of descriptors). The retrieval interface is pluggable; swapping providers is a single-file change if a future measurement justifies it. Locks via new ADR (`0007-embedding-provider.md`).
+- **E1. Embedding provider.** ~~OPEN~~ **LOCKED** in [`../adr/0007-embedding-provider.md`](../adr/0007-embedding-provider.md): default is OpenAI `text-embedding-3-small`, retrieval interface is pluggable so swapping providers is a single-file change.
 - **E2. Refusal threshold.** Below what retrieval score do we refuse without calling the LLM? Empirical; set initially to a conservative value and tune from real questions.
 - **E3. Citation enforcement on the LLM output.** If the LLM returns an answer that fails to cite a retrieved descriptor, do we (a) rewrite by re-prompting with a stricter instruction, (b) reject and surface a refusal, or (c) both with a retry budget? Recommend (c) with a single retry.
 - **E4. Search index strategy.** MiniSearch client-side is recommended for the dataset size we expect through Phase 2. If the dataset exceeds ~5 MB serialized, move to a server-side route. Decide at first real measurement.
