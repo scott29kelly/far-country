@@ -1,13 +1,15 @@
 {
   "name": "far-country-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Phase 1 placeholder: loads the exported canonical.json and renders one entity (New Jerusalem). Replaced by the real browse UI in Phase 2.",
+  "description": "Far Country browse UI and grounded Q&A — Phase 2 app shell over the canonical export.",
   "scripts": {
     "dev": "next dev -p 3030",
     "build": "next build",
     "start": "next start -p 3030",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "next": "^15.0.0",
@@ -15,9 +17,13 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.6.0"
+    "postcss": "^8.4.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
   }
 }
