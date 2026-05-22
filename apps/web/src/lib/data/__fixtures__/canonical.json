@@ -25,6 +25,14 @@
       "temporal_phase": "final"
     },
     {
+      "id": "desc-nj-cube",
+      "entity_id": "new-jerusalem",
+      "statement": "The city's length, breadth, and height are equal — measured as twelve thousand stadia on each side.",
+      "tier": "debated",
+      "symbolic_referent": null,
+      "temporal_phase": "final"
+    },
+    {
       "id": "desc-gates-pearl",
       "entity_id": "twelve-gates",
       "statement": "The twelve gates of the city are twelve pearls, each gate being made of a single pearl.",
@@ -50,6 +58,23 @@
       "chapter": 21,
       "verse_start": 2,
       "verse_end": null
+    },
+    {
+      "id": "cit-nj-cube-rev",
+      "descriptor_id": "desc-nj-cube",
+      "source_type": "scripture",
+      "book": "Revelation",
+      "chapter": 21,
+      "verse_start": 16,
+      "verse_end": null
+    },
+    {
+      "id": "cit-nj-cube-willis",
+      "descriptor_id": "desc-nj-cube",
+      "source_type": "willis",
+      "willis_chapter": "The Holy City",
+      "willis_page_start": 88,
+      "willis_page_end": 91
     },
     {
       "id": "cit-gates-pearl",

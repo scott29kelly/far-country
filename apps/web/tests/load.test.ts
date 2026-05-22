@@ -111,7 +111,7 @@ describe("loadCanonical + loadEntityIndex", () => {
   it("returns the full canonical export from fixtures", async () => {
     const canonical = await loadCanonical();
     expect(canonical.entities).toHaveLength(2);
-    expect(canonical.descriptors).toHaveLength(3);
+    expect(canonical.descriptors).toHaveLength(4);
   });
 
   it("sorts the entity index alphabetically by name", async () => {
@@ -128,7 +128,7 @@ describe("loadEntity", () => {
     const entity = await loadEntity("new-jerusalem");
     expect(entity).not.toBeNull();
     expect(entity?.name).toBe("The New Jerusalem");
-    expect(entity?.descriptors).toHaveLength(1);
+    expect(entity?.descriptors).toHaveLength(2);
   });
 
   it("returns null for an unknown slug", async () => {

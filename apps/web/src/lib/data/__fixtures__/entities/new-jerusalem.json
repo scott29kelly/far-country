@@ -20,6 +20,30 @@
           "verse_end": null
         }
       ]
+    },
+    {
+      "id": "desc-nj-cube",
+      "statement": "The city's length, breadth, and height are equal — measured as twelve thousand stadia on each side.",
+      "tier": "debated",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "cit-nj-cube-rev",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 16,
+          "verse_end": null
+        },
+        {
+          "id": "cit-nj-cube-willis",
+          "source_type": "willis",
+          "willis_chapter": "The Holy City",
+          "willis_page_start": 88,
+          "willis_page_end": 91
+        }
+      ]
     }
   ],
   "relations": [
