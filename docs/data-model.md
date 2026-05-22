@@ -98,10 +98,30 @@ CREATE TABLE extraction_run (
   notes           TEXT
 );
 
+-- Audit log of citation-verification runs. Each row is one (descriptor,
+-- citation) check produced by `far-country verify run`. Re-running verify
+-- appends new rows rather than overwriting, so verdict history is preserved.
+CREATE TABLE verification (
+  id              TEXT PRIMARY KEY,
+  descriptor_id   TEXT NOT NULL REFERENCES descriptor(id),
+  citation_id     TEXT NOT NULL REFERENCES citation(id),
+  run_id          TEXT NOT NULL REFERENCES extraction_run(id),
+  score           REAL NOT NULL,             -- 0..1 keyword-overlap score
+  status          TEXT NOT NULL CHECK (status IN ('pass','partial','fail')),
+  rationale       TEXT NOT NULL,
+  judge_status    TEXT CHECK (judge_status IS NULL OR judge_status IN
+                    ('pass','partial','fail')),
+  judge_rationale TEXT,
+  created_at      TEXT NOT NULL
+);
+
 CREATE INDEX idx_descriptor_entity ON descriptor(entity_id);
 CREATE INDEX idx_descriptor_tier   ON descriptor(tier);
 CREATE INDEX idx_descriptor_status ON descriptor(review_status);
 CREATE INDEX idx_citation_descriptor ON citation(descriptor_id);
+CREATE INDEX idx_verification_run        ON verification(run_id);
+CREATE INDEX idx_verification_descriptor ON verification(descriptor_id);
+CREATE INDEX idx_verification_citation   ON verification(citation_id);
 ```
 
 ---

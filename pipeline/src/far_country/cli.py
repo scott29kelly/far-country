@@ -16,8 +16,9 @@ Currently exposes:
 `data/canonical.sqlite` by default; pass `--db-path` to override or
 `--dry-run` to skip writes. The `verify` subcommand runs the
 keyword-overlap citation check over the descriptors written by a given
-extraction run and prints a JSON report. `export` writes the canonical
-JSON files consumed by Phase 2.
+extraction run, prints a JSON report, and persists each check to the
+`verification` table — pass `--no-persist` to skip writes. `export`
+writes the canonical JSON files consumed by Phase 2.
 """
 
 from __future__ import annotations
@@ -55,6 +56,7 @@ from far_country.store import (
     create_engine_for_path,
     create_session_factory,
     init_db,
+    save_verification_results,
 )
 from far_country.store.models import Citation, ExtractionRun
 from far_country.verify import (
@@ -348,37 +350,55 @@ def verify_run(
         Path | None,
         typer.Option("--cache-dir", help="ESV cache directory override."),
     ] = None,
+    no_persist: Annotated[
+        bool,
+        typer.Option(
+            "--no-persist",
+            help="Compute and print results but skip writing to the verification table.",
+        ),
+    ] = False,
 ) -> None:
     """Run keyword-overlap citation verification over the descriptors of a run.
 
     Descriptors are matched by the `run_id` embedded in `descriptor.provenance`.
+    Results are written to the `verification` table unless `--no-persist` is given.
     """
     engine = create_engine_for_path(db_path)
     init_db(engine)
     session_factory = create_session_factory(engine)
-    descriptors_by_id: list[Descriptor] = []
-    run_row: ExtractionRun | None = None
-    with session_factory() as session:
+
+    # One session spans the whole flow: descriptors carry lazy-loaded
+    # `.citations` that the verifier accesses, and persisting the results
+    # uses the same connection.
+    persisted = 0
+    results: list[VerificationResult] = []
+    with session_factory() as session, ESVClient(cache_dir=cache_dir) as client:
         run_row = session.get(ExtractionRun, run_id)
         if run_row is None:
             typer.echo(f"No extraction_run row with id {run_id!r}", err=True)
             raise typer.Exit(code=2)
-        descriptors_by_id = _descriptors_for_run(session, run_id)
 
-    if not descriptors_by_id:
-        typer.echo(f"No descriptors found for run {run_id}", err=True)
-        raise typer.Exit(code=1)
+        descriptors_by_id: list[Descriptor] = _descriptors_for_run(session, run_id)
+        if not descriptors_by_id:
+            typer.echo(f"No descriptors found for run {run_id}", err=True)
+            raise typer.Exit(code=1)
 
-    results: list[VerificationResult] = []
-    with ESVClient(cache_dir=cache_dir) as client:
         fetcher = _ESVOnlyFetcher(client)
         for descriptor in descriptors_by_id:
             results.extend(verify_descriptor(descriptor, fetcher=fetcher))
 
-    typer.echo(
+        if not no_persist and results:
+            persisted = len(save_verification_results(session, run_id, results))
+
+    summary = (
         f"Verified {len(descriptors_by_id)} descriptor(s) "
         f"({len(results)} citation check(s)) for run {run_id}"
     )
+    if no_persist:
+        summary += " [--no-persist: results not written]"
+    else:
+        summary += f" — persisted {persisted} row(s) to verification"
+    typer.echo(summary)
     typer.echo(
         json.dumps(
             [json.loads(r.to_json()) for r in results],

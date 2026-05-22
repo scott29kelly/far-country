@@ -13,6 +13,7 @@ from far_country.store.models import (
     Entity,
     EntityRelation,
     ExtractionRun,
+    Verification,
 )
 from far_country.store.repo import (
     CountsByStatus,
@@ -27,6 +28,7 @@ from far_country.store.repo import (
     list_approved_for_entity,
     list_descriptors,
     recent_runs,
+    save_verification_results,
     update_review_status,
 )
 
@@ -42,6 +44,7 @@ __all__ = [
     "Entity",
     "EntityRelation",
     "ExtractionRun",
+    "Verification",
     "RunSummary",
     "counts_by_status",
     "counts_by_tier",
@@ -53,5 +56,6 @@ __all__ = [
     "list_approved_for_entity",
     "list_descriptors",
     "recent_runs",
+    "save_verification_results",
     "update_review_status",
 ]
