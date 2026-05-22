@@ -51,6 +51,37 @@ jobs:
             done
           fi
 
+  web:
+    name: web (typecheck + tests + build + leakage check)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test (vitest)
+        run: npm run test
+
+      - name: Build (next)
+        run: npm run build
+
+      - name: No source leakage in build output
+        run: npm run check:no-source-leakage
+
   init-db-smoke:
     name: init_db smoke
     runs-on: ubuntu-latest

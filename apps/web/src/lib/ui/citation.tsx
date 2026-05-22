@@ -1,16 +1,28 @@
 /**
  * Citation rendering.
  *
- * Scripture citations render as text references (e.g. "Revelation 21:2").
- * Willis citations render as chapter + page range. Secondary works render
- * as work + locator. ESV verse text is NOT fetched here — that lands in
- * PR 2A.3 via the /api/esv proxy with a popover. Until then we render the
- * reference only.
+ * Scripture citations render as a clickable reference that opens a popover
+ * with the ESV verse text fetched server-side through /api/esv. Willis and
+ * secondary citations render as reference text only — there is no API
+ * fetch for non-scripture sources.
+ *
+ * The verse text never lives in the bundle (ADR 0006); only references do.
  */
 
 import type { Citation } from "@/lib/data/types";
+import { ScriptureCitationPopover } from "./citation-popover";
 
 export function CitationLine({ citation }: { citation: Citation }) {
+  if (citation.source_type === "scripture") {
+    return (
+      <span
+        data-citation-id={citation.id}
+        data-source-type={citation.source_type}
+      >
+        <ScriptureCitationPopover citation={citation} />
+      </span>
+    );
+  }
   return (
     <span
       data-citation-id={citation.id}
