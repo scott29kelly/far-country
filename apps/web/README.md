@@ -1,59 +1,56 @@
-# Far Country — web (Phase 1 placeholder)
+# Far Country — web
 
-A minimal Next.js page that loads the Phase 1 canonical JSON export and renders
-one entity (New Jerusalem). It exists to close spec acceptance criterion 4:
+The Next.js app shell for the Phase 2 browse UI and grounded Q&A. Reads the canonical export produced by the Phase 1 pipeline and renders it for a non-technical reader.
 
-> A placeholder Next.js page (in a separate `apps/web/` directory) loads
-> `canonical.json` and renders one entity (e.g., New Jerusalem) with its
-> approved descriptors and citations.
+This is the **real Phase 2 app**, not the Phase 1 placeholder. (The placeholder lives forever at the git tag `phase-1-placeholder` — `git checkout phase-1-placeholder -- apps/web/` to inspect it.)
 
-This is **not** the real browse UI — that's Phase 2. The placeholder proves
-the export contract works end-to-end.
+## What ships in PR 2A.1
+
+- Tailwind v4 + Next 15 (App Router) + React 19 + TypeScript.
+- Type-safe data layer (`src/lib/data/`) over the canonical export, with a manifest schema-version guard that refuses to render on a major-version mismatch.
+- Dev fixture data under `src/lib/data/__fixtures__/` so `npm run dev` works without any pipeline run.
+- Pages: landing (`/`) and entity index (`/entities`).
+- Vitest unit tests over the loader fallback and manifest guard.
+
+PR 2A.2 adds entity detail pages. PR 2A.3 adds filtering, search, and the ESV citation drill-down. PR 2B series adds retrieval and grounded Q&A.
 
 ## Run it locally
 
-The web app reads its data from `apps/web/public/data/`, which is gitignored.
-You produce that data with the Phase 1 pipeline:
-
 ```bash
-# From the repo root — generate canonical.json + entities/<slug>.json
-uv run --project pipeline far-country export
-
-# Stage the exports under the web app's public dir
-mkdir -p apps/web/public/data
-cp -r data/exports/* apps/web/public/data/
-
-# Run the placeholder
 cd apps/web
 npm install
 npm run dev
 # → http://localhost:3030
 ```
 
-If `apps/web/public/data/entities/new-jerusalem.json` is missing, the page
-renders a fallback panel explaining how to populate it.
+This works immediately against the committed dev fixtures (2 entities, 3 descriptors). To browse the real curated dataset instead:
 
-## What this page is and isn't
+```bash
+# From the repo root — generate the canonical export
+uv run --project pipeline far-country export
 
-It is:
+# Stage the exports under the web app's public dir
+mkdir -p apps/web/public/data
+cp -r data/exports/* apps/web/public/data/
+```
 
-- A read-only server component that imports the entity JSON via the Node
-  filesystem at build/request time.
-- Styled minimally to make the data legible — not the visual identity for
-  Phase 2.
+The loader prefers `public/data/` over `__fixtures__/` automatically.
 
-It is **not**:
+## Tests + typecheck
 
-- The Phase 2 browse UI (that gets real navigation, Tailwind, a design system,
-  search, and the 3D layer).
-- A demonstration of grounded Q&A (Phase 2).
-- Deployed anywhere — the licensing posture (ADR 0006) restricts public
-  artifacts that redistribute ESV or Willis text. Descriptors are
-  project-original paraphrases and may be safe to deploy, but the call lives
-  in a future ADR.
+```bash
+npm run typecheck
+npm run test
+```
 
-## Tech
+## Tech notes
 
-- Next.js 15 (App Router)
-- React 19, TypeScript 5
-- No CSS framework — single `globals.css`, kept minimal on purpose
+- **Tailwind v4** with CSS-first config (`@theme { ... }` in `globals.css`); no `tailwind.config.js`.
+- **Path alias** `@/*` → `./src/*`. Pages under `app/` import library code via `@/lib/...`.
+- **Types are hand-maintained** against the Python JSON Schema (`pipeline/src/far_country/export/schema.py`). Codegen-from-schema is tracked as deferred tech debt in the PR 2A.1 description.
+- **Source-text licensing.** Per ADR 0006, neither the bundle nor the public data directory ever contains raw ESV or Willis text. ESV proxy + the no-source-leakage CI check land with PR 2A.3.
+
+## Constraints
+
+- Read-only over the canonical export. Mutations happen in the Phase 1 review tool (`apps/review/`), never here.
+- Hermeneutic policy (`docs/hermeneutics.md`) is load-bearing. Tier, `symbolic_referent`, and `temporal_phase` must surface in the UI — they are not optional decorations.

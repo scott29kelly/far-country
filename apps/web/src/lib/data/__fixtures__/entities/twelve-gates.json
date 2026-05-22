@@ -1,0 +1,51 @@
+{
+  "id": "twelve-gates",
+  "name": "The Twelve Gates",
+  "entity_type": "thing",
+  "summary": "The twelve gates of the New Jerusalem, each a single pearl, inscribed with the names of the twelve tribes of Israel.",
+  "descriptors": [
+    {
+      "id": "desc-gates-pearl",
+      "statement": "The twelve gates of the city are twelve pearls, each gate being made of a single pearl.",
+      "tier": "symbolic",
+      "symbolic_referent": "The preciousness, purity, and singular costliness of access to God's eternal city — pearls in the ancient world were among the most valued materials and, unlike gold, are organic and singular rather than fabricated.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "cit-gates-pearl",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 21,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "desc-gates-inscribed",
+      "statement": "The names of the twelve tribes of the sons of Israel are inscribed on the twelve gates.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "cit-gates-inscribed",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel-gates-in-city",
+      "from_entity_id": "twelve-gates",
+      "to_entity_id": "new-jerusalem",
+      "relation_type": "part-of",
+      "notes": "Twelve gates are part of the city walls (Rev 21:12)."
+    }
+  ]
+}

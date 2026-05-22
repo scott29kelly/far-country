@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.1.0",
+  "generated_at": "2026-05-21T00:00:00Z",
+  "counts": {
+    "entities": 2,
+    "descriptors": 3,
+    "citations": 3,
+    "relations": 1
+  },
+  "entity_files": ["new-jerusalem.json", "twelve-gates.json"]
+}

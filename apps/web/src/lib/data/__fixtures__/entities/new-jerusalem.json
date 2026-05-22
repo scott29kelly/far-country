@@ -1,0 +1,34 @@
+{
+  "id": "new-jerusalem",
+  "name": "The New Jerusalem",
+  "entity_type": "place",
+  "summary": "The eternal city of God, descending out of heaven from God, prepared as a bride adorned for her husband.",
+  "descriptors": [
+    {
+      "id": "desc-nj-descends",
+      "statement": "The New Jerusalem comes down out of heaven from God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "cit-nj-descends",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel-gates-in-city",
+      "from_entity_id": "twelve-gates",
+      "to_entity_id": "new-jerusalem",
+      "relation_type": "part-of",
+      "notes": "Twelve gates are part of the city walls (Rev 21:12)."
+    }
+  ]
+}
