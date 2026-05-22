@@ -9,9 +9,11 @@
     "start": "next start -p 3030",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:no-source-leakage": "node scripts/check-no-source-leakage.mjs"
   },
   "dependencies": {
+    "minisearch": "^7.2.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

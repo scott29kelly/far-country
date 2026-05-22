@@ -1,66 +1,82 @@
-import Link from "next/link";
-
-import { loadEntityIndex } from "@/lib/data/load";
-import type { EntityType } from "@/lib/data/types";
+import { loadSearchableEntities } from "@/lib/data/search-index";
+import {
+  ENTITY_TYPES,
+  TIERS,
+  type EntityType,
+  type Tier,
+} from "@/lib/data/types";
+import { EntitySearchList } from "@/lib/ui/entity-search";
+import { EntityTypeFilter, TierFilter } from "@/lib/ui/filter-chips";
 
 export const metadata = {
   title: "Entities — Far Country",
 };
 
-const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
-  person: "Person",
-  place: "Place",
-  thing: "Thing",
-  event: "Event",
-  attribute: "Attribute",
+type PageProps = {
+  searchParams: Promise<{
+    entity_type?: string;
+    tier?: string;
+  }>;
 };
 
-export default async function EntityIndexPage() {
-  const entities = await loadEntityIndex();
+function parseEntityType(raw: string | undefined): EntityType | null {
+  if (!raw) return null;
+  return (ENTITY_TYPES as readonly string[]).includes(raw)
+    ? (raw as EntityType)
+    : null;
+}
+
+function parseTier(raw: string | undefined): Tier | null {
+  if (!raw) return null;
+  return (TIERS as readonly string[]).includes(raw) ? (raw as Tier) : null;
+}
+
+export default async function EntityIndexPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const entityType = parseEntityType(params.entity_type);
+  const tier = parseTier(params.tier);
+
+  const all = await loadSearchableEntities();
+  const filtered = all.filter((e) => {
+    if (entityType && e.entity_type !== entityType) return false;
+    if (tier && !e.tiers.includes(tier)) return false;
+    return true;
+  });
+
+  const baseParams = {
+    entity_type: entityType ?? undefined,
+    tier: tier ?? undefined,
+  };
 
   return (
     <div className="space-y-6">
-      <header>
+      <header className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Entities</h1>
-        <p className="mt-1 text-sm text-(--color-fg-muted)">
-          {entities.length}{" "}
-          {entities.length === 1 ? "entity" : "entities"} in the dataset.
-          Select one to see its descriptors and citations. Filtering and
-          search land in PR 2A.3.
+        <p className="text-sm text-(--color-fg-muted)">
+          {all.length} {all.length === 1 ? "entity" : "entities"} in the
+          dataset. Filter by type or tier, or search names and descriptors.
         </p>
       </header>
 
-      {entities.length === 0 ? (
+      <section
+        aria-labelledby="filters-heading"
+        className="space-y-3 rounded-lg border border-(--color-border) bg-(--color-card) p-4"
+      >
+        <h2 id="filters-heading" className="sr-only">
+          Filters
+        </h2>
+        <EntityTypeFilter active={entityType} baseParams={baseParams} />
+        <TierFilter active={tier} baseParams={baseParams} />
+      </section>
+
+      {all.length === 0 ? (
         <p className="text-(--color-fg-muted)">
           The dataset is empty. Run the pipeline export and copy{" "}
           <code className="font-mono text-xs">data/exports/*</code> into{" "}
           <code className="font-mono text-xs">apps/web/public/data/</code>.
         </p>
       ) : (
-        <ul className="divide-y divide-(--color-border) overflow-hidden rounded-lg border border-(--color-border) bg-(--color-card)">
-          {entities.map((entity) => (
-            <li key={entity.id}>
-              <Link
-                href={`/entities/${entity.id}`}
-                className="block p-5 transition hover:bg-(--color-bg)"
-              >
-                <div className="flex items-baseline justify-between gap-4">
-                  <h2 className="text-lg font-semibold text-(--color-fg)">
-                    {entity.name}
-                  </h2>
-                  <span className="text-xs uppercase tracking-wider text-(--color-fg-muted)">
-                    {ENTITY_TYPE_LABELS[entity.entity_type]}
-                  </span>
-                </div>
-                {entity.summary ? (
-                  <p className="mt-2 text-sm leading-relaxed text-(--color-fg-muted)">
-                    {entity.summary}
-                  </p>
-                ) : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <EntitySearchList entities={filtered} />
       )}
     </div>
   );
