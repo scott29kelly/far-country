@@ -14,6 +14,7 @@ from far_country.extract.extractor import (
     DEFAULT_MODEL,
     Extractor,
     ExtractorError,
+    make_anthropic_caller,
     parse_candidates,
 )
 from far_country.ingest import Passage, Verse, WillisChapter, WillisSection
@@ -198,3 +199,45 @@ def test_passage_source_scope_normalizes_book_name() -> None:
     )
     result = Extractor(caller).extract_from_passage(passage)
     assert result.source_scope == "esv:1-corinthians:15"
+
+
+# ---------- make_anthropic_caller ----------
+
+
+class _FakeTextBlock:
+    def __init__(self, text: str) -> None:
+        self.text = text
+
+
+class _FakeMessage:
+    def __init__(self, text: str, stop_reason: str = "end_turn") -> None:
+        self.content = [_FakeTextBlock(text)]
+        self.stop_reason = stop_reason
+
+
+class _FakeMessages:
+    def __init__(self, message: _FakeMessage) -> None:
+        self._message = message
+        self.calls: list[dict[str, object]] = []
+
+    def create(self, **kwargs: object) -> _FakeMessage:
+        self.calls.append(kwargs)
+        return self._message
+
+
+class _FakeAnthropicClient:
+    def __init__(self, message: _FakeMessage) -> None:
+        self.messages = _FakeMessages(message)
+
+
+def test_anthropic_caller_returns_text_on_normal_stop() -> None:
+    client = _FakeAnthropicClient(_FakeMessage("ok", stop_reason="end_turn"))
+    caller = make_anthropic_caller(client, model="m", max_tokens=100)
+    assert caller("sys", "user") == "ok"
+
+
+def test_anthropic_caller_raises_on_max_tokens_truncation() -> None:
+    client = _FakeAnthropicClient(_FakeMessage("partial...", stop_reason="max_tokens"))
+    caller = make_anthropic_caller(client, model="m", max_tokens=4096)
+    with pytest.raises(ExtractorError, match="truncated"):
+        caller("sys", "user")

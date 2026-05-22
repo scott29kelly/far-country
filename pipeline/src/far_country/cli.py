@@ -239,6 +239,7 @@ def extract_passage(
     try:
         result = extractor.extract_from_passage(passage)
     except ExtractorError as exc:
+        typer.echo(f"Extraction failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     _persist_or_dry_run(result, db_path=db_path, dry_run=dry_run)
 
@@ -269,6 +270,7 @@ def extract_entity(
     try:
         result = extractor.extract_for_entity(slug, name, passages)
     except ExtractorError as exc:
+        typer.echo(f"Extraction failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     _persist_or_dry_run(result, db_path=db_path, dry_run=dry_run)
 
@@ -287,6 +289,7 @@ def extract_willis(
     try:
         result = extractor.extract_from_willis(chap)
     except ExtractorError as exc:
+        typer.echo(f"Extraction failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     _persist_or_dry_run(result, db_path=db_path, dry_run=dry_run)
 

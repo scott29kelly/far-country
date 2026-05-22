@@ -29,7 +29,9 @@ if TYPE_CHECKING:
 ModelCaller = Callable[[str, str], str]
 
 DEFAULT_MODEL: Final = "claude-opus-4-7"
-DEFAULT_MAX_TOKENS: Final = 4096
+# 16384 comfortably accommodates a chapter's worth of candidate descriptors
+# at ~300 tokens each. Live testing with Revelation 21 truncated at 4096.
+DEFAULT_MAX_TOKENS: Final = 16384
 
 _JSON_FENCE = re.compile(r"^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$", re.DOTALL)
 _CANDIDATES_ADAPTER = TypeAdapter(list[CandidateDescriptor])
@@ -149,6 +151,15 @@ def make_anthropic_caller(
             system=system,
             messages=[{"role": "user", "content": user}],
         )
+        # Catch truncation before we hand a half-finished JSON blob to the
+        # parser — otherwise the failure surfaces as a confusing
+        # "Invalid JSON: EOF while parsing a string" several frames down.
+        stop_reason = getattr(message, "stop_reason", None)
+        if stop_reason == "max_tokens":
+            raise ExtractorError(
+                f"Anthropic response was truncated (stop_reason='max_tokens', "
+                f"max_tokens={max_tokens}). Increase max_tokens or shorten the input."
+            )
         # The Messages API returns a list of content blocks; the first
         # text block holds the response we want.
         for block in message.content:
