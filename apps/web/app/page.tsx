@@ -52,6 +52,12 @@ export default async function LandingPage() {
         >
           Browse entities
         </Link>
+        <Link
+          href="/ask"
+          className="rounded-md border border-(--color-accent) px-4 py-2 text-sm font-medium text-(--color-accent) hover:bg-(--color-accent) hover:text-white"
+        >
+          Ask a question
+        </Link>
       </section>
     </div>
   );

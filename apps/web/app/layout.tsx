@@ -34,6 +34,14 @@ export default function RootLayout({
                   Entities
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/ask"
+                  className="text-(--color-fg-muted) hover:text-(--color-accent)"
+                >
+                  Ask
+                </Link>
+              </li>
             </ul>
           </nav>
         </header>

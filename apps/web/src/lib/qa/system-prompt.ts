@@ -36,7 +36,11 @@ const PROMPT_FILE_RELATIVE = path.join(
   "system-prompt.md",
 );
 
-const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
+// Tolerate CRLF as well as LF — the file is committed with LF, but
+// git's default `core.autocrlf=true` on Windows checkouts converts line
+// endings on read. Without this the parser breaks on Windows dev boxes
+// even though CI (Linux) stays green.
+const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
 
 function parseFrontmatter(raw: string): SystemPrompt {
   const match = FRONTMATTER_RE.exec(raw);
