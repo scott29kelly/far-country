@@ -25,7 +25,9 @@ from far_country.store.models import (
     Descriptor,
     Entity,
     ExtractionRun,
+    Verification,
 )
+from far_country.verify.citation_check import VerificationResult
 
 ReviewStatus = Literal["pending", "approved", "rejected", "needs-discussion"]
 
@@ -288,3 +290,48 @@ def _append_note(existing: str | None, addition: str, now: str) -> str:
     if not existing:
         return entry
     return f"{existing.rstrip()}\n{entry}"
+
+
+# ----------------------- verification persistence -----------------------
+
+
+def save_verification_results(
+    session: Session,
+    run_id: str,
+    results: Sequence[VerificationResult],
+) -> list[Verification]:
+    """Persist a batch of `VerificationResult` rows for an extraction run.
+
+    Results missing `descriptor_id` or `citation_id` are skipped (a
+    `VerificationResult` constructed outside a stored descriptor is not
+    persistable). Each row gets a fresh uuid; re-running verify for the
+    same descriptor/citation/run appends new rows rather than overwriting,
+    so verdict history stays queryable.
+
+    Returns the inserted rows, in input order.
+    """
+    import uuid
+
+    now = _now()
+    inserted: list[Verification] = []
+    for result in results:
+        if result.descriptor_id is None or result.citation_id is None:
+            continue
+        row = Verification(
+            id=str(uuid.uuid4()),
+            descriptor_id=result.descriptor_id,
+            citation_id=result.citation_id,
+            run_id=run_id,
+            score=float(result.score),
+            status=result.status,
+            rationale=result.rationale,
+            judge_status=result.judge_status,
+            judge_rationale=result.judge_rationale,
+            created_at=now,
+        )
+        session.add(row)
+        inserted.append(row)
+    session.commit()
+    for row in inserted:
+        session.refresh(row)
+    return inserted

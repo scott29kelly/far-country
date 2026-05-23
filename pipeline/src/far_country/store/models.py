@@ -1,12 +1,12 @@
 """SQLAlchemy ORM models for the canonical store.
 
-These mirror the raw-SQL schema in `migrations/0001_initial.sql`, which is the
-source of truth. When the schema changes, update both files together.
+These mirror the raw-SQL schema in `migrations/`, which is the source of
+truth. When the schema changes, update both files together.
 """
 
 from __future__ import annotations
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, Text
+from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, Integer, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 ENTITY_TYPES = ("person", "place", "thing", "event", "attribute")
@@ -14,6 +14,7 @@ TIERS = ("clear", "fuzzy", "debated", "symbolic")
 TEMPORAL_PHASES = ("intermediate", "final", "either", "unspecified")
 REVIEW_STATUSES = ("pending", "approved", "rejected", "needs-discussion")
 SOURCE_TYPES = ("scripture", "willis", "secondary")
+VERIFICATION_STATUSES = ("pass", "partial", "fail")
 
 
 def _in_clause(column: str, values: tuple[str, ...]) -> str:
@@ -127,3 +128,38 @@ class ExtractionRun(Base):
     source_scope: Mapped[str] = mapped_column(Text, nullable=False)
     descriptor_count: Mapped[int | None] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(Text)
+
+
+class Verification(Base):
+    """One citation-verification check, persisted from `far-country verify run`.
+
+    Mirrors `verify.VerificationResult`, plus the `run_id` it was produced
+    under and a `created_at` stamp. Re-running verification inserts a new
+    row rather than overwriting — past verdicts stay queryable.
+    """
+
+    __tablename__ = "verification"
+    __table_args__ = (
+        CheckConstraint(
+            _in_clause("status", VERIFICATION_STATUSES),
+            name="ck_verification_status",
+        ),
+        CheckConstraint(
+            f"judge_status IS NULL OR {_in_clause('judge_status', VERIFICATION_STATUSES)}",
+            name="ck_verification_judge_status",
+        ),
+        Index("idx_verification_run", "run_id"),
+        Index("idx_verification_descriptor", "descriptor_id"),
+        Index("idx_verification_citation", "citation_id"),
+    )
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    descriptor_id: Mapped[str] = mapped_column(Text, ForeignKey("descriptor.id"), nullable=False)
+    citation_id: Mapped[str] = mapped_column(Text, ForeignKey("citation.id"), nullable=False)
+    run_id: Mapped[str] = mapped_column(Text, ForeignKey("extraction_run.id"), nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    judge_status: Mapped[str | None] = mapped_column(Text)
+    judge_rationale: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)
