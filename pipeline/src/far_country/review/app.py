@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from far_country.review.verses import lookup_verses
 from far_country.store import (
     DEFAULT_DB_PATH,
     DescriptorNotFoundError,
@@ -63,6 +64,7 @@ def create_app(db_path: "Path | str | None" = None) -> FastAPI:
     app.state.db_path = resolved
 
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
+    templates.env.globals["lookup_verses"] = lookup_verses
     app.state.templates = templates
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

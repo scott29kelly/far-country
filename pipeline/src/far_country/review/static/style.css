@@ -71,8 +71,25 @@ table.runs td.num, table.runs th.num { text-align: right; }
 
 .statement { margin: 0.4rem 0; font-size: 1.05rem; }
 .referent { font-size: 0.9rem; color: var(--fg-muted); margin: 0.25rem 0; }
-.citations { list-style: none; padding: 0; margin: 0.25rem 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.citations { list-style: none; padding: 0; margin: 0.5rem 0 0.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .citations li code { background: #ecebe7; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85rem; }
+.citations .verse-text {
+  margin: 0.35rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--border);
+  background: #f7f6f2;
+  font-size: 0.95rem;
+  color: var(--fg);
+  line-height: 1.5;
+}
+.citations .verse-num {
+  display: inline-block;
+  font-size: 0.7rem;
+  vertical-align: super;
+  color: var(--fg-muted);
+  margin-right: 0.15rem;
+}
+.citations .verse-missing { font-size: 0.85rem; margin-left: 0.4rem; }
 .reviewer-notes { background: #f4f3ef; padding: 0.5rem 0.75rem; border-radius: 4px; font-size: 0.85rem; white-space: pre-wrap; }
 
 .actions { margin-top: 0.6rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
