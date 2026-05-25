@@ -8,6 +8,8 @@
     <p class="muted">{{ total }} descriptor(s)</p>
   </header>
 
+  {% include "_review_help.html" %}
+
   {% if rows %}
   <ul class="descriptor-list">
     {% for row in rows %}

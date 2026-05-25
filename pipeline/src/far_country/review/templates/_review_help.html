@@ -1,0 +1,31 @@
+<details class="review-help" open>
+  <summary>What am I approving?</summary>
+  <div class="review-help-body">
+    <p>
+      Each row is a single descriptor — an atomic claim about heaven, grounded in
+      the cited verse(s), classified by a curator-assigned tier, and (when symbolic)
+      pointed at what the symbol refers to. <strong>Approving the row affirms all
+      four interpretive claims at once:</strong>
+    </p>
+    <ol>
+      <li>The <strong>statement</strong> is a true claim about heaven grounded in the cited verse(s).</li>
+      <li>The <strong>tier</strong> classification is correct (<code>clear</code> / <code>fuzzy</code> / <code>debated</code> / <code>symbolic</code>).</li>
+      <li>The <strong>symbolic_referent</strong> (when tier is symbolic) accurately captures what the symbol points to — not just a restatement of the surface image.</li>
+      <li>The <strong>citation</strong> (book, chapter, verses) is correct.</li>
+    </ol>
+
+    <p>If you agree with most of a row but disagree on one claim, use <strong>Edit</strong> — don't reject. Decision triage:</p>
+    <ul>
+      <li><strong>Approve</strong> — all four claims look right.</li>
+      <li><strong>Edit</strong> — claim is fine but tier, referent, statement wording, or citation needs adjusting. Edit returns the row to <code>pending</code> for your re-approval.</li>
+      <li><strong>Reject</strong> — the descriptor doesn't belong in the dataset at all. Use for hallucinations (verse doesn't say this), paraphrase-bloat that adds nothing the verse doesn't say, duplicates, or claims that aren't really about <em>heaven</em>. Requires reviewer notes.</li>
+      <li><strong>Discuss</strong> — you want a second pass on a theological judgment before deciding. Parks the row for batched follow-up.</li>
+    </ul>
+
+    <p class="muted">
+      Keyboard: <kbd>a</kbd> approve · <kbd>r</kbd> reject · <kbd>d</kbd> discuss · <kbd>e</kbd> edit.
+      Approval feeds the canonical dataset that grounds Phase 2 Q&amp;A and (later) Phase 3's 3D world.
+      Symbolic-vs-literal rendering decisions are downstream policy (ADR 0009 / 0010) — they don't belong in this judgment.
+    </p>
+  </div>
+</details>

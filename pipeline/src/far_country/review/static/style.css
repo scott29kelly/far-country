@@ -50,11 +50,41 @@ table.runs th, table.runs td { padding: 0.4rem 0.6rem; border-bottom: 1px solid 
 table.runs td.num, table.runs th.num { text-align: right; }
 
 .descriptor-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
-.descriptor-row { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+.descriptor-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
 .descriptor-row.tier-symbolic { border-left: 4px solid var(--warn); }
 .descriptor-row.tier-debated { border-left: 4px solid var(--danger); }
 .descriptor-row.tier-fuzzy { border-left: 4px solid var(--discuss); }
 .descriptor-row.tier-clear { border-left: 4px solid var(--accent); }
+
+/* Decision states: once the reviewer acts, the row recolors as a whole
+   so it clearly visually moves out of the "still needs my attention"
+   bucket. Pending rows keep the white background + tier-coded border. */
+.descriptor-row.status-approved {
+  background: #f1f6ea;
+  border-color: #c9dcb5;
+  border-left-color: var(--accent);
+  opacity: 0.78;
+}
+.descriptor-row.status-rejected {
+  background: #faecec;
+  border-color: #e6c4c4;
+  border-left-color: var(--danger);
+  opacity: 0.62;
+}
+.descriptor-row.status-rejected .statement { text-decoration: line-through; }
+.descriptor-row.status-needs-discussion {
+  background: #eaf1f7;
+  border-color: #bfd3e3;
+  border-left-color: var(--discuss);
+  /* No opacity drop — needs-discussion rows still want active attention. */
+}
+.descriptor-row:hover { opacity: 1; }
 
 .row-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .entity-link { font-weight: 600; text-decoration: none; }
@@ -90,6 +120,33 @@ table.runs td.num, table.runs th.num { text-align: right; }
   margin-right: 0.15rem;
 }
 .citations .verse-missing { font-size: 0.85rem; margin-left: 0.4rem; }
+
+.judge-badge, .kw-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  margin-left: 0.35rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.judge-pass { background: #d8e5cc; color: var(--accent); }
+.judge-partial { background: #f1d9b8; color: var(--warn); }
+.judge-fail { background: #efd1d1; color: var(--danger); }
+.kw-pass { background: #ecebe7; color: var(--fg-muted); }
+.kw-partial { background: #f4e3c8; color: var(--warn); }
+.kw-fail { background: #efd1d1; color: var(--danger); }
+
+.judge-rationale {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--fg);
+  background: #f7f4ec;
+  border-left: 3px solid var(--warn);
+  padding: 0.4rem 0.6rem;
+  border-radius: 0 4px 4px 0;
+}
+.judge-rationale strong { color: var(--warn); }
 .reviewer-notes { background: #f4f3ef; padding: 0.5rem 0.75rem; border-radius: 4px; font-size: 0.85rem; white-space: pre-wrap; }
 
 .actions { margin-top: 0.6rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -106,6 +163,37 @@ table.runs td.num, table.runs th.num { text-align: right; }
 .actions button:hover, .actions .button-like:hover { background: var(--bg); }
 
 .pager { margin: 1.25rem 0; display: flex; gap: 1.5rem; }
+
+.review-help {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0 1.25rem;
+}
+.review-help > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.35rem 0;
+  list-style: revert;
+}
+.review-help > summary:hover { color: var(--accent); }
+.review-help-body { padding-top: 0.25rem; }
+.review-help-body p { margin: 0.5rem 0; }
+.review-help-body ol, .review-help-body ul { margin: 0.4rem 0 0.8rem 1.25rem; padding: 0; }
+.review-help-body li { margin: 0.2rem 0; }
+.review-help-body code { background: #ecebe7; padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.85rem; }
+.review-help-body kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 0.05rem 0.35rem;
+  margin: 0 0.05rem;
+}
 
 .edit-form { display: flex; flex-direction: column; gap: 0.75rem; max-width: 600px; }
 .edit-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; color: var(--fg-muted); }

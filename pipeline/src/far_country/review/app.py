@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from far_country.review.verifications import latest_verdicts_for_descriptor
 from far_country.review.verses import lookup_verses
 from far_country.store import (
     DEFAULT_DB_PATH,
@@ -65,6 +66,14 @@ def create_app(db_path: "Path | str | None" = None) -> FastAPI:
 
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     templates.env.globals["lookup_verses"] = lookup_verses
+
+    def _verdicts_for(descriptor_id: str) -> dict:
+        # Open a short-lived session so templates can call this freely.
+        # Verifications are read-only here; no transactional concerns.
+        with session_factory() as s:
+            return latest_verdicts_for_descriptor(s, descriptor_id)
+
+    templates.env.globals["verdicts_for"] = _verdicts_for
     app.state.templates = templates
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

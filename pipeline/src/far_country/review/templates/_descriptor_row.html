@@ -15,11 +15,23 @@
   <p class="referent"><em>Refers to:</em> {{ row.descriptor.symbolic_referent }}</p>
   {% endif %}
 
+  {% set verdicts = verdicts_for(row.descriptor.id) %}
   <ul class="citations">
     {% for c in row.citations %}
+    {% set verdict = verdicts.get(c.id) %}
     <li class="citation">
       {% if c.source_type == 'scripture' %}
         <code>{{ c.book }} {{ c.chapter }}:{{ c.verse_start }}{% if c.verse_end and c.verse_end != c.verse_start %}&ndash;{{ c.verse_end }}{% endif %}</code>
+        {% if verdict and verdict.judge_status %}
+          <span class="judge-badge judge-{{ verdict.judge_status }}" title="LLM judge verdict (claude-sonnet-4-6)">
+            judge: {{ verdict.judge_status }}
+          </span>
+        {% endif %}
+        {% if verdict %}
+          <span class="kw-badge kw-{{ verdict.status }}" title="Keyword-overlap score {{ '%.2f'|format(verdict.score) }}">
+            kw: {{ verdict.status }} ({{ '%.2f'|format(verdict.score) }})
+          </span>
+        {% endif %}
         {% set verses = lookup_verses(c.book, c.chapter, c.verse_start, c.verse_end) %}
         {% if verses %}
         <blockquote class="verse-text">
@@ -27,6 +39,9 @@
         </blockquote>
         {% else %}
         <span class="verse-missing muted">(text not cached locally)</span>
+        {% endif %}
+        {% if verdict and verdict.judge_rationale %}
+        <p class="judge-rationale"><strong>Judge ({{ verdict.judge_status }}):</strong> {{ verdict.judge_rationale }}</p>
         {% endif %}
       {% elif c.source_type == 'willis' %}
         <code>Willis ch. {{ c.willis_chapter }}, p. {{ c.willis_page_start }}{% if c.willis_page_end and c.willis_page_end != c.willis_page_start %}&ndash;{{ c.willis_page_end }}{% endif %}</code>
