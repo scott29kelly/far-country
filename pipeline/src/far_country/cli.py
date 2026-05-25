@@ -63,6 +63,7 @@ from far_country.verify import (
     VerificationResult,
     verify_descriptor,
 )
+from far_country.verify.llm_judge import DEFAULT_JUDGE_MODEL, make_anthropic_judge
 
 load_dotenv(find_dotenv(usecwd=True))
 
@@ -357,15 +358,42 @@ def verify_run(
             help="Compute and print results but skip writing to the verification table.",
         ),
     ] = False,
+    judge: Annotated[
+        bool,
+        typer.Option(
+            "--judge",
+            help=(
+                "Also call the Anthropic LLM judge on every citation. "
+                "Reads the cited passage text and judges substantive support; "
+                "fills judge_status/judge_rationale on the verification rows. "
+                "Requires ANTHROPIC_API_KEY."
+            ),
+        ),
+    ] = False,
+    judge_model: Annotated[
+        str,
+        typer.Option(
+            "--judge-model",
+            help="Anthropic model id for the judge (default: claude-sonnet-4-6).",
+        ),
+    ] = DEFAULT_JUDGE_MODEL,
 ) -> None:
     """Run keyword-overlap citation verification over the descriptors of a run.
 
     Descriptors are matched by the `run_id` embedded in `descriptor.provenance`.
     Results are written to the `verification` table unless `--no-persist` is given.
+    Pass `--judge` to additionally call the LLM-as-judge for each citation.
     """
     engine = create_engine_for_path(db_path)
     init_db(engine)
     session_factory = create_session_factory(engine)
+
+    judge_caller = None
+    if judge:
+        from anthropic import Anthropic  # imported lazily — only when judging
+
+        anthropic_client = Anthropic()
+        judge_caller = make_anthropic_judge(anthropic_client, model=judge_model)
 
     # One session spans the whole flow: descriptors carry lazy-loaded
     # `.citations` that the verifier accesses, and persisting the results
@@ -385,7 +413,7 @@ def verify_run(
 
         fetcher = _ESVOnlyFetcher(client)
         for descriptor in descriptors_by_id:
-            results.extend(verify_descriptor(descriptor, fetcher=fetcher))
+            results.extend(verify_descriptor(descriptor, fetcher=fetcher, judge=judge_caller))
 
         if not no_persist and results:
             persisted = len(save_verification_results(session, run_id, results))
