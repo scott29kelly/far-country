@@ -21,9 +21,34 @@
  *   FAR_COUNTRY_DRY_RUN     — "1" prints what would be embedded and exits
  */
 
-import { promises as fs } from "node:fs";
+import { promises as fs, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+
+// Load repo-root .env so OPENAI_API_KEY (per ADR 0007) is visible when this
+// script runs via `npm --prefix apps/web run build:index` from the repo root.
+// We don't pull in a dotenv dep — this is a single-line build script need.
+function loadRepoRootEnv(): void {
+  const candidate = path.resolve(process.cwd(), "..", "..", ".env");
+  const fallback = path.resolve(process.cwd(), ".env");
+  const envPath = existsSync(candidate) ? candidate : existsSync(fallback) ? fallback : null;
+  if (envPath === null) return;
+  for (const line of readFileSync(envPath, "utf-8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    if (process.env[key] !== undefined) continue;
+    let value = trimmed.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
+}
+
+loadRepoRootEnv();
 
 import {
   EMBEDDING_INDEX_SCHEMA_VERSION,
