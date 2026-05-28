@@ -1,5 +1,7 @@
 "use client";
 
+import { Html } from "@react-three/drei";
+
 import {
   CITY_HALF,
   GATE_HEIGHT,
@@ -44,6 +46,13 @@ function SingleGate({ gate }: { gate: (typeof GATES)[number] }) {
   const [x, , z] = gate.position;
   const yMid = GATE_HEIGHT / 2;
 
+  // Tribe label sits just above the lintel, anchored at the gate's center.
+  // drei's <Html> auto-faces the camera, so a single label per gate is
+  // readable from both inside and outside the city. The label is placed
+  // higher than the wall top (30m) so it never gets buried inside the
+  // jasper wall when viewed at low angles.
+  const labelY = GATE_HEIGHT + 5;
+
   if (isHorizontalSide) {
     return (
       <group position={[x, 0, z]}>
@@ -71,6 +80,7 @@ function SingleGate({ gate }: { gate: (typeof GATES)[number] }) {
             z > 0 ? -0.5 : 0.5,
           ]}
         />
+        <TribeLabel tribe={gate.tribe} position={[0, labelY, 0]} />
       </group>
     );
   }
@@ -96,7 +106,35 @@ function SingleGate({ gate }: { gate: (typeof GATES)[number] }) {
           0,
         ]}
       />
+      <TribeLabel tribe={gate.tribe} position={[0, labelY, 0]} />
     </group>
+  );
+}
+
+/**
+ * Pearl-tinted floating tribe label. Uses drei's <Html> so the label is
+ * a DOM div positioned at a 3D point and auto-billboards toward the camera —
+ * far lighter on the GPU than SDF text, and avoids the headless-Chromium
+ * WebGL context loss that troika-three-text triggers with 12+ instances.
+ */
+function TribeLabel({
+  tribe,
+  position,
+}: {
+  tribe: string;
+  position: [number, number, number];
+}) {
+  return (
+    <Html
+      position={position}
+      center
+      distanceFactor={28}
+      style={{ pointerEvents: "none", userSelect: "none" }}
+    >
+      <div className="whitespace-nowrap rounded-sm border border-[#fff4d0]/40 bg-[#1c1208]/60 px-2 py-0.5 font-semibold text-[#fff4d0] [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">
+        {tribe}
+      </div>
+    </Html>
   );
 }
 

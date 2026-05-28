@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Vector3 } from "three";
 
+import { anyBlockerContains, BLOCKERS } from "../data/collision";
 import { useWorldStore } from "../state/worldStore";
 
 /**
@@ -142,7 +143,19 @@ export function FirstPersonControls() {
       move.current.normalize();
       const speed = k.sprint ? SPRINT_SPEED : WALK_SPEED;
       move.current.multiplyScalar(speed * delta);
-      camera.position.add(move.current);
+      // Per-axis resolution so the player slides along walls instead of
+      // sticking. If the X step would land inside a blocker, revert X;
+      // same for Z. Vertical (Y) movement bypasses collision so the user
+      // can always fly out of a stuck state (gates pass freely because
+      // the wall spans have gate cutouts; throne footprint is solid).
+      const startX = camera.position.x;
+      const startZ = camera.position.z;
+      const wantX = startX + move.current.x;
+      const wantZ = startZ + move.current.z;
+      const blockedX = anyBlockerContains(BLOCKERS, wantX, startZ);
+      const blockedZ = anyBlockerContains(BLOCKERS, startX, wantZ);
+      camera.position.x = blockedX ? startX : wantX;
+      camera.position.z = blockedZ ? startZ : wantZ;
     }
     if (k.up) camera.position.y += VERTICAL_SPEED * delta;
     if (k.down) camera.position.y -= VERTICAL_SPEED * delta;

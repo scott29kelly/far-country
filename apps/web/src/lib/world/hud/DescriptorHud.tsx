@@ -99,8 +99,8 @@ function ClickToBeginHint() {
   return (
     <div className="rounded-lg border border-(--color-border) bg-(--color-card)/95 px-3 py-2 text-xs text-(--color-fg-muted) shadow">
       Click the scene to begin. WASD to move, mouse to look, Shift to sprint,
-      Space/C to fly up/down, ESC to release. No collision — you can walk
-      through walls.
+      Space/C to fly up/down, ESC to release. Walls block you — pass through
+      a gate to leave the city.
     </div>
   );
 }

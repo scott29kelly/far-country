@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 
+import { Compass } from "./hud/Compass";
 import { DescriptorHud } from "./hud/DescriptorHud";
 
 /**
@@ -28,6 +29,7 @@ export function WorldClient() {
   return (
     <div className="relative h-[calc(100vh-13rem)] min-h-[600px] w-full overflow-hidden bg-[#1a140a]">
       <Scene />
+      <Compass />
       <DescriptorHud />
       <Crosshair />
     </div>

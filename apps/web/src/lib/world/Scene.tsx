@@ -59,8 +59,10 @@ export function Scene() {
  */
 function ProximityWatcher() {
   const setNearbyEntity = useWorldStore((s) => s.setNearbyEntity);
+  const setCompass = useWorldStore((s) => s.setCompass);
   const lastCheck = useRef(0);
   const cameraXZ = useRef(new Vector3());
+  const camDir = useRef(new Vector3());
 
   useFrame((state, delta) => {
     lastCheck.current += delta;
@@ -68,10 +70,19 @@ function ProximityWatcher() {
     lastCheck.current = 0;
 
     const camera = state.camera;
+
+    // Compass: camera yaw and bearing to the throne (origin), both
+    // measured the same way — 0 = facing -Z (north), positive = counter-
+    // clockwise viewed from above. atan2(x, -z) gives that convention.
+    camera.getWorldDirection(camDir.current);
+    const yaw = Math.atan2(camDir.current.x, -camDir.current.z);
+    const throneBearing = Math.atan2(-camera.position.x, camera.position.z);
+    setCompass(yaw, throneBearing);
+
+    // Nearest POI.
     let match: string | null = null;
     for (const poi of POIS) {
       if (poi.global === true) {
-        // Save the first global as a fallback if no anchored match wins.
         if (!match) match = poi.slug;
         continue;
       }
