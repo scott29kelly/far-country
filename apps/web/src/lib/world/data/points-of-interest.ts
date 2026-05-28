@@ -181,6 +181,28 @@ export const POIS: Poi[] = [
     position: [-40, 0, -40],
     radius: 25,
   },
+  // Tree of Life — both flanking trees share the same entity slug; either
+  // anchor wins when the player approaches that bank.
+  {
+    slug: "tree-of-life",
+    label: "Tree of Life",
+    position: [-5, 0, 55],
+    radius: 10,
+  },
+  {
+    slug: "tree-of-life",
+    label: "Tree of Life",
+    position: [5, 0, 55],
+    radius: 10,
+  },
+  // River of Life — anchor in the middle of the channel. Wider radius so
+  // walking alongside the river surfaces it.
+  {
+    slug: "river-of-the-water-of-life",
+    label: "River of Life",
+    position: [0, 0, 55],
+    radius: 18,
+  },
   // Glory of God illuminating the city — anchored high above the throne.
   // The radius is generous because the lit sky is a global condition.
   {

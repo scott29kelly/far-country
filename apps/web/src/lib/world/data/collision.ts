@@ -20,6 +20,7 @@ import {
   GATE_WIDTH,
   WALL_THICKNESS,
 } from "./points-of-interest";
+import { TREE_POSITIONS, TREE_TRUNK_RADIUS } from "./world-geometry";
 
 export type Rect = {
   /** Inclusive min on X. */
@@ -116,6 +117,20 @@ export function buildBlockers(): Rect[] {
     minZ: -THRONE_HALF - r,
     maxZ: THRONE_HALF + r,
   });
+
+  // Tree trunks — small AABB around each trunk's footprint so the player
+  // walks around it. Approximating a circular trunk with a square is fine
+  // at this scale; the canopy overhead is not collision-relevant since
+  // it's well above head height.
+  const trunkR = TREE_TRUNK_RADIUS + r;
+  for (const [tx, tz] of TREE_POSITIONS) {
+    rects.push({
+      minX: tx - trunkR,
+      maxX: tx + trunkR,
+      minZ: tz - trunkR,
+      maxZ: tz + trunkR,
+    });
+  }
 
   return rects;
 }

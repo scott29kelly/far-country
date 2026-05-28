@@ -7,8 +7,10 @@ import { Vector3 } from "three";
 import { CityShell } from "./components/CityShell";
 import { Gates } from "./components/Gate";
 import { Ground } from "./components/Ground";
+import { River } from "./components/River";
 import { Skybox } from "./components/Skybox";
 import { Throne } from "./components/Throne";
+import { TreesOfLife } from "./components/TreeOfLife";
 import { FirstPersonControls } from "./controls/FirstPersonControls";
 import { CITY_HALF, POIS } from "./data/points-of-interest";
 import { useWorldStore } from "./state/worldStore";
@@ -41,6 +43,8 @@ export function Scene() {
       <Ground />
       <CityShell />
       <Gates />
+      <River />
+      <TreesOfLife />
       <Throne />
 
       <ProximityWatcher />
