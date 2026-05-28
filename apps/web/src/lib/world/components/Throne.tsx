@@ -1,22 +1,12 @@
 "use client";
 
 /* -----------------------------------------------------------------------------
- * ANICONIC POLICY — DO NOT VIOLATE
+ * ANICONIC POLICY — see docs/adr/0010-aniconic-policy.md
  *
- * The throne is rendered as ABSTRACT GEOMETRY ONLY. Never as a humanoid form,
- * face, eyes, hair, hands, gender cue, crown, beard, Lamb figure, or any other
- * iconographic marker of a divine person.
- *
- * Rationale: Scripture itself is careful here — Ezek 1:26 describes "a likeness
- * with a human appearance" rather than naming a person; Rev 4:2 says "one
- * seated on the throne" with no description of who; Ex 33:20 — "you cannot see
- * my face." Geometry forces commitments that text and citations do not. If we
- * put a figure on the throne, we have answered theological questions the
- * dataset deliberately leaves open.
- *
- * This component is the load-bearing aniconic choice in the Phase 3 MVP. If a
- * future ADR (planned: ADR 0010) reverses this policy, it must be a deliberate,
- * documented decision — not a drift in a follow-up commit.
+ * The throne is rendered as ABSTRACT GEOMETRY ONLY. No humanoid form, face,
+ * eyes, hair, hands, gender cue, crown, beard, Lamb figure, or any other
+ * iconographic marker of a divine person. Reversing this is an ADR-level
+ * decision (a new ADR superseding 0010), not a code-level override.
  * --------------------------------------------------------------------------- */
 
 export function Throne() {
