@@ -42,6 +42,14 @@ export default function RootLayout({
                   Ask
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/world"
+                  className="text-(--color-fg-muted) hover:text-(--color-accent)"
+                >
+                  World
+                </Link>
+              </li>
             </ul>
           </nav>
         </header>
