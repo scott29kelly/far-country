@@ -54,6 +54,10 @@ data/cache/
 *.log
 logs/
 
+# Playwright MCP local artifacts (screenshots, console logs, snapshots)
+.playwright-mcp/
+*-mvp-initial.png
+
 # OS / editor
 .DS_Store
 Thumbs.db
