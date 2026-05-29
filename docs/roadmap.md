@@ -57,18 +57,22 @@ After Phase 0 lands, the PRD is locked. Subsequent changes require a new ADR.
 
 ---
 
-## Phase 3 — Explorable 3D world
+## Phase 3 — Explorable 3D world *(in progress)*
 
 **Deliverable:** A React Three Fiber layer inside the same Next.js app that procedurally renders the New Jerusalem and lets the user walk through it.
 
 **Milestones:**
 
-1. **M3.1 — Scene scaffolding.** R3F + drei set up; camera controls (orbit + WASD/touch); placeholder geometry.
-2. **M3.2 — City shell.** Procedural city walls (Rev 21:12–17) with twelve gates and twelve foundations.
-3. **M3.3 — Throne, river, tree of life.** Core central features (Rev 22:1–2).
-4. **M3.4 — Entity interaction.** Click an object → see its descriptor card (tier, citations, links).
-5. **M3.5 — Symbolic indicators.** Visual treatment that distinguishes literal from symbolic features at a glance.
-6. **M3.6 — Population.** A representative set of named persons/categorical persons present in the scene.
+1. **M3.1 — Scene scaffolding.** *(done)* R3F + drei set up; first-person WASD + pointer-lock controls; placeholder geometry; client-only Canvas via `next/dynamic`.
+2. **M3.2 — City shell.** *(done)* Procedural jasper walls (Rev 21:12–17), twelve pearl gates with tribe labels in **Ezekiel 48:30–34 order** (compass side shown in each label), a jewelled twelve-foundation course at the wall base (Rev 21:19–20, ESV gems), AABB wall/gate collision.
+3. **M3.3 — Step-mountain, throne, river, tree of life.** *(done)* City rendered as Willis's **terraced step pyramid** of translucent crystalline terraces (Rev 21:11, 18) with the **aniconic throne at the summit** (ADR 0010) under a cloud-and-fire glory canopy (Isa 4:5–6); single river of life **cascading from the summit throne down the south meridian** terrace by terrace to the south gate (Rev 22:1); flanking trees of life with twelve-fruit specks at the river's base (Rev 22:2). Movement is terrain-following (fly up with Space to ascend terraces); a click-to-teleport mini-map jumps to any gate, the summit, or a tree.
+4. **M3.4 — Entity interaction.** *(partial)* Proximity HUD surfaces the nearest entity's descriptor cards with tier badges + citations; click-to-open routes to `/entities/[slug]`. Direct object click-picking still pending.
+5. **M3.5 — Symbolic indicators.** *(partial)* Symbolic features render in stylised, luminous, slightly-unphysical form per ADR 0009; HUD tier badges disclose symbolism. A dedicated at-a-glance literal-vs-symbolic visual key is still pending.
+6. **M3.6 — Population.** *(not started)* A representative set of named/categorical non-divine persons present in the scene. Policy: figural non-divine persons permitted; divine persons remain aniconic (ADR 0010); symbolic-tier figures (four living creatures, 24 elders) deferred to `RENDERING-DECISIONS.md`. See [`adr/0011-population-rendering-policy.md`](adr/0011-population-rendering-policy.md).
+
+> **Rendering note (city form).** The city's vertical form (step pyramid, not cube) and the gate tribe order (Ezekiel 48, not Revelation 7) are `debated`-tier rendering decisions documented in [`RENDERING-DECISIONS.md`](../RENDERING-DECISIONS.md) entries #1 and #2 per ADR 0009 rule 4. Scale stays the ~200m placeholder (ADR 0009 rule 6) — only the shape changed.
+
+> **Rendering note (river).** The river of life is rendered as a *single* channel, not as cardinal branches. Rev 22:1 describes one river ("*a* river... flowing from the throne... through the middle of the street"); the four-headed river belongs to Eden (Gen 2:10) and divides *downstream* of the garden. The universal-scope symbolism that Eden's fourfold river carries is, in Revelation, expressed by the foursquare twelve-gate city (Rev 21:13, 16) — which the world already renders — not by multiplying the river. See `apps/web/src/lib/world/components/River.tsx` and ADR 0009.
 
 **Done when:** A user can walk through a recognizable representation of the New Jerusalem on a mid-range laptop, click any major feature, and see a sourced descriptor for it.
 
