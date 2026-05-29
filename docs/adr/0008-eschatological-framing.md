@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-05-25
 - **Supersedes:** Partially supersedes [`0005-hermeneutic-policy.md`](0005-hermeneutic-policy.md) — specifically the implicit treatment of the intermediate state and the millennium as live interpretive options. The conservative-Protestant, literal-where-possible policy of ADR 0005 still stands as the base; this ADR locks the eschatological framing inside it.
-- **Superseded by:** —
+- **Superseded by:** [`0012-eschatological-framing-premillennial.md`](0012-eschatological-framing-premillennial.md) — the amillennial framing locked here was a deliberate temporary simplification; ADR 0012 replaces it with premillennial (pre-wrath) New Creationism. The body below is left intact as the historical record.
 
 ## Context
 

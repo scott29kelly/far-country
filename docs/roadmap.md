@@ -80,6 +80,27 @@ After Phase 0 lands, the PRD is locked. Subsequent changes require a new ADR.
 
 ---
 
+## Phase 4 — Millennial-Kingdom surroundings *(planned)*
+
+**Deliverable:** The premillennial *setting* around the New Jerusalem, built out in the same `/world` scene. Phase 3 rendered the descended city; Phase 4 renders the millennial earth it descends onto.
+
+This phase exists because of the eschatological pivot in [`adr/0012-eschatological-framing-premillennial.md`](adr/0012-eschatological-framing-premillennial.md). Under the prior amillennial framing ([ADR 0008](adr/0008-eschatological-framing.md)) these features were out of scope ("one heaven, no millennial earth"); ADR 0012 adopts Willis's premillennial New Creationism in full and puts them on the roadmap. The four milestones follow Willis's harmonization of Ezekiel with Revelation — see [`sources/willis-new-jerusalem-model.md`](sources/willis-new-jerusalem-model.md).
+
+**Milestones:**
+
+1. **M4.1 — Ezekiel 40–48 temple complex.** The literal future millennial temple as a structure **distinct from and adjacent to** the city (Willis's "Washington D.C." adjacency; Rev 21:22 — no temple *inside* the New Jerusalem; Ezek 48:10 priestly allotment). Outer/inner courts, gates, and the sanctuary per Ezekiel's measurements, rendered aniconically where divine presence is in view (ADR 0010 still controls). Genuinely contested sub-questions (e.g. the function of the temple sacrifices, Ezek 40–46) are `debated`-tier and get a `RENDERING-DECISIONS.md` entry before geometry lands (ADR 0009 rule 4).
+2. **M4.2 — Holy Allotment + tribal geography.** The Ezekiel 48 land division — the holy district, the prince's portion, and the twelve tribal strips — as legible landscape around the temple and city. This is the macro-geography the city and temple sit within.
+3. **M4.3 — Ezekiel 47 healing river.** The river issuing **from the temple** (Ezek 47:1–12), flowing east toward the Arabah and healing the waters, with trees on its banks. This is a **second, distinct** water feature from the Rev 22:1 city river already built in M3.3 (which cascades from the summit throne). The two rivers must read as distinct in-scene — different source (temple vs. throne), different course — and the dataset/HUD must not conflate them.
+4. **M4.4 — Mortal nations + pilgrimage dynamism.** The millennial earth is inhabited by mortal nations alongside resurrected saints; the city's perpetually-open gates (Rev 21:25) take on their premillennial meaning — nations and kings bring their glory in (Rev 21:24–26) and make pilgrimage to worship (Zech 14:16). A representative, non-static depiction of that movement. Figural non-divine persons follow [`adr/0011-population-rendering-policy.md`](adr/0011-population-rendering-policy.md); divine persons remain aniconic (ADR 0010).
+
+> **Dependency note.** Phase 4 assumes the descriptors for these features have been extracted and reviewed (Phase 1) under the premillennial rubric of ADR 0012 — which inverts ADR 0008's rubric polarity (a literal Ezekiel temple, first resurrection, and intermediate state are now *approvable*). The Phase-3 city does not need to be rebuilt; Phase 4 is additive.
+
+**Done when:** A user can walk out from the New Jerusalem into a recognizable millennial landscape — see the adjacent temple, the tribal land division, the healing river distinct from the city river — with every major feature sourced.
+
+**Spec stub:** *(to be written)*.
+
+---
+
 ## What's deliberately not on the roadmap
 
 - Multiplayer / social.
@@ -95,3 +116,5 @@ After Phase 0 lands, the PRD is locked. Subsequent changes require a new ADR.
 ## Re-prioritization
 
 This roadmap is reviewed at the end of each phase. Material reshuffling (e.g., promoting the 3D layer before Q&A, or splitting Phase 2) is captured in a new ADR.
+
+**2026-05-29 — eschatological pivot.** [ADR 0012](adr/0012-eschatological-framing-premillennial.md) superseded the amillennial framing of [ADR 0008](adr/0008-eschatological-framing.md) with premillennial (pre-wrath) New Creationism. This **added Phase 4 (Millennial-Kingdom surroundings)**, which the prior framing had ruled out of scope. The earlier phases are unchanged in deliverable; only the extraction/review rubric polarity shifts (per ADR 0012's consequences) and the Phase-3 city gains a millennial *setting* rather than being modified.

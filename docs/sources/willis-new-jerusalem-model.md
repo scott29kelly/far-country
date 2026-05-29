@@ -141,10 +141,11 @@ Her signature, contrarian claim:
 
 ---
 
-## Eschatology — and the conflict with ADR 0008
+## Eschatology — adopted in full (ADR 0012)
 
-Willis is **premillennial (prewrath)**; her publisher (Alan Kurschner / Eschatos
-Ministries) brands her view **"Premillennial New Creationism."** Distinctives:
+Willis is **premillennial (pre-wrath)**; her publisher (Alan Kurschner /
+Eschatos Ministries) brands her view **"Premillennial New Creationism."**
+Distinctives:
 
 - A **literal future millennium**, with the New Jerusalem descending at its
   **beginning** (her argument: the tree's leaves "for the healing of the
@@ -152,26 +153,39 @@ Ministries) brands her view **"Premillennial New Creationism."** Distinctives:
   millennium), persisting "during the millennium and for all eternity."
 - **Ezekiel 40–48 as a literal future millennial temple + functioning
   priesthood** in restored national Israel.
+- **Renewal over annihilation** for the new heavens and new earth.
+- A **pre-wrath** reading of the church's relation to the tribulation (the
+  church passes through the earlier tribulation and is gathered to Christ before
+  the Day of the Lord's wrath).
 
-**This conflicts directly with [ADR 0008](../adr/0008-eschatological-framing.md)**,
-which locks the project to **Reformed amillennialism** (no future earthly
-millennium; Ezekiel's temple read typologically). Endorsers (David Burggraff,
-Shepherds Theological Seminary; commended by Erwin Lutzer) sit in the
-dispensational/premil orbit; no mainstream Reformed academic review found.
+Endorsers (David Burggraff, Shepherds Theological Seminary; commended by Erwin
+Lutzer) sit in the dispensational/premil orbit; no mainstream Reformed academic
+review found.
 
-**Project stance (2026-05-29):** The owner is personally premillennial but
-chose an amillennial framing for the *current* phase to simplify and reach the
-3D world faster, with intent to reconcile doctrinal details later once the world
-proves compelling. Accordingly:
+**Project stance (2026-05-29):** Willis's eschatology is now **adopted in full**
+as the project's framing. The project initially carried a Reformed amillennial
+framing ([ADR 0008](../adr/0008-eschatological-framing.md)) as a *temporary
+simplification* to reach the 3D world faster; that simplification has served its
+purpose and is now superseded by
+[**ADR 0012**](../adr/0012-eschatological-framing-premillennial.md), which locks
+the project to premillennial (pre-wrath) New Creationism. There is no longer any
+quarantine: Willis's framework is the project's framework. Accordingly:
 
-- **Adopt Willis's framework-portable ARCHITECTURE** in `/world` now (pyramid,
-  ~scale-deferred placeholder, summit throne, terraced gem foundations,
-  crystalline materials, glory-light, cascading single river, Ezekiel gate
-  order). These do not depend on premillennialism.
-- **Quarantine the premil-specific surroundings** (separate millennial temple +
-  priestly district, "during the millennium" framing, restored-national-Israel
-  setting) until the amil-vs-premil question is decided in a future ADR. Tag any
-  such claims `debated` if they enter the dataset.
+- **Her ARCHITECTURE remains in `/world`** (pyramid, ~scale-deferred placeholder,
+  summit throne, terraced gem foundations, crystalline materials, glory-light,
+  cascading single river, Ezekiel gate order) — as before, and was always
+  framework-portable.
+- **Her premil-specific surroundings are now in-scope build targets, not
+  quarantined material:** the literal future Ezekiel 40–48 temple + priestly
+  district (distinct from and adjacent to the city), the Holy Allotment and
+  tribal geography (Ezek 48), the Ezekiel 47 healing river issuing from the
+  temple (distinct from the Rev 22:1 city river already built), the
+  restored-national-Israel setting, and the dynamism of mortal nations making
+  pilgrimage (Zech 14:16). These are organized into the Millennial-Kingdom
+  milestone in [`roadmap.md`](../roadmap.md). Such claims enter the dataset under
+  the normal tier system (most `clear` or `fuzzy`; genuinely contested
+  sub-questions like the function of the millennial sacrifices remain `debated`)
+  — no longer auto-tagged `debated` purely for being premil-specific.
 
 See [`RENDERING-DECISIONS.md`](../../RENDERING-DECISIONS.md) entry #1 and
 [ADR 0009](../adr/0009-symbolic-vs-literal-rendering.md) rule 4.

@@ -34,9 +34,14 @@ question, the options, the choice, the rationale, and the governing source.
 The project **defers to Willis for the architecture of the 3D world** (her book
 is the primary structuring lens, per [hermeneutics.md §2](docs/hermeneutics.md)).
 Her mountain model is *framework-portable* — it does not depend on the
-premillennial eschatology that
-[the Willis source doc](docs/sources/willis-new-jerusalem-model.md) flags as in
-tension with [ADR 0008](docs/adr/0008-eschatological-framing.md). Rendering the
+premillennial eschatology at all, which is why the pyramid was safe to build
+before the eschatology question was settled. That question is now settled:
+[ADR 0012](docs/adr/0012-eschatological-framing-premillennial.md) adopts Willis's
+premillennial New Creationism in full, superseding
+[ADR 0008](docs/adr/0008-eschatological-framing.md) — and the pyramid stands
+unchanged either way (it was never quarantine-bounded; only the premil-specific
+*surroundings* were, and they are now in scope per Phase 4 of the roadmap).
+Rendering the
 city as a luminous crystal mountain with the aniconic throne at its summit
 engages the "holy mountain of God" texts the cube reading leaves on the table,
 and gives the foundations, the river, and the throne their natural vertical

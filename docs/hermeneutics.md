@@ -29,11 +29,11 @@ A descriptor cannot rest on (3) or (4) alone. There must be at least one (1) cit
 
 Scripture itself signals when language is symbolic. The signals include:
 
-- **Genre.** Apocalyptic literature (Daniel 7–12, most of Revelation), prophetic vision (Isaiah 6, Ezekiel 1, Ezekiel 40–48), and Hebrew poetry (Psalms, parts of Job) use figurative language as a normal mode. Symbolism in these passages is the default, not the exception, *for the imagery*. The realities the symbols point to are not symbolic.
+- **Genre.** Apocalyptic literature (Daniel 7–12, most of Revelation), prophetic vision (Isaiah 6, Ezekiel 1, Ezekiel 40–48), and Hebrew poetry (Psalms, parts of Job) use figurative language as a normal mode. Symbolism in these passages is the default, not the exception, *for the imagery*. The realities the symbols point to are not symbolic. (Under the project's premillennial framing — [`adr/0012-eschatological-framing-premillennial.md`](adr/0012-eschatological-framing-premillennial.md) — Ezekiel 40–48 in particular describes a *literal future millennial temple*: its visionary mode governs how its imagery is read, not whether the temple, priesthood, and ordinances it describes are real.)
 - **Visionary framing.** "I saw..." "I was in the Spirit..." "the appearance of the likeness of..." — these explicitly frame imagery as visionary representation.
 - **Stated symbolism.** Rev 1:20 ("the seven stars are the angels of the seven churches, and the seven lampstands are the seven churches") explicitly interprets a symbol.
 - **Internal absurdity if read literally.** A lamb with seven horns and seven eyes that is also slain and standing (Rev 5:6) is not asking to be diagrammed anatomically.
-- **Numerical and structural patterns.** Twelve gates, twelve foundations, 144 cubits, 1,000 years — Scripture's numerical patterns frequently carry symbolic weight, though sometimes also literal measurement.
+- **Numerical and structural patterns.** Twelve gates, twelve foundations, 144 cubits — Scripture's numerical patterns frequently carry symbolic weight, though sometimes also literal measurement. (The 1,000 years of Rev 20 is *not* among these: under the project's premillennial framing — [`adr/0012`](adr/0012-eschatological-framing-premillennial.md) — it is read as a literal future duration, not as a symbol of the present church age.)
 
 **Default rule:** if Scripture itself signals symbolism, the descriptor is marked `symbolic` with a `symbolic_referent` field naming what the symbol points to. If Scripture does not signal symbolism, the descriptor is marked `literal` (or, in cases of genuine ambiguity, `fuzzy` or `debated`).
 
@@ -57,7 +57,7 @@ Every descriptor receives one of four tiers:
 | --- | --- | --- |
 | `clear` | Scripture states the matter plainly; little or no interpretive dispute among conservative Protestant interpreters | The redeemed will see God face to face (Rev 22:4); there will be no more death (Rev 21:4); the saints will be bodily resurrected (1 Cor 15) |
 | `fuzzy` | Scripture touches on the matter but does not give clear shape; multiple legitimate readings exist within the hermeneutic | Whether saints recognize one another by appearance vs. by some other faculty; the relative geography of New Jerusalem features beyond what Rev 21–22 names |
-| `debated` | Scripture is invoked by multiple sides reaching different conservative-Protestant conclusions | The relationship between the intermediate state and the final state; the literal vs. symbolic reading of the millennium (Rev 20) as it affects the heavenly picture |
+| `debated` | Scripture is invoked by multiple sides reaching different conservative-Protestant conclusions | Whether the millennial temple's sacrifices (Ezek 40–46) are memorial or serve some other function; the makeup and role of the mortal nations during the millennium |
 | `symbolic` | Scripture itself signals symbolism (see §3) | Streets of gold; pearl gates; the lamb with seven horns; the sea of glass |
 
 Tiers are not a quality judgment — a `symbolic` descriptor can be as important as a `clear` one. They are routing labels for review and presentation.
@@ -110,6 +110,8 @@ This is enforced architecturally in [`adr/0004-llm-grounding-strategy.md`](adr/0
 ## 8. What this means for the 3D layer (Phase 3)
 
 The world is *generated from the dataset*. The renderer does not invent geography, populate the city with un-cited beings, or extrapolate beyond what descriptors describe. Symbolic descriptors are rendered with a visual indicator (an unobtrusive marker, or a hover-state note) so that the user can distinguish literal from symbolic in space. The visual treatment may take liberties (a pearl gate must look like *something*) but every interactive entity in the scene maps to at least one descriptor.
+
+The *eschatological* framing that governs **what** the world may legitimately depict is set by [`adr/0012-eschatological-framing-premillennial.md`](adr/0012-eschatological-framing-premillennial.md) (premillennial, pre-wrath New Creationism). This puts the millennial surroundings of the New Jerusalem in scope for the 3D layer — the literal future Ezekiel 40–48 temple and priestly district, the Holy Allotment and tribal geography (Ezek 48), the Ezekiel 47 healing river issuing from the temple (distinct from the Rev 22:1 city river), and the mortal nations who make pilgrimage (Zech 14:16). The build sequence for these is in [`roadmap.md`](roadmap.md); the existing pyramid city is framework-portable and unaffected by the framing.
 
 The rules that operationalize this for geometry are codified in two ADRs that govern Phase 3 specifically:
 
