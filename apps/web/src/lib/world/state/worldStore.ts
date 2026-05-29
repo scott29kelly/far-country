@@ -3,11 +3,16 @@ import { create } from "zustand";
 /**
  * Zustand store for the /world scene.
  *
- * The renderer is the producer (writes via setNearbyEntity from a useFrame
- * loop). The HUD is the consumer (subscribes via the hook). Keeping camera
- * position out of the store — every useFrame tick would re-render every
- * subscriber. Only POI entry/exit transitions are committed.
+ * The renderer is the producer (writes via setNearbyEntity / setCompass /
+ * setCameraPos from the throttled proximity loop). The HUD and MiniMap are the
+ * consumers. Camera position is committed only in coarse buckets so the
+ * MiniMap re-renders a few times a second, not 60×.
+ *
+ * Teleport is a one-shot request: the MiniMap sets `teleportTo`, the controls
+ * loop consumes it on the next frame and clears it.
  */
+export type Teleport = { x: number; y: number; z: number };
+
 export type WorldState = {
   nearbyEntitySlug: string | null;
   pointerLocked: boolean;
@@ -15,9 +20,17 @@ export type WorldState = {
   cameraYaw: number;
   /** Bearing from camera to throne, in radians (same convention as cameraYaw). */
   throneBearing: number;
+  /** Coarse-bucketed camera X/Z for the mini-map marker. */
+  cameraX: number;
+  cameraZ: number;
+  /** Pending teleport request, consumed and cleared by the controls loop. */
+  teleportTo: Teleport | null;
   setNearbyEntity: (slug: string | null) => void;
   setPointerLocked: (locked: boolean) => void;
   setCompass: (yaw: number, bearing: number) => void;
+  setCameraPos: (x: number, z: number) => void;
+  requestTeleport: (t: Teleport) => void;
+  clearTeleport: () => void;
 };
 
 /**
@@ -31,11 +44,19 @@ function bucketed(v: number): number {
   return Math.round(v / COMPASS_BUCKET) * COMPASS_BUCKET;
 }
 
+/** Camera position is bucketed to whole metres for the mini-map. */
+function bucketMetres(v: number): number {
+  return Math.round(v);
+}
+
 export const useWorldStore = create<WorldState>((set) => ({
   nearbyEntitySlug: null,
   pointerLocked: false,
   cameraYaw: 0,
   throneBearing: 0,
+  cameraX: 0,
+  cameraZ: 0,
+  teleportTo: null,
   setNearbyEntity: (slug) =>
     set((s) => (s.nearbyEntitySlug === slug ? s : { nearbyEntitySlug: slug })),
   setPointerLocked: (locked) => set({ pointerLocked: locked }),
@@ -46,4 +67,13 @@ export const useWorldStore = create<WorldState>((set) => ({
       if (s.cameraYaw === y && s.throneBearing === b) return s;
       return { cameraYaw: y, throneBearing: b };
     }),
+  setCameraPos: (x, z) =>
+    set((s) => {
+      const bx = bucketMetres(x);
+      const bz = bucketMetres(z);
+      if (s.cameraX === bx && s.cameraZ === bz) return s;
+      return { cameraX: bx, cameraZ: bz };
+    }),
+  requestTeleport: (t) => set({ teleportTo: t }),
+  clearTeleport: () => set((s) => (s.teleportTo === null ? s : { teleportTo: null })),
 }));

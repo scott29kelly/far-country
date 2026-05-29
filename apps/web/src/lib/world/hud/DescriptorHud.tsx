@@ -98,9 +98,11 @@ export function DescriptorHud() {
 function ClickToBeginHint() {
   return (
     <div className="rounded-lg border border-(--color-border) bg-(--color-card)/95 px-3 py-2 text-xs text-(--color-fg-muted) shadow">
-      Click the scene to begin. WASD to move, mouse to look, Shift to sprint,
-      Space/C to fly up/down, ESC to release. Walls block you — pass through
-      a gate to leave the city.
+      Click the scene to begin. WASD to move, mouse to look, Shift to sprint.
+      The city is a step mountain — press <strong>Space</strong> to fly up and
+      ascend the terraces toward the summit throne, <strong>C</strong> to
+      descend. Walls and terrace edges block you; pass through a gate to leave.
+      Use the mini-map (top-left) to jump to a gate, the summit, or a tree.
     </div>
   );
 }

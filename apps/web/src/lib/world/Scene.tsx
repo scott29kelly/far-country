@@ -5,8 +5,10 @@ import { useRef } from "react";
 import { Vector3 } from "three";
 
 import { CityShell } from "./components/CityShell";
+import { Foundations } from "./components/Foundations";
 import { Gates } from "./components/Gate";
 import { Ground } from "./components/Ground";
+import { Pyramid } from "./components/Pyramid";
 import { River } from "./components/River";
 import { Skybox } from "./components/Skybox";
 import { Throne } from "./components/Throne";
@@ -25,22 +27,28 @@ export function Scene() {
   return (
     <Canvas
       camera={{
-        position: [0, 1.8, CITY_HALF - 8],
+        // Start on the plaza just inside the south gate, looking north and
+        // slightly up at the crystal mountain rising to the summit throne.
+        position: [0, 2, CITY_HALF - 6],
         fov: 70,
         near: 0.1,
         far: 2000,
       }}
       shadows={false}
-      style={{ position: "absolute", inset: 0, background: "#1a140a" }}
+      style={{ position: "absolute", inset: 0, background: "#15110a" }}
     >
-      {/* Light: warm hemisphere + an ambient. The throne emits its own
-          point light. No directional sun — Rev 21:23. */}
-      <hemisphereLight args={["#fff1c8", "#3a2a14", 0.7]} />
-      <ambientLight intensity={0.25} color="#fff4d6" />
-      <fog attach="fog" args={["#f4d8a0", 60, 600]} />
+      {/* Light: warm hemisphere + an ambient. The summit throne emits its own
+          point light (the city's true light source — Rev 21:23). No
+          directional sun. */}
+      <hemisphereLight args={["#fff1c8", "#2a200f", 0.6]} />
+      <ambientLight intensity={0.22} color="#fff4d6" />
+      {/* Fog pushed back so the whole ~84m mountain reads; warm haze. */}
+      <fog attach="fog" args={["#e9cf98", 110, 760]} />
 
       <Skybox />
       <Ground />
+      <Pyramid />
+      <Foundations />
       <CityShell />
       <Gates />
       <River />
@@ -64,6 +72,7 @@ export function Scene() {
 function ProximityWatcher() {
   const setNearbyEntity = useWorldStore((s) => s.setNearbyEntity);
   const setCompass = useWorldStore((s) => s.setCompass);
+  const setCameraPos = useWorldStore((s) => s.setCameraPos);
   const lastCheck = useRef(0);
   const cameraXZ = useRef(new Vector3());
   const camDir = useRef(new Vector3());
@@ -82,6 +91,9 @@ function ProximityWatcher() {
     const yaw = Math.atan2(camDir.current.x, -camDir.current.z);
     const throneBearing = Math.atan2(-camera.position.x, camera.position.z);
     setCompass(yaw, throneBearing);
+
+    // Publish coarse camera position for the mini-map marker.
+    setCameraPos(camera.position.x, camera.position.z);
 
     // Nearest POI.
     let match: string | null = null;

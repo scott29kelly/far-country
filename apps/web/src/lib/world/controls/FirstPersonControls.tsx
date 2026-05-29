@@ -5,25 +5,32 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Vector3 } from "three";
 
-import { anyBlockerContains, BLOCKERS } from "../data/collision";
+import { groundHeightAt, horizontalBlocked } from "../data/collision";
 import { useWorldStore } from "../state/worldStore";
 
 /**
- * WASD first-person controls with drei's PointerLockControls.
+ * WASD first-person controls with drei's PointerLockControls, now terrain-aware
+ * for the step pyramid.
  *
  * - Click canvas → pointer lock (camera follows mouse)
  * - ESC → release pointer lock
  * - W/A/S/D → move (forward/left/back/right relative to camera yaw)
  * - Shift → sprint
- * - Space / Q → up, C / Z → down (so the user can still navigate even
- *   though there's no collision detection or gravity)
+ * - Space / Q → fly up (ascend terraces); C / Z → descend (clamped to ground)
  *
- * No collisions. The user can walk through walls; this is a known MVP
- * limitation, called out in the on-screen help overlay.
+ * Terrain follow: when not flying, the camera settles to groundHeightAt + eye
+ * height — walking up the pyramid means flying onto the next terrace, then
+ * settling onto it. Horizontal moves into a riser higher than MAX_STEP_UP are
+ * blocked while grounded (handled in collision.horizontalBlocked); walking off
+ * an edge is always allowed and the camera falls to the lower terrace.
  */
 const WALK_SPEED = 14; // metres / second
 const SPRINT_SPEED = 32;
-const VERTICAL_SPEED = 10;
+const VERTICAL_SPEED = 16;
+const FALL_SPEED = 40;
+const EYE_HEIGHT = 1.6;
+/** Above this clearance over the local ground, the player counts as airborne. */
+const AIRBORNE_CLEARANCE = 0.4;
 
 type KeyState = {
   forward: boolean;
@@ -126,12 +133,23 @@ export function FirstPersonControls() {
   const move = useRef(new Vector3());
 
   useFrame((_, delta) => {
+    // Consume a pending teleport request before anything else.
+    const { teleportTo, clearTeleport } = useWorldStore.getState();
+    if (teleportTo) {
+      camera.position.set(teleportTo.x, teleportTo.y, teleportTo.z);
+      clearTeleport();
+      return;
+    }
+
     const k = keys.current;
-    // Compute horizontal forward (zero out Y so flying is decoupled).
+    const feetY = camera.position.y - EYE_HEIGHT;
+    const groundHere = groundHeightAt(camera.position.x, camera.position.z);
+    const airborne = camera.position.y - (groundHere + EYE_HEIGHT) > AIRBORNE_CLEARANCE;
+
+    // Horizontal movement, decoupled from look pitch.
     camera.getWorldDirection(forward.current);
     forward.current.y = 0;
     if (forward.current.lengthSq() > 0) forward.current.normalize();
-    // Right vector = forward × up.
     right.current.set(forward.current.z, 0, -forward.current.x);
 
     move.current.set(0, 0, 0);
@@ -143,24 +161,35 @@ export function FirstPersonControls() {
       move.current.normalize();
       const speed = k.sprint ? SPRINT_SPEED : WALK_SPEED;
       move.current.multiplyScalar(speed * delta);
-      // Per-axis resolution so the player slides along walls instead of
-      // sticking. If the X step would land inside a blocker, revert X;
-      // same for Z. Vertical (Y) movement bypasses collision so the user
-      // can always fly out of a stuck state (gates pass freely because
-      // the wall spans have gate cutouts; throne footprint is solid).
+      // Per-axis resolution so the player slides along walls / riser faces.
       const startX = camera.position.x;
       const startZ = camera.position.z;
       const wantX = startX + move.current.x;
       const wantZ = startZ + move.current.z;
-      const blockedX = anyBlockerContains(BLOCKERS, wantX, startZ);
-      const blockedZ = anyBlockerContains(BLOCKERS, startX, wantZ);
-      camera.position.x = blockedX ? startX : wantX;
-      camera.position.z = blockedZ ? startZ : wantZ;
+      if (!horizontalBlocked(feetY, wantX, startZ, airborne)) {
+        camera.position.x = wantX;
+      }
+      if (!horizontalBlocked(feetY, startX, wantZ, airborne)) {
+        camera.position.z = wantZ;
+      }
     }
+
+    // Vertical: explicit fly up / down, plus terrain settle.
     if (k.up) camera.position.y += VERTICAL_SPEED * delta;
     if (k.down) camera.position.y -= VERTICAL_SPEED * delta;
-    // Keep the camera above the ground.
-    if (camera.position.y < 1.6) camera.position.y = 1.6;
+
+    const desiredY = groundHeightAt(camera.position.x, camera.position.z) + EYE_HEIGHT;
+    if (!k.up) {
+      if (camera.position.y > desiredY) {
+        // Settle / fall toward the terrace below.
+        camera.position.y = Math.max(desiredY, camera.position.y - FALL_SPEED * delta);
+      } else if (camera.position.y < desiredY) {
+        // Never sink below the terrain (e.g. after landing on a higher step).
+        camera.position.y = desiredY;
+      }
+    } else if (camera.position.y < desiredY) {
+      camera.position.y = desiredY;
+    }
   });
 
   return (
