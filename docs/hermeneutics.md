@@ -111,6 +111,13 @@ This is enforced architecturally in [`adr/0004-llm-grounding-strategy.md`](adr/0
 
 The world is *generated from the dataset*. The renderer does not invent geography, populate the city with un-cited beings, or extrapolate beyond what descriptors describe. Symbolic descriptors are rendered with a visual indicator (an unobtrusive marker, or a hover-state note) so that the user can distinguish literal from symbolic in space. The visual treatment may take liberties (a pearl gate must look like *something*) but every interactive entity in the scene maps to at least one descriptor.
 
+The rules that operationalize this for geometry are codified in two ADRs that govern Phase 3 specifically:
+
+- [`adr/0009-symbolic-vs-literal-rendering.md`](adr/0009-symbolic-vs-literal-rendering.md) — keys rendering treatment off the `tier` of the descriptor: `clear` may be rendered literally; `symbolic` must be rendered as the figure used in the vision but visibly unphysical (so the symbolic frame is not flattened to literal claim); `fuzzy` must be quiet/peripheral; `debated` requires a per-phase `RENDERING-DECISIONS.md` entry before any geometry lands. The MVP's gold streets, pearl gates, and jasper walls follow rule (2); the placeholder ~200m city scale is a known deferred-literalism case recorded in rule (6).
+- [`adr/0010-aniconic-policy.md`](adr/0010-aniconic-policy.md) — overrides ADR 0009 for divine persons. The Father, the Son (including the Lamb), the Holy Spirit, and the one seated on the throne are not depicted in humanoid form regardless of tier. The MVP's aniconic throne (stepped base + prism + glow column, no figure) is the reference implementation; Christological imagery in the 3D world is handled by abstract geometry and light rather than figure.
+
+Non-divine persons (angels, the redeemed, the twenty-four elders, the four living creatures) are not covered by ADR 0010. Their rendering is a separate decision to be settled before population work lands.
+
 ---
 
 ## 9. Change control
