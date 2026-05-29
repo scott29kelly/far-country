@@ -150,13 +150,27 @@ Example for "the streets of the city are pure gold, like transparent glass" (Rev
 
 ### `descriptor.temporal_phase`
 
-Captures whether the descriptor refers to:
+Captures the phase of redemptive history a descriptor refers to:
 - `intermediate` — the state of the soul between death and bodily resurrection (e.g., "to be absent from the body is to be at home with the Lord," 2 Cor 5:8)
-- `final` — the eternal state after bodily resurrection and the new heavens-and-new-earth (e.g., Rev 21–22 material)
-- `either` — descriptors that apply to both phases (e.g., the presence of God)
+- `final` — the eternal state: after the general resurrection, in the new heavens and new earth in their final, deathless form (much of Rev 21–22)
+- `either` — descriptors that apply across phases (e.g., the presence of God)
 - `unspecified` — Scripture does not clearly indicate phase; routed to review
 
 This addresses PRD Open Question Q1.
+
+> **Premillennial framing — known schema gap ([ADR 0012](adr/0012-eschatological-framing-premillennial.md)).**
+> Under the project's eschatological framing, future-facing redemptive history has
+> **three** phases, not two: the **intermediate** state, the **millennial kingdom**
+> (Christ reigning, the New Jerusalem descended, restored Israel and its Ezekiel
+> 40–48 temple, mortal nations alongside resurrected saints), and the **eternal
+> state**. The enum above has **no value for the millennial phase**, and `final`
+> as defined conflates "millennial" with "eternal." This is a known gap. The fix —
+> add a `millennial` value to the enum, or carry a separate age-spanning field —
+> requires a migration of `canonical.sqlite` (a CHECK-constraint change) and is
+> **deferred to the Phase 1 data-model pass**, documented here rather than silently
+> applied. Note: ADR 0008 had disabled `intermediate`; ADR 0012 re-enables it, so it
+> remains valid in the enum above and in the `CHECK` constraint near the top of this
+> document.
 
 ### `descriptor.review_status`
 
