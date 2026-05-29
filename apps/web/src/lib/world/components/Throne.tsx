@@ -7,11 +7,18 @@
  * eyes, hair, hands, gender cue, crown, beard, Lamb figure, or any other
  * iconographic marker of a divine person. Reversing this is an ADR-level
  * decision (a new ADR superseding 0010), not a code-level override.
+ *
+ * The throne now sits at the SUMMIT of the step pyramid (y = SUMMIT_Y), per
+ * Willis's mountain model — "the throne / glory at the summit (apex)". A
+ * cloud-and-fire glory canopy crowns it (Isa 4:5–6; cf. Sinai, Ex 19:18),
+ * rendered as luminous volume, not figure.
  * --------------------------------------------------------------------------- */
+
+import { SUMMIT_Y } from "../data/world-geometry";
 
 export function Throne() {
   return (
-    <group position={[0, 0, 0]}>
+    <group position={[0, SUMMIT_Y, 0]}>
       {/* Stepped base — three concentric platforms. Pure abstract geometry. */}
       <mesh position={[0, 0.5, 0]} receiveShadow castShadow>
         <boxGeometry args={[18, 1, 18]} />
@@ -80,14 +87,38 @@ export function Throne() {
         />
       </mesh>
 
+      {/* Cloud-and-fire glory canopy over the summit (Isa 4:5–6: "a cloud by
+          day, and smoke and the shining of a flaming fire by night... a canopy").
+          Rendered as luminous volume only — no figure. A broad soft cloud cap
+          with a warmer fire-tinted underglow. */}
+      <mesh position={[0, 40, 0]}>
+        <sphereGeometry args={[26, 24, 16]} />
+        <meshBasicMaterial
+          color="#fbe6bf"
+          transparent
+          opacity={0.1}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh position={[0, 33, 0]}>
+        <sphereGeometry args={[16, 24, 16]} />
+        <meshBasicMaterial
+          color="#ffca7a"
+          transparent
+          opacity={0.14}
+          depthWrite={false}
+        />
+      </mesh>
+
       {/* A point light at the throne to actually illuminate the surrounding
           city — the throne is the light source of the New Jerusalem
-          (Rev 21:23). */}
+          (Rev 21:23). Reach extended to wash the whole pyramid (summit is
+          ~84m up). */}
       <pointLight
         position={[0, 12, 0]}
-        intensity={1500}
-        distance={250}
-        decay={1.6}
+        intensity={2600}
+        distance={420}
+        decay={1.4}
         color="#fff1c8"
         castShadow={false}
       />
