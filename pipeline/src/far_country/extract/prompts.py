@@ -17,7 +17,7 @@ from typing import Final
 
 from far_country.ingest import Passage, WillisChapter
 
-PROMPT_VERSION: Final = "0.2.0"
+PROMPT_VERSION: Final = "0.3.0"
 
 _HERMENEUTIC_PREAMBLE: Final = """\
 You are extracting candidate descriptors of heaven for the Far Country project.
@@ -32,22 +32,28 @@ HERMENEUTIC:
   interpretive latitude; `debated` when responsible interpreters disagree.
 - Otherwise mark `clear`.
 
-ESCHATOLOGICAL FRAMING (locked in ADR 0008 — Reformed amillennial):
-- AMILLENNIAL READING OF REVELATION 20. The "thousand years" is symbolic
-  of the current age between Christ's first and second comings. Do not
-  extract descriptors that posit a future literal millennial kingdom
-  distinct from the eternal state. When Rev 20 is the source passage,
-  tag the millennium-referencing material `symbolic` with a
-  `symbolic_referent` that points at the present church-age reign of
-  Christ with the saints, not at a future literal kingdom.
-- ONE HEAVEN. All Scripture about heaven refers to a single place
-  (eternal heaven / New Jerusalem / heavenly Mount Zion / Father's
-  house). Do not extract descriptors that bifurcate heaven into a
-  pre-resurrection "intermediate heaven" and a post-resurrection "final
-  heaven" as distinct places.
-- NO SEPARABLE INTERMEDIATE STATE. The disembodied believer in 2 Cor 5:8
-  and the resurrected believer in Rev 21 are in the same heaven. The
-  bodily resurrection glorifies a believer who is already there.
+ESCHATOLOGICAL FRAMING (locked in ADR 0012 — premillennial, pre-wrath
+New Creationism; supersedes ADR 0008):
+- PREMILLENNIAL READING OF REVELATION 20. The "thousand years" is a
+  LITERAL future millennial kingdom — a 1,000-year reign of Christ after
+  his return, distinct from both the present age and the eternal state.
+  The first resurrection (Rev 20:4-6) is a real bodily resurrection of
+  the redeemed at the millennium's start. Extract millennium-referencing
+  material with the tier the text warrants (`clear`/`fuzzy`); do NOT
+  recast it as a symbol of the present church age.
+- THREE PHASES, NOT TWO. Redemptive history runs: the intermediate
+  state, the millennial kingdom, then the eternal state. A descriptor
+  may pertain to any of them.
+- LITERAL EZEKIEL TEMPLE. Ezekiel 40-48 describes a literal future
+  millennial temple with a functioning priesthood in restored national
+  Israel — distinct from and adjacent to the New Jerusalem (which has no
+  temple, Rev 21:22). Do not read it as already-fulfilled typology.
+- INTERMEDIATE STATE IS LIVE. Believers who die before the first
+  resurrection are consciously with Christ in the interim (2 Cor 5:8;
+  Phil 1:23; Luke 23:43) while awaiting bodily resurrection. This is a
+  real, distinct state, not a collapsed one.
+- RENEWAL OVER ANNIHILATION for the new heavens and new earth
+  (continuity of the physical creation).
 
 TIER ROUTING (not a quality label, a review-routing label):
 - clear: plain reading of the text supports it.
@@ -56,28 +62,32 @@ TIER ROUTING (not a quality label, a review-routing label):
 - symbolic: requires a symbolic_referent.
 
 TEMPORAL_PHASE ROUTING:
-- final: the descriptor pertains specifically to the post-resurrection,
-  post-new-creation state in cases where that distinction within the
-  single heaven matters (e.g. the bodily resurrection itself, the new
-  earth motif, the absence of death).
-- either: the descriptor is true of any believer in heaven regardless
-  of whether their body has been resurrected yet. THIS IS THE DEFAULT
-  for descriptors about believer-with-Christ at death (e.g. 2 Cor 5:8,
-  Phil 1:23, Luke 23:43) since under ADR 0008 there is no separable
-  intermediate state.
-- unspecified: the source text does not pin a phase and neither
-  context nor genre selects one.
-- DO NOT USE `intermediate`. ADR 0008 collapses the intermediate-state
-  category into the single heaven. Existing schema retains the value
-  for backward compatibility; new extractions must not assign it.
+- intermediate: the descriptor pertains specifically to the state of the
+  redeemed between death and the (first) resurrection — disembodied,
+  consciously with Christ (e.g. 2 Cor 5:8, Phil 1:23, Luke 23:43, the
+  spirits of the righteous made perfect in Heb 12:23, the souls under
+  the altar in Rev 6:9-11). This is the DEFAULT for believer-with-Christ-
+  at-death claims.
+- final: the descriptor pertains specifically to the eternal state after
+  the general resurrection and the new creation in its final, deathless
+  form (e.g. the bodily resurrection itself, the absence of death, the
+  new-earth motif).
+- either: the descriptor is true of the redeemed regardless of phase
+  (e.g. the presence of God, seeing his face).
+- unspecified: the source text does not pin a phase and neither context
+  nor genre selects one. NOTE: the schema has no `millennial` value yet
+  (see docs/data-model.md); for a descriptor that is specifically
+  millennial, prefer `unspecified` rather than forcing it into `final`,
+  until the schema gains a millennial phase.
 
 DO NOT:
 - Invent claims not grounded in the cited verses.
 - Cite verses outside the canonical 66 books.
 - Paraphrase content the text does not contain.
 - Write meta-claims ("Revelation 21 says..."). Write the claim itself.
-- Tag any new descriptor with `temporal_phase: intermediate`.
-- Posit a future literal millennial kingdom distinct from the eternal state.
+- Flatten the millennium into the present church age, or read Ezekiel's
+  temple as merely symbolic / already-fulfilled typology.
+- Deny or collapse the intermediate state.
 
 If a passage is fuzzy or debated, EXTRACT it with the right tier rather
 than skipping it.
@@ -94,7 +104,7 @@ Return a JSON array. Each element is one candidate descriptor with this shape:
   "entity_type_suggestion": "person|place|thing|event|attribute",
   "tier": "clear|fuzzy|debated|symbolic",
   "symbolic_referent": null,
-  "temporal_phase": "final|either|unspecified",
+  "temporal_phase": "intermediate|final|either|unspecified",
   "citations": [
     {
       "source_type": "scripture",
@@ -120,7 +130,7 @@ Return a JSON array. Each element is one candidate descriptor with this shape:
   "entity_type_suggestion": "person|place|thing|event|attribute",
   "tier": "fuzzy|debated|clear|symbolic",
   "symbolic_referent": null,
-  "temporal_phase": "final|either|unspecified",
+  "temporal_phase": "intermediate|final|either|unspecified",
   "citations": [
     {
       "source_type": "willis",
