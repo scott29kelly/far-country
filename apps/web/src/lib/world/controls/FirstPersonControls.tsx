@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { Vector3 } from "three";
 
 import { groundHeightAt, horizontalBlocked } from "../data/collision";
+import { CITY_HALF } from "../data/points-of-interest";
 import { useWorldStore } from "../state/worldStore";
 
 /**
@@ -127,6 +128,14 @@ export function FirstPersonControls() {
       window.removeEventListener("keyup", onKeyUp);
     };
   }, []);
+
+  // Controls only mount once the intro fly-in completes. Land the camera at the
+  // plaza spawn facing north (the fly-in already places it here; this also
+  // covers any path into `active` that skipped the tween).
+  useEffect(() => {
+    camera.position.set(0, 2, CITY_HALF - 6);
+    camera.rotation.set(0, 0, 0);
+  }, [camera]);
 
   const forward = useRef(new Vector3());
   const right = useRef(new Vector3());

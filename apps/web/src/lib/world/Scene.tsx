@@ -14,7 +14,8 @@ import { Skybox } from "./components/Skybox";
 import { Throne } from "./components/Throne";
 import { TreesOfLife } from "./components/TreeOfLife";
 import { FirstPersonControls } from "./controls/FirstPersonControls";
-import { CITY_HALF, POIS } from "./data/points-of-interest";
+import { EntryTween, IntroCamera, INTRO_START_POSITION } from "./controls/IntroRig";
+import { POIS } from "./data/points-of-interest";
 import { useWorldStore } from "./state/worldStore";
 
 /**
@@ -24,12 +25,13 @@ import { useWorldStore } from "./state/worldStore";
  * Camera starts just inside the south gate, facing north toward the throne.
  */
 export function Scene() {
+  const phase = useWorldStore((s) => s.phase);
   return (
     <Canvas
       camera={{
-        // Start on the plaza just inside the south gate, looking north and
-        // slightly up at the crystal mountain rising to the summit throne.
-        position: [0, 2, CITY_HALF - 6],
+        // First paint is the elevated establishing orbit; IntroCamera drives it
+        // from there. The fly-in then drops to the plaza spawn.
+        position: INTRO_START_POSITION,
         fov: 70,
         near: 0.1,
         far: 2000,
@@ -56,7 +58,9 @@ export function Scene() {
       <Throne />
 
       <ProximityWatcher />
-      <FirstPersonControls />
+      {phase === "intro" && <IntroCamera />}
+      {phase === "entering" && <EntryTween />}
+      {phase === "active" && <FirstPersonControls />}
     </Canvas>
   );
 }
