@@ -31,18 +31,18 @@ export function Pyramid() {
               in shadowed faces without tripping the bloom threshold (that glow
               belongs to the throne). */}
           <meshPhysicalMaterial
-            color="#eaf6ff"
-            transmission={0.92}
+            color="#dcefff"
+            transmission={0.95}
             thickness={Math.max(8, t.half * 0.6)}
-            ior={1.35}
-            roughness={0.05}
+            ior={1.45}
+            roughness={0.03}
             metalness={0}
             attenuationColor="#bfe6f5"
-            attenuationDistance={70}
-            emissive="#8fc6e6"
-            emissiveIntensity={0.16}
-            clearcoat={0.6}
-            clearcoatRoughness={0.15}
+            attenuationDistance={90}
+            emissive="#7fbfe0"
+            emissiveIntensity={0.1}
+            clearcoat={0.25}
+            clearcoatRoughness={0.08}
           />
         </mesh>
       ))}
