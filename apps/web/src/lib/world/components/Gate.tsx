@@ -17,11 +17,15 @@ import {
  * the gates the names of the twelve tribes of the sons of Israel were
  * inscribed."
  *
- * Implementation: each gate is rendered as a thin pearl-white frame around
- * the opening (so the wall cutout reads as a *named gate* rather than just
- * a hole), with a soft glow. Tribe names are NOT rendered as inscribed
- * text — that would require font loading; in the MVP the tribe name only
- * shows up in the HUD as a label.
+ * Implementation: each gate is a rounded pearl archway — two nacre jambs
+ * rising into a semicircular arch, crowned by a single luminous pearl orb.
+ * The pearl material uses thin-film iridescence + clearcoat + sheen so it
+ * reads as living nacre (the shifting lustre of a pearl) rather than white
+ * plastic. The crown orb is the "single pearl" of Rev 21:21 made literal at
+ * the keystone, and stays bright so it doubles as the from-a-distance
+ * wayfinding marker inside the city. Tribe names are NOT inscribed as 3D text
+ * (font loading / WebGL context cost); the name shows in the HUD and on a
+ * floating label above the arch.
  */
 export function Gates() {
   return (
@@ -33,81 +37,96 @@ export function Gates() {
   );
 }
 
+/** Jamb / arch tube radius, metres. */
+const PEARL_R = 0.9;
+/** Half-width of the walkable opening (matches GATE_WIDTH). */
+const INNER_HALF = GATE_WIDTH / 2;
+/** Major radius of the arch — springs from the jamb centres. */
+const ARCH_R = INNER_HALF + PEARL_R;
+/** Y of the arch crown / keystone pearl. */
+const CROWN_Y = GATE_HEIGHT + ARCH_R;
+
 function SingleGate({ gate }: { gate: (typeof GATES)[number] }) {
-  // Frame thickness (extends beyond the wall on both sides).
-  const frame = 0.6;
   const isHorizontalSide = gate.side === "north" || gate.side === "south";
-
-  // Frame dimensions in world space:
-  //   - on N/S sides, the gate face is in the X-Y plane; frame depth runs along Z
-  //   - on E/W sides, the gate face is in the Z-Y plane; frame depth runs along X
-  const depth = 3; // how far the frame extends through the wall
-
   const [x, , z] = gate.position;
-  const yMid = GATE_HEIGHT / 2;
 
-  // Tribe label sits just above the lintel, anchored at the gate's center.
-  // drei's <Html> auto-faces the camera, so a single label per gate is
-  // readable from both inside and outside the city. The label is placed
-  // higher than the wall top (30m) so it never gets buried inside the
-  // jasper wall when viewed at low angles.
-  const labelY = GATE_HEIGHT + 5;
+  // The portal is built in the X-Y plane (arch sweeps through +Y). N/S gates
+  // already face along Z; E/W gates rotate 90deg about Y so the same geometry
+  // faces along X. drei's <Html> auto-billboards, so the rotated group does not
+  // affect label readability.
+  const labelY = CROWN_Y + 4;
 
-  if (isHorizontalSide) {
-    return (
-      <group position={[x, 0, z]}>
-        {/* Left jamb */}
-        <PearlBox
-          position={[-(GATE_WIDTH / 2) - frame / 2, yMid, 0]}
-          size={[frame, GATE_HEIGHT, depth]}
-        />
-        {/* Right jamb */}
-        <PearlBox
-          position={[GATE_WIDTH / 2 + frame / 2, yMid, 0]}
-          size={[frame, GATE_HEIGHT, depth]}
-        />
-        {/* Lintel */}
-        <PearlBox
-          position={[0, GATE_HEIGHT + frame / 2, 0]}
-          size={[GATE_WIDTH + frame * 2, frame, depth]}
-        />
-        {/* Indicator marker — small luminous sphere above the gate to
-            make it visible from a distance inside the city. */}
-        <Indicator
-          position={[
-            0,
-            GATE_HEIGHT + frame + 1.5,
-            z > 0 ? -0.5 : 0.5,
-          ]}
-        />
-        <TribeLabel tribe={gate.tribe} position={[0, labelY, 0]} />
-      </group>
-    );
-  }
   return (
-    <group position={[x, 0, z]}>
-      {/* Front jamb (toward +Z when on east wall, etc.) */}
-      <PearlBox
-        position={[0, yMid, -(GATE_WIDTH / 2) - frame / 2]}
-        size={[depth, GATE_HEIGHT, frame]}
-      />
-      <PearlBox
-        position={[0, yMid, GATE_WIDTH / 2 + frame / 2]}
-        size={[depth, GATE_HEIGHT, frame]}
-      />
-      <PearlBox
-        position={[0, GATE_HEIGHT + frame / 2, 0]}
-        size={[depth, frame, GATE_WIDTH + frame * 2]}
-      />
-      <Indicator
-        position={[
-          x > 0 ? -0.5 : 0.5,
-          GATE_HEIGHT + frame + 1.5,
-          0,
-        ]}
-      />
+    <group
+      position={[x, 0, z]}
+      rotation={[0, isHorizontalSide ? 0 : Math.PI / 2, 0]}
+    >
+      <PearlPortal />
       <TribeLabel tribe={gate.tribe} position={[0, labelY, 0]} />
     </group>
+  );
+}
+
+/**
+ * A single pearl archway in the local X-Y plane: two vertical jambs and a
+ * semicircular arch joining their tops, crowned by a luminous pearl orb.
+ */
+function PearlPortal() {
+  return (
+    <group>
+      {/* Left jamb */}
+      <mesh position={[-ARCH_R, GATE_HEIGHT / 2, 0]} castShadow>
+        <cylinderGeometry args={[PEARL_R, PEARL_R, GATE_HEIGHT, 16]} />
+        <PearlMaterial />
+      </mesh>
+      {/* Right jamb */}
+      <mesh position={[ARCH_R, GATE_HEIGHT / 2, 0]} castShadow>
+        <cylinderGeometry args={[PEARL_R, PEARL_R, GATE_HEIGHT, 16]} />
+        <PearlMaterial />
+      </mesh>
+      {/* Semicircular arch (half-torus, arc = PI sweeps the top). */}
+      <mesh position={[0, GATE_HEIGHT, 0]} castShadow>
+        <torusGeometry args={[ARCH_R, PEARL_R, 16, 48, Math.PI]} />
+        <PearlMaterial />
+      </mesh>
+      {/* Keystone pearl — the "single pearl" made literal, and the bright
+          wayfinding marker visible from across the city. */}
+      <mesh position={[0, CROWN_Y, 0]}>
+        <sphereGeometry args={[1.6, 28, 28]} />
+        <PearlMaterial emissiveIntensity={1.1} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Living-nacre pearl: warm off-white with thin-film iridescence (the colour
+ * shift across a pearl's surface), a high-clearcoat gloss, and soft sheen for
+ * the velvety lustre. A low emissive keeps it self-lit in shadow without
+ * tripping the bloom threshold (that glow belongs to the throne); the crown
+ * orb raises it so the keystone reads as a beacon.
+ */
+function PearlMaterial({
+  emissiveIntensity = 0.35,
+}: {
+  emissiveIntensity?: number;
+}) {
+  return (
+    <meshPhysicalMaterial
+      color="#fdf6f0"
+      roughness={0.25}
+      metalness={0}
+      clearcoat={1}
+      clearcoatRoughness={0.1}
+      iridescence={1}
+      iridescenceIOR={1.3}
+      iridescenceThicknessRange={[120, 420]}
+      sheen={1}
+      sheenColor="#ffe9f2"
+      sheenRoughness={0.4}
+      emissive="#fff0e6"
+      emissiveIntensity={emissiveIntensity}
+    />
   );
 }
 
@@ -135,41 +154,6 @@ function TribeLabel({
         {tribe}
       </div>
     </Html>
-  );
-}
-
-function PearlBox({
-  position,
-  size,
-}: {
-  position: [number, number, number];
-  size: [number, number, number];
-}) {
-  return (
-    <mesh position={position} castShadow>
-      <boxGeometry args={size} />
-      <meshStandardMaterial
-        color="#fff8f0"
-        roughness={0.15}
-        metalness={0.25}
-        emissive="#fff1d6"
-        emissiveIntensity={0.4}
-      />
-    </mesh>
-  );
-}
-
-function Indicator({ position }: { position: [number, number, number] }) {
-  return (
-    <mesh position={position}>
-      <sphereGeometry args={[1.2, 16, 16]} />
-      <meshStandardMaterial
-        color="#fff8f0"
-        emissive="#ffe8b0"
-        emissiveIntensity={1.6}
-        roughness={0.2}
-      />
-    </mesh>
   );
 }
 
