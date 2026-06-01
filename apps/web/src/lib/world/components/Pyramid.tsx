@@ -24,15 +24,25 @@ export function Pyramid() {
       {TERRACES.map((t) => (
         <mesh key={t.level} position={[0, t.topY / 2, 0]}>
           <boxGeometry args={[t.half * 2, t.topY, t.half * 2]} />
-          <meshStandardMaterial
-            color="#dff0fb"
-            transparent
-            opacity={0.46}
-            roughness={0.06}
-            metalness={0.35}
-            emissive="#aadcf4"
-            emissiveIntensity={0.32}
-            depthWrite
+          {/* Physical crystal: real refraction (ior) and light transmission so
+              the terraces read as a thick jewel mass (Rev 21:11 "clear as
+              crystal", 21:18 gold "like clear glass"), with a faint blue
+              absorption tint via attenuation. A low emissive keeps it self-lit
+              in shadowed faces without tripping the bloom threshold (that glow
+              belongs to the throne). */}
+          <meshPhysicalMaterial
+            color="#eaf6ff"
+            transmission={0.92}
+            thickness={Math.max(8, t.half * 0.6)}
+            ior={1.35}
+            roughness={0.05}
+            metalness={0}
+            attenuationColor="#bfe6f5"
+            attenuationDistance={70}
+            emissive="#8fc6e6"
+            emissiveIntensity={0.16}
+            clearcoat={0.6}
+            clearcoatRoughness={0.15}
           />
         </mesh>
       ))}

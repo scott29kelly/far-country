@@ -2,14 +2,21 @@
 
 import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Bloom, EffectComposer, ToneMapping } from "@react-three/postprocessing";
+import {
+  Bloom,
+  EffectComposer,
+  GodRays,
+  ToneMapping,
+  Vignette,
+} from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { useRef } from "react";
-import { Vector3 } from "three";
+import { useRef, useState } from "react";
+import { type Mesh, Vector3 } from "three";
 
 import { CityShell } from "./components/CityShell";
 import { Foundations } from "./components/Foundations";
 import { Gates } from "./components/Gate";
+import { GloryMotes } from "./components/GloryMotes";
 import { Ground } from "./components/Ground";
 import { Pyramid } from "./components/Pyramid";
 import { River } from "./components/River";
@@ -19,6 +26,7 @@ import { TreesOfLife } from "./components/TreeOfLife";
 import { FirstPersonControls } from "./controls/FirstPersonControls";
 import { EntryTween, IntroCamera, INTRO_START_POSITION } from "./controls/IntroRig";
 import { POIS } from "./data/points-of-interest";
+import { SUMMIT_Y } from "./data/world-geometry";
 import { useWorldStore } from "./state/worldStore";
 
 /**
@@ -29,6 +37,10 @@ import { useWorldStore } from "./state/worldStore";
  */
 export function Scene() {
   const phase = useWorldStore((s) => s.phase);
+  // The glory core is a small, very bright sphere at the summit. It is both the
+  // bloom seed and the god-rays source — the light shafts radiate from the
+  // throne's glory (Rev 21:23), occluded by the crystal terraces in front of it.
+  const [gloryCore, setGloryCore] = useState<Mesh | null>(null);
   return (
     <Canvas
       camera={{
@@ -89,6 +101,15 @@ export function Scene() {
       <TreesOfLife />
       <Throne />
 
+      {/* Glory core — bloom seed + god-rays source at the summit. toneMapped
+          off so it stays at full intensity through ACES and reads as the
+          unapproachable light (1 Tim 6:16) the shafts pour from. */}
+      <mesh ref={setGloryCore} position={[0, SUMMIT_Y + 14, 0]}>
+        <sphereGeometry args={[3.2, 24, 24]} />
+        <meshBasicMaterial color="#fff6da" toneMapped={false} />
+      </mesh>
+      <GloryMotes />
+
       <ProximityWatcher />
       {phase === "intro" && <IntroCamera />}
       {phase === "entering" && <EntryTween />}
@@ -97,16 +118,29 @@ export function Scene() {
       {/* Post: bloom makes the throne-glory, the glow column, and the emissive
           crystal actually emit light rather than read as pale plastic; ACES
           tone-mapping tames the warm wash into filmic contrast. */}
-      <EffectComposer enableNormalPass={false}>
-        <Bloom
-          intensity={0.7}
-          luminanceThreshold={0.62}
-          luminanceSmoothing={0.9}
-          mipmapBlur
-          radius={0.6}
-        />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-      </EffectComposer>
+      {gloryCore && (
+        <EffectComposer enableNormalPass={false}>
+          <GodRays
+            sun={gloryCore}
+            samples={60}
+            density={0.95}
+            decay={0.92}
+            weight={0.45}
+            exposure={0.5}
+            clampMax={1}
+            blur
+          />
+          <Bloom
+            intensity={0.7}
+            luminanceThreshold={0.62}
+            luminanceSmoothing={0.9}
+            mipmapBlur
+            radius={0.6}
+          />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          <Vignette offset={0.32} darkness={0.55} />
+        </EffectComposer>
+      )}
     </Canvas>
   );
 }

@@ -19,15 +19,36 @@
  * cascadeSegments(); this component only draws the planes.
  */
 
-import { DoubleSide } from "three";
+import { useFrame } from "@react-three/fiber";
+import { useRef } from "react";
+import { DoubleSide, type MeshStandardMaterial } from "three";
 
 import { cascadeSegments, RIVER } from "../data/world-geometry";
 
 const WATER_COLOR = "#dff4ff";
 const WATER_EMISSIVE = "#b9e2ff";
 
+type Tracked = { mat: MeshStandardMaterial; y: number; base: number };
+
 export function River() {
   const { channels, falls } = cascadeSegments();
+  const tracked = useRef<Tracked[]>([]);
+  tracked.current = [];
+
+  // A brightness wave travels DOWN the cascade (phase keyed to height y), so the
+  // water of life reads as living, flowing light (Rev 22:1 "bright as crystal,
+  // flowing from the throne") rather than a static ribbon.
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    for (const item of tracked.current) {
+      item.mat.emissiveIntensity =
+        item.base + 0.3 * Math.sin(t * 2.4 - item.y * 0.14);
+    }
+  });
+
+  const track = (base: number, y: number) => (mat: MeshStandardMaterial | null) => {
+    if (mat) tracked.current.push({ mat, y, base });
+  };
 
   return (
     <group>
@@ -43,6 +64,7 @@ export function River() {
           >
             <planeGeometry args={[RIVER.width, length]} />
             <meshStandardMaterial
+              ref={track(0.55, c.y)}
               color={WATER_COLOR}
               transparent
               opacity={0.6}
@@ -66,6 +88,7 @@ export function River() {
           >
             <planeGeometry args={[RIVER.width, height]} />
             <meshStandardMaterial
+              ref={track(0.7, centerY)}
               color={WATER_COLOR}
               transparent
               opacity={0.5}
