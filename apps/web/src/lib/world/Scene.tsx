@@ -4,6 +4,7 @@ import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   Bloom,
+  DepthOfField,
   EffectComposer,
   GodRays,
   ToneMapping,
@@ -120,6 +121,17 @@ export function Scene() {
           tone-mapping tames the warm wash into filmic contrast. */}
       {gloryCore && (
         <EffectComposer enableNormalPass={false}>
+          {/* Cinematic depth of field — active only during the establishing
+              orbit (bokehScale 0 elsewhere, so gameplay stays fully sharp).
+              Focus is pinned to the mountain mid-height; worldFocusRange is wide
+              enough to keep the whole city crisp, so only the near foreground
+              ground and the far sky soften — depth without miniaturising the
+              scale. */}
+          <DepthOfField
+            target={[0, 38, 0]}
+            worldFocusRange={220}
+            bokehScale={phase === "intro" ? 4 : 0}
+          />
           <GodRays
             sun={gloryCore}
             samples={60}
