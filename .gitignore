@@ -57,6 +57,8 @@ logs/
 # Playwright MCP local artifacts (screenshots, console logs, snapshots)
 .playwright-mcp/
 /world-*.png
+/world-*.jpeg
+/world-*.jpg
 
 # OS / editor
 .DS_Store

@@ -25,13 +25,13 @@ export function Pyramid() {
         <mesh key={t.level} position={[0, t.topY / 2, 0]}>
           <boxGeometry args={[t.half * 2, t.topY, t.half * 2]} />
           <meshStandardMaterial
-            color="#cfe6f2"
+            color="#dff0fb"
             transparent
-            opacity={0.42}
-            roughness={0.08}
-            metalness={0.1}
-            emissive="#9fd0e6"
-            emissiveIntensity={0.28}
+            opacity={0.46}
+            roughness={0.06}
+            metalness={0.35}
+            emissive="#aadcf4"
+            emissiveIntensity={0.32}
             depthWrite
           />
         </mesh>

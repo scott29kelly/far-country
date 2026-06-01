@@ -1,6 +1,9 @@
 "use client";
 
+import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { Bloom, EffectComposer, ToneMapping } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
 import { useRef } from "react";
 import { Vector3 } from "three";
 
@@ -42,10 +45,39 @@ export function Scene() {
       {/* Light: warm hemisphere + an ambient. The summit throne emits its own
           point light (the city's true light source — Rev 21:23). No
           directional sun. */}
-      <hemisphereLight args={["#fff1c8", "#2a200f", 0.6]} />
-      <ambientLight intensity={0.22} color="#fff4d6" />
+      <hemisphereLight args={["#fff1c8", "#3a2c14", 0.7]} />
+      <ambientLight intensity={0.28} color="#fff4d6" />
       {/* Fog pushed back so the whole ~84m mountain reads; warm haze. */}
-      <fog attach="fog" args={["#e9cf98", 110, 760]} />
+      <fog attach="fog" args={["#f0d9a0", 140, 820]} />
+
+      {/* Baked light environment: gives the crystal terraces and gold something
+          to reflect (metalness needs an envMap to read as material, not matte).
+          Built from Lightformers so it needs no network HDRI — a warm dome plus
+          a brighter source toward the summit. background={false}: our own
+          Skybox owns the sky. */}
+      <Environment resolution={256} frames={1} background={false}>
+        <Lightformer
+          intensity={1.4}
+          color="#fff0cc"
+          position={[0, 6, 0]}
+          scale={[12, 12, 1]}
+          form="circle"
+        />
+        <Lightformer
+          intensity={2.2}
+          color="#ffe6b0"
+          position={[0, 3, -8]}
+          scale={[8, 8, 1]}
+          form="circle"
+        />
+        <Lightformer
+          intensity={0.6}
+          color="#bcd6e6"
+          position={[0, -4, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+          scale={[20, 20, 1]}
+        />
+      </Environment>
 
       <Skybox />
       <Ground />
@@ -61,6 +93,20 @@ export function Scene() {
       {phase === "intro" && <IntroCamera />}
       {phase === "entering" && <EntryTween />}
       {phase === "active" && <FirstPersonControls />}
+
+      {/* Post: bloom makes the throne-glory, the glow column, and the emissive
+          crystal actually emit light rather than read as pale plastic; ACES
+          tone-mapping tames the warm wash into filmic contrast. */}
+      <EffectComposer enableNormalPass={false}>
+        <Bloom
+          intensity={0.7}
+          luminanceThreshold={0.62}
+          luminanceSmoothing={0.9}
+          mipmapBlur
+          radius={0.6}
+        />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      </EffectComposer>
     </Canvas>
   );
 }

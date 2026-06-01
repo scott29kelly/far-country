@@ -59,8 +59,8 @@ export function Throne() {
           color="#fbf6e8"
           roughness={0.18}
           metalness={0.4}
-          emissive="#f1e4b2"
-          emissiveIntensity={0.6}
+          emissive="#f7eab8"
+          emissiveIntensity={1.1}
         />
       </mesh>
 

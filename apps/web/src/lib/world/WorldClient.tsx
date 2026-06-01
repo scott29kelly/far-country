@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 import { Compass } from "./hud/Compass";
 import { DescriptorHud } from "./hud/DescriptorHud";
@@ -30,7 +31,7 @@ const Scene = dynamic(
 export function WorldClient() {
   const phase = useWorldStore((s) => s.phase);
   return (
-    <div className="relative h-[calc(100vh-13rem)] min-h-[600px] w-full overflow-hidden bg-[#15110a]">
+    <div className="fixed inset-0 z-40 overflow-hidden bg-[#15110a]">
       <Scene />
       {phase === "intro" && <IntroOverlay />}
       {phase === "active" && (
@@ -41,6 +42,12 @@ export function WorldClient() {
           <Crosshair />
         </>
       )}
+      <Link
+        href="/"
+        className="pointer-events-auto absolute bottom-4 left-4 z-30 rounded-md border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white/70 backdrop-blur-md transition hover:bg-black/55 hover:text-white"
+      >
+        ← Far Country
+      </Link>
     </div>
   );
 }
