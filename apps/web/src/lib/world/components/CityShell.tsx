@@ -10,11 +10,17 @@ import {
 } from "../data/points-of-interest";
 
 /**
- * The jasper city wall. Rev 21:18 — "the wall was built of jasper."
+ * The jasper city wall. Rev 21:18 — "the wall was built of jasper" — read with
+ * Rev 21:11, where the city's radiance is "like a jasper, clear as crystal."
  *
  * Implementation: each side is built from segments between gate cutouts.
  * Three gates per side at offsets [-50, 0, 50] from the side's midpoint,
- * each cutout is GATE_WIDTH metres wide. Segments are simple boxes.
+ * each cutout is GATE_WIDTH metres wide. Segments are simple boxes sharing a
+ * translucent jasper-crystal material (see JasperMaterial) so the glowing
+ * crystal mountain reads *through* the walls, consistent with the Pyramid
+ * terraces and ADR 0009 rule 2 (crystal shown as the figure of the vision, not
+ * photoreal masonry). All transmissive meshes in the scene share three's single
+ * transmission render pass, so the clear walls add no extra full-scene render.
  *
  * Geometry note: corner segments overlap slightly (by WALL_THICKNESS) where
  * the four walls meet. This is fine for the MVP — it looks like a solid
@@ -84,13 +90,7 @@ function WallSegment({
   return (
     <mesh position={position} castShadow receiveShadow>
       <boxGeometry args={size} />
-      <meshStandardMaterial
-        color="#c8d8e8"
-        roughness={0.4}
-        metalness={0.15}
-        emissive="#1c2838"
-        emissiveIntensity={0.2}
-      />
+      <JasperMaterial />
     </mesh>
   );
 }
@@ -102,31 +102,41 @@ function Lintel({
 }) {
   const lintelHeight = WALL_HEIGHT - GATE_HEIGHT;
   const lintelY = GATE_HEIGHT + lintelHeight / 2;
-  if (gate.side === "north" || gate.side === "south") {
-    return (
-      <mesh position={[gate.position[0], lintelY, gate.position[2]]}>
-        <boxGeometry args={[GATE_WIDTH, lintelHeight, WALL_THICKNESS]} />
-        <meshStandardMaterial
-          color="#c8d8e8"
-          roughness={0.4}
-          metalness={0.15}
-          emissive="#1c2838"
-          emissiveIntensity={0.2}
-        />
-      </mesh>
-    );
-  }
+  const size: [number, number, number] =
+    gate.side === "north" || gate.side === "south"
+      ? [GATE_WIDTH, lintelHeight, WALL_THICKNESS]
+      : [WALL_THICKNESS, lintelHeight, GATE_WIDTH];
   return (
     <mesh position={[gate.position[0], lintelY, gate.position[2]]}>
-      <boxGeometry args={[WALL_THICKNESS, lintelHeight, GATE_WIDTH]} />
-      <meshStandardMaterial
-        color="#c8d8e8"
-        roughness={0.4}
-        metalness={0.15}
-        emissive="#1c2838"
-        emissiveIntensity={0.2}
-      />
+      <boxGeometry args={size} />
+      <JasperMaterial />
     </mesh>
+  );
+}
+
+/**
+ * Translucent jasper crystal (Rev 21:18 + 21:11 "clear as crystal"): a clear,
+ * faintly blue-green mass that lets the summit glory glow through, with a body
+ * tint from light attenuation so the wall still reads as a wall rather than
+ * vanishing. A low emissive keeps shadowed faces self-lit without tripping the
+ * bloom threshold (that glow belongs to the throne).
+ */
+function JasperMaterial() {
+  return (
+    <meshPhysicalMaterial
+      color="#cfe0ea"
+      transmission={0.6}
+      thickness={4}
+      ior={1.4}
+      roughness={0.14}
+      metalness={0}
+      attenuationColor="#8fb3c9"
+      attenuationDistance={45}
+      emissive="#2a3a4a"
+      emissiveIntensity={0.12}
+      clearcoat={0.4}
+      clearcoatRoughness={0.2}
+    />
   );
 }
 
