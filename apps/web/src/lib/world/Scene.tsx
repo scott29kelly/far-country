@@ -1,12 +1,17 @@
 "use client";
 
-import { Environment, Lightformer } from "@react-three/drei";
+import { Environment, Lightformer, Sparkles } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   Bloom,
+  BrightnessContrast,
+  ChromaticAberration,
   DepthOfField,
   EffectComposer,
   GodRays,
+  HueSaturation,
+  N8AO,
+  SMAA,
   ToneMapping,
   Vignette,
 } from "@react-three/postprocessing";
@@ -34,7 +39,16 @@ import { useWorldStore } from "./state/worldStore";
  * Top-level scene wrapper. Held by the /world page via next/dynamic so it
  * never tries to SSR.
  *
- * Camera starts just inside the south gate, facing north toward the throne.
+ * Camera starts on the elevated establishing orbit, facing the glowing crystal
+ * mountain; IntroCamera drives the drift, then the fly-in drops to the plaza.
+ *
+ * Lighting philosophy (cinematic-epic, max fidelity): the New Jerusalem has no
+ * sun or moon — "the glory of God gives it light, and its lamp is the Lamb"
+ * (Rev 21:23). So the scene is lit for DRAMA, not daylight: a low warm ambient
+ * fill, a bright blooming glory core at the summit that is the true key light
+ * and the god-ray source, and a baked light environment that gives the gold and
+ * crystal something luminous to reflect. High contrast + volumetric shafts +
+ * color grading do the cinematic work the flat MVP lighting could not.
  */
 export function Scene() {
   const phase = useWorldStore((s) => s.phase);
@@ -52,43 +66,72 @@ export function Scene() {
         near: 0.1,
         far: 2000,
       }}
+      // Max-fidelity desktop target: render at up to 2× device pixels and ask
+      // for the discrete GPU. Tone mapping is owned by the post ToneMapping
+      // effect (the composer disables the renderer's own), so we don't set it
+      // on the GL here.
+      dpr={[1, 2]}
+      gl={{ antialias: false, powerPreference: "high-performance", alpha: false }}
       shadows={false}
-      style={{ position: "absolute", inset: 0, background: "#15110a" }}
+      style={{ position: "absolute", inset: 0, background: "#0e0b06" }}
     >
-      {/* Light: warm hemisphere + an ambient. The summit throne emits its own
-          point light (the city's true light source — Rev 21:23). No
-          directional sun. */}
-      <hemisphereLight args={["#fff1c8", "#3a2c14", 0.7]} />
-      <ambientLight intensity={0.28} color="#fff4d6" />
-      {/* Fog pushed back so the whole ~84m mountain reads; warm haze. */}
-      <fog attach="fog" args={["#f0d9a0", 140, 820]} />
+      {/* Light: a LOW warm ambient fill plus a cool hemisphere bounce — just
+          enough to keep shadowed faces from going black. The real key light is
+          the summit glory (its point light, below) so the mountain reads with
+          strong directional falloff rather than flat daylight. */}
+      <hemisphereLight args={["#ffe9c0", "#1c140a", 0.4]} />
+      <ambientLight intensity={0.12} color="#fff4d6" />
+      {/* A soft high fill from above the summit gives the terraces gentle
+          top-modelling (no harsh shadow — shadows are off scene-wide). */}
+      <directionalLight position={[30, 180, 40]} intensity={0.45} color="#fff0d0" />
 
-      {/* Baked light environment: gives the crystal terraces and gold something
-          to reflect (metalness needs an envMap to read as material, not matte).
-          Built from Lightformers so it needs no network HDRI — a warm dome plus
-          a brighter source toward the summit. background={false}: our own
-          Skybox owns the sky. */}
-      <Environment resolution={256} frames={1} background={false}>
+      {/* Atmospheric haze — denser and warmer than the MVP so distance reads as
+          luminous depth and the god-rays have something to pour through. Pushed
+          back enough that the whole ~84 m mountain stays clear. */}
+      <fog attach="fog" args={["#e3c489", 175, 860]} />
+
+      {/* Baked light environment: gives the crystal terraces, gold street and
+          gems something to reflect (PBR metalness/transmission need an envMap to
+          read as material, not matte). Built from Lightformers so it needs no
+          network HDRI — a warm overhead dome, a brighter source toward the
+          summit, a cool ground bounce, and two cool rim accents that rake the
+          crystal so its edges catch light. background={false}: our Skybox owns
+          the sky. */}
+      <Environment resolution={512} frames={1} background={false}>
         <Lightformer
-          intensity={1.4}
-          color="#fff0cc"
-          position={[0, 6, 0]}
-          scale={[12, 12, 1]}
+          intensity={2.0}
+          color="#fff2d4"
+          position={[0, 9, 0]}
+          scale={[14, 14, 1]}
           form="circle"
         />
         <Lightformer
-          intensity={2.2}
-          color="#ffe6b0"
-          position={[0, 3, -8]}
-          scale={[8, 8, 1]}
+          intensity={3.4}
+          color="#ffe2a8"
+          position={[0, 6, -11]}
+          scale={[11, 11, 1]}
           form="circle"
         />
         <Lightformer
-          intensity={0.6}
+          intensity={0.9}
           color="#bcd6e6"
-          position={[0, -4, 0]}
+          position={[0, -6, 0]}
           rotation={[Math.PI / 2, 0, 0]}
-          scale={[20, 20, 1]}
+          scale={[30, 30, 1]}
+        />
+        {/* Cool rim accents — vertical strips left and right that give the
+            translucent crystal a cold edge highlight against the warm body. */}
+        <Lightformer
+          intensity={1.6}
+          color="#cfe6ff"
+          position={[-20, 11, 8]}
+          scale={[3, 12, 1]}
+        />
+        <Lightformer
+          intensity={1.6}
+          color="#dff0ff"
+          position={[20, 11, 8]}
+          scale={[3, 12, 1]}
         />
       </Environment>
 
@@ -106,56 +149,94 @@ export function Scene() {
           off so it stays at full intensity through ACES and reads as the
           unapproachable light (1 Tim 6:16) the shafts pour from. */}
       <mesh ref={setGloryCore} position={[0, SUMMIT_Y + 14, 0]}>
-        <sphereGeometry args={[3.2, 24, 24]} />
-        <meshBasicMaterial color="#fff6da" toneMapped={false} />
+        <sphereGeometry args={[2.8, 32, 32]} />
+        <meshBasicMaterial color="#fff7e0" toneMapped={false} />
       </mesh>
       <GloryMotes />
+      {/* Fine GPU glory-dust at two scales — a broad drift over the whole city
+          and a denser, brighter shimmer concentrated around the summit glory.
+          Bloom catches the bright ones, so the air itself reads as full of
+          light. Abstract light only (no iconographic meaning). */}
+      <Sparkles
+        count={220}
+        scale={[CITY_WIDTH, SUMMIT_Y + 80, CITY_WIDTH]}
+        position={[0, (SUMMIT_Y + 80) / 2, 0]}
+        size={5}
+        speed={0.25}
+        opacity={0.5}
+        color="#ffe9bd"
+        noise={1.5}
+      />
+      <Sparkles
+        count={120}
+        scale={[70, 70, 70]}
+        position={[0, SUMMIT_Y + 6, 0]}
+        size={7}
+        speed={0.4}
+        opacity={0.7}
+        color="#fff3cf"
+      />
 
       <ProximityWatcher />
       {phase === "intro" && <IntroCamera />}
       {phase === "entering" && <EntryTween />}
       {phase === "active" && <FirstPersonControls />}
 
-      {/* Post: bloom makes the throne-glory, the glow column, and the emissive
-          crystal actually emit light rather than read as pale plastic; ACES
-          tone-mapping tames the warm wash into filmic contrast. */}
+      {/* Post: a cinematic stack. N8AO grounds the geometry with contact
+          shadowing; depth-of-field softens only during the establishing orbit;
+          god-rays pour from the glory; bloom makes the glory, gems and emissive
+          crystal genuinely emit; a hint of chromatic aberration adds lens
+          realism; ACES tone-maps the HDR wash to filmic contrast; a gentle
+          saturation + contrast grade and a vignette finish the frame; SMAA
+          cleans the edges (MSAA is off because post needs a single sample). */}
       {gloryCore && (
-        <EffectComposer enableNormalPass={false}>
+        <EffectComposer enableNormalPass={false} multisampling={0}>
+          <N8AO aoRadius={6} intensity={1.8} distanceFalloff={1} quality="high" />
           {/* Cinematic depth of field — active only during the establishing
               orbit (bokehScale 0 elsewhere, so gameplay stays fully sharp).
               Focus is pinned to the mountain mid-height; worldFocusRange is wide
               enough to keep the whole city crisp, so only the near foreground
-              ground and the far sky soften — depth without miniaturising the
-              scale. */}
+              ground and the far sky soften — depth without miniaturising. */}
           <DepthOfField
             target={[0, 38, 0]}
             worldFocusRange={220}
-            bokehScale={phase === "intro" ? 4 : 0}
+            bokehScale={phase === "intro" ? 3 : 0}
           />
           <GodRays
             sun={gloryCore}
-            samples={60}
-            density={0.95}
-            decay={0.92}
-            weight={0.45}
-            exposure={0.5}
+            samples={70}
+            density={0.92}
+            decay={0.93}
+            weight={0.42}
+            exposure={0.38}
             clampMax={1}
             blur
           />
           <Bloom
             intensity={0.7}
-            luminanceThreshold={0.62}
+            luminanceThreshold={0.68}
             luminanceSmoothing={0.9}
             mipmapBlur
-            radius={0.6}
+            radius={0.62}
+          />
+          <ChromaticAberration
+            offset={[0.0006, 0.0009]}
+            radialModulation
+            modulationOffset={0.6}
           />
           <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-          <Vignette offset={0.32} darkness={0.55} />
+          <HueSaturation saturation={0.16} />
+          <BrightnessContrast brightness={-0.03} contrast={0.18} />
+          <Vignette offset={0.3} darkness={0.6} />
+          <SMAA />
         </EffectComposer>
       )}
     </Canvas>
   );
 }
+
+/** Planar extent of the broad glory-dust volume (covers the full base plaza). */
+const CITY_WIDTH = 320;
 
 /**
  * Each frame, check the camera against each POI's radius and update the
