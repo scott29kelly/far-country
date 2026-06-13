@@ -136,10 +136,10 @@ export function cascadeSegments(): {
  * around it.
  */
 export const TREE_POSITIONS: Array<[number, number]> = [
-  [-RIVER.width / 2 - 3.5, 92],
-  [RIVER.width / 2 + 3.5, 92],
+  [-12, 80],
+  [12, 80],
 ];
 
-export const TREE_TRUNK_RADIUS = 0.8;
-export const TREE_TRUNK_HEIGHT = 8;
-export const TREE_CANOPY_RADIUS = 4.5;
+export const TREE_TRUNK_RADIUS = 0.7;
+export const TREE_TRUNK_HEIGHT = 9;
+export const TREE_CANOPY_RADIUS = 3.4;

@@ -267,14 +267,14 @@ function buildPois(): Poi[] {
   pois.push({
     slug: "tree-of-life",
     label: "Tree of Life",
-    position: [-4, 0, 92],
-    radius: 9,
+    position: [-12, 0, 80],
+    radius: 10,
   });
   pois.push({
     slug: "tree-of-life",
     label: "Tree of Life",
-    position: [4, 0, 92],
-    radius: 9,
+    position: [12, 0, 80],
+    radius: 10,
   });
 
   // Street of gold — the base plaza floor.
