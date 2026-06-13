@@ -2,7 +2,7 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
-import { Quaternion, Vector3 } from "three";
+import { Object3D, Quaternion, Vector3 } from "three";
 
 import { CITY_HALF } from "../data/points-of-interest";
 import { useWorldStore } from "../state/worldStore";
@@ -51,10 +51,18 @@ export function IntroCamera() {
 
 // --- Fly-in tween -----------------------------------------------------------
 
-/** Gameplay spawn: plaza just inside the south gate, eye height. */
-const SPAWN = new Vector3(0, 2, CITY_HALF - 6);
-/** Identity quaternion = a level camera facing -Z (north) at the spawn. */
-const SPAWN_QUAT = new Quaternion();
+/** Gameplay spawn: plaza just inside the south gate. */
+const SPAWN = new Vector3(0, 3, CITY_HALF - 4);
+/** Look target partway up the mountain so the fly-in lands on the rising
+ *  crystal ziggurat (matches FirstPersonControls' spawn look). */
+const SPAWN_LOOK = new Vector3(0, 34, 0);
+/** Orientation at the spawn — derived from the look target. */
+const SPAWN_QUAT = (() => {
+  const o = new Object3D();
+  o.position.copy(SPAWN);
+  o.lookAt(SPAWN_LOOK);
+  return o.quaternion.clone();
+})();
 const FLY_IN_DURATION = 1.6; // seconds
 
 function smoothstep(t: number): number {

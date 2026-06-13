@@ -52,12 +52,18 @@ function useGemMaterials() {
         new MeshPhysicalMaterial({
           color: new Color(g.color),
           metalness: 0,
-          roughness: 0.08,
+          roughness: 0.05,
           clearcoat: 1,
-          clearcoatRoughness: 0.04,
-          envMapIntensity: 1.3,
+          clearcoatRoughness: 0.03,
+          // High env intensity makes the cut facets blaze with the light
+          // environment so the course sparkles like set jewels; a touch of
+          // iridescence adds fire to the edges.
+          envMapIntensity: 2.6,
           emissive: new Color(g.color),
-          emissiveIntensity: 0.35,
+          emissiveIntensity: 0.45,
+          iridescence: 0.35,
+          iridescenceIOR: 1.4,
+          specularIntensity: 1,
           flatShading: true,
         }),
     );

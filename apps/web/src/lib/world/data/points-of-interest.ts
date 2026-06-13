@@ -38,13 +38,20 @@ export const CITY_HALF = 100;
  * Derived helpers (halfAtLevel, groundHeightAt, cascadeSegments, …) live in
  * world-geometry.ts. See RENDERING-DECISIONS.md entry #1.
  *
- *   - `baseHalf`   half-width of the level-0 base plaza (= CITY_HALF).
+ *   - `baseHalf`   half-width of the pyramid foot. Smaller than CITY_HALF so a
+ *                  walkable street-of-gold plaza RING is left between the
+ *                  mountain foot and the jewelled walls (Rev 21:21 street; you
+ *                  can circle the mountain and watch it rise). This is a
+ *                  rendering-proportion choice (RENDERING-DECISIONS entry #1
+ *                  lists the stepped specifics as our choice, not a textual
+ *                  claim); a narrower base also reads as a steeper, more
+ *                  monumental crystal mountain.
  *   - `summitHalf` half-width of the flat summit terrace that carries the throne.
  *   - `steps`      number of risers between level 0 (plaza) and the summit.
  *   - `stepHeight` vertical rise of each riser, in metres.
  */
 export const PYRAMID = {
-  baseHalf: CITY_HALF,
+  baseHalf: 68,
   summitHalf: 18,
   steps: 7,
   stepHeight: 12,

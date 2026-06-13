@@ -29,10 +29,10 @@ function useGoldGradient() {
       size / 2,
       size * 0.62,
     );
-    g.addColorStop(0, "#fbe29a");
-    g.addColorStop(0.32, "#e9c25c");
-    g.addColorStop(0.66, "#cc9c3c");
-    g.addColorStop(1, "#8f6418");
+    g.addColorStop(0, "#e8c170");
+    g.addColorStop(0.32, "#cfa24a");
+    g.addColorStop(0.66, "#a87e2e");
+    g.addColorStop(1, "#6e4d14");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, size, size);
     const tex = new CanvasTexture(canvas);
@@ -112,20 +112,20 @@ export function Ground() {
         <planeGeometry args={[CITY_HALF * 2, CITY_HALF * 2]} />
         <MeshReflectorMaterial
           resolution={1024}
-          mirror={0.42}
-          mixStrength={1.0}
-          mixBlur={1.0}
-          blur={[300, 110]}
-          minDepthThreshold={0.4}
-          maxDepthThreshold={1.2}
-          depthScale={1.0}
-          metalness={0.92}
-          roughness={0.38}
-          {...(goldMap ? { map: goldMap } : { color: "#e8b94a" })}
+          mirror={0.2}
+          mixStrength={0.45}
+          mixBlur={1.5}
+          blur={[450, 160]}
+          minDepthThreshold={0.3}
+          maxDepthThreshold={1.4}
+          depthScale={1.1}
+          metalness={0.7}
+          roughness={0.58}
+          {...(goldMap ? { map: goldMap } : { color: "#cfa24a" })}
           {...(roughnessMap ? { roughnessMap } : {})}
-          envMapIntensity={0.55}
-          emissive="#3a2a08"
-          emissiveIntensity={0.03}
+          envMapIntensity={0.35}
+          emissive="#2a1d06"
+          emissiveIntensity={0.025}
         />
       </mesh>
     </group>

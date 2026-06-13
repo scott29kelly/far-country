@@ -130,11 +130,13 @@ export function FirstPersonControls() {
   }, []);
 
   // Controls only mount once the intro fly-in completes. Land the camera at the
-  // plaza spawn facing north (the fly-in already places it here; this also
-  // covers any path into `active` that skipped the tween).
+  // plaza spawn just inside the south gate, looking UP the mountain (its
+  // mid-height) so the first thing you see is the glowing crystal ziggurat
+  // rising ahead — not the floor at eye level. (The fly-in already places it
+  // here; this also covers any path into `active` that skipped the tween.)
   useEffect(() => {
-    camera.position.set(0, 2, CITY_HALF - 6);
-    camera.rotation.set(0, 0, 0);
+    camera.position.set(0, 3, CITY_HALF - 4);
+    camera.lookAt(0, 34, 0);
   }, [camera]);
 
   const forward = useRef(new Vector3());

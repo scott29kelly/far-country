@@ -118,24 +118,28 @@ function Lintel({
  * Translucent jasper crystal (Rev 21:18 + 21:11 "clear as crystal"): a clear,
  * faintly blue-green mass that lets the summit glory glow through, with a body
  * tint from light attenuation so the wall still reads as a wall rather than
- * vanishing. A low emissive keeps shadowed faces self-lit without tripping the
- * bloom threshold (that glow belongs to the throne).
+ * vanishing. Thin optical thickness keeps it clear (not milky); iridescence and
+ * a glossy clearcoat give the wall the shifting lustre of a gem rather than flat
+ * glass; a gentle internal glow keeps shadowed faces self-lit.
  */
 function JasperMaterial() {
   return (
     <meshPhysicalMaterial
-      color="#cfe0ea"
-      transmission={0.6}
+      color="#bfe0ee"
+      transmission={0.45}
       thickness={4}
-      ior={1.4}
-      roughness={0.14}
+      ior={1.5}
+      roughness={0.08}
       metalness={0}
-      attenuationColor="#8fb3c9"
-      attenuationDistance={45}
-      emissive="#2a3a4a"
-      emissiveIntensity={0.12}
-      clearcoat={0.4}
-      clearcoatRoughness={0.2}
+      attenuationColor="#6fa8c4"
+      attenuationDistance={30}
+      emissive="#26506a"
+      emissiveIntensity={0.18}
+      iridescence={0.5}
+      iridescenceIOR={1.35}
+      clearcoat={0.7}
+      clearcoatRoughness={0.12}
+      specularIntensity={1}
     />
   );
 }

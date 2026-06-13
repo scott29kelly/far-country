@@ -8,9 +8,10 @@
  * record but not the rendered form.
  *
  * Scale stays the ~200m placeholder of the MVP (ADR 0009 rule 6): only the
- * *shape* changes here, not the deferred true-scale decision. The base
- * footprint half-width remains CITY_HALF so the existing walls and gates at
- * y=0 still ring the base plaza.
+ * *shape* changes here, not the deferred true-scale decision. The pyramid foot
+ * (PYRAMID.baseHalf) is now narrower than CITY_HALF, leaving a walkable
+ * street-of-gold plaza ring between the mountain and the walls/gates (which
+ * stay at CITY_HALF).
  *
  * Multiple components and the collision module read from here, so changes
  * propagate consistently.
