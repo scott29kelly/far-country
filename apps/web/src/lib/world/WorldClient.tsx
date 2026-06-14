@@ -2,7 +2,9 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useState } from "react";
 
+import { ambience } from "./audio/ambience";
 import { Compass } from "./hud/Compass";
 import { DescriptorHud } from "./hud/DescriptorHud";
 import { MiniMap } from "./hud/MiniMap";
@@ -40,6 +42,7 @@ export function WorldClient() {
           <MiniMap />
           <DescriptorHud />
           <Crosshair />
+          <SoundToggle />
         </>
       )}
       <Link
@@ -73,7 +76,11 @@ function IntroOverlay() {
         </p>
         <button
           type="button"
-          onClick={enterCity}
+          onClick={() => {
+            // Audio context must be created from a user gesture (autoplay policy).
+            ambience.start();
+            enterCity();
+          }}
           className="mt-4 rounded-md bg-white/90 px-5 py-2 text-sm font-semibold text-black transition hover:bg-white"
         >
           Enter the city
@@ -91,5 +98,22 @@ function Crosshair() {
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
       <div className="h-2 w-2 rounded-full border border-white/50 bg-white/20" />
     </div>
+  );
+}
+
+function SoundToggle() {
+  const [muted, setMuted] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        const next = !muted;
+        setMuted(next);
+        ambience.setMuted(next);
+      }}
+      className="pointer-events-auto absolute bottom-14 left-4 z-30 rounded-md border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white/70 backdrop-blur-md transition hover:bg-black/55 hover:text-white"
+    >
+      {muted ? "Sound off" : "Sound on"}
+    </button>
   );
 }

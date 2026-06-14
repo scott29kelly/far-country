@@ -19,6 +19,7 @@ import { ToneMappingMode } from "postprocessing";
 import { useRef, useState } from "react";
 import { type Mesh, Vector3 } from "three";
 
+import { Ambience } from "./components/Ambience";
 import { CityShell } from "./components/CityShell";
 import { Foundations } from "./components/Foundations";
 import { Gates } from "./components/Gate";
@@ -185,6 +186,7 @@ export function Scene() {
       {phase === "entering" && <EntryTween />}
       {phase === "active" && <FirstPersonControls />}
       {phase === "active" && <ClickInspector />}
+      {phase === "active" && <Ambience />}
 
       {/* Post: a cinematic stack. N8AO grounds the geometry with contact
           shadowing; depth-of-field softens only during the establishing orbit;
