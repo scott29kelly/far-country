@@ -205,11 +205,19 @@ function AngelicHosts() {
   return (
     <group ref={group}>
       {hosts.map((h, i) => (
-        <mesh key={i} position={[h.x, h.baseY, h.z]} scale={[h.scale, h.scale, h.scale]}>
-          {/* A soft vertical ovoid of light. */}
-          <capsuleGeometry args={[0.8, 3.2, 6, 12]} />
-          <meshBasicMaterial color="#fff0c8" transparent opacity={0.42} toneMapped={false} />
-        </mesh>
+        <group key={i} position={[h.x, h.baseY, h.z]} scale={[h.scale, h.scale, h.scale]}>
+          {/* A soft tapering column of light — bright core within a fainter,
+              taller aura, so each host reads as a being of radiance rather than
+              a solid pill. */}
+          <mesh>
+            <capsuleGeometry args={[0.32, 5.0, 6, 12]} />
+            <meshBasicMaterial color="#fff7e6" transparent opacity={0.55} toneMapped={false} />
+          </mesh>
+          <mesh>
+            <capsuleGeometry args={[0.85, 6.2, 6, 12]} />
+            <meshBasicMaterial color="#ffe9c0" transparent opacity={0.16} toneMapped={false} />
+          </mesh>
+        </group>
       ))}
     </group>
   );

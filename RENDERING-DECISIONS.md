@@ -164,3 +164,44 @@ the inhabitants altogether.
 - Rev 7:9; Rev 5:11; ADR 0009 rule 4 (this entry's mandate); ADR 0010 (aniconic
   — divine persons only).
 - Code: `apps/web/src/lib/world/components/Inhabitants.tsx`
+
+---
+
+## Entry #4 — The rainbow around the throne: full spectrum with emerald prominence
+
+- **Date:** 2026-06-14
+- **Tier:** `debated` (Rev 4:3 — "and around the throne was a rainbow that had
+  the appearance of an emerald" — is read both as a green-dominant halo and as a
+  full rainbow with emerald prominence).
+- **Question:** Is the rainbow rendered as a GREEN/emerald halo (taking "the
+  appearance of an emerald" as the dominant colour) or as a FULL spectral
+  rainbow (taking "rainbow" as primary, with emerald prominence)?
+- **Decision:** **Full spectral rainbow with an emerald bias.**
+
+### Options considered
+
+| Option | For | Against |
+| --- | --- | --- |
+| **Emerald-only halo** | Takes "appearance of an emerald" as the literal colour. | Underplays "rainbow" (Gk *iris*), which normally denotes the full bow. |
+| **Full rainbow + emerald prominence** *(chosen)* | Honours "rainbow" (the spectrum) while giving the emerald its stated prominence via a green bias; reads unmistakably as the iris around the throne. | The exact colour balance is our choice, not stated. |
+
+### Rationale
+
+"Rainbow" (*iris*) most naturally denotes the spectral bow; "the appearance of
+an emerald" is honoured by biasing the spectrum toward green rather than
+discarding the other colours. A green-only ring would under-render "rainbow."
+The sea of glass beneath it (Rev 4:6) is `clear`-tier and simply rendered as the
+figure of the vision (a reflective crystalline floor, ADR 0009 rule 2) — no
+debate, so no separate entry.
+
+### What is grounded vs. a rendering choice
+
+- **Grounded:** a rainbow encircling the throne, with emerald prominence
+  (Rev 4:3); a sea of glass before the throne (Rev 4:6).
+- **Rendering choice (not a textual claim):** the two-ring halo form, the
+  additive glow, and the exact amount of green bias.
+
+### Governing sources
+
+- Rev 4:3; Rev 4:6; ADR 0009 rule 4.
+- Code: `apps/web/src/lib/world/components/Throne.tsx` (`RainbowHalo`, sea of glass)
