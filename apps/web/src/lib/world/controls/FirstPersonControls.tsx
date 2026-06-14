@@ -269,7 +269,9 @@ export function FirstPersonControls() {
     camera.getWorldDirection(forward.current);
     forward.current.y = 0;
     if (forward.current.lengthSq() > 0) forward.current.normalize();
-    right.current.set(forward.current.z, 0, -forward.current.x);
+    // Right-hand strafe vector = cross(forward, up). Facing north (-Z) this is
+    // east (+X), so D (right) strafes right and A (left) strafes left.
+    right.current.set(-forward.current.z, 0, forward.current.x);
 
     move.current.set(0, 0, 0);
     if (k.forward) move.current.add(forward.current);
