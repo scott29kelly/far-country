@@ -132,8 +132,9 @@ statement; this entry governs only the *placement*.
   clothed in white robes, standing before the throne"): simplified white-robed
   luminous figures with **no facial or identity features**; a subtle scale and
   warm-tone variation implies the "every nation" diversity without depicting any
-  specific person. Placed standing throughout the plaza and ascending the
-  terrace courses, gathered toward the throne.
+  specific person. Each figure faces the throne and holds a raised palm branch
+  (Rev 7:9, "with palm branches in their hands"). Placed standing throughout the
+  plaza and ascending the terrace courses, gathered toward the throne.
 - **Angelic hosts (Rev 5:11** — "many angels... around the throne"): **abstract
   vertical beings of light** ringing the summit, slowly rising and falling. **No
   wings and no figural form** — Scripture does not fix the hosts' appearance in
@@ -152,8 +153,9 @@ the inhabitants altogether.
 
 ### What is grounded vs. a rendering choice
 
-- **Grounded:** the existence and white robes of the multitude and its placement
-  "before the throne" (Rev 7:9); the hosts "around the throne" (Rev 5:11).
+- **Grounded:** the existence, white robes, and palm branches of the multitude
+  and its placement "before the throne" (Rev 7:9); the hosts "around the throne"
+  (Rev 5:11).
 - **Rendering choice (not a textual claim):** the *count* rendered (a legibility/
   performance stand-in for "no one could number"), the cone-robe + head-sphere
   silhouette, the abstract light-form for the hosts, exact positions, and the
