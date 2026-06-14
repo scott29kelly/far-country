@@ -119,12 +119,12 @@ export function DescriptorHud() {
 function ClickToBeginHint() {
   return (
     <div className="rounded-lg border border-(--color-border) bg-(--color-card)/95 px-3 py-2 text-xs text-(--color-fg-muted) shadow">
-      Click the scene to begin. WASD to move, mouse to look, Shift to sprint.
-      The city is a step mountain — press <strong>Space</strong> to fly up and
-      ascend the terraces toward the summit throne, <strong>C</strong> to
-      descend. <strong>Aim and click any element</strong> — a gate, a gem, the
-      throne — to pin its descriptor. Use the mini-map (top-left) to{" "}
-      <strong>fly</strong> to a gate, the summit, or a tree.
+      <strong>Move your mouse to look around</strong> — toward an edge turns you
+      that way; the centre holds still. <strong>WASD</strong> or the arrow keys
+      to walk, <strong>Shift</strong> to sprint, <strong>Space</strong> to rise
+      up the terraces, <strong>C</strong> to descend.{" "}
+      <strong>Click anything</strong> to pin its descriptor. Use the mini-map
+      (top-left) to <strong>fly</strong> straight to a gate, the summit, or a tree.
     </div>
   );
 }

@@ -18,8 +18,6 @@ import { Vector2 } from "three";
 import { POIS } from "../data/points-of-interest";
 import { useWorldStore } from "../state/worldStore";
 
-const CENTER = new Vector2(0, 0);
-
 export function ClickInspector() {
   const camera = useThree((s) => s.camera);
   const scene = useThree((s) => s.scene);
@@ -29,8 +27,14 @@ export function ClickInspector() {
 
   useEffect(() => {
     const el = gl.domElement;
-    const onClick = () => {
-      raycaster.setFromCamera(CENTER, camera);
+    const pointer = new Vector2();
+    const onClick = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      pointer.set(
+        ((e.clientX - r.left) / r.width) * 2 - 1,
+        -(((e.clientY - r.top) / r.height) * 2 - 1),
+      );
+      raycaster.setFromCamera(pointer, camera);
       const hits = raycaster.intersectObjects(scene.children, true);
       const hit = hits.find((h) => h.distance > 0.4 && h.object.visible);
       if (!hit) return;

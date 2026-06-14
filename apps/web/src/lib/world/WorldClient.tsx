@@ -41,7 +41,6 @@ export function WorldClient() {
           <Compass />
           <MiniMap />
           <DescriptorHud />
-          <Crosshair />
           <SoundToggle />
         </>
       )}
@@ -89,14 +88,6 @@ function IntroOverlay() {
           Revelation 21–22 · placeholder scale, not 12,000 stadia
         </p>
       </div>
-    </div>
-  );
-}
-
-function Crosshair() {
-  return (
-    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-      <div className="h-2 w-2 rounded-full border border-white/50 bg-white/20" />
     </div>
   );
 }
