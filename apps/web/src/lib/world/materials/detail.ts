@@ -184,3 +184,12 @@ export function jasperNormalMap(repeats = 3): Texture {
     ridged(vein, u, v, 5, 4) * 0.7 + fbm(grain, u, v, 3, 22) * 0.3;
   return repeat(normalMapFrom(512, height, 1.8), repeats);
 }
+
+/** Bumpy leaf-cluster relief for the tree canopies. */
+export function foliageNormalMap(repeats = 3): Texture {
+  const clump = makeValueNoise(808);
+  const fine = makeValueNoise(909);
+  const height: HeightFn = (u, v) =>
+    fbm(clump, u, v, 4, 9) * 0.55 + ridged(fine, u, v, 3, 34) * 0.45;
+  return repeat(normalMapFrom(256, height, 2.2), repeats);
+}
