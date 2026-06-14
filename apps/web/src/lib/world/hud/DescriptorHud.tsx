@@ -20,7 +20,11 @@ import { useWorldStore } from "../state/worldStore";
 const MAX_CARDS = 3;
 
 export function DescriptorHud() {
-  const slug = useWorldStore((s) => s.nearbyEntitySlug);
+  const nearby = useWorldStore((s) => s.nearbyEntitySlug);
+  const pinned = useWorldStore((s) => s.pinnedEntitySlug);
+  const setPinned = useWorldStore((s) => s.setPinnedEntity);
+  // A clicked (pinned) element takes precedence over the proximity readout.
+  const slug = pinned ?? nearby;
   const pointerLocked = useWorldStore((s) => s.pointerLocked);
   const [entity, setEntity] = useState<EntityExport | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,17 +64,34 @@ export function DescriptorHud() {
         {entity && (
           <div className="rounded-lg border border-(--color-border) bg-(--color-card)/95 p-3 shadow-lg backdrop-blur-sm">
             <div className="mb-2 flex items-baseline justify-between gap-2">
-              <h2 className="text-sm font-semibold text-(--color-fg)">
+              <h2 className="flex items-baseline gap-1.5 text-sm font-semibold text-(--color-fg)">
                 {entity.name}
+                {pinned && (
+                  <span className="rounded bg-(--color-accent)/15 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wider text-(--color-accent)">
+                    pinned
+                  </span>
+                )}
               </h2>
-              <Link
-                href={`/entities/${entity.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-(--color-accent) hover:underline"
-              >
-                open ↗
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/entities/${entity.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-(--color-accent) hover:underline"
+                >
+                  open ↗
+                </Link>
+                {pinned && (
+                  <button
+                    type="button"
+                    onClick={() => setPinned(null)}
+                    aria-label="Unpin"
+                    className="text-xs leading-none text-(--color-fg-muted) hover:text-(--color-fg)"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
             <ul className="space-y-2">
               {entity.descriptors.slice(0, MAX_CARDS).map((d) => (
@@ -101,8 +122,9 @@ function ClickToBeginHint() {
       Click the scene to begin. WASD to move, mouse to look, Shift to sprint.
       The city is a step mountain — press <strong>Space</strong> to fly up and
       ascend the terraces toward the summit throne, <strong>C</strong> to
-      descend. Walls and terrace edges block you; pass through a gate to leave.
-      Use the mini-map (top-left) to jump to a gate, the summit, or a tree.
+      descend. <strong>Aim and click any element</strong> — a gate, a gem, the
+      throne — to pin its descriptor. Use the mini-map (top-left) to{" "}
+      <strong>fly</strong> to a gate, the summit, or a tree.
     </div>
   );
 }

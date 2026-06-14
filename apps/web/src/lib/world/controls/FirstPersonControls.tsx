@@ -3,7 +3,7 @@
 import { PointerLockControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
-import { Vector3 } from "three";
+import { Object3D, Quaternion, Vector3 } from "three";
 
 import { groundHeightAt, horizontalBlocked } from "../data/collision";
 import { CITY_HALF } from "../data/points-of-interest";
@@ -32,6 +32,12 @@ const FALL_SPEED = 40;
 const EYE_HEIGHT = 1.6;
 /** Above this clearance over the local ground, the player counts as airborne. */
 const AIRBORNE_CLEARANCE = 0.4;
+/** Cinematic fly-to: smooth glide to a landmark instead of an instant snap. */
+const FLY_DURATION = 1.4;
+
+function smoothstep(t: number): number {
+  return t * t * (3 - 2 * t);
+}
 
 type KeyState = {
   forward: boolean;
@@ -143,12 +149,38 @@ export function FirstPersonControls() {
   const right = useRef(new Vector3());
   const move = useRef(new Vector3());
 
+  // Cinematic fly-to tween state.
+  const flying = useRef(false);
+  const flyT = useRef(0);
+  const flyFrom = useRef(new Vector3());
+  const flyTo = useRef(new Vector3());
+  const flyFromQ = useRef(new Quaternion());
+  const flyToQ = useRef(new Quaternion());
+  const flyTmp = useRef(new Object3D());
+
   useFrame((_, delta) => {
-    // Consume a pending teleport request before anything else.
+    // Cinematic fly-to: a landmark click (mini-map) requests a teleport; instead
+    // of snapping, glide there over FLY_DURATION and arrive framed toward the
+    // throne axis. Input and terrain-settle are paused mid-flight.
     const { teleportTo, clearTeleport } = useWorldStore.getState();
-    if (teleportTo) {
-      camera.position.set(teleportTo.x, teleportTo.y, teleportTo.z);
+    if (teleportTo && !flying.current) {
+      flying.current = true;
+      flyT.current = 0;
+      flyFrom.current.copy(camera.position);
+      flyFromQ.current.copy(camera.quaternion);
+      flyTo.current.set(teleportTo.x, teleportTo.y, teleportTo.z);
+      const dist = Math.hypot(teleportTo.x, teleportTo.z);
+      flyTmp.current.position.copy(flyTo.current);
+      flyTmp.current.lookAt(0, teleportTo.y + dist * 0.16, 0);
+      flyToQ.current.copy(flyTmp.current.quaternion);
       clearTeleport();
+    }
+    if (flying.current) {
+      flyT.current = Math.min(1, flyT.current + delta / FLY_DURATION);
+      const s = smoothstep(flyT.current);
+      camera.position.lerpVectors(flyFrom.current, flyTo.current, s);
+      camera.quaternion.slerpQuaternions(flyFromQ.current, flyToQ.current, s);
+      if (flyT.current >= 1) flying.current = false;
       return;
     }
 

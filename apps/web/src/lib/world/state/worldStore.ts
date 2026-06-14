@@ -24,6 +24,8 @@ export type WorldPhase = "intro" | "entering" | "active";
 export type WorldState = {
   phase: WorldPhase;
   nearbyEntitySlug: string | null;
+  /** Entity pinned by clicking an element in-world; overrides the proximity HUD until cleared. */
+  pinnedEntitySlug: string | null;
   pointerLocked: boolean;
   /** Camera yaw in radians. 0 = facing -Z (north). Increases counter-clockwise from above. */
   cameraYaw: number;
@@ -39,6 +41,7 @@ export type WorldState = {
   /** entering → active (fly-in complete, hand over to first-person controls). */
   activate: () => void;
   setNearbyEntity: (slug: string | null) => void;
+  setPinnedEntity: (slug: string | null) => void;
   setPointerLocked: (locked: boolean) => void;
   setCompass: (yaw: number, bearing: number) => void;
   setCameraPos: (x: number, z: number) => void;
@@ -65,6 +68,7 @@ function bucketMetres(v: number): number {
 export const useWorldStore = create<WorldState>((set) => ({
   phase: "intro",
   nearbyEntitySlug: null,
+  pinnedEntitySlug: null,
   pointerLocked: false,
   cameraYaw: 0,
   throneBearing: 0,
@@ -75,6 +79,8 @@ export const useWorldStore = create<WorldState>((set) => ({
   activate: () => set((s) => (s.phase === "active" ? s : { phase: "active" })),
   setNearbyEntity: (slug) =>
     set((s) => (s.nearbyEntitySlug === slug ? s : { nearbyEntitySlug: slug })),
+  setPinnedEntity: (slug) =>
+    set((s) => (s.pinnedEntitySlug === slug ? s : { pinnedEntitySlug: slug })),
   setPointerLocked: (locked) => set({ pointerLocked: locked }),
   setCompass: (yaw, bearing) =>
     set((s) => {

@@ -23,6 +23,7 @@ import { CityShell } from "./components/CityShell";
 import { Foundations } from "./components/Foundations";
 import { Gates } from "./components/Gate";
 import { GloryMotes } from "./components/GloryMotes";
+import { ClickInspector } from "./components/ClickInspector";
 import { Ground } from "./components/Ground";
 import { Inhabitants } from "./components/Inhabitants";
 import { Pyramid } from "./components/Pyramid";
@@ -183,6 +184,7 @@ export function Scene() {
       {phase === "intro" && <IntroCamera />}
       {phase === "entering" && <EntryTween />}
       {phase === "active" && <FirstPersonControls />}
+      {phase === "active" && <ClickInspector />}
 
       {/* Post: a cinematic stack. N8AO grounds the geometry with contact
           shadowing; depth-of-field softens only during the establishing orbit;
