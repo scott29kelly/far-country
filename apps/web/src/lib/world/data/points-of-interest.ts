@@ -53,8 +53,8 @@ export const CITY_HALF = 100;
 export const PYRAMID = {
   baseHalf: 68,
   summitHalf: 18,
-  steps: 7,
-  stepHeight: 12,
+  steps: 12,
+  stepHeight: 7,
 } as const;
 
 /** Y of the summit terrace top — where the throne sits. */
