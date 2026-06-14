@@ -111,3 +111,56 @@ statement; this entry governs only the *placement*.
 
 - [`docs/sources/willis-new-jerusalem-model.md`](docs/sources/willis-new-jerusalem-model.md) — "Tribe → gate ordering (Ezekiel 48:30–34)"
 - Code: `apps/web/src/lib/world/data/points-of-interest.ts` (`GATES`)
+
+---
+
+## Entry #3 — Depicting the inhabitants (great multitude + angelic hosts)
+
+- **Date:** 2026-06-14
+- **Tier:** the inhabitants are `clear` (Rev 7:9 and Rev 5:11 state them plainly);
+  the *rendering choices* below are the interpretive part this entry records
+  (ADR 0009 rule 4).
+- **Question:** Should the explorable world depict the redeemed and the angels —
+  and if so, how — given the aniconic policy (ADR 0010) and the
+  no-invented-imagery non-negotiable (CLAUDE.md)?
+- **Decision:** **Yes — depict both, reverently and without invented
+  iconography.**
+
+### Chosen rendering
+
+- **Great multitude (Rev 7:9** — "a great multitude that no one could number...
+  clothed in white robes, standing before the throne"): simplified white-robed
+  luminous figures with **no facial or identity features**; a subtle scale and
+  warm-tone variation implies the "every nation" diversity without depicting any
+  specific person. Placed standing throughout the plaza and ascending the
+  terrace courses, gathered toward the throne.
+- **Angelic hosts (Rev 5:11** — "many angels... around the throne"): **abstract
+  vertical beings of light** ringing the summit, slowly rising and falling. **No
+  wings and no figural form** — Scripture does not fix the hosts' appearance in
+  this text, so we do not invent it.
+
+### Rationale
+
+Rev 7:9 and 5:11 are clear-tier: an empty city under-represents the dataset
+(heaven is *full* — of the redeemed before the throne and the hosts around it)
+and reads as an architectural model rather than an inhabited place. ADR 0010's
+aniconic restriction governs the **divine** persons only (kept as abstract light
+at the summit, see `Throne.tsx`); the redeemed and the angels are creatures and
+may be shown. The no-invented-imagery rule is honoured by **withholding** detail
+Scripture does not give (no faces, no wings, no harps) rather than by omitting
+the inhabitants altogether.
+
+### What is grounded vs. a rendering choice
+
+- **Grounded:** the existence and white robes of the multitude and its placement
+  "before the throne" (Rev 7:9); the hosts "around the throne" (Rev 5:11).
+- **Rendering choice (not a textual claim):** the *count* rendered (a legibility/
+  performance stand-in for "no one could number"), the cone-robe + head-sphere
+  silhouette, the abstract light-form for the hosts, exact positions, and the
+  subtle tone variation.
+
+### Governing sources
+
+- Rev 7:9; Rev 5:11; ADR 0009 rule 4 (this entry's mandate); ADR 0010 (aniconic
+  — divine persons only).
+- Code: `apps/web/src/lib/world/components/Inhabitants.tsx`

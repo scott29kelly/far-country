@@ -24,6 +24,7 @@ import { Foundations } from "./components/Foundations";
 import { Gates } from "./components/Gate";
 import { GloryMotes } from "./components/GloryMotes";
 import { Ground } from "./components/Ground";
+import { Inhabitants } from "./components/Inhabitants";
 import { Pyramid } from "./components/Pyramid";
 import { River } from "./components/River";
 import { Skybox } from "./components/Skybox";
@@ -143,6 +144,7 @@ export function Scene() {
       <Gates />
       <River />
       <TreesOfLife />
+      <Inhabitants />
       <Throne />
 
       {/* Glory core — bloom seed + god-rays source at the summit. toneMapped
