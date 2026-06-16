@@ -70,7 +70,7 @@ def make_anthropic_judge(
     *,
     model: str = DEFAULT_JUDGE_MODEL,
     max_tokens: int = DEFAULT_MAX_TOKENS,
-) -> "JudgeCaller":
+) -> JudgeCaller:
     """Wrap an `anthropic.Anthropic` client into a `JudgeCaller`.
 
     Accepts an object rather than the SDK type so this module imports
@@ -78,7 +78,7 @@ def make_anthropic_judge(
     `extract.extractor.make_anthropic_caller`.
     """
 
-    def judge(statement: str, source_text: str) -> tuple["VerificationStatus", str]:
+    def judge(statement: str, source_text: str) -> tuple[VerificationStatus, str]:
         user = (
             f"PASSAGE TEXT:\n{source_text.strip()}\n\n"
             f"CLAIM ABOUT HEAVEN:\n{statement.strip()}\n\n"
@@ -109,7 +109,7 @@ def make_anthropic_judge(
     return judge
 
 
-def _parse_judge_payload(raw: str) -> tuple["VerificationStatus", str]:
+def _parse_judge_payload(raw: str) -> tuple[VerificationStatus, str]:
     cleaned = _strip_json_fence(raw)
     try:
         payload = json.loads(cleaned)

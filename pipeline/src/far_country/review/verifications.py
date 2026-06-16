@@ -13,7 +13,6 @@ descriptor_id so a queue page rendering 20 rows doesn't hammer the DB
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
