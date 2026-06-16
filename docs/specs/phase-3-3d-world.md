@@ -18,7 +18,8 @@ This spec is a placeholder. Its purpose right now is to record the goals, the th
 
 ## What we already know
 
-- Stack: React Three Fiber + drei + zustand, inside the existing Next.js app. See [`../adr/0002-tech-stack.md`](../adr/0002-tech-stack.md).
+- **Rendering stack superseded.** The R3F-on-Next approach below was superseded by [`../adr/0013-fork-laas-engine-for-3d-world.md`](../adr/0013-fork-laas-engine-for-3d-world.md): Phase 3 now builds on the vendored WebGPU engine (`apps/world-engine/`). The concrete port plan is [`phase-3-engine-integration.md`](phase-3-engine-integration.md). The goals and content scope on this page still hold; only the renderer changed.
+- Original stack (now legacy, retired at engine parity): React Three Fiber + drei + zustand, inside the existing Next.js app. See [`../adr/0002-tech-stack.md`](../adr/0002-tech-stack.md).
 - Data source: the same JSON exports the browse UI consumes.
 - Scope is bounded to the New Jerusalem core elements (city walls, gates, foundations, throne, river of life, tree of life, representative population) for the initial release. See [`../prd.md`](../prd.md) §5 Phase 3.
 - The 3D layer does not invent geography or populate the city with un-cited beings.
