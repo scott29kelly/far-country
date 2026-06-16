@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:no-source-leakage": "node scripts/check-no-source-leakage.mjs",
-    "build:index": "tsx scripts/build-index.ts"
+    "build:index": "tsx scripts/build-index.ts",
+    "build:engine": "npm --prefix ../world-engine ci && npm --prefix ../world-engine run build && node -e \"const fs=require('fs');fs.rmSync('public/laas',{recursive:true,force:true});fs.cpSync('../world-engine/dist','public/laas',{recursive:true})\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",

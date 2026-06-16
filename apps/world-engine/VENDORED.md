@@ -31,6 +31,26 @@ Country's own modifications to this engine are made under the same terms.
 Why this engine, and how it is integrated, is recorded in
 [`docs/adr/0013-fork-laas-engine-for-3d-world.md`](../../docs/adr/0013-fork-laas-engine-for-3d-world.md).
 In short: it is kept as a standalone sub-app that builds with its own Vite
-setup; the Next app hosts its build output at `/world`; and its procedural
-forest content is being progressively replaced with New Jerusalem geometry
-driven by the canonical dataset.
+setup; and its procedural forest content is being progressively replaced with
+New Jerusalem geometry driven by the canonical dataset.
+
+## How it is hosted in the web app (Stage 2)
+
+The engine's Vite `base` is `/laas/` for production builds, so its output is
+emitted into the web app's static dir at that path with no edits to the engine:
+
+- `apps/web`'s `npm run build:engine` runs `npm ci` + `npm run build` here, then
+  copies `dist/` into `apps/web/public/laas/` (gitignored — a generated artifact).
+- The Next route `apps/web/app/world-preview/page.tsx` hosts it in a
+  full-viewport iframe pointing at `/laas/index.html`, so the engine runs
+  untouched (own canvas, boot UI, error hooks, HUD), isolated from React.
+- This `/world-preview` route coexists with the legacy R3F `/world` until the
+  engine reaches parity on the New Jerusalem core elements, then `/world` is
+  retired (per ADR 0013).
+- CI builds this engine on every PR (the `world-engine` job) to guard against
+  the vendored code ceasing to compile.
+
+To view locally: `cd apps/world-engine && npm install && npm run dev`
+(`localhost:5173`) for the engine standalone, or from `apps/web` run
+`npm run build:engine` then `npm run dev` and open `/world-preview`. WebGPU
+(Chrome 113+) is required.
