@@ -19,6 +19,7 @@ import { buildSanityScene } from './debug/SanityScene';
 import { buildShadowTestScene } from './debug/ShadowTestScene';
 import { buildTerrainScene } from './debug/TerrainScene';
 import { buildScene, registerScene, type WorldContext } from './debug/Scenes';
+import { buildNewJerusalemScene } from './nj/NewJerusalemScene';
 
 async function boot(): Promise<void> {
   const hooks = initHooks();
@@ -63,6 +64,8 @@ async function boot(): Promise<void> {
   registerScene('shadowtest', buildShadowTestScene);
   // 'world' becomes the streamed open world once terrain tiles land.
   registerScene('world', buildTerrainScene);
+  // Far Country: the New Jerusalem on the new-earth terrain (Phase 3, Stage 3).
+  registerScene('newjerusalem', buildNewJerusalemScene);
 
   const ctx: WorldContext = {
     engine,

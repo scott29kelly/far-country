@@ -50,8 +50,8 @@ Any `Mesh`/`InstancedMesh` added to `engine.scene` with `castShadow` /
 
 **Integration is therefore additive:**
 
-1. **New:** `src/world-engine-nj/NewJerusalemScene.ts` (a `SceneBuilder`).
-   (We keep our content in its own dir rather than `debug/` to separate it from
+1. **New:** `src/nj/NewJerusalemScene.ts` (a `SceneBuilder`). (We keep our
+   content in its own `src/nj/` dir rather than `debug/` to separate it from
    vendored code and ease upstream diffs.)
 2. **Modify:** `src/main.ts` (~line 65) — `registerScene('newjerusalem', …)`.
 3. **Boot:** `?scene=newjerusalem`. Wire `/world-preview` to pass that param.

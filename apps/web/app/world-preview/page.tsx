@@ -30,7 +30,7 @@ export default function WorldPreviewPage() {
         ← Back
       </Link>
       <iframe
-        src="/laas/index.html"
+        src="/laas/index.html?scene=newjerusalem"
         title="Far Country world engine preview"
         className="h-full w-full border-0"
       />
