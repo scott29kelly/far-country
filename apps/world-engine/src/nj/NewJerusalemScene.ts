@@ -28,6 +28,8 @@ import { setupSunShadows } from '../render/ShadowSetup';
 import { Clouds } from '../sky/Clouds';
 import { SunSky } from '../sky/SunSky';
 import type { WorldContext } from '../debug/Scenes';
+import { CITY_HALF } from './cityModel';
+import { buildCityMassing } from './CityMassing';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params, seed } = ctx;
@@ -129,42 +131,26 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     water: hf.waterYAtCpu(x, z),
   });
 
-  // === M2: New Jerusalem geometry is added here (leveled pad at the origin) ===
+  // New Jerusalem geometry (M2). Placed at the origin; the city's local y = 0
+  // sits on the base-platform top, resting on the new-earth terrain.
+  ctx.progress(0.95, 'newjerusalem: building the city');
+  const cityGroundY = hf.heightAtCpu(0, 0);
+  const city = buildCityMassing();
+  city.position.set(0, cityGroundY, 0);
+  engine.scene.add(city);
 
-  // Camera spawn: a dry, reasonably flat spot near the map center, eye height,
-  // looking toward the NE relief — same default as the terrain scene.
+  // Camera spawn: an establishing view from south of the wall, looking north up
+  // the cascade meridian toward the throne, lifted to take in the pyramid.
   if (params.cam === null) {
-    const spawn = findWalkSpawn(hf);
-    ctx.hooks.initialPose = {
-      p: [spawn.x, hf.heightAtCpu(spawn.x, spawn.z) + 1.7, spawn.z],
-      yaw: -0.78,
-      pitch: -0.02,
+    const camPose: { p: [number, number, number]; yaw: number; pitch: number } = {
+      p: [0, cityGroundY + 46, CITY_HALF + 110],
+      yaw: 0, // 0 = looking -Z (north), toward the city
+      pitch: -0.05,
     };
-    ctx.hooks.initialPoseMode = 'walk';
-    engine.camera.position.set(spawn.x, ctx.hooks.initialPose.p[1], spawn.z);
+    ctx.hooks.initialPose = camPose;
+    ctx.hooks.initialPoseMode = 'fly';
+    engine.camera.position.set(...camPose.p);
   }
 
   ctx.progress(1, 'newjerusalem ready');
-}
-
-/**
- * Default walk spawn: first dry, reasonably flat spot on a coarse spiral out
- * from the map center. Mirrors the terrain scene's spawn logic.
- */
-function findWalkSpawn(hf: Heightfield): { x: number; z: number } {
-  for (let r = 0; r <= 240; r += 12) {
-    const steps = Math.max(1, Math.round((2 * Math.PI * r) / 18));
-    for (let k = 0; k < steps; k++) {
-      const a = (k / steps) * Math.PI * 2;
-      const x = Math.cos(a) * r;
-      const z = Math.sin(a) * r;
-      const h = hf.heightAtCpu(x, z);
-      if (hf.waterYAtCpu(x, z) > h - 0.05) continue; // wet or waterline
-      const sx = hf.heightAtCpu(x + 6, z) - hf.heightAtCpu(x - 6, z);
-      const sz = hf.heightAtCpu(x, z + 6) - hf.heightAtCpu(x, z - 6);
-      if (Math.hypot(sx, sz) / 12 > 0.35) continue; // too steep
-      return { x, z };
-    }
-  }
-  return { x: 0, z: 0 };
 }

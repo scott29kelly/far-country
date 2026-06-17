@@ -132,26 +132,29 @@ them:
 
 ---
 
-## 5. The new-earth landscape question (key design decision)
+## 5. The new-earth landscape (decided: idealized paradisal terrain)
 
 The engine's terrain is an eroded forest landscape. Revelation sites the city on
-a **new earth** (Rev 21:1–2), with nations and kings bringing glory into it
-(Rev 21:24–26). Two options:
+a **new earth** (Rev 21:1-2). **Decision (2026-06):** keep the engine's terrain
+technology but art-direct it toward an **idealized, paradisal** look rather than
+wild wilderness, and keep the surrounding landscape as illustrative context (not
+a cited descriptor; disclosed as such in the HUD).
 
-- **(A) City on a leveled plateau within the engine's terrain** — keep the
-  surrounding new-earth landscape (mountains, rivers, sky) as context; flatten a
-  building pad under the city footprint via the heightfield. *Recommended:* it
-  exploits exactly the quality we forked the engine for, and the surrounding
-  landscape is defensible as the new earth — provided it carries **no un-cited
-  claims** (it is "landscape," not asserted heavenly geography; note this in the
-  HUD).
-- **(B) City on a neutral/abstract ground** — discard the natural terrain,
-  render only the city on an idealised plane. Safer hermeneutically, but throws
-  away the engine's signature terrain/vegetation strengths.
+Paradisal art-direction is inherently *visual* iteration and belongs in M3, done
+against a running build (the agent container has no GPU). The levers:
 
-This needs a decision before M2. Leaning (A) with an explicit "surrounding
-landscape is illustrative, not a cited descriptor" disclosure. **Open — surface
-to the user.**
+- **Time of day / grade** — a warm, luminous key (the single biggest lever). The
+  scene honours `?T=` (0-24), so candidates can be A/B'd live and the winner
+  baked as the scene default. Default is currently the engine's `T=11`.
+- **Relief** — gentler amplitude than the wild default. Lives inside the
+  heightfield synthesis (not a URL param); a tuning knob is a small engine edit,
+  deferred to M3 so it can be judged visually.
+- **Water** — calmer surface, fuller rivers/lakes.
+- **Lushness** — optional reintroduction of *gardens/groundcover* (not the wild
+  forest scatter) around the city, if it reads as paradise rather than wilderness.
+
+Rejected: discarding the terrain for an abstract plane (throws away the exact
+quality we forked the engine for).
 
 ---
 
