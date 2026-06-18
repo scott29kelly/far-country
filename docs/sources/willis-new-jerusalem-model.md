@@ -207,6 +207,69 @@ illustrative order; deferring to Willis switches it to Ezekiel's.)
 
 ---
 
+## Visual composition (from Willis's own artwork)
+
+New observations from **her illustrations** in two print articles (*Biblical
+Prophecy* magazine): "Why the New Jerusalem Is Shaped Like a Mountain" (Winter
+2022) and "The Size of New Jerusalem" (Spring 2023). These are the print
+counterparts of the bibleprophecydaily.com articles already indexed below;
+"Artwork by Janet Willis." Per [ADR 0006](../adr/0006-source-licensing-posture.md)
+we describe her renderings, we do not reproduce them. This section is for **art
+direction** — how she composes the scene — distinct from the doctrinal claims
+above.
+
+**The hero composition (recurring across both articles):**
+
+- The city reads as a **terraced step-pyramid / ziggurat** rising in distinct
+  decreasing-width tiers to a single summit — not a smooth cone, not a cube.
+  Many shallow steps (more than a dozen visible), giving a stair-stepped
+  silhouette like Djoser / El Castillo (the real-world ziggurats she prints
+  alongside, as cultural-memory evidence).
+- It sits on **elevated green land** — a broad rise / plateau, not a flat plain
+  and not a sharp peak. The land around is **verdant and gently rolling**, with
+  scattered trees and meadow.
+- **Water in the foreground / around the base:** a calm river or lake leads the
+  eye to the city. Distant **mountain ranges** ring the horizon under a bright,
+  softly clouded **daytime sky**.
+- The city is **luminous** — it glows warmer and brighter than the daylit
+  landscape (the glory-light reading made visible), brightest toward the summit.
+
+**Palette she uses:**
+
+- City: **warm golds and ivory/sand** on the lower terraces (street-of-gold /
+  jasper), shifting to **pale, cool crystalline blue-green and white** higher up,
+  with a bright glow at the apex. Reads as stone-and-crystal, not metallic chrome.
+- Land: saturated **verdant greens**; **soft blue water**; **hazy blue-grey**
+  distant mountains; warm, high-key atmosphere (gentle, not dramatic).
+
+**Layout diagrams (not landscape art):**
+
+- **Holy Allotment** plan (Ezek 45/48): a **square subdivided into stacked
+  horizontal bands** (priests' portion with the sanctuary, Levites' portion, the
+  city portion, the prince's land flanking) — the **city sits at the south end**
+  of this square district. This is the *regional* layout the city sits within.
+- **Ezekiel-vs-John comparison** table: both cities on elevated land, square
+  base, twelve gates (3/side), etc. — the harmonization, in checklist form.
+- **Height-comparison** chart dramatizing scale (the city dwarfing the Burj
+  Khalifa, 2,717 ft). NB: our build uses the **deferred ~placeholder scale**
+  (ADR 0009 rule 6), so this is mood/intent, not our metric.
+
+**Build directives for the engine scene (`?scene=newjerusalem`):**
+
+1. **Site the city on a broad rise**, not flat ground — pick/raise a plateau in
+   the heightfield so the terraced city reads as a mountain-city above the land.
+2. **Put water at the approach** — a river/lake between the default spawn and the
+   city, leading the eye up to it (matches her foreground water, and the Rev 22
+   river can flow down to meet it).
+3. **Terracing:** many shallow steps to a single bright summit; lower tiers warm
+   gold/ivory, upper tiers cool crystalline, **glow concentrated at the apex**
+   (throne glory) — drives material zoning and an emissive summit.
+4. **Surround with verdant, gently rolling vegetated land** ringed by distant
+   hills — which the restored full-landscape scene now provides.
+5. **Keep the daytime, high-key, softly-clouded mood** for the establishing view.
+
+---
+
 ## Source index
 
 - Willis — [New Jerusalem Is Shaped Like a Mountain](https://bibleprophecydaily.com/new-jerusalem-is-shaped-like-a-mountain/)
