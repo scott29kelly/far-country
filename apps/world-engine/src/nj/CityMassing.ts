@@ -1,9 +1,9 @@
 /**
  * New Jerusalem massing — M3, the luminous arcaded mountain-city.
  *
- * The dominant form per Janet Willis's artwork and video walkthrough: a rugged
- * rock mountain pedestal the city rises from, a street-of-gold base plaza
- * (Rev 21:21), and a seven-tier step-pyramid (Rev 21:10) whose every terrace is
+ * The dominant form per Janet Willis's artwork and video walkthrough: a
+ * street-of-gold base plaza (Rev 21:21) and a seven-tier step-pyramid
+ * (Rev 21:10) whose every terrace is
  * faced with a repeating golden ARCADE — pilaster columns over emissive window
  * bands, capped by a cornice lip — so the city reads as detailed, translucent
  * gold "glowing from within its arches" rather than smooth blocks. A
@@ -23,14 +23,13 @@
  * plaza top); the scene positions it on the new-earth terrain.
  */
 
-import { BoxGeometry, Color, CylinderGeometry, Group, Mesh, SphereGeometry } from 'three';
+import { BoxGeometry, Color, Group, Mesh, SphereGeometry } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
 import { CITY_HALF, PYRAMID, SUMMIT_Y, TERRACES } from './cityModel';
 
 const GOLD = new Color(0xd9a441); // warm street-of-gold (lower terraces)
 const CRYSTAL = new Color(0xcfe8f2); // pale crystalline (upper terraces)
-const ROCK = new Color(0x6b5847); // rugged earthy brown mountain rock
 
 type Face = { axis: 'x' | 'z'; sign: 1 | -1 };
 const FACES: Face[] = [
@@ -43,18 +42,6 @@ const FACES: Face[] = [
 export function buildCityMassing(): Group {
   const city = new Group();
   city.name = 'new-jerusalem';
-
-  // Rugged rock mountain pedestal: a faceted frustum whose skirt embeds into the
-  // terrain and whose top face sits at the plaza (y = 0); rock rising into gold.
-  const rockMat = new MeshStandardNodeMaterial();
-  rockMat.color.copy(ROCK);
-  rockMat.metalness = 0;
-  rockMat.roughness = 0.95;
-  const rock = new Mesh(new CylinderGeometry(160, 260, 90, 8, 1), rockMat);
-  rock.position.y = -45;
-  rock.castShadow = true;
-  rock.receiveShadow = true;
-  city.add(rock);
 
   // Base platform / street-of-gold plaza. Top face at local y = 0.
   const gold = new MeshStandardNodeMaterial();

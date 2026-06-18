@@ -37,6 +37,15 @@ loadRepoRootEnv();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The WebGPU engine at /world-preview is the current front door. Send the
+  // root and the legacy R3F /world route there so the production domain (and the
+  // Vercel dashboard's Visit button) land on the engine, not the old scene.
+  async redirects() {
+    return [
+      { source: "/", destination: "/world-preview", permanent: false },
+      { source: "/world", destination: "/world-preview", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

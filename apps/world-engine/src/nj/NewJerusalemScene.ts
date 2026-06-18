@@ -22,8 +22,7 @@
 import { buildTerrainScene } from '../debug/TerrainScene';
 import type { WorldContext } from '../debug/Scenes';
 import type { Heightfield } from '../world/Heightfield';
-import { CITY_HALF } from './cityModel';
-import { buildCityMassing } from './CityMassing';
+import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './Allotment';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
@@ -32,26 +31,34 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // Reused unchanged so the world here is exactly the ?scene=world quality bar.
   await buildTerrainScene(ctx);
 
-  // Place the New Jerusalem at the origin, resting on the terrain. buildTerrainScene
-  // stashes the generated heightfield on the engine; read it back for ground height.
+  // Place the Holy Allotment (the lifted plain carrying the city) at the origin.
+  // buildTerrainScene stashes the generated heightfield on the engine; read it
+  // back for ground height, then lift the plateau above the local terrain.
   const hf = (engine as unknown as { heightfield?: Heightfield }).heightfield ?? null;
-  const cityGroundY = hf ? hf.heightAtCpu(0, 0) : 0;
-  const city = buildCityMassing();
-  city.position.set(0, cityGroundY, 0);
-  engine.scene.add(city);
+  const baseY = hf ? hf.heightAtCpu(0, 0) : 0;
+  const PLAIN_LIFT = 12;
+  const plainTopY = baseY + PLAIN_LIFT;
+  const allot = buildHolyAllotment();
+  allot.position.set(0, plainTopY, 0);
+  engine.scene.add(allot);
 
-  // Spawn the explorer out in the landscape, south of the city, grounded and
-  // free to roam (V toggles fly), looking north toward the crystal city.
-  // buildTerrainScene's default walk spawn spirals out from the origin and could
-  // land inside the city footprint, so override it with a clear approach pose.
+  // Walk physics: clamp to the plateau top while standing on the allotment, else
+  // fall back to the procedural terrain probe buildTerrainScene installed.
+  const baseProbe = ctx.hooks.groundProbe;
+  ctx.hooks.groundProbe = (x, z) => {
+    const base = baseProbe ? baseProbe(x, z) : { ground: baseY, water: baseY - 100 };
+    const onPlain =
+      x >= -ALLOT_X && x <= ALLOT_X && z >= ALLOT_Z_NORTH && z <= ALLOT_Z_SOUTH;
+    return onPlain ? { ground: plainTopY, water: base.water } : base;
+  };
+
+  // Spawn on the plain, south of the city, grounded and free to roam (V toggles
+  // fly), looking north up the meridian toward the city, fields, and temple.
   if (params.cam === null && hf) {
-    const sx = 0;
-    const sz = CITY_HALF + 180;
-    const groundY = hf.heightAtCpu(sx, sz);
     const pose = {
-      p: [sx, groundY + 1.7, sz] as [number, number, number],
+      p: [0, plainTopY + 1.7, 120] as [number, number, number],
       yaw: 0, // 0 = looking -Z (north), toward the city
-      pitch: 0.12, // up-tilt to take in the terraced summit on its rock mount
+      pitch: 0.1, // up-tilt to take in the terraced summit
     };
     ctx.hooks.initialPose = pose;
     ctx.hooks.initialPoseMode = 'walk';
