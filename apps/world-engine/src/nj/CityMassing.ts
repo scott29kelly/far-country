@@ -1,35 +1,34 @@
 /**
- * New Jerusalem massing — M3, the luminous arcaded mountain-city.
+ * New Jerusalem massing — M3, the arched golden mountain-city (toward Willis).
  *
- * The dominant form per Janet Willis's artwork and video walkthrough: a
- * street-of-gold base plaza (Rev 21:21) and a seven-tier step-pyramid
- * (Rev 21:10) whose every terrace is
- * faced with a repeating golden ARCADE — pilaster columns over emissive window
- * bands, capped by a cornice lip — so the city reads as detailed, translucent
- * gold "glowing from within its arches" rather than smooth blocks. A
- * self-luminous glory crowns the open-air summit (Rev 21:23; 22:5 — the glory
- * of God is the light, no sun or moon; abstract light only, ADR 0010).
+ * Built to read like Janet Willis's book-cover renderings: a street-of-gold
+ * plinth, three grand terraces each faced with FOUR tall arched window-gates
+ * (twelve per side), and a glowing crown under the open-air glory. Every arched
+ * bay is a recessed luminous window framed by gold piers with an arched head,
+ * so the city reads as detailed translucent gold "glowing from within its
+ * arches" rather than smooth or striped blocks. Lower tiers are warm gold;
+ * upper tiers grade toward pale crystal; the glow intensifies toward the throne.
  *
- * Lower terraces are warm gold; upper terraces grade toward pale crystal, and
- * the window glow intensifies toward the throne.
- *
- * Materials are placeholder PBR approximations (no true gem transmission yet).
- * Still to come: jasper wall + twelve pearl gates (three per side), the twelve
- * jewelled foundation courses, the river-of-life cascade with trees of life
- * (date palms), the vaulted interior, and the flat green Holy-Allotment platform
- * (crop fields, priests' dwellings, standalone temple) the city sits on.
- *
- * Returns a Group in city-local coordinates (origin-centred, local y=0 at the
- * plaza top); the scene positions it on the new-earth terrain.
+ * Abstract glory-light only at the summit (Rev 21:23; 22:5; ADR 0010 — no
+ * figure). Materials are placeholder PBR approximations (no true gem
+ * transmission yet). Still to come: jasper wall + twelve pearl gates as distinct
+ * portals, the twelve jewelled foundation courses, the river-of-life cascade
+ * with trees of life, and the vaulted interior.
  */
 
-import { BoxGeometry, Color, Group, Mesh, SphereGeometry } from 'three';
+import {
+  BoxGeometry,
+  CircleGeometry,
+  Color,
+  DoubleSide,
+  Group,
+  Mesh,
+  SphereGeometry,
+} from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
-import { CITY_HALF, PYRAMID, SUMMIT_Y, TERRACES } from './cityModel';
-
-const GOLD = new Color(0xd9a441); // warm street-of-gold (lower terraces)
-const CRYSTAL = new Color(0xcfe8f2); // pale crystalline (upper terraces)
+const GOLD = new Color(0xd9a441);
+const CRYSTAL = new Color(0xdfeaf0);
 
 type Face = { axis: 'x' | 'z'; sign: 1 | -1 };
 const FACES: Face[] = [
@@ -39,94 +38,124 @@ const FACES: Face[] = [
   { axis: 'x', sign: -1 },
 ];
 
+/** Position+orient an object built facing +Z onto a given tier face. */
+function placeOnFace(obj: Mesh | Group, u: number, y: number, off: number, face: Face): void {
+  if (face.axis === 'z') {
+    obj.position.set(u, y, face.sign * off);
+    obj.rotation.y = face.sign > 0 ? 0 : Math.PI;
+  } else {
+    obj.position.set(face.sign * off, y, u);
+    obj.rotation.y = face.sign > 0 ? -Math.PI / 2 : Math.PI / 2;
+  }
+}
+
+/** An arched window: a tall luminous panel with a semicircular head, facing +Z. */
+export function makeArchWindow(width: number, height: number, m: MeshStandardNodeMaterial): Group {
+  const g = new Group();
+  const rect = new Mesh(new BoxGeometry(width, height, 0.6), m);
+  rect.position.y = height / 2;
+  g.add(rect);
+  const arch = new Mesh(new CircleGeometry(width / 2, 18, 0, Math.PI), m);
+  arch.position.set(0, height, 0.3);
+  g.add(arch);
+  return g;
+}
+
+type Tier = { half: number; h: number; arches: number };
+
 export function buildCityMassing(): Group {
   const city = new Group();
   city.name = 'new-jerusalem';
 
-  // Base platform / street-of-gold plaza. Top face at local y = 0.
-  const gold = new MeshStandardNodeMaterial();
-  gold.color.copy(GOLD);
-  gold.metalness = 0.5;
-  gold.roughness = 0.3;
-  const platform = new Mesh(new BoxGeometry(2 * CITY_HALF, 8, 2 * CITY_HALF), gold);
-  platform.position.y = -4;
-  platform.castShadow = true;
-  platform.receiveShadow = true;
-  city.add(platform);
+  // Street-of-gold apron around the base.
+  const apron = new MeshStandardNodeMaterial();
+  apron.color.copy(GOLD);
+  apron.metalness = 0.5;
+  apron.roughness = 0.3;
+  const plaza = new Mesh(new BoxGeometry(232, 5, 232), apron);
+  plaza.position.y = -2.5;
+  plaza.receiveShadow = true;
+  plaza.castShadow = true;
+  city.add(plaza);
 
-  // Shared decoration geometry (columns are uniform; panels/cornices size per tier).
-  const H = PYRAMID.stepHeight;
-  const colGeo = new BoxGeometry(1.6, H, 2.2);
-  const last = Math.max(1, TERRACES.length - 1);
+  // Plinth + three grand terraces (12 arched gates per side) + glowing crown.
+  const tiers: Tier[] = [
+    { half: 100, h: 16, arches: 4 }, // street-of-gold plinth / gates
+    { half: 82, h: 42, arches: 4 },
+    { half: 60, h: 38, arches: 4 },
+    { half: 40, h: 34, arches: 4 },
+    { half: 22, h: 26, arches: 0 }, // crown (solid, glowing) under the glory
+  ];
 
-  for (const t of TERRACES) {
-    const f = (t.level - 1) / last; // 0 at base .. 1 near summit
+  let yBot = 0;
+  const last = tiers.length - 1;
+  for (let ti = 0; ti < tiers.length; ti++) {
+    const t = tiers[ti];
+    const f = ti / last; // 0 at base .. 1 at crown
     const tierColor = GOLD.clone().lerp(CRYSTAL, f);
-    const yBot = (t.level - 1) * H;
-    const yMid = yBot + H / 2;
-    const half = t.half;
+    const H = t.h;
+    const yc = yBot + H / 2;
 
     // Solid tier mass (the silhouette).
-    const wall = new MeshStandardNodeMaterial();
-    wall.color.copy(tierColor);
-    wall.metalness = 0.5 * (1 - f);
-    wall.roughness = 0.3 - 0.18 * f;
-    wall.emissive.copy(tierColor);
-    wall.emissiveIntensity = 0.04 + 0.18 * f;
-    const box = new Mesh(new BoxGeometry(2 * half, t.topY, 2 * half), wall);
-    box.position.y = t.topY / 2;
+    const mass = new MeshStandardNodeMaterial();
+    mass.color.copy(tierColor);
+    mass.metalness = 0.55 * (1 - f);
+    mass.roughness = 0.3 - 0.16 * f;
+    mass.emissive.copy(tierColor);
+    mass.emissiveIntensity = 0.05 + 0.6 * f * f;
+    const box = new Mesh(new BoxGeometry(2 * t.half, H, 2 * t.half), mass);
+    box.position.y = yc;
     box.castShadow = true;
     box.receiveShadow = true;
     city.add(box);
 
-    // Per-tier decoration materials.
-    const colMat = new MeshStandardNodeMaterial();
-    colMat.color.copy(tierColor);
-    colMat.metalness = 0.7;
-    colMat.roughness = 0.22;
-    const winMat = new MeshStandardNodeMaterial();
-    winMat.color.setHex(0xffe9a8);
-    winMat.emissive.setHex(0xffdf8c);
-    winMat.emissiveIntensity = 1.4 + 3.2 * f; // glow brighter toward the throne
-    winMat.roughness = 0.5;
-
-    // Geometry sized to this tier.
-    const panelGeo = new BoxGeometry(2 * half * 0.86, H * 0.6, 0.8);
-    const corniceGeo = new BoxGeometry(2 * half + 5, 2, 2 * half + 5);
-
-    // Cornice lip at the top of the riser (overhangs the step edge → shadow line).
-    const cornice = new Mesh(corniceGeo, colMat);
-    cornice.position.y = t.topY - 1;
+    // Gold cornice lip at the tier top.
+    const trim = new MeshStandardNodeMaterial();
+    trim.color.copy(GOLD.clone().lerp(CRYSTAL, f));
+    trim.metalness = 0.7;
+    trim.roughness = 0.22;
+    const cornice = new Mesh(new BoxGeometry(2 * t.half + 6, 3, 2 * t.half + 6), trim);
+    cornice.position.y = yBot + H - 1.5;
     cornice.castShadow = true;
-    cornice.receiveShadow = true;
     city.add(cornice);
 
-    const cols = Math.max(3, Math.round((2 * half) / 7));
-    for (const face of FACES) {
-      // Emissive window band, set just inside the colonnade.
-      const panel = new Mesh(panelGeo, winMat);
-      if (face.axis === 'z') {
-        panel.position.set(0, yMid, face.sign * (half + 0.25));
-      } else {
-        panel.position.set(face.sign * (half + 0.25), yMid, 0);
-        panel.rotation.y = Math.PI / 2;
-      }
-      city.add(panel);
+    if (t.arches > 0) {
+      const winMat = new MeshStandardNodeMaterial();
+      winMat.color.copy(GOLD.clone().lerp(new Color(0xffffff), f));
+      winMat.emissive.setHex(0xffe7a6);
+      winMat.emissiveIntensity = 1.8 + 2.6 * f;
+      winMat.roughness = 0.5;
+      winMat.side = DoubleSide;
 
-      // Pilaster colonnade in front of the glow.
-      for (let i = 0; i < cols; i++) {
-        const u = -half + 2 * half * ((i + 0.5) / cols);
-        const col = new Mesh(colGeo, colMat);
-        if (face.axis === 'z') {
-          col.position.set(u, yMid, face.sign * (half + 0.4));
-        } else {
-          col.position.set(face.sign * (half + 0.4), yMid, u);
-          col.rotation.y = Math.PI / 2;
+      const off = t.half + 0.2;
+      const W = 2 * t.half;
+      const bay = W / t.arches;
+      const ow = bay * 0.58;
+      const winH = H * 0.56;
+      const winBot = yBot + H * 0.16;
+      const pierW = bay * 0.34;
+
+      for (const face of FACES) {
+        // Arched windows.
+        for (let i = 0; i < t.arches; i++) {
+          const u = -W / 2 + bay * (i + 0.5);
+          const win = makeArchWindow(ow, winH, winMat);
+          placeOnFace(win, u, winBot, off, face);
+          city.add(win);
         }
-        col.receiveShadow = true;
-        city.add(col);
+        // Gold piers between/around the bays.
+        for (let i = 0; i <= t.arches; i++) {
+          const u = -W / 2 + bay * i;
+          const pier = new Mesh(new BoxGeometry(pierW, H, 2.6), trim);
+          placeOnFace(pier, u, yc, off, face);
+          pier.castShadow = true;
+          pier.receiveShadow = true;
+          city.add(pier);
+        }
       }
     }
+
+    yBot += H;
   }
 
   // Throne glory: a radiant, self-luminous source at the open-air summit, which
@@ -136,8 +165,8 @@ export function buildCityMassing(): Group {
   gloryMat.emissive.setHex(0xfff1c8);
   gloryMat.emissiveIntensity = 6;
   gloryMat.roughness = 1;
-  const glory = new Mesh(new SphereGeometry(10, 32, 24), gloryMat);
-  glory.position.y = SUMMIT_Y + 8;
+  const glory = new Mesh(new SphereGeometry(11, 32, 24), gloryMat);
+  glory.position.y = yBot + 10;
   city.add(glory);
 
   return city;

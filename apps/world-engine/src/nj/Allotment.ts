@@ -16,10 +16,10 @@
  * Materials are flat PBR; crop/temple/dwelling detailing is illustrative fill.
  */
 
-import { BoxGeometry, Color, Group, Mesh } from 'three';
+import { BoxGeometry, Color, DoubleSide, Group, Mesh } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
-import { buildCityMassing } from './CityMassing';
+import { buildCityMassing, makeArchWindow } from './CityMassing';
 
 export const ALLOT_X = 480; // E-W half-extent
 export const ALLOT_Z_SOUTH = 180; // +Z edge (south, behind the spawn)
@@ -147,24 +147,82 @@ export function buildHolyAllotment(): Group {
   }
 
   // Standalone temple, north of the priests — outside the city (Ezek 48:10).
-  // Bright and prominent, with a golden cap, so it anchors the far end.
+  // Bright and prominent, with arched windows (matching the city) and a golden
+  // cap, so it anchors the far end. Built in a local group, then placed north.
+  const temple = new Group();
   const templeMat = mat(TEMPLE, { rough: 0.5, metal: 0.05, emit: 0.08 });
   const tBase = new Mesh(new BoxGeometry(110, 18, 110), templeMat);
-  tBase.position.set(0, 9, -715);
+  tBase.position.y = 9;
   tBase.castShadow = true;
   tBase.receiveShadow = true;
-  allot.add(tBase);
-  const tInner = new Mesh(new BoxGeometry(66, 40, 66), templeMat);
-  tInner.position.set(0, 38, -715);
+  temple.add(tBase);
+  const tHalf = 33;
+  const tH = 40;
+  const tInner = new Mesh(new BoxGeometry(2 * tHalf, tH, 2 * tHalf), templeMat);
+  tInner.position.y = 18 + tH / 2;
   tInner.castShadow = true;
-  allot.add(tInner);
+  temple.add(tInner);
+  // Arched windows, three per face, glowing pale.
+  const tWin = new MeshStandardNodeMaterial();
+  tWin.color.setHex(0xfff3e0);
+  tWin.emissive.setHex(0xffe9c2);
+  tWin.emissiveIntensity = 1.6;
+  tWin.roughness = 0.5;
+  tWin.side = DoubleSide;
+  const tFaces: Array<{ axis: 'x' | 'z'; sign: 1 | -1 }> = [
+    { axis: 'z', sign: 1 },
+    { axis: 'z', sign: -1 },
+    { axis: 'x', sign: 1 },
+    { axis: 'x', sign: -1 },
+  ];
+  for (const face of tFaces) {
+    for (let i = 0; i < 3; i++) {
+      const u = -2 * tHalf * 0.5 + ((2 * tHalf) / 3) * (i + 0.5);
+      const win = makeArchWindow(15, 26, tWin);
+      const off = tHalf + 0.2;
+      if (face.axis === 'z') {
+        win.position.set(u, 24, face.sign * off);
+        win.rotation.y = face.sign > 0 ? 0 : Math.PI;
+      } else {
+        win.position.set(face.sign * off, 24, u);
+        win.rotation.y = face.sign > 0 ? -Math.PI / 2 : Math.PI / 2;
+      }
+      temple.add(win);
+    }
+  }
   const tCap = new Mesh(
     new BoxGeometry(34, 14, 34),
     mat(new Color(0xe8b23a), { metal: 0.4, rough: 0.3, emit: 0.3 }),
   );
-  tCap.position.set(0, 65, -715);
+  tCap.position.y = 65;
   tCap.castShadow = true;
-  allot.add(tCap);
+  temple.add(tCap);
+  temple.position.set(0, 0, -715);
+  allot.add(temple);
+
+  // Rock chunks along the plateau edge, to break the flat cliff face.
+  const chunkMat = mat(ROCK, { rough: 1 });
+  const edgeZ = [ALLOT_Z_SOUTH, ALLOT_Z_NORTH];
+  for (let k = 0; k < 22; k++) {
+    const along = -ALLOT_X + 0.5 + (2 * ALLOT_X) * (k / 21);
+    const s = 26 + ((k * 37) % 22);
+    // north/south edges
+    const z = edgeZ[k % 2] + (k % 2 === 0 ? 8 : -8);
+    const c1 = new Mesh(new BoxGeometry(s, s * 0.7, s * 0.8), chunkMat);
+    c1.position.set(along, -10 - (k % 3) * 6, z);
+    c1.rotation.y = k * 0.7;
+    c1.castShadow = true;
+    c1.receiveShadow = true;
+    allot.add(c1);
+    // east/west edges
+    const ex = (k % 2 === 0 ? ALLOT_X : -ALLOT_X) + (k % 2 === 0 ? -8 : 8);
+    const c2 = new Mesh(new BoxGeometry(s * 0.8, s * 0.7, s), chunkMat);
+    c2.position.set(ex, -10 - (k % 3) * 6, ALLOT_CZ + along * 0.9);
+    c2.rotation.y = k * 0.5;
+    c2.castShadow = true;
+    c2.receiveShadow = true;
+    allot.add(c2);
+  }
 
   // The New Jerusalem at the south-centre, resting on the plain (plaza at y = 0).
   allot.add(buildCityMassing());
