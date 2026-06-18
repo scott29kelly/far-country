@@ -16,16 +16,26 @@
 /** Half-width of the placeholder city (base footprint), in metres. */
 export const CITY_HALF = 100;
 
-/** Willis step-pyramid (terraced ziggurat) parameters. */
+/**
+ * Willis step-pyramid (terraced ziggurat) parameters.
+ *
+ * Seven visible terraces follow Willis's own artwork and the video walkthrough
+ * (the ~11mi-cubed bounding read as a 7-tier ziggurat). The twelve gem
+ * foundations (Rev 21:19-20) are NOT the visible terraces — they become the
+ * jewelled bedrock courses beneath the base tier (added in a later increment).
+ *
+ * NOTE: the engine copy intentionally diverges from the 12-step apps/web R3F
+ * model (legacy, being retired). Sync deferred per phase-3 spec.
+ */
 export const PYRAMID = {
   baseHalf: 68,
   summitHalf: 18,
-  steps: 12,
-  stepHeight: 7,
+  steps: 7,
+  stepHeight: 16,
 } as const;
 
-/** Y of the summit terrace top — where the throne sits. */
-export const SUMMIT_Y = PYRAMID.steps * PYRAMID.stepHeight; // 84
+/** Y of the summit terrace top — where the throne / glory sits. */
+export const SUMMIT_Y = PYRAMID.steps * PYRAMID.stepHeight; // 112
 
 export const WALL_HEIGHT = 30;
 export const WALL_THICKNESS = 2;

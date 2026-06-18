@@ -46,12 +46,12 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // land inside the city footprint, so override it with a clear approach pose.
   if (params.cam === null && hf) {
     const sx = 0;
-    const sz = CITY_HALF + 140;
+    const sz = CITY_HALF + 180;
     const groundY = hf.heightAtCpu(sx, sz);
     const pose = {
       p: [sx, groundY + 1.7, sz] as [number, number, number],
       yaw: 0, // 0 = looking -Z (north), toward the city
-      pitch: 0.05, // slight up-tilt to take in the pyramid summit
+      pitch: 0.12, // up-tilt to take in the terraced summit on its rock mount
     };
     ctx.hooks.initialPose = pose;
     ctx.hooks.initialPoseMode = 'walk';
