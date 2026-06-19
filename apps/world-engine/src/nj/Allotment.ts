@@ -23,7 +23,7 @@ import { buildCityMassing, makeArchWindow } from './CityMassing';
 
 export const ALLOT_X = 480; // E-W half-extent
 export const ALLOT_Z_SOUTH = 180; // +Z edge (south, behind the spawn)
-export const ALLOT_Z_NORTH = -780; // -Z edge (north)
+export const ALLOT_Z_NORTH = -880; // -Z edge (north) — extra room behind the temple
 const ALLOT_CZ = (ALLOT_Z_SOUTH + ALLOT_Z_NORTH) / 2;
 const ALLOT_DEPTH = ALLOT_Z_SOUTH - ALLOT_Z_NORTH;
 
@@ -33,7 +33,8 @@ const FIELD = new Color(0x5f8a44);
 const HEDGE = new Color(0x33572a);
 const DWELL = new Color(0x6b6358); // darker stone so the grid reads from afar
 const SANDSTONE = new Color(0xc8b98f); // warm perimeter wall
-const TEMPLE = new Color(0xe8e2d0); // bright temple stone
+const TGOLD = new Color(0xd9a441); // temple gold (matches the city)
+const TCRYS = new Color(0xe9dca0); // temple upper grade
 
 function mat(
   color: Color,
@@ -48,6 +49,118 @@ function mat(
     m.emissiveIntensity = opts.emit;
   }
   return m;
+}
+
+const TEMPLE_FACES: Array<{ axis: 'x' | 'z'; sign: 1 | -1 }> = [
+  { axis: 'z', sign: 1 },
+  { axis: 'z', sign: -1 },
+  { axis: 'x', sign: 1 },
+  { axis: 'x', sign: -1 },
+];
+
+/**
+ * The standalone temple (Ezekiel 48:10) — a smaller gold arched structure in
+ * the city's idiom: a tiered, arcaded gold building with glowing windows and a
+ * golden cap, free-standing so it can be entered from any side. Distinct from
+ * and outside the New Jerusalem (a literal future millennial temple per Willis;
+ * its identification is her interpretation, not bare Scripture).
+ */
+function buildTemple(): Group {
+  const g = new Group();
+  g.name = 'temple';
+  const tiers = [
+    { half: 50, h: 12, arches: 5 },
+    { half: 42, h: 24, arches: 4 },
+    { half: 30, h: 18, arches: 3 },
+    { half: 18, h: 14, arches: 0 },
+  ];
+  let yBot = 0;
+  const last = tiers.length - 1;
+  for (let ti = 0; ti < tiers.length; ti++) {
+    const t = tiers[ti];
+    const f = ti / last;
+    const col = TGOLD.clone().lerp(TCRYS, f);
+    const H = t.h;
+    const yc = yBot + H / 2;
+
+    const massM = new MeshStandardNodeMaterial();
+    massM.color.copy(col);
+    massM.metalness = 0.55 * (1 - f);
+    massM.roughness = 0.3 - 0.14 * f;
+    massM.emissive.copy(col);
+    massM.emissiveIntensity = 0.05 + 0.3 * f;
+    const box = new Mesh(new BoxGeometry(2 * t.half, H, 2 * t.half), massM);
+    box.position.y = yc;
+    box.castShadow = true;
+    box.receiveShadow = true;
+    g.add(box);
+
+    const trimM = new MeshStandardNodeMaterial();
+    trimM.color.copy(col);
+    trimM.metalness = 0.7;
+    trimM.roughness = 0.22;
+    const cornice = new Mesh(new BoxGeometry(2 * t.half + 5, 3, 2 * t.half + 5), trimM);
+    cornice.position.y = yBot + H - 1.5;
+    cornice.castShadow = true;
+    g.add(cornice);
+
+    if (t.arches > 0) {
+      const winM = new MeshStandardNodeMaterial();
+      winM.color.copy(TGOLD.clone().lerp(new Color(0xffffff), f));
+      winM.emissive.setHex(0xffe7a6);
+      winM.emissiveIntensity = 1.8 + 1.8 * f;
+      winM.roughness = 0.5;
+      winM.side = DoubleSide;
+      const off = t.half + 0.2;
+      const W = 2 * t.half;
+      const bay = W / t.arches;
+      const ow = bay * 0.58;
+      const winH = H * 0.56;
+      const winBot = yBot + H * 0.16;
+      const pierW = bay * 0.34;
+      for (const face of TEMPLE_FACES) {
+        for (let i = 0; i < t.arches; i++) {
+          const u = -W / 2 + bay * (i + 0.5);
+          const win = makeArchWindow(ow, winH, winM);
+          if (face.axis === 'z') {
+            win.position.set(u, winBot, face.sign * off);
+            win.rotation.y = face.sign > 0 ? 0 : Math.PI;
+          } else {
+            win.position.set(face.sign * off, winBot, u);
+            win.rotation.y = face.sign > 0 ? -Math.PI / 2 : Math.PI / 2;
+          }
+          g.add(win);
+        }
+        for (let i = 0; i <= t.arches; i++) {
+          const u = -W / 2 + bay * i;
+          const pier = new Mesh(new BoxGeometry(pierW, H, 2.6), trimM);
+          if (face.axis === 'z') {
+            pier.position.set(u, yc, face.sign * off);
+            pier.rotation.y = face.sign > 0 ? 0 : Math.PI;
+          } else {
+            pier.position.set(face.sign * off, yc, u);
+            pier.rotation.y = face.sign > 0 ? -Math.PI / 2 : Math.PI / 2;
+          }
+          pier.castShadow = true;
+          g.add(pier);
+        }
+      }
+    }
+    yBot += H;
+  }
+
+  const capM = new MeshStandardNodeMaterial();
+  capM.color.setHex(0xe8b23a);
+  capM.metalness = 0.5;
+  capM.roughness = 0.28;
+  capM.emissive.setHex(0xe8b23a);
+  capM.emissiveIntensity = 0.4;
+  const cap = new Mesh(new BoxGeometry(24, 10, 24), capM);
+  cap.position.y = yBot + 5;
+  cap.castShadow = true;
+  g.add(cap);
+
+  return g;
 }
 
 export function buildHolyAllotment(): Group {
@@ -146,58 +259,10 @@ export function buildHolyAllotment(): Group {
     }
   }
 
-  // Standalone temple, north of the priests — outside the city (Ezek 48:10).
-  // Bright and prominent, with arched windows (matching the city) and a golden
-  // cap, so it anchors the far end. Built in a local group, then placed north.
-  const temple = new Group();
-  const templeMat = mat(TEMPLE, { rough: 0.5, metal: 0.05, emit: 0.08 });
-  const tBase = new Mesh(new BoxGeometry(110, 18, 110), templeMat);
-  tBase.position.y = 9;
-  tBase.castShadow = true;
-  tBase.receiveShadow = true;
-  temple.add(tBase);
-  const tHalf = 33;
-  const tH = 40;
-  const tInner = new Mesh(new BoxGeometry(2 * tHalf, tH, 2 * tHalf), templeMat);
-  tInner.position.y = 18 + tH / 2;
-  tInner.castShadow = true;
-  temple.add(tInner);
-  // Arched windows, three per face, glowing pale.
-  const tWin = new MeshStandardNodeMaterial();
-  tWin.color.setHex(0xfff3e0);
-  tWin.emissive.setHex(0xffe9c2);
-  tWin.emissiveIntensity = 1.6;
-  tWin.roughness = 0.5;
-  tWin.side = DoubleSide;
-  const tFaces: Array<{ axis: 'x' | 'z'; sign: 1 | -1 }> = [
-    { axis: 'z', sign: 1 },
-    { axis: 'z', sign: -1 },
-    { axis: 'x', sign: 1 },
-    { axis: 'x', sign: -1 },
-  ];
-  for (const face of tFaces) {
-    for (let i = 0; i < 3; i++) {
-      const u = -2 * tHalf * 0.5 + ((2 * tHalf) / 3) * (i + 0.5);
-      const win = makeArchWindow(15, 26, tWin);
-      const off = tHalf + 0.2;
-      if (face.axis === 'z') {
-        win.position.set(u, 24, face.sign * off);
-        win.rotation.y = face.sign > 0 ? 0 : Math.PI;
-      } else {
-        win.position.set(face.sign * off, 24, u);
-        win.rotation.y = face.sign > 0 ? -Math.PI / 2 : Math.PI / 2;
-      }
-      temple.add(win);
-    }
-  }
-  const tCap = new Mesh(
-    new BoxGeometry(34, 14, 34),
-    mat(new Color(0xe8b23a), { metal: 0.4, rough: 0.3, emit: 0.3 }),
-  );
-  tCap.position.y = 65;
-  tCap.castShadow = true;
-  temple.add(tCap);
-  temple.position.set(0, 0, -715);
+  // Standalone temple (Ezek 48:10), outside the city, set well inside the north
+  // edge so it is free-standing and walkable/enterable on all four sides.
+  const temple = buildTemple();
+  temple.position.set(0, 0, -710);
   allot.add(temple);
 
   // Rock chunks along the plateau edge, to break the flat cliff face.
