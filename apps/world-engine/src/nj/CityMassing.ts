@@ -135,7 +135,18 @@ export function buildCityMassing(): Group {
     mass.metalness = 0.55 * (1 - f);
     mass.roughness = 0.3 - 0.16 * f;
     mass.emissive.copy(tierColor);
-    mass.emissiveIntensity = 0.05 + 0.6 * f * f;
+    // Self-luminous city (Rev 21:23 — the glory of God is its light, so the
+    // city is the brightest thing, glowing THROUGH the km-scale aerial haze
+    // rather than washing into it). The base was ~0.05 (purely sunlit → it
+    // dissolved into the haze at citywide distance); now every tier glows in
+    // its own tier colour (warm gold low → cool crystal high), brightest at
+    // the summit. Tuned to the post stack: the base floor stays below the 1.5
+    // bloom threshold (PostStack bloom) so close-up it glows without blooming
+    // to flat white (the failure mode that toned the windows down); only the
+    // crown crosses the threshold for a gentle apex bloom. Auto-exposure does
+    // the rest — a brighter centre-frame city pulls global exposure down, so
+    // the hazy landscape recedes and the city reads as the source of light.
+    mass.emissiveIntensity = 0.55 + 1.15 * f * f;
     const box = new Mesh(new BoxGeometry(2 * t.half, H, 2 * t.half), mass);
     box.position.y = yc;
     box.castShadow = true;
@@ -156,9 +167,11 @@ export function buildCityMassing(): Group {
       const winMat = new MeshStandardNodeMaterial();
       winMat.color.copy(GOLD.clone().lerp(new Color(0xffffff), f));
       winMat.emissive.setHex(0xffdf9e);
-      // Toned down (was 1.8 + 2.6f) — the windows were blowing out to flat
-      // white under bloom, killing the gold read and hiding all relief.
-      winMat.emissiveIntensity = 0.7 + 1.0 * f;
+      // The lit openings stay the brightest part of each face. Nudged up from
+      // 0.7+1.0f now that the tier mass self-glows too (so the windows read as
+      // openings, not the only light); still kept under the 1.5 bloom
+      // threshold at the base to avoid the old flat-white blowout.
+      winMat.emissiveIntensity = 0.9 + 1.3 * f;
       winMat.roughness = 0.5;
       winMat.side = DoubleSide;
 
@@ -215,7 +228,10 @@ export function buildCityMassing(): Group {
   const gloryMat = new MeshStandardNodeMaterial();
   gloryMat.color.setHex(0xfff4d6);
   gloryMat.emissive.setHex(0xfff1c8);
-  gloryMat.emissiveIntensity = 6;
+  // The summit glory is THE light of the city — pushed well past the 1.5 bloom
+  // threshold so it stays a blinding beacon even through the aerial haze at
+  // citywide distance (Rev 21:23; 22:5). Abstract light only (ADR 0010).
+  gloryMat.emissiveIntensity = 12;
   gloryMat.roughness = 1;
   const glory = new Mesh(new SphereGeometry(11, 32, 24), gloryMat);
   glory.position.y = yBot + 10;

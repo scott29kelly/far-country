@@ -27,6 +27,20 @@ import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './All
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
 
+  // Front-light the city. The sun arcs east → south → west across the day, so
+  // only in the AFTERNOON does it swing into the south and rake the city's
+  // south face — which is the face the primary spawn/establishing view looks
+  // at (the walker spawns south of the city, looking north). The engine
+  // default (T=11, late-morning ESE sun) TOP-lights the terraces into a flat,
+  // washed silhouette that dissolves into the bright sky. T=17 keeps the bright
+  // "high-key daytime" mood (Willis's establishing note) while lighting the
+  // gold faces and arches so the city reads as glowing — the single biggest
+  // lever on the wash. A user ?T= still wins. Set BEFORE buildTerrainScene so
+  // the probe GI, sky LUTs, and sun all bake consistently at this sun.
+  if (!new URLSearchParams(window.location.search).has('T')) {
+    params.timeOfDay = 17.0;
+  }
+
   // Citywide scale ramp toward Willis's ~12-mile New Jerusalem (she reads Rev
   // 21:16's 12,000 stadia as the AREA of the square base → ~12 mi/side, height
   // ≈ base). The whole composition scales uniformly from this one factor; tuned
@@ -49,6 +63,21 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // The new earth: the engine's complete, detailed procedural landscape.
   // Reused unchanged so the world here is exactly the ?scene=world quality bar.
   await buildTerrainScene(ctx);
+
+  // De-haze the city. At citywide distance the boundary-layer aerial haze
+  // washes the New Jerusalem toward the sky tone, so it reads pale instead of
+  // as the brightest thing (Rev 21:23 — "the glory of God gives it light").
+  // Pull that humid term back HARD for this scene only; ?scene=world keeps the
+  // tuned default (0.22). The thinner air lets the city's self-glow (raised in
+  // CityMassing) and its saturated gold read THROUGH the atmosphere — the part
+  // of the wash the per-frame auto-exposure cannot compensate for. See ADR 0014.
+  const sunSky = (engine as unknown as {
+    sunSky?: { atmosphere: { aerialFogK: { value: number }; aerialClarity: { value: number } } };
+  }).sunSky;
+  if (sunSky) {
+    sunSky.atmosphere.aerialFogK.value = 0.08; // thin the humid valley haze
+    sunSky.atmosphere.aerialClarity.value = 0.55; // de-haze ALL aerial terms 55%
+  }
 
   // Place the Holy Allotment (the lifted plain carrying the city) at the origin.
   // buildTerrainScene stashes the generated heightfield on the engine; read it

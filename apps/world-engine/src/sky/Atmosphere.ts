@@ -135,6 +135,23 @@ export class Atmosphere {
   readonly skyViewLUT: StorageTexture;
   /** sun direction (world, normalized, y up) */
   readonly sunDir = uniform(new Vector3(0.3, 0.6, 0.2).normalize());
+  /**
+   * Boundary-layer (humid valley) haze extinction at the reference height, per
+   * km — the dominant near-ground term of the aerial perspective. Default 0.22
+   * is the tuned humid look for ?scene=world; scenes may pull it back (the New
+   * Jerusalem does, so the city reads as glowing THROUGH clearer air per
+   * Rev 21:23 rather than dissolving into the wash at citywide distance).
+   */
+  readonly aerialFogK = uniform(0.22);
+  /**
+   * Scene clarity (0..1): lerps the aerial transmittance toward 1, de-hazing
+   * ALL terms (rayleigh + mie + fog) uniformly. 0 = full physical haze
+   * (?scene=world default). The New Jerusalem raises it so the city keeps its
+   * saturated colour and glow at citywide distance instead of bleaching toward
+   * the sky tone — the desaturating veil is the part of the wash that the
+   * per-frame auto-exposure cannot undo (exposure only rescales brightness).
+   */
+  readonly aerialClarity = uniform(0);
   private renderer: Renderer | null = null;
   private skyCompute: ComputeNode | null = null;
 
@@ -382,8 +399,8 @@ export class Atmosphere {
     const tauR = betaR.mul(dr).mul(distKm);
     const tauM = float(BETA_M_E).mul(dm).mul(distKm);
 
-    // boundary-layer fog: density k·exp(−(h−h0)/Hf); exact path integral
-    const FOG_K = 0.22; // extinction at the reference height, per km
+    // boundary-layer fog: density k·exp(−(h−h0)/Hf); exact path integral.
+    // FOG_K is a uniform (scene-settable — see aerialFogK); H0/HF are fixed.
     const FOG_H0 = 0.16; // reference altitude (≈ valley floor), km
     const FOG_HF = 0.38; // scale height, km
     const y0 = camAltKm.sub(FOG_H0).div(FOG_HF);
@@ -394,9 +411,12 @@ export class Atmosphere {
       exp(y0.negate()).mul(distKm),
       exp(y0.negate()).sub(exp(y1.negate())).div(dy).mul(distKm),
     );
-    const tauF = integ.mul(FOG_K).max(0);
+    const tauF = integ.mul(this.aerialFogK as unknown as NF).max(0);
 
-    const T = vexp3(tauR.add(tauM).add(tauF).negate());
+    const Tphys = vexp3(tauR.add(tauM).add(tauF).negate());
+    // scene clarity lerps transmittance toward 1 (de-haze); 0 keeps the full
+    // physical haze. Applied per-scene so the city can read through clear air.
+    const T = Tphys.add(vec3(1).sub(Tphys).mul(this.aerialClarity as unknown as NF));
     const sky = this.skyColor(viewDir);
     // per-channel energy exchange: blue extinguishes first → haze reads blue
     return color.mul(T).add(sky.mul(vec3(1).sub(T)));
