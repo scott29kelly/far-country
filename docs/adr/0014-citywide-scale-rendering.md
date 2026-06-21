@@ -30,7 +30,7 @@ Even Willis's ~12 mi is **unviewable as a whole** inside this engine: a 12-mile,
 
 Render the New Jerusalem at a **citywide but viewable scale of ~2–3 miles**, driven by a single uniform factor `NJ_SCALE` in [`apps/world-engine/src/nj/NewJerusalemScene.ts`](../../apps/world-engine/src/nj/NewJerusalemScene.ts). That one factor scales the whole composition: the Holy Allotment group, the walk-physics plateau rectangle, the procedural-scatter keep-out, and the spawn.
 
-- **Current value: `NJ_SCALE = 16` (~2 mi base).** The working band is `16` (~2 mi) … `24` (~3 mi), tuned by eye against screenshots.
+- **Current value: `NJ_SCALE = 20` (~2.5 mi base).** The working band is `16` (~2 mi) … `24` (~3 mi), tuned by eye against screenshots; the project owner selected ~2.5 mi (the middle of the band) as the landing value.
 - This is a **deliberate symbolic-/viewable-scale rendering**, in the same spirit as ADR 0009 rule 2's treatment of `symbolic` material: it honours the *intent* of the measurement (a vast city that dominates the new earth as a holy mountain, in the direction of Willis's ~12 mi reading) while electing a value that can actually be **seen whole and explored**. It is explicitly **not** a claim that the city is literally 2–3 miles.
 
 ### Why 2–3 miles specifically

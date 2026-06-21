@@ -48,7 +48,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // detailed terrain and the forest reads on the far-shell foothills beyond.
   // The user deliberately targets ~2-3 mi (NOT the literal 12 mi, which becomes
   // an unviewable sky-wall); 16 ~= 2 mi base, 24 ~= 3 mi. See ADR 0014.
-  const NJ_SCALE = 16;
+  const NJ_SCALE = 20; // ~2.5 mi base (mid of the 2-3 mi band, art-director call)
 
   // Keep the procedural forest/rock scatter off the Holy Allotment footprint so
   // the city sits on a clean plain rather than in a pine forest. Must be set
