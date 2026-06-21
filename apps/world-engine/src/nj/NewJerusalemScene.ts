@@ -32,7 +32,9 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // ≈ base). The whole composition scales uniformly from this one factor; tuned
   // by eye against screenshots. At citywide scale the plateau dominates the
   // detailed terrain and the forest reads on the far-shell foothills beyond.
-  const NJ_SCALE = 12;
+  // The user deliberately targets ~2-3 mi (NOT the literal 12 mi, which becomes
+  // an unviewable sky-wall); 16 ~= 2 mi base, 24 ~= 3 mi. See ADR 0014.
+  const NJ_SCALE = 16;
 
   // Keep the procedural forest/rock scatter off the Holy Allotment footprint so
   // the city sits on a clean plain rather than in a pine forest. Must be set
