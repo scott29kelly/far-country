@@ -61,6 +61,39 @@ export function makeArchWindow(width: number, height: number, m: MeshStandardNod
   return g;
 }
 
+/**
+ * A blind-arcade frieze — a fascia carrying a row of small recessed arches,
+ * facing +Z. This is the dense "little arches" banding that runs along every
+ * step-back in Willis's renderings (a Lombard band). Cheap by design: shares
+ * two materials and casts no shadows.
+ */
+function makeArcadeBand(
+  width: number,
+  height: number,
+  count: number,
+  body: MeshStandardNodeMaterial,
+  recess: MeshStandardNodeMaterial,
+): Group {
+  const g = new Group();
+  const fascia = new Mesh(new BoxGeometry(width, height, 1.4), body);
+  fascia.position.y = height / 2;
+  g.add(fascia);
+  const bay = width / count;
+  const aw = bay * 0.66;
+  const stem = height * 0.42;
+  const base = height * 0.14;
+  for (let i = 0; i < count; i++) {
+    const u = -width / 2 + bay * (i + 0.5);
+    const jamb = new Mesh(new BoxGeometry(aw, stem, 0.5), recess);
+    jamb.position.set(u, base + stem / 2, 0.7);
+    g.add(jamb);
+    const head = new Mesh(new CircleGeometry(aw / 2, 10, 0, Math.PI), recess);
+    head.position.set(u, base + stem, 0.72);
+    g.add(head);
+  }
+  return g;
+}
+
 type Tier = { half: number; h: number; arches: number };
 
 export function buildCityMassing(): Group {
@@ -122,10 +155,21 @@ export function buildCityMassing(): Group {
     if (t.arches > 0) {
       const winMat = new MeshStandardNodeMaterial();
       winMat.color.copy(GOLD.clone().lerp(new Color(0xffffff), f));
-      winMat.emissive.setHex(0xffe7a6);
-      winMat.emissiveIntensity = 1.8 + 2.6 * f;
+      winMat.emissive.setHex(0xffdf9e);
+      // Toned down (was 1.8 + 2.6f) — the windows were blowing out to flat
+      // white under bloom, killing the gold read and hiding all relief.
+      winMat.emissiveIntensity = 0.7 + 1.0 * f;
       winMat.roughness = 0.5;
       winMat.side = DoubleSide;
+
+      // Frieze materials: a gold fascia and a darker recessed arch (blind).
+      const friezeBody = new MeshStandardNodeMaterial();
+      friezeBody.color.copy(GOLD.clone().lerp(CRYSTAL, f));
+      friezeBody.metalness = 0.6;
+      friezeBody.roughness = 0.32;
+      const friezeRecess = new MeshStandardNodeMaterial();
+      friezeRecess.color.copy(GOLD.clone().lerp(CRYSTAL, f).multiplyScalar(0.5));
+      friezeRecess.roughness = 0.6;
 
       const off = t.half + 0.2;
       const W = 2 * t.half;
@@ -134,6 +178,10 @@ export function buildCityMassing(): Group {
       const winH = H * 0.56;
       const winBot = yBot + H * 0.16;
       const pierW = bay * 0.34;
+
+      const friezeH = Math.min(7, H * 0.16);
+      const friezeBot = yBot + H - friezeH - 2.5; // just under the cornice lip
+      const smallCount = Math.max(6, Math.round(W / 11)); // dense little arches
 
       for (const face of FACES) {
         // Arched windows.
@@ -152,6 +200,10 @@ export function buildCityMassing(): Group {
           pier.receiveShadow = true;
           city.add(pier);
         }
+        // Blind-arcade frieze along the tier top (the Willis "little arches").
+        const band = makeArcadeBand(W, friezeH, smallCount, friezeBody, friezeRecess);
+        placeOnFace(band, 0, friezeBot, off + 0.1, face);
+        city.add(band);
       }
     }
 
