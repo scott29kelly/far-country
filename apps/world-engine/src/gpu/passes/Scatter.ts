@@ -365,10 +365,29 @@ export async function runScatter(
   renderer: Renderer,
   hf: Heightfield,
   seed: WorldSeed,
+  exclude?: readonly [number, number, number, number],
 ): Promise<ScatterResult> {
   const sT = seed.sub('scatter/trees') & 0x7fffffff;
   const sU = seed.sub('scatter/understory') & 0x7fffffff;
   const sE = seed.sub('scatter/extras') & 0x7fffffff;
+
+  // Optional keep-out rect (world xz) [x0, x1, z0, z1] — built scenes (e.g. the
+  // New Jerusalem plateau) pass their footprint so nothing scatters onto it.
+  // Emitted as an early reject in each kernel, like the water/river masks.
+  const excludeGuard = exclude
+    ? (wxz: NV2): void => {
+        If(
+          wxz.x
+            .greaterThan(exclude[0])
+            .and(wxz.x.lessThan(exclude[1]))
+            .and(wxz.y.greaterThan(exclude[2]))
+            .and(wxz.y.lessThan(exclude[3])),
+          () => {
+            Return();
+          },
+        );
+      }
+    : null;
 
   // ---------------------------------------------------------------- trees --
   const treeG = Math.round(WORLD_SIZE / TREE_CELL);
@@ -384,6 +403,7 @@ export async function runScatter(
     const cell = vec2(float(i.mod(treeG)), float(i.div(treeG)));
     const jit = cellHash2(cell, sT);
     const wpos = cell.add(jit).div(treeG).sub(0.5).mul(WORLD_SIZE);
+    excludeGuard?.(wpos);
     const s = sampleSite(hf, wpos);
 
     // hard exclusions: open/standing water, river channels, lake shelf
@@ -500,6 +520,7 @@ export async function runScatter(
     const cell = vec2(float(i.mod(underG)), float(i.div(underG)));
     const jit = cellHash2(cell, sU);
     const wpos = cell.add(jit).div(underG).sub(0.5).mul(WORLD_SIZE);
+    excludeGuard?.(wpos);
     const s = sampleSite(hf, wpos);
 
     If(s.h.lessThan(LAKE_LEVEL + 0.35), () => {
@@ -602,6 +623,7 @@ export async function runScatter(
     const cell = vec2(float(i.mod(extraG)), float(i.div(extraG)));
     const jit = cellHash2(cell, sE);
     const wpos = cell.add(jit).div(extraG).sub(0.5).mul(WORLD_SIZE);
+    excludeGuard?.(wpos);
     const s = sampleSite(hf, wpos);
 
     If(s.h.lessThan(LAKE_LEVEL + 0.3), () => {
@@ -716,6 +738,7 @@ export async function runScatter(
     const cell = vec2(float(i.mod(stoneG)), float(i.div(stoneG)));
     const jit = cellHash2(cell, sS);
     const wpos = cell.add(jit).div(stoneG).sub(0.5).mul(WORLD_SIZE);
+    excludeGuard?.(wpos);
     const s = sampleSite(hf, wpos);
     If(s.h.lessThan(LAKE_LEVEL + 0.25), () => {
       Return();

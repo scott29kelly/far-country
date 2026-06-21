@@ -27,6 +27,11 @@ import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './All
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
 
+  // Keep the procedural forest/rock scatter off the Holy Allotment plateau so
+  // the city sits on a clean plain (Willis's crop-field plateau) rather than in
+  // a pine forest. Must be set BEFORE buildTerrainScene runs the scatter.
+  ctx.scatterExclude = [-ALLOT_X, ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH];
+
   // The new earth: the engine's complete, detailed procedural landscape.
   // Reused unchanged so the world here is exactly the ?scene=world quality bar.
   await buildTerrainScene(ctx);

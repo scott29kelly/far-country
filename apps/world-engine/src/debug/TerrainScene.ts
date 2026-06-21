@@ -66,7 +66,7 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   // heightfield; the canopy map is their only knowledge of the forest) and
   // before tiles (under-crown ambient)
   ctx.progress(0.94, 'vegetation: scattering instances');
-  const scatter = await runScatter(engine.renderer, hf, seed);
+  const scatter = await runScatter(engine.renderer, hf, seed, ctx.scatterExclude);
   const canopyTex = await buildCanopyMap(engine.renderer, scatter.trees);
   engine.stats.counters['veg.trees'] = scatter.trees.count;
   engine.stats.counters['veg.under'] = scatter.understory.count;

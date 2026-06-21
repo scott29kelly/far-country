@@ -12,6 +12,13 @@ export interface WorldContext {
   hooks: LaasHooks;
   /** report build progress 0..1 */
   progress: (p: number, msg: string) => void;
+  /**
+   * Optional world-space keep-out rect [x0, x1, z0, z1] for procedural scatter
+   * (trees/understory/rocks). Scenes that place built geometry on the terrain
+   * (e.g. the New Jerusalem Holy Allotment) set it so vegetation doesn't grow
+   * through their footprint.
+   */
+  scatterExclude?: readonly [number, number, number, number];
 }
 
 export type SceneBuilder = (ctx: WorldContext) => Promise<void>;
