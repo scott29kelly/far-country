@@ -27,10 +27,22 @@ import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './All
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
 
-  // Keep the procedural forest/rock scatter off the Holy Allotment plateau so
-  // the city sits on a clean plain (Willis's crop-field plateau) rather than in
-  // a pine forest. Must be set BEFORE buildTerrainScene runs the scatter.
-  ctx.scatterExclude = [-ALLOT_X, ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH];
+  // Citywide scale ramp toward Willis's ~12-mile New Jerusalem (she reads Rev
+  // 21:16's 12,000 stadia as the AREA of the square base → ~12 mi/side, height
+  // ≈ base). The whole composition scales uniformly from this one factor; tuned
+  // by eye against screenshots. At citywide scale the plateau dominates the
+  // detailed terrain and the forest reads on the far-shell foothills beyond.
+  const NJ_SCALE = 12;
+
+  // Keep the procedural forest/rock scatter off the Holy Allotment footprint so
+  // the city sits on a clean plain rather than in a pine forest. Must be set
+  // BEFORE buildTerrainScene runs the scatter; scaled to the enlarged plateau.
+  ctx.scatterExclude = [
+    -ALLOT_X * NJ_SCALE,
+    ALLOT_X * NJ_SCALE,
+    ALLOT_Z_NORTH * NJ_SCALE,
+    ALLOT_Z_SOUTH * NJ_SCALE,
+  ];
 
   // The new earth: the engine's complete, detailed procedural landscape.
   // Reused unchanged so the world here is exactly the ?scene=world quality bar.
@@ -44,6 +56,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const PLAIN_LIFT = 12;
   const plainTopY = baseY + PLAIN_LIFT;
   const allot = buildHolyAllotment();
+  allot.scale.setScalar(NJ_SCALE);
   allot.position.set(0, plainTopY, 0);
   engine.scene.add(allot);
 
@@ -53,17 +66,23 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   ctx.hooks.groundProbe = (x, z) => {
     const base = baseProbe ? baseProbe(x, z) : { ground: baseY, water: baseY - 100 };
     const onPlain =
-      x >= -ALLOT_X && x <= ALLOT_X && z >= ALLOT_Z_NORTH && z <= ALLOT_Z_SOUTH;
+      x >= -ALLOT_X * NJ_SCALE &&
+      x <= ALLOT_X * NJ_SCALE &&
+      z >= ALLOT_Z_NORTH * NJ_SCALE &&
+      z <= ALLOT_Z_SOUTH * NJ_SCALE;
     return onPlain ? { ground: plainTopY, water: base.water } : base;
   };
 
   // Spawn on the plain, south of the city, grounded and free to roam (V toggles
   // fly), looking north up the meridian toward the city, fields, and temple.
   if (params.cam === null && hf) {
+    // Stand on the plain south of the now city-scale New Jerusalem, looking
+    // north and up at the terraced holy mountain rising above the land.
+    const cityHalf = 100 * NJ_SCALE;
     const pose = {
-      p: [0, plainTopY + 1.7, 120] as [number, number, number],
+      p: [0, plainTopY + 1.7, cityHalf + 500] as [number, number, number],
       yaw: 0, // 0 = looking -Z (north), toward the city
-      pitch: 0.1, // up-tilt to take in the terraced summit
+      pitch: 0.32, // steeper up-tilt — the summit is far overhead now
     };
     ctx.hooks.initialPose = pose;
     ctx.hooks.initialPoseMode = 'walk';
