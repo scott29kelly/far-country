@@ -20,6 +20,7 @@ import { BoxGeometry, Color, DoubleSide, Group, Mesh } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
 import { buildCityMassing, makeArchWindow } from './CityMassing';
+import { buildRiverOfLife } from './RiverOfLife';
 
 export const ALLOT_X = 480; // E-W half-extent
 export const ALLOT_Z_SOUTH = 180; // +Z edge (south, behind the spawn)
@@ -291,6 +292,11 @@ export function buildHolyAllotment(): Group {
 
   // The New Jerusalem at the south-centre, resting on the plain (plaza at y = 0).
   allot.add(buildCityMassing());
+
+  // The river of life cascading the south terraces to the plain, trees of life
+  // on its banks (Rev 22:1-2). Shares the city's local frame, so it scales/lifts
+  // with everything.
+  allot.add(buildRiverOfLife());
 
   return allot;
 }
