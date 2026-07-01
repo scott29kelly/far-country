@@ -377,6 +377,12 @@ export function buildCityMassing(): Group {
         // Gold piers between/around the bays.
         for (let i = 0; i <= t.arches; i++) {
           const u = -W / 2 + bay * i;
+          // The base tier's pier rhythm (u = 0, ±50, ±100) lands exactly on
+          // the three gate offsets per side — a solid pier there stands
+          // immediately outside the wall's real gate gap and reads as a
+          // blocked door head-on (found 2026-07-01 once the grade NaN fix
+          // unmasked the forecourt). The pearl portals own those slots.
+          if (ti === 0 && GATE_OFFSETS.some((g) => Math.abs(g - u) < GATE_WIDTH)) continue;
           const pier = new Mesh(new BoxGeometry(pierW, H, 2.6), trim);
           placeOnFace(pier, u, yc, off, face);
           pier.castShadow = true;
