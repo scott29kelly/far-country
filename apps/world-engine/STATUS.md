@@ -5,6 +5,11 @@
 > pinned three.js), then the **Current focus** section below. Reference images: `reference/`.
 > Never re-plan from scratch; continue from "Next actions". Update this file after every
 > meaningful step. Commit per milestone with descriptive messages.
+>
+> **If your task concerns the New Jerusalem / biblical content** (`?scene=newjerusalem`,
+> `src/nj/`) rather than the terrain engine itself, the phase checklist below does not
+> track it — go to the **"New Jerusalem scene (`src/nj/`) — content track status"**
+> section instead, and also read `docs/roadmap.md` Phase 3 and `RENDERING-DECISIONS.md`.
 
 ## Mission (1 paragraph)
 
@@ -121,6 +126,129 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 - [ ] **Phase 7** — perf pass (60fps@1440p / reduced preset), HUD full (per-pass GPU timings),
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
+
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-01)
+
+> This engine's phase checklist above tracks the **terrain/vegetation systems**
+> (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
+> (`?scene=newjerusalem`, hosted at `/world-preview`) is a separate track,
+> specced in `docs/specs/phase-3-engine-integration.md` (its own M1–M5) and
+> tracked milestone-by-milestone in `docs/roadmap.md` Phase 3 (M3.1–M3.6). This
+> section is the source-of-truth inventory for that track specifically — kept
+> in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
+> session should also read.
+
+**What's built** (`NewJerusalemScene.ts`, `CityMassing.ts`, `Allotment.ts`,
+`RiverOfLife.ts` — corresponds to integration-spec M1–M2, partial M3):
+
+- City: a 5-tier gold→crystal box massing (`CityMassing.ts`), each tier faced
+  with flat arch-window panels + a "blind-arcade" frieze band, gold cornice
+  lips, a self-luminous glory sphere at the summit (throne + glory-light
+  conflated into one primitive, aniconic per ADR 0010).
+- **(2026-07-01) Base tier is now a real jasper WALL, not a solid box.**
+  `CityMassing.ts` now imports `cityModel.ts`'s `GATES`/`FOUNDATION_BANDS`/
+  `FOUNDATION_GEMS`/`GATE_OFFSETS`/`GATE_WIDTH`/`CITY_HALF` (previously
+  unimported dead code — this closes that desync) to build: a solid inner
+  plinth (structural support for the terraces above) + an outer wall ring
+  split into segments with real gaps at the twelve named gates in Ezekiel
+  48:30–34 order (RENDERING-DECISIONS #2) — a camera can fly/walk through a
+  gate gap, not past a decorative panel — each gate framed by gold jambs and
+  a pearl arch head, plus a twelve-stone jewelled foundation course (Rev
+  21:19–20 order, per-gem stylised hues) girdling the wall's outer base.
+  `RiverOfLife.ts`'s hand-duplicated tier table is unaffected (tier
+  half-widths/heights unchanged, only how tier 0 is *constructed*
+  internally changed) — still a latent desync risk if tier dimensions
+  themselves are edited (see `docs/plans/world-tooling-and-scriptural-
+  grounding.md` §1 Phase B). **Not yet re-verified live** — the session's
+  screenshot tooling malfunctioned (see STATUS.md's usual verification
+  discipline note below); `tsc --noEmit` and `vite build` both pass clean.
+- River of life cascading the tiers to the plain + 6 pairs of tree-of-life
+  (trunk + two offset spheres + glowing "fruit" points) flanking it
+  (`RiverOfLife.ts`) — river tier table is a **manually duplicated copy** of
+  `CityMassing.ts`'s, not shared (latent desync risk, see below).
+- Holy Allotment (`Allotment.ts`): a lifted grass-topped rock plateau
+  (perimeter sandstone wall, rock-chunk cliff edge), hedgerow crop fields E/W
+  of the city, a 12×7 priestly dwelling grid (flat dark boxes) N of the city,
+  and a standalone temple (Ezek 48:10) N of that — same box-massing idiom as
+  the city, smaller, no interior.
+  Fields/dwellings/temple are new content **ahead of** `docs/roadmap.md`'s
+  Phase 3 scope (they belong to Phase 4's Ezekiel 40–48 / Holy Allotment
+  milestones) — built here first because the engine invites it, not because
+  Phase 3 required it. Reconcile roadmap sequencing before adding more.
+- Citywide scale: `NJ_SCALE = 20` (~2.5 mi), per
+  [ADR 0014](../../docs/adr/0014-citywide-scale-rendering.md) — supersedes
+  every reference to a "~200 m placeholder" for this scene specifically.
+- De-haze / self-emissive tuning so the city reads as the brightest thing in
+  frame against km-scale aerial perspective (`aerialFogK`/`aerialClarity`
+  overrides in `NewJerusalemScene.ts`, tier emissive curves in
+  `CityMassing.ts`).
+
+**What's NOT built** (present on the legacy `/world` R3F scene, retired per
+ADR 0013, and not yet ported — see `RENDERING-DECISIONS.md` entries #1–#4 for
+the decisions these owe):
+
+- Wall/gate collision of any kind — `FlyCamera.ts` only clamps to ground
+  height (`groundProbe`); a player currently walks straight through every
+  pier and tier of the city (gate gaps are now real openings, so this matters
+  less at the gates specifically, but still applies to the tier masses).
+- Distinct throne (rainbow halo + sea of glass, RENDERING-DECISIONS #4) — only
+  a plain emissive sphere.
+- Mini-map / click-to-teleport.
+- Any descriptor/citation HUD, any click-picking, any entity interaction at
+  all — only the engine's generic debug HUD (fps chip, `F3` panel) exists.
+- Symbolic-vs-literal tier badges or a visual key.
+- Population (multitude, angelic hosts) — not started on either scene.
+
+**(2026-07-01) Navigation reworked: mouse-steer, no pointer lock.**
+`FlyCamera.ts` previously used click-to-lock pointer-lock (hidden cursor, raw
+mouse-look) — the generic rig, not the legacy scene's later approachable
+navigation. Ported the legacy scheme (commit `e94c3c1`): cursor stays
+visible; view eases toward wherever it points (dead-zoned, eased response),
+steering only while the cursor is over the canvas. Applies uniformly to both
+walk and fly modes. `tools/probe-pointerlock.ts` is now stale (tested the
+removed pointer-lock cooldown behavior) — not deleted this session, flagged
+for cleanup.
+
+**(2026-07-01) Plateau lift raised 12 m → 600 m.** The Holy Allotment's fixed
+lift above the origin's terrain height was tuned for the pre-citywide-scale
+footprint; at `NJ_SCALE=20` the allotment (up to ~21 km north-south) reaches
+far into the engine's analytic far-shell, where wild terrain can rise well
+above a 12 m lift, producing a visible collision at the plateau edge (worst
+near the temple). Raised to 600 m — also thematically correct (the plain
+should sit clearly above the surrounding land, not barely above it). **Not
+re-verified live this session** (see below); if the seam is still visible or
+600 m reads as excessive, treat this as a starting value to tune by eye, not
+a derived constant.
+
+**Known issues found 2026-07-01** (visual audit via `?scene=newjerusalem`,
+`__laas.setPose`, before this session's fixes):
+
+- **Massing quality is far below this engine's own bar.** The city is flat
+  `BoxGeometry` + `MeshStandardNodeMaterial` primitives with no per-instance
+  variation, no PBR gem/crystal transmission, no macro-meso-micro surface
+  detail — the exact failure mode (ADR 0013) that motivated forking LAAS in
+  the first place ("hand-built primitives... the redeemed multitude is 760
+  cone-plus-sphere figures"), now recurring in the new engine's own city
+  content next to its ~5M-tri, per-instance-unique forest. Central input to
+  Task 1's city-specific quality bar (`CITY-QUALITY-BAR.md`). **Wall/gate/
+  foundation geometry landed 2026-07-01 (above); crystal/gem transmission
+  materials and per-tier surface relief (delta #1/#3) remain open.**
+
+**PENDING USER CONFIRM (2026-07-01):** the wall/gate/foundation build, the
+plateau-lift fix, and the mouse-steer navigation rework all pass `tsc
+--noEmit` + `vite build` clean, but this session's screenshot tooling
+(`preview_screenshot`, and a `canvas.toDataURL()` fallback attempted after it)
+malfunctioned consistently against this engine's WebGPU canvas — repeated
+timeouts on the former, corrupted output on the latter across multiple
+independent attempts — and the Chrome extension (this repo's normal WebGPU
+verification path, per project convention) was not connected this session.
+**None of the three changes above have been visually re-verified live.** Do a
+live check (`npm run dev` in `apps/web`, visit `/world-preview`, or the
+engine's own `tools/shoot.ts` harness) before treating them as done — the gate
+gap math and wall segment placement in particular are exactly the kind of
+change that reads correctly on paper but can be subtly wrong in practice
+(overlapping segments, misaligned gate offsets, a wall ring facing the wrong
+direction).
 
 ## Current focus
 

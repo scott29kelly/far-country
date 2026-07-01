@@ -84,7 +84,17 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // back for ground height, then lift the plateau above the local terrain.
   const hf = (engine as unknown as { heightfield?: Heightfield }).heightfield ?? null;
   const baseY = hf ? hf.heightAtCpu(0, 0) : 0;
-  const PLAIN_LIFT = 12;
+  // The allotment footprint (up to ~9.6 km E-W, ~21 km N-S at NJ_SCALE=20) is
+  // far larger than the ±2048 m detailed terrain ring (WORLD_HALF) — most of
+  // it, including the temple, sits out in the analytic far-shell, whose
+  // synthesized peaks can reach well above a small fixed lift above the
+  // origin's height. A 12 m lift (the pre-citywide-scale value) let distant
+  // massifs visually collide with the plateau edge (CITY-QUALITY-BAR.md delta
+  // #4 — reads as a geometry bug, not "distant foothills"). Willis's own
+  // reading also wants the plain to sit CLEARLY above the surrounding land
+  // (a mountain "rising" over it), so a generous lift is thematically
+  // correct, not just a workaround.
+  const PLAIN_LIFT = 600;
   const plainTopY = baseY + PLAIN_LIFT;
   const allot = buildHolyAllotment();
   allot.scale.setScalar(NJ_SCALE);
