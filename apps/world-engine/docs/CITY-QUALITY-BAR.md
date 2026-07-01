@@ -220,13 +220,28 @@ transmission materials) remain the top open item** — still flat
 per-instance surface variation. Both landed changes have now been **live-verified** via
 `apps/world-engine/tools/shoot.ts` (see `STATUS.md` — this is the resolved
 verification path, use it going forward). Plateau lift: confirmed fixed. Wall
-gates: the gaps are geometrically real (confirmed via a flanking-gate shot),
-but looking straight into one reveals a **new delta item — the gate recess
-renders solid black**, a direct Pillar-B violation ("no black shadows,
-ever"). Add to the ranked list: **#11 (new) — gate recesses read as flat
-black voids, not lit pearl portals**, likely because the plinth's inner face
-sitting just behind the gap gets no direct light and no emissive floor from
-this angle. Candidate fix: give the plinth's exposed face and jamb material
-a baseline emissive matching the rest of `CityMassing.ts`'s self-luminous
-city. Re-shoot and re-judge the center (offset-0) gates too — the river
-channel and trees of life obscured them in every framing tried this session.
+gates: the gaps are geometrically real (confirmed via a flanking-gate shot).
+
+**#11 — gate black void: RESOLVED (2026-07-01, later session).** The
+head-on "solid black gate" was root-caused to two stacked issues, neither
+the one hypothesised (the plinth-emissive theory was wrong):
+
+1. **An engine-wide post bug**: the golden-hour grade's saturation
+   (≈ 1.14) extrapolates away from gray, driving deeply saturated dark
+   channels negative, and the contrast `pow()` turns negatives into NaN →
+   AgX paints the pixel pure black. The city was the only visible victim
+   because its shadowed golds/gems are uniquely dark AND high-chroma (no
+   probe-GI lift on city materials + 0.15× hemisphere floor). Fixed with a
+   clamp before the pow in `PostStack.ts`; `?scene=world` bookmark
+   regression shot unchanged. Full bisect trail in `STATUS.md`.
+2. **Tier-0 piers stood exactly on the gate offsets** (u = 0, ±50 collide
+   with the three gates per side) — a 340 m gold pier blocked each portal
+   head-on. `CityMassing.ts` now skips base-tier piers at gate slots.
+
+Verified after both fixes: head-on south (Simeon) framing shows an open
+recessed portal with lit jamb reveals and the pearl arch head; recess
+samples warm (rgb ≈ 105,85,35 — Pillar B holds); the center (offset-0)
+east gate (Benjamin) was re-judged with a dedicated framing and renders an
+open portal over its correct onyx foundation band. The south-centre
+(Issachar) gate remains visually covered by the river approach — re-judge
+it whenever the river/gate composition changes (delta #7 work).

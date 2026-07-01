@@ -205,9 +205,13 @@ mouse-look) — the generic rig, not the legacy scene's later approachable
 navigation. Ported the legacy scheme (commit `e94c3c1`): cursor stays
 visible; view eases toward wherever it points (dead-zoned, eased response),
 steering only while the cursor is over the canvas. Applies uniformly to both
-walk and fly modes. `tools/probe-pointerlock.ts` is now stale (tested the
-removed pointer-lock cooldown behavior) — not deleted this session, flagged
-for cleanup.
+walk and fly modes. `tools/probe-pointerlock.ts` (tested the removed
+pointer-lock cooldown behavior) deleted 2026-07-01. **LIVE-VERIFIED
+2026-07-01 via `tools/probe-mousesteer.ts` — ALL PASS** (dead-zone hold:
+zero drift; right/left edge holds ease yaw in opposite directions; top/bottom
+holds ease pitch in opposite directions). Playwright's `page.mouse` emits
+real trusted CDP input events, so interactive-input checks do NOT need the
+Chrome extension — use that probe as the template.
 
 **(2026-07-01) Plateau lift raised 12 m → 600 m.** The Holy Allotment's fixed
 lift above the origin's terrain height was tuned for the pre-citywide-scale
@@ -265,23 +269,44 @@ this engine going forward** — reach for it before the generic preview tool.
   ±50, e.g. Simeon/Zebulun) show genuine daylight through the wall from
   outside (`?cam=0,1500,2600,0,-0.5,80`). The gate-order/segmentation logic
   works.
-- **NEW BUG FOUND: gate recesses render solid BLACK when viewed head-on**
-  (`?cam=-1000,1000,2500,0,-0.15,60` — a real gap exists there, per the wide
-  shot above, but looking straight into it shows a flat black void, not a lit
-  pearl portal). Root cause not yet diagnosed — likely the plinth's inner
-  face (sitting only ~12 units behind the gap) gets no direct sun or bounce
-  light from this angle, and neither the jamb nor plinth material has any
-  emissive floor to prevent it going fully black. This is a direct violation
-  of the engine's own Pillar B ("no black shadows, ever" — `PROJECT_LAAS_v2.md`
-  §Six pillars) and needs a fix (candidate: give the plinth's exposed face and
-  the jamb material a baseline emissive, matching how every other city
-  surface already self-illuminates in `CityMassing.ts`). **Not yet fixed.**
-- The center (offset 0) gates were not clearly evaluated — the river channel
-  and tree-of-life placement visually cover them at the framings tried;
-  worth a dedicated look.
-- Mouse-steer navigation: **not testable via `shoot.ts`** (static camera
-  poses only, no simulated mouse input) — still needs a live interactive
-  check (Chrome extension once reconnected, or manual browser testing).
+- **GATE BLACK VOID — ROOT-CAUSED AND FIXED (2026-07-01, later session).**
+  The recorded hypothesis (plinth face missing an emissive floor) was WRONG —
+  the black was never the city's geometry or materials at all. Bisect trail
+  (all live, `tools/shoot.ts` + `tools/probe-blackvoid2.ts` raycast
+  attribution + in-page material swaps): black pixels were exact RGB(0,0,0);
+  survived `?ablate=` of taa, bloom, ao, contact, clouds, froxels, gi, pcss,
+  shadows; survived an aerial-perspective passthrough; vanished under
+  `?postmin=1` AND under `?postmin=1&postmrt=1` ⇒ the grade. ROOT CAUSE:
+  `PostStack.ts` graded() saturation `mix(lum, c, uSat)` EXTRAPOLATES at the
+  golden-hour script's sat ≈ 1.14 (ColorScript t=15.5→19) — any channel with
+  ch/lum < (s−1)/s ≈ 0.12 crosses NEGATIVE, and the following
+  `pow(c, uContrast)` is NaN for negative bases in WGSL → AgX renders the
+  pixel pure black. The city was the only victim because its shadowed pixels
+  are uniquely DARK+SATURATED: city materials get no probe-GI injection
+  (that's a per-material opt-in the city never opted into), the hemisphere
+  ambient is floored at 0.15×, and the gold/gem albedos are high-chroma
+  (shadowed gold sits at ch/lum ≈ 0.123 — right at the cliff; the gem hues
+  far under it). The screen-space "bounce disc" black blob shared the root
+  (warm saturated bounce add tipped marginal pixels over). FIX: clamp
+  `c = c.max(vec3(0))` after the saturation mix, before pow — also catches
+  TRAA variance-clip undershoot. VERIFIED at the original repro framing, the
+  120 m close framing, and a `?scene=world` bm4 regression shot (unchanged).
+  Pillar B holds: gate recesses now sample warm-lit (e.g. rgb(105,85,35)).
+- **SECOND FIX unmasked by the first: tier-0 piers stood ON the gates.**
+  The base tier's decorative pier rhythm (u = 0, ±50, ±100 per side) lands
+  exactly on the three gate offsets — a 340 m (17-unit) gold pier stood
+  immediately outside each real wall gap, reading as a blocked door head-on
+  (this, plus the grade-black in front of it, is what the original "void"
+  framing was actually showing). `CityMassing.ts` now skips base-tier piers
+  within a gate width of any `GATE_OFFSETS` entry. Head-on shot now shows an
+  open, walkable portal: recessed corridor, jamb reveals with sky fill,
+  pearl arch head visible.
+- Center (offset-0) gates: **re-judged with a dedicated framing** (east/
+  Benjamin, `?cam=2700,1000,0,1.5708,-0.1,60` — the river covers the south
+  one). Open lit portal, and the ONYX foundation band (east-centre, Rev
+  21:19-20 order) renders its correct slate hue. No voids.
+- Mouse-steer navigation: **live-verified ALL PASS** via
+  `tools/probe-mousesteer.ts` (see the navigation entry above).
 
 ## Current focus
 
