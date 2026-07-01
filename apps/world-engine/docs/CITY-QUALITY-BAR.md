@@ -217,8 +217,16 @@ Holy Allotment's plateau lift was raised 12 m → 600 m to pull it clear of the
 surrounding far-shell terrain. **#1/#3 (relief geometry + true gem/crystal
 transmission materials) remain the top open item** — still flat
 `BoxGeometry` + opaque `MeshStandardNodeMaterial`, no transmission, no
-per-instance surface variation. Both landed changes pass `tsc --noEmit` +
-`vite build` clean but were **not visually re-verified live** this session
-(screenshot tooling malfunctioned — see `STATUS.md`'s "PENDING USER CONFIRM"
-note). Re-shoot and re-judge against `reference-city/` before ranking the
-next three.
+per-instance surface variation. Both landed changes have now been **live-verified** via
+`apps/world-engine/tools/shoot.ts` (see `STATUS.md` — this is the resolved
+verification path, use it going forward). Plateau lift: confirmed fixed. Wall
+gates: the gaps are geometrically real (confirmed via a flanking-gate shot),
+but looking straight into one reveals a **new delta item — the gate recess
+renders solid black**, a direct Pillar-B violation ("no black shadows,
+ever"). Add to the ranked list: **#11 (new) — gate recesses read as flat
+black voids, not lit pearl portals**, likely because the plinth's inner face
+sitting just behind the gap gets no direct light and no emissive floor from
+this angle. Candidate fix: give the plinth's exposed face and jamb material
+a baseline emissive matching the rest of `CityMassing.ts`'s self-luminous
+city. Re-shoot and re-judge the center (offset-0) gates too — the river
+channel and trees of life obscured them in every framing tried this session.

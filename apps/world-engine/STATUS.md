@@ -234,21 +234,54 @@ a derived constant.
   foundation geometry landed 2026-07-01 (above); crystal/gem transmission
   materials and per-tier surface relief (delta #1/#3) remain open.**
 
-**PENDING USER CONFIRM (2026-07-01):** the wall/gate/foundation build, the
-plateau-lift fix, and the mouse-steer navigation rework all pass `tsc
---noEmit` + `vite build` clean, but this session's screenshot tooling
-(`preview_screenshot`, and a `canvas.toDataURL()` fallback attempted after it)
-malfunctioned consistently against this engine's WebGPU canvas — repeated
-timeouts on the former, corrupted output on the latter across multiple
-independent attempts — and the Chrome extension (this repo's normal WebGPU
-verification path, per project convention) was not connected this session.
-**None of the three changes above have been visually re-verified live.** Do a
-live check (`npm run dev` in `apps/web`, visit `/world-preview`, or the
-engine's own `tools/shoot.ts` harness) before treating them as done — the gate
-gap math and wall segment placement in particular are exactly the kind of
-change that reads correctly on paper but can be subtly wrong in practice
-(overlapping segments, misaligned gate offsets, a wall ring facing the wrong
-direction).
+**VERIFICATION TOOLING — RESOLVED (2026-07-01).** The generic `preview_screenshot`
+tool hung (30s timeout) on every attempt against this engine's WebGPU canvas
+this session, and a `canvas.toDataURL()`-via-eval fallback produced corrupted
+output; the Chrome extension was also not connected. **Fix: use the engine's
+own `apps/world-engine/tools/shoot.ts` Playwright harness directly (already
+built, `docs/DELTA.md`/STATUS.md's established tool) — it works reliably.**
+It launches Chromium with `channel: 'chromium'` (not Playwright's default
+GPU-less headless shell) and gets a real adapter (verified: Intel Xe-LPG on
+this Windows dev machine). Run it against the world-engine's own Vite dev
+server on **port 5173** (`npm run dev` in `apps/world-engine`, NOT the
+`apps/web` :3030 iframe wrapper — `tools/launch.ts`'s `PROBE_BASE` is
+hardcoded to `localhost:5173`):
+
+```
+npx tsx tools/shoot.ts --scene newjerusalem --cam "x,y,z,yaw,pitch,fov" \
+  --out shots/wip/name.png --w 1280 --h 800 --settle 12 --timeout 180000
+```
+
+Then read the PNG directly (`Read` tool) — no MCP screenshot tool or Chrome
+extension needed. A `.claude/launch.json` `"engine"` entry (port 5173) now
+exists alongside `"web"` for this. **This is the go-to verification path for
+this engine going forward** — reach for it before the generic preview tool.
+
+**Live verification results (2026-07-01, via the above):**
+- **Plateau/terrain seam (12m→600m lift): CONFIRMED FIXED.** Wide establishing
+  shots (`?cam=0,1300,8000,0,-0.1,55`) show a clean plateau edge, no visible
+  mountain intrusion.
+- **Wall gate gaps: geometry CONFIRMED REAL** — the flanking gates (offsets
+  ±50, e.g. Simeon/Zebulun) show genuine daylight through the wall from
+  outside (`?cam=0,1500,2600,0,-0.5,80`). The gate-order/segmentation logic
+  works.
+- **NEW BUG FOUND: gate recesses render solid BLACK when viewed head-on**
+  (`?cam=-1000,1000,2500,0,-0.15,60` — a real gap exists there, per the wide
+  shot above, but looking straight into it shows a flat black void, not a lit
+  pearl portal). Root cause not yet diagnosed — likely the plinth's inner
+  face (sitting only ~12 units behind the gap) gets no direct sun or bounce
+  light from this angle, and neither the jamb nor plinth material has any
+  emissive floor to prevent it going fully black. This is a direct violation
+  of the engine's own Pillar B ("no black shadows, ever" — `PROJECT_LAAS_v2.md`
+  §Six pillars) and needs a fix (candidate: give the plinth's exposed face and
+  the jamb material a baseline emissive, matching how every other city
+  surface already self-illuminates in `CityMassing.ts`). **Not yet fixed.**
+- The center (offset 0) gates were not clearly evaluated — the river channel
+  and tree-of-life placement visually cover them at the framings tried;
+  worth a dedicated look.
+- Mouse-steer navigation: **not testable via `shoot.ts`** (static camera
+  poses only, no simulated mouse input) — still needs a live interactive
+  check (Chrome extension once reconnected, or manual browser testing).
 
 ## Current focus
 
