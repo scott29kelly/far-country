@@ -14,7 +14,7 @@ Full vision: [`docs/vision.md`](docs/vision.md). Product spec: [`docs/prd.md`](d
 
 ## Current phase
 
-**Phase 0 — Documentation scaffolding.** No application code yet. If you're asked to write code that goes beyond docs, stop and confirm — we're not there yet.
+**Phase 3 — Explorable 3D world, in progress.** Phases 0–2 (docs, dataset/pipeline, browse UI + grounded Q&A) are built. Active work is the 3D world: two implementations coexist per [ADR 0013](docs/adr/0013-fork-laas-engine-for-3d-world.md) — the legacy React Three Fiber scene (`apps/web/src/lib/world/`, retired, reachable only via its old route) and the vendored LAAS WebGPU engine at `/world-preview` (`apps/world-engine/`), now the front door. The engine's terrain/atmosphere quality is well ahead of the legacy scene's, but its New Jerusalem content (`apps/world-engine/src/nj/`) is well behind the legacy scene's feature set — see [`docs/roadmap.md`](docs/roadmap.md) Phase 3 for the current per-milestone status.
 
 Phase ordering: 0 docs → 1 dataset + review tool → 2 browse UI + grounded Q&A → 3 explorable 3D world. See [`docs/roadmap.md`](docs/roadmap.md).
 

@@ -176,18 +176,33 @@ separate concern. Plan:
 
 ## 7. Staged milestones
 
-- **M1 — Boot parity.** `NewJerusalemScene` registered; terrain + SunSky +
+> **Status update, 2026-07-01** (see `apps/world-engine/STATUS.md` "New
+> Jerusalem scene" section and `docs/roadmap.md` Phase 3 for the full
+> inventory): M1 is done. M2 is **partial and diverged** — city massing,
+> river cascade, and trees exist, but as a hand-tuned 5-tier box massing
+> (`CityMassing.ts`) that does not consume this doc's "shared constants"
+> (`cityModel.ts` was ported but is unimported dead code); walls, named
+> gates, and jewelled foundations were never built. Content ahead of this
+> spec's original scope has also landed (Holy Allotment plateau, crop
+> fields, dwelling grid, standalone temple, citywide scale per ADR 0014) —
+> reconcile against `docs/roadmap.md` Phase 4 sequencing before extending
+> further. M3–M5 have not started.
+
+- **M1 — Boot parity.** *(done)* `NewJerusalemScene` registered; terrain + SunSky +
   shadows + PostStack render with an empty pad. Confirms the reused stack works.
   *Verifiable via the engine's Playwright `tools/shoot.ts` screenshot harness.*
-- **M2 — City massing.** Pyramid terraces, walls, gates, foundations, throne
+- **M2 — City massing.** *(partial, diverged — see status note above)* Pyramid
+  terraces, walls, gates, foundations, throne
   glory core, river cascade, two trees — correct positions from the shared
   constants, placeholder materials. The silhouette reads as the New Jerusalem.
-- **M3 — Material quality.** Crystal/jasper transmission, gold street, pearl
+- **M3 — Material quality.** *(not started)* Crystal/jasper transmission, gold street, pearl
   gates, gem foundations, glory bloom; tune against the engine's lighting/post.
   This is the milestone that closes the visual-quality gap.
-- **M4 — Population + symbolic markers.** Improved multitude (ADR 0011); symbolic
+- **M4 — Population + symbolic markers.** *(not started)* Improved multitude (ADR 0011); symbolic
   indicators (ADR 0009); descriptor/citation inspect HUD (§6).
-- **M5 — Retire R3F.** Once parity on the core elements, point `/world` at the
+- **M5 — Retire R3F.** *(not started; `/world` already redirects to `/world-preview`
+  at the route level, but the underlying code is not yet removed)* Once parity on
+  the core elements, point `/world` at the
   engine and remove `apps/web/src/lib/world/` (per ADR 0013).
 
 ---
@@ -205,7 +220,9 @@ separate concern. Plan:
 
 ## 9. Open questions
 
-- §5 new-earth landscape: option (A) vs (B). **Decide before M2.**
+- ~~§5 new-earth landscape: option (A) vs (B). **Decide before M2.**~~ **Resolved
+  2026-07-01:** kept the engine's wild terrain unchanged (option "keep tech, no
+  paradisal re-art-direction"). See `RENDERING-DECISIONS.md` Entry #5.
 - River: reuse the engine `WaterMaterial`/caustics for the cascade, or author a
   simpler ribbon? (Prefer reuse if the cascade geometry cooperates.)
 - Throne glory: how bright/large before it washes the frame via bloom — tune in M3.

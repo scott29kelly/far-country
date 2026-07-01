@@ -1,9 +1,19 @@
-# Rendering Decisions (Phase 3 — /world)
+# Rendering Decisions (Phase 3 — 3D world)
 
 Per [ADR 0009](docs/adr/0009-symbolic-vs-literal-rendering.md) **rule 4**, any
 `debated`-tier descriptor that gets rendered in the 3D world must have a
 documented decision here recording *which side the project rendered and why* —
 because geometry cannot footnote itself. This file is that record.
+
+**Two scenes, one policy.** As of [ADR 0013](docs/adr/0013-fork-laas-engine-for-3d-world.md),
+there are two implementations: the legacy React Three Fiber scene at `/world`
+(retired, redirects to `/world-preview`, kept only until parity) and the
+vendored LAAS WebGPU engine at `/world-preview` (the current front door,
+`apps/world-engine/src/nj/`). The decisions below govern *both* — a decision
+made once is not re-litigated per renderer — but the engine port is behind on
+implementing several of them. Each entry's "Code" pointer now lists both
+scenes and notes which has actually implemented the decision. See
+`docs/roadmap.md` Phase 3 for the up-to-date per-milestone port status.
 
 Entries are append-only in spirit: when a decision is reversed, add a new entry
 that supersedes the old one rather than rewriting history. Each entry names the
@@ -71,7 +81,8 @@ itself commits to neither. This entry exists so the rendered pyramid is read as
 
 - [`docs/sources/willis-new-jerusalem-model.md`](docs/sources/willis-new-jerusalem-model.md) — "Shape — a step pyramid / mountain (NOT a cube)"
 - [`docs/adr/0009-symbolic-vs-literal-rendering.md`](docs/adr/0009-symbolic-vs-literal-rendering.md) rule 4 (this file's mandate) and rule 6 (scale deferral)
-- Code: `apps/web/src/lib/world/data/world-geometry.ts`, `components/Pyramid.tsx`
+- Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/data/world-geometry.ts`, `components/Pyramid.tsx`
+- Code (current `/world-preview`, per ADR 0013): `apps/world-engine/src/nj/CityMassing.ts` re-implements the terraced-mountain form with its own hand-tuned tier table (5 tiers, not the legacy 7/12-step model) — this entry's *decision* (mountain, not cube) still governs; the specific step count/heights are, per this entry's own "rendering choice, not a textual claim" note, implementation detail that has legitimately diverged between the two scenes. `apps/world-engine/src/nj/cityModel.ts` also carries a (currently unused/dead-code) `PYRAMID`/`TERRACES` table ported from the legacy model — see `docs/roadmap.md` Phase 3 M3.2 note and `apps/world-engine/STATUS.md`.
 
 ---
 
@@ -110,7 +121,8 @@ statement; this entry governs only the *placement*.
 ### Governing sources
 
 - [`docs/sources/willis-new-jerusalem-model.md`](docs/sources/willis-new-jerusalem-model.md) — "Tribe → gate ordering (Ezekiel 48:30–34)"
-- Code: `apps/web/src/lib/world/data/points-of-interest.ts` (`GATES`)
+- Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/data/points-of-interest.ts` (`GATES`)
+- Code (current `/world-preview`, updated 2026-07-01): `apps/world-engine/src/nj/cityModel.ts`'s `GATES` table (Ezekiel order preserved) is now consumed by `CityMassing.ts` to build twelve real gate portals (gold jambs + pearl arch head) as gaps cut into the base-tier wall ring, at each gate's named side/offset. Not yet: tribe-name labels legible in-scene (a HUD/wayfinding concern, `CITY-QUALITY-BAR.md` delta #10) and gate collision (a player can already walk through the gap, which is correct, but the flanking jambs have no collision either). **Not visually re-verified live this session** — see `apps/world-engine/STATUS.md`'s "PENDING USER CONFIRM" note.
 
 ---
 
@@ -165,7 +177,8 @@ the inhabitants altogether.
 
 - Rev 7:9; Rev 5:11; ADR 0009 rule 4 (this entry's mandate); ADR 0010 (aniconic
   — divine persons only).
-- Code: `apps/web/src/lib/world/components/Inhabitants.tsx`
+- Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/components/Inhabitants.tsx`
+- Code (current `/world-preview`): **not yet ported.** No population geometry exists in `apps/world-engine/src/nj/` — this is `docs/roadmap.md` Phase 3 M3.6, not started on either scene as of 2026-07-01.
 
 ---
 
@@ -206,4 +219,35 @@ debate, so no separate entry.
 ### Governing sources
 
 - Rev 4:3; Rev 4:6; ADR 0009 rule 4.
-- Code: `apps/web/src/lib/world/components/Throne.tsx` (`RainbowHalo`, sea of glass)
+- Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/components/Throne.tsx` (`RainbowHalo`, sea of glass)
+- Code (current `/world-preview`): **not yet ported.** `apps/world-engine/src/nj/CityMassing.ts` renders only an emissive sphere ("glory") at the summit conflating throne and glory-light into one primitive — no rainbow halo, no sea of glass. This entry's decision applies whenever the throne environment is rebuilt there.
+
+---
+
+## Entry #5 — New-earth landscape: the engine's wild terrain, unchanged (not an idealized paradise)
+
+- **Date:** 2026-07-01 (retroactively documenting the decision made in commit `747db8e`, "Rebuild New Jerusalem scene on the full procedural landscape", which reversed the "idealized paradisal terrain" direction recorded in commit `e5667ec` and `docs/specs/phase-3-engine-integration.md` §5)
+- **Tier:** the surrounding landscape is explicitly **not a cited descriptor** (`docs/specs/phase-3-engine-integration.md` §5, `docs/roadmap.md` Phase 3) — it is illustrative context for the New Jerusalem, which *is* cited. This entry exists because the choice of *what kind* of illustrative landscape touches the project's eschatological framing (ADR 0012) closely enough to warrant a documented rationale, even though no individual descriptor is at stake.
+- **Question:** Should the "new earth" (Rev 21:1) the city sits on be rendered as the LAAS engine's default wild terrain (eroded mountains, forests, rivers, snow) unchanged, or should it be art-directed toward an idealized/paradisal look (gentler relief, calmer water, garden-like lushness) as `phase-3-engine-integration.md` §5 originally proposed?
+- **Decision:** **Keep the engine's wild terrain unchanged.**
+
+### Rationale
+
+Two considerations, one engineering and one theological:
+
+1. **Engineering.** Art-directing the heightfield/erosion/water systems toward a gentler "paradisal" look would mean tuning down exactly the systems ([PROJECT_LAAS_v2.md](apps/world-engine/PROJECT_LAAS_v2.md)'s pillars) the engine was forked to get right (ADR 0013). The wild terrain is also the vendored engine's proven, verified-against-reference quality bar (`apps/world-engine/docs/DELTA.md`); a bespoke "paradise" variant would need its own reference-delta loop from scratch.
+2. **Theological.** Per [ADR 0012](docs/adr/0012-eschatological-framing-premillennial.md), the land the city descends onto at the *start* of this scene's implied timeframe is the **millennial earth**, not yet the fully renewed eternal state — Willis's own geography for this period (Ezek 47's healing river, Ezek 48's tribal allotments, Zech 14) describes a real, physically normal earth with mountains, rivers, and mortal nations on it, not an already-perfected Eden. A wild, geologically ordinary landscape is therefore not a theological overclaim; an artificially smoothed "paradise" would arguably overclaim eternal-state conditions the millennial framing doesn't yet grant. (This reasoning would need revisiting if a future phase renders the *eternal state* specifically, per `docs/roadmap.md` Phase 4.)
+
+Both reasons point the same direction, so the engine's default terrain is used as-is, with only the Holy Allotment plateau lifted above it (a local, disclosed, non-cited platform for the city) rather than the landscape itself being retextured.
+
+### What is grounded vs. a rendering choice
+
+- **Grounded:** none — the surrounding landscape carries no descriptor and makes no claim about the millennial or eternal earth's actual appearance.
+- **Rendering choice:** using the engine's unmodified wild-terrain generation as illustrative filler, rather than a bespoke "paradisal" variant.
+
+### Governing sources
+
+- [`docs/adr/0012-eschatological-framing-premillennial.md`](docs/adr/0012-eschatological-framing-premillennial.md) — millennial-earth framing this entry leans on
+- [`docs/adr/0013-fork-laas-engine-for-3d-world.md`](docs/adr/0013-fork-laas-engine-for-3d-world.md) — why the terrain tech is worth keeping unchanged
+- `docs/specs/phase-3-engine-integration.md` §5 — the original "idealized paradisal terrain" proposal this entry reverses
+- Code: `apps/world-engine/src/nj/NewJerusalemScene.ts` (`buildTerrainScene(ctx)` call, unmodified)
