@@ -585,6 +585,15 @@ export class PostStack {
       c = mix(c, c.mul(vec3(uHighlightTint)), hiMask);
       // saturation + gentle contrast around mid-gray
       c = mix(vec3(dot(c, vec3(0.2126, 0.7152, 0.0722))), c, float(uSat));
+      // sat > 1 EXTRAPOLATES away from gray: a deeply saturated channel can
+      // cross below 0 (crosses when ch/lum < (s−1)/s ≈ 0.12 at golden-hour
+      // sat 1.14 — the city's shadowed gold sits at ~0.123 and its gem hues
+      // well under), and pow(negative, non-integer) is NaN in WGSL — AgX then
+      // renders the pixel pure BLACK (the /world-preview "gate void": a black
+      // band over every shadowed city surface + a bounce-tipped black disc,
+      // 2026-07-01). Clamp before pow; also catches TRAA variance-clip
+      // undershoot arriving from upstream.
+      c = c.max(vec3(0));
       c = c.div(0.18).pow(vec3(float(uContrast))).mul(0.18);
       // restrained vignette + static grain (freeze-deterministic)
       const v = screenUV.sub(0.5);
