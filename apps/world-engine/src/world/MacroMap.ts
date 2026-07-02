@@ -33,6 +33,7 @@ import {
 import type { Rng, WorldSeed } from '../core/Seed';
 import type { NF, NV2 } from '../gpu/TSLTypes';
 import { FAR_RADIUS, KARST_PLATEAU, LAKE_LEVEL, WORLD_HALF } from './WorldConst';
+import type { AllotmentZoneParams } from './ZoneField';
 
 /**
  * Scene-authored plateau (ADR 0015 — the Holy Allotment rise): a broad,
@@ -66,6 +67,13 @@ export interface PlateauParams {
   rollAmp: number;
   /** optional shallow basin (approach water — hydrology fills it) */
   basin?: { c: [number, number]; r: number; depth: number };
+  /**
+   * managed land-use zones on the plateau top (ZoneField) — never read by
+   * the terrain synthesis itself (zones do not move ground); carried here so
+   * downstream consumers (scatter, grass ring, splat) all reach the same
+   * authored numbers through `hf.mp`
+   */
+  zones?: AllotmentZoneParams;
   /** stratified mesa rim (replaces the smooth falloff when present) */
   cliff?: {
     /** shoulder-rounding width INSIDE the lip (m) — grass runs to the edge */

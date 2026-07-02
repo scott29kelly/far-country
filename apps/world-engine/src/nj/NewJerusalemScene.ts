@@ -27,6 +27,7 @@ import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
+import { ALLOT_ZONES } from './allotmentZones';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { riverSurfaceLocalY } from './RiverOfLife';
@@ -70,6 +71,10 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       // the spawn that the hydrology fills as a meadow pond
       basin: { c: [1150, 3550], r: 520, depth: 9 },
       cliff: { ...RIM_CLIFF },
+      // managed planting on the plateau top (allotmentZones.ts): crop
+      // patchwork, orchard rows, hedgerow lanes, mown approach lawn —
+      // consumed by scatter/grass/splat, never by the terrain synthesis
+      zones: ALLOT_ZONES,
     };
   };
 
