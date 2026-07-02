@@ -31,6 +31,7 @@ import { ALLOT_ZONES } from './allotmentZones';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { riverSurfaceLocalY } from './RiverOfLife';
+import { buildTemple } from './Temple';
 import { buildTreesOfLife } from './TreesOfLife';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
@@ -142,6 +143,11 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // allotment scale would distort them). Null when veg is ablated.
   const treesOfLife = await buildTreesOfLife(ctx);
   if (treesOfLife) engine.scene.add(treesOfLife);
+
+  // Ezekiel's temple (Ezek 40-42 + the 43:13-17 altar): a world-space,
+  // literal-cubit compound built from the cited measurement dataset
+  // (ADR 0017/0018; RENDERING-DECISIONS #7) on the priests' campus band.
+  engine.scene.add(buildTemple({ hf, gi }));
 
   // Waterfalls off the mesa rim (ADR 0016): authored crystal ribbons at the
   // seed's REAL drainage crossings (the hydrology field cannot express
