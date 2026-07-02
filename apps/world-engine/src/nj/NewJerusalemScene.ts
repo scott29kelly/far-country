@@ -26,7 +26,8 @@ import type { WorldContext } from '../debug/Scenes';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
-import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './Allotment';
+import { buildHolyAllotment } from './Allotment';
+import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { riverSurfaceLocalY } from './RiverOfLife';
 import { buildTreesOfLife } from './TreesOfLife';
 
@@ -44,26 +45,21 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     params.timeOfDay = 17.0;
   }
 
-  // Citywide scale (ADR 0014): ~2.5 mi base. See cityModel.ts for the model.
-  const NJ_SCALE = 20;
-
-  // --- the Holy Allotment as authored geography (ADR 0015) --------------------
+  // --- the Holy Allotment as authored geography (ADR 0015 + 0016) -------------
   // A broad rise whose flat core carries the city + forecourt; the open plain
-  // rolls gently; the rim slopes down to the wild terrain over ~2 km. The
-  // whole footprint (compressed Willis proportions — placeholder per ADR 0009
-  // rule 6) fits inside the far shell; the city + approach sit inside the
-  // detailed ring.
-  const PLATEAU_Y = 470;
-  const footHalfX = ALLOT_X * NJ_SCALE + 400;
-  const footHalfZ = ((ALLOT_Z_SOUTH - ALLOT_Z_NORTH) / 2) * NJ_SCALE + 400;
-  const footCz = ((ALLOT_Z_SOUTH + ALLOT_Z_NORTH) / 2) * NJ_SCALE;
+  // rolls gently; the RIM is a stratified mesa edge (ADR 0016, USER-REFS
+  // directive #2) dropping to the wild terrain. The whole footprint
+  // (compressed Willis proportions — placeholder per ADR 0009 rule 6) fits
+  // inside the far shell; the city + approach + the south rim's whole cliff
+  // band sit inside the detailed ring. Geometry constants live in
+  // rimModel.ts, shared with the CPU rim scanner so they cannot drift.
   ctx.macroPatch = (mp) => {
     mp.plateau = {
-      c: [0, footCz],
-      half: [footHalfX, footHalfZ],
-      cornerR: 1600,
+      c: [RIM.cx, RIM.cz],
+      half: [RIM.hx, RIM.hz],
+      cornerR: RIM.cornerR,
       y: PLATEAU_Y,
-      falloff: 1900,
+      falloff: 1900, // unused while cliff is set; kept for the no-cliff path
       // flat core: city (±2000) + gold forecourt (±2320) + margin
       flatC: [0, 150],
       flatHalf: [2750, 2850],
@@ -72,6 +68,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       // Willis directive #2 — water at the approach: a shallow basin SE of
       // the spawn that the hydrology fills as a meadow pond
       basin: { c: [1150, 3550], r: 520, depth: 9 },
+      cliff: { ...RIM_CLIFF },
     };
   };
 

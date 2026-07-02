@@ -26,6 +26,7 @@ import {
   mx_worley_noise_float,
   pow,
   saturate,
+  sin,
   smoothstep,
   vec2,
 } from 'three/tsl';
@@ -38,10 +39,15 @@ import { FAR_RADIUS, KARST_PLATEAU, LAKE_LEVEL, WORLD_HALF } from './WorldConst'
  * gently-rolling elevated table that OVERRIDES valleys/lakes/ranges inside
  * its rounded-rect footprint. Composited inside macroTerrain so the 4096²
  * bake and the analytic far shell get identical geometry (seam continuity
- * for free). Willis's directive is "elevated green land… gently rolling",
- * not a sheer mesa: the rim is a kilometers-wide slope, the top keeps a
- * low-amplitude roll that flattens to near-billiard inside `flat*` (where
- * built content stands).
+ * for free). Willis's directive is "elevated green land… gently rolling":
+ * the TOP keeps a low-amplitude roll that flattens to near-billiard inside
+ * `flat*` (where built content stands). With `cliff` set (USER-REFS
+ * directive #2), the rim is a stratified MESA edge — green top to a
+ * meandering lip, a stepped near-vertical face, then a talus tail — instead
+ * of the original kilometers-wide smooth ramp. The face band also gets a
+ * strata-modulated hardness boost so 640 erosion iterations sharpen its
+ * benches into ledges instead of shedding the wall (the karst-tower
+ * survival mechanism).
  */
 export interface PlateauParams {
   /** footprint center / half-extents / corner radius (world m) */
@@ -50,7 +56,7 @@ export interface PlateauParams {
   cornerR: number;
   /** nominal top elevation (m, absolute) */
   y: number;
-  /** rim falloff width (m) — the breadth of the rise's slopes */
+  /** rim falloff width (m) — the breadth of the rise's slopes (no-cliff mode) */
   falloff: number;
   /** flat core (city + forecourt) — roll is attenuated ~8× inside */
   flatC: [number, number];
@@ -60,6 +66,20 @@ export interface PlateauParams {
   rollAmp: number;
   /** optional shallow basin (approach water — hydrology fills it) */
   basin?: { c: [number, number]; r: number; depth: number };
+  /** stratified mesa rim (replaces the smooth falloff when present) */
+  cliff?: {
+    /** shoulder-rounding width INSIDE the lip (m) — grass runs to the edge */
+    lip: number;
+    /** horizontal width of the stepped near-vertical face band (m) */
+    face: number;
+    /** ABSOLUTE wall height dropped across shoulder+face (m) — guarantees a
+     *  mesa face even where the wild fringe runs close to the plateau top */
+    wallH: number;
+    /** stepped-bench count across the face */
+    benches: number;
+    /** tail width beyond the face blending into the wild terrain (m) */
+    talus: number;
+  };
 }
 
 export interface MacroParams {
@@ -421,6 +441,7 @@ export function macroTerrain(p: NV2, mp: MacroParams, detail: 'full' | 'far'): M
   // footprint and blends into whatever the wild terrain was doing at the rim.
   // Runs in BOTH detail branches — the bake and the far shell agree at the
   // ring boundary by construction.
+  let cliffBand: NF | null = null;
   if (mp.plateau) {
     const pl = mp.plateau;
     // rounded-rect SDF (≤0 inside)
@@ -431,7 +452,6 @@ export function macroTerrain(p: NV2, mp: MacroParams, detail: 'full' | 'far'): M
       return outside.add(min(max(qx, qy), 0)).sub(rad);
     };
     const d = rrect(pl.c, pl.half, pl.cornerR);
-    const rise = smoothstep(pl.falloff, 0, d);
     const dFlat = rrect(pl.flatC, pl.flatHalf, Math.max(60, pl.cornerR * 0.5));
     const flat = smoothstep(pl.flatFalloff, 0, dFlat);
     // gentle roll on the open plain; the flat core rides near the roll's
@@ -455,7 +475,46 @@ export function macroTerrain(p: NV2, mp: MacroParams, detail: 'full' | 'far'): M
       const dB = p.sub(vec2(b.c[0], b.c[1])).length();
       plTop = plTop.sub(smoothstep(b.r, b.r * 0.3, dB).mul(b.depth));
     }
-    h = mix(h, plTop, rise);
+    if (pl.cliff) {
+      // Stratified mesa rim (ADR 0016 / USER-REFS #2): green top → meandering
+      // lip → stepped near-vertical face carrying an ABSOLUTE wallH metres →
+      // talus tail blending to the wild terrain. Piecewise, monotone, C1:
+      //   dc ≤ -lip           h = plTop                       (rolling top)
+      //   dc ∈ [-lip, 0]      shoulder eases off 6% of wallH  (rounded lip)
+      //   dc ∈ [0, face]      benched descent of 94% of wallH (the cliff)
+      //   dc ∈ [face, +talus] blend from the wall foot into the wild land
+      //                       (rises where the fringe runs high — a carved
+      //                       canyon rim — and descends where it runs low)
+      const cl = pl.cliff;
+      // lateral meander so the lip is geology, not a machined rounded rect
+      const wob = mx_fractal_noise_float(
+        p.div(420).add(vec2(o.warp[0] + 91, o.warp[1] - 17)),
+        3,
+        2.1,
+        0.5,
+        1,
+      ).mul(70);
+      const dc = d.add(wob);
+      const shoulder = smoothstep(-cl.lip, 0, dc).mul(0.06 * cl.wallH);
+      const tFace = clamp(dc.div(cl.face), 0, 1);
+      // staircase curve: monotone for benchAmp < 1; erosion (via the hardness
+      // boost below) sharpens the treads/risers into real strata ledges
+      const twoPiB = Math.PI * 2 * cl.benches;
+      const tBench = tFace.sub(sin(tFace.mul(twoPiB)).mul(0.85 / twoPiB));
+      const target = plTop.sub(shoulder).sub(tBench.mul(0.94 * cl.wallH));
+      const w = float(1).sub(
+        smoothstep(0, 1, clamp(dc.sub(cl.face).div(cl.talus), 0, 1)),
+      );
+      h = mix(h, target, w);
+      // face-band mask for the hardness boost (visible to the hardness
+      // expression below): the cliff wall + the upper talus edge
+      cliffBand = smoothstep(-20, 30, dc).mul(
+        smoothstep(cl.face + cl.talus * 0.4, cl.face, dc),
+      ) as NF;
+    } else {
+      const rise = smoothstep(pl.falloff, 0, d);
+      h = mix(h, plTop, rise);
+    }
   }
 
   // --- hardness (erosion resistance + later: strata/talus behavior) -----------
@@ -464,15 +523,20 @@ export function macroTerrain(p: NV2, mp: MacroParams, detail: 'full' | 'far'): M
   )
     .mul(0.5)
     .add(0.5);
-  const hardness = clamp(
-    float(0.34)
-      .add(strata.mul(0.36))
-      .add(tKarst.mul(0.28))
-      .add(tAlp.mul(0.18))
-      .sub(tLake.mul(0.2)),
-    0.08,
-    0.97,
-  );
+  let hardBase = float(0.34)
+    .add(strata.mul(0.36))
+    .add(tKarst.mul(0.28))
+    .add(tAlp.mul(0.18))
+    .sub(tLake.mul(0.2)) as NF;
+  if (cliffBand) {
+    // plateau rim face: strata-modulated boost — hard beds clamp to 0.97
+    // (karst-tower survival regime, ~72° repose) while soft interbeds stay
+    // ~0.72 (~62°), so 640 erosion iterations CARVE LEDGES instead of
+    // shedding the wall. Wild scenes never set plateau.cliff — untaken JS
+    // branch, compiled WGSL unchanged.
+    hardBase = hardBase.add(cliffBand.mul(strata.mul(0.18).add(0.38))) as NF;
+  }
+  const hardness = clamp(hardBase, 0.08, 0.97);
 
   return {
     height: h,
