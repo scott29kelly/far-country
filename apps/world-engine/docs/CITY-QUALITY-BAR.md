@@ -276,3 +276,13 @@ Remaining top deltas: #6 (dwelling variation), #8 (temple identity —
 USER-REFS says red-sandstone Ezekiel compound), #9 (population), #10
 (wayfinding), plus the logged polish debts (gem facet punch at range,
 shaded-face glass read, fall ribbons at close range).
+
+**Progress, 2026-07-02 (late) — the allotment zone map landed.** Pillar
+C's "fields show furrow/crop relief, not a flat green plane with box
+hedges" clause is first-pass real: the plateau top is an ordered
+patchwork (per-plot crop tints + row striping through blades AND splat,
+worn lanes, hedgerow bands, gridded orchard rows of real pipeline
+trees, mown processional lawn) driven by `src/world/ZoneField.ts` /
+`src/nj/allotmentZones.ts` through the engine's own scatter/grass/splat
+systems. Full inventory and verification log: `STATUS.md` "New
+Jerusalem scene" 2026-07-02 late-2 entry.

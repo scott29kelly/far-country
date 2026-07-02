@@ -217,6 +217,50 @@ note was stale); arcade glow panes could use per-course hue drift. Backlog
 (plateau rim cliffs, allotment zone map, dwellings/temple identity)
 unchanged below.
 
+**(2026-07-02, late-2) ALLOTMENT ZONE MAP — queued item 3 BUILT.**
+Managed planting on the plateau top through the engine's own systems
+(USER-REFS directive #3; ADR 0015 decision 4's promised milestone).
+`src/world/ZoneField.ts` is an analytic land-use function — 260×200 m
+plot grid hashed per-plot into crop/orchard/fallow, belts choosing the
+mix, worn lanes on plot borders, a hashed hedgerow subset (hedging
+every edge reads as a waffle and blows the understory cap), mown-park
+rects, pond keep-clear — built as a TSL graph and carried on
+`PlateauParams.zones` (`src/nj/allotmentZones.ts` holds the authored
+numbers: crop belts flanking the city per Ezek 48:18-19 / the Ezek
+45/48 schematic, an orchard-heavy Zadok band toward the dwelling
+campus, the approach corridor as mown lawn). Terrain synthesis never
+reads zones — ground does not move, so heightfield/erosion/hydrology
+are untouched. Consumers, each behind a literal `if (…zones)` JS guard
+(wild scenes compile bit-identical; bm4 regression verified — NOTE
+capture PNGs are never hash-identical across runs, clouds/TRAA/
+exposure state differ; judge structurally via tools/compare.ts):
+- Scatter: orchard plots plant even-aged rows on a snapped lattice
+  (exact one-candidate-per-lattice-point dedup via cell containment;
+  domain thinning BYPASSED in managed zones so rows cannot gap;
+  species split per plot beech/birch so each impostor pool's 49k
+  compact region holds at aerial framings); hedgerows override the
+  understory to a near-continuous hazel/juniper band (streambed
+  idiom); wild trees/deadfall/stones suppressed on worked land.
+  Counters: 304k trees / 356k under / 37k extras / 347k stones — all
+  inside caps (pcg2d hash extracted to `gpu/passes/CellHash.ts` so
+  ZoneField and Scatter share it without an import cycle).
+- GroundRing: crop plots stand as dense tall per-plot-tinted sward
+  with 3.4 m row striping; the lawn mows short and fresh; lanes tread
+  thin and dry; debris keeps off tended ground; the g3 far band
+  matches so the handoff does not pop.
+- TerrainMaterial: same palette + stripe phase tint the splat (near
+  tiles AND far shell) — the layer that carries the field mosaic at
+  aerial range — plus packed-earth lane lines and dark hedgerow
+  border lines.
+LIVE-VERIFIED (shots/wip/zone1-*, zone2-*): aerial mosaic with dotted
+orchard rows, lane grid and pond (zone2-aerial); spawn hero
+composition unchanged (mown processional lawn with specimen trees);
+crop stand / worn lane / orchard rows / hedge wall at walking height
+(zone1-field, zone2-orchard). Debts: hedge border lines still subtle
+at high aerial; park lawn keeps some dry scruff (tune the blade dryK
+park suppression if judged); orchard rows loosen at oblique angles
+(±0.8 m planting slack — tighten if judged).
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
@@ -255,7 +299,9 @@ unchanged below.
    the refs' warm sandstone (cohesion vs refs tradeoff — surface if judged);
    E/W/N rims are far-shell only (ADR 0016 accepted); plunge pools lack a
    wade guard (off-path, logged).
-3. Allotment zone map (managed planting through the scatter/grass kernels).
+3. ~~Allotment zone map~~ **BUILT 2026-07-02** (dated entry above:
+   `ZoneField.ts` + `allotmentZones.ts` planted through scatter, the
+   grass ring and the splat; wild scene regression-verified).
 4. Temple PoC — Scripture-as-data concept ADR + Ezek 40–42 measurement
    extraction + units/scale ADR; doubles as the delta #8 temple rebuild.
 5. Dwelling variation (delta #6).
