@@ -3,16 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LAAS</title>
+    <title>Far Country</title>
     <style>
+      :root {
+        /* night sky tinted toward the city's gold; never pure black */
+        --night: #0c0f17;
+        --night-lift: #131728;
+        --gold: #d9a441;
+        --gold-line: #e0b45c;
+        --gold-dim: #8a6c33;
+        --crystal: #dfeaf0;
+        --parchment: #d8cfbc;
+        --parchment-dim: #9b917d;
+        --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+      }
       html, body {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: #06080a;
-        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        background: var(--night);
+        font-family: var(--serif);
       }
       #app {
         position: fixed;
@@ -23,52 +35,270 @@
         width: 100%;
         height: 100%;
       }
+
+      /* ============ boot rite: "I go to prepare a place for you" ============ */
       #boot {
         position: fixed;
         inset: 0;
+        z-index: 10;
+        background:
+          radial-gradient(120% 90% at 50% 118%, rgba(217, 164, 65, 0.10), transparent 55%),
+          radial-gradient(140% 120% at 50% 50%, var(--night-lift) 0%, var(--night) 62%, #080a10 100%);
+        transition: opacity 0.55s ease;
+        cursor: default;
+      }
+      #boot-motes {
+        position: absolute;
+        inset: 0;
+        display: block;
+      }
+      /* the dawn behind the city — swells with progress (JS drives opacity) */
+      #boot-dawn {
+        position: absolute;
+        left: 50%;
+        top: 46%;
+        width: 130vmin;
+        height: 90vmin;
+        transform: translate(-50%, -58%);
+        background: radial-gradient(50% 42% at 50% 52%,
+          rgba(226, 186, 106, 0.16) 0%,
+          rgba(217, 164, 65, 0.07) 38%,
+          transparent 70%);
+        opacity: 0;
+        transition: opacity 1.2s ease;
+        pointer-events: none;
+      }
+
+      /* center axis: the city drawn on its twelve foundations */
+      #boot-rite {
+        position: absolute;
+        left: 50%;
+        top: 47%;
+        transform: translate(-50%, -50%);
+        width: min(680px, 90vw);
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        color: #8aa39b;
-        font-size: 13px;
-        letter-spacing: 0.08em;
         pointer-events: none;
-        transition: opacity 0.5s ease;
-        z-index: 10;
       }
-      #boot .title {
-        font-size: 22px;
-        color: #c8d8d0;
-        margin-bottom: 14px;
-        letter-spacing: 0.35em;
+      #boot-city {
+        width: 100%;
+        height: auto;
+        overflow: visible;
       }
-      #boot .bar {
-        width: 260px;
-        height: 2px;
-        background: #1a2420;
-        margin-top: 16px;
+      #boot-city .ln {
+        fill: none;
+        stroke: var(--gold-line);
+        stroke-width: 1.1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #boot-city .glow {
+        fill: none;
+        stroke: var(--gold);
+        stroke-width: 4;
+        stroke-linecap: round;
+        opacity: 0.10;
+      }
+      #boot-city .river {
+        fill: none;
+        stroke: var(--crystal);
+        stroke-width: 1;
+        opacity: 0.55;
+      }
+      #boot-city .beacon {
+        fill: #fff4d6;
+        opacity: 0;
+        transition: opacity 1s ease;
+      }
+      #boot-beaconGlow {
+        position: absolute;
+        left: 50%;
+        width: 34vmin;
+        height: 34vmin;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle,
+          rgba(255, 244, 214, 0.34) 0%,
+          rgba(232, 178, 58, 0.10) 40%,
+          transparent 68%);
+        opacity: 0;
+        transition: opacity 1.4s ease;
+        pointer-events: none;
+      }
+
+      /* twelve foundation stones (Rev 21:19-20) — the progress indicator */
+      #boot-stones {
+        display: flex;
+        gap: clamp(8px, 1.8vw, 16px);
+        margin-top: 4px;
+        padding-top: 10px;
         position: relative;
-        overflow: hidden;
       }
-      #boot .bar > div {
+      /* the wall base line the stones sit beneath: fills with progress */
+      #boot-baseline {
+        position: absolute;
+        top: 0;
+        left: 2px;
+        right: 2px;
+        height: 1px;
+        background: rgba(217, 164, 65, 0.16);
+      }
+      #boot-baseline > div {
         position: absolute;
         left: 0;
         top: 0;
         bottom: 0;
         width: 0%;
-        background: #5fae8f;
-        transition: width 0.2s ease;
+        background: rgba(224, 180, 92, 0.75);
+        transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .stone {
+        width: clamp(9px, 1.6vw, 13px);
+        height: clamp(9px, 1.6vw, 13px);
+        transform: rotate(45deg) scale(0.92);
+        border: 1px solid rgba(216, 207, 188, 0.22);
+        background: transparent;
+        transition: background 0.7s ease, box-shadow 0.9s ease, border-color 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .stone.lit {
+        border-color: transparent;
+        transform: rotate(45deg) scale(1);
+        /* per-stone color + glow set inline from the gem table */
+      }
+      #boot-gemname {
+        margin-top: 14px;
+        font-size: 11px;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+        color: var(--gold-dim);
+        min-height: 14px;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+
+      /* the word — Scripture with citation, lower third */
+      #boot-word {
+        position: absolute;
+        left: 50%;
+        bottom: 16%;
+        transform: translateX(-50%);
+        width: min(560px, 84vw);
+        text-align: center;
+        pointer-events: none;
+      }
+      #boot-verse {
+        font-style: italic;
+        font-size: clamp(15px, 2vw, 19px);
+        line-height: 1.65;
+        color: var(--parchment);
+        opacity: 0;
+        transition: opacity 1.1s ease;
+      }
+      #boot-cite {
+        margin-top: 10px;
+        font-style: normal;
+        font-size: 10.5px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--parchment-dim);
+        opacity: 0;
+        transition: opacity 1.1s ease;
+      }
+
+      /* functional frame: corners */
+      #boot-mark {
+        position: absolute;
+        top: clamp(18px, 3.4vh, 34px);
+        left: clamp(20px, 3.2vw, 40px);
+        pointer-events: none;
+      }
+      #boot-mark .name {
+        font-size: clamp(15px, 1.5vw, 18px);
+        letter-spacing: 0.34em;
+        color: var(--parchment);
+      }
+      #boot-mark .sub {
+        margin-top: 7px;
+        font-size: 9.5px;
+        letter-spacing: 0.42em;
+        text-transform: uppercase;
+        color: var(--gold-dim);
+      }
+      #boot-status {
+        position: absolute;
+        bottom: clamp(16px, 3vh, 30px);
+        left: clamp(20px, 3.2vw, 40px);
+        pointer-events: none;
+      }
+      #boot-stage {
+        font-size: 12.5px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--parchment-dim);
+        transition: opacity 0.3s ease;
+      }
+      #boot-msg {
+        margin-top: 6px;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        color: rgba(155, 145, 125, 0.42);
+      }
+      /* legacy hook kept for tooling familiarity; hidden bar */
+      #boot-bar { display: none; }
+
+      #boot-hint {
+        position: absolute;
+        bottom: clamp(16px, 3vh, 30px);
+        right: clamp(20px, 3.2vw, 40px);
+        font-size: 10px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: rgba(155, 145, 125, 0.4);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 2s ease;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #boot * { transition-duration: 0.01s !important; }
       }
     </style>
-    <script type="module" crossorigin src="/laas/assets/index-D6P8jxOK.js"></script>
+    <script type="module" crossorigin src="/laas/assets/index-BOko5idL.js"></script>
   </head>
   <body>
     <div id="app"></div>
     <div id="boot">
-      <div class="title">L A A S</div>
-      <div id="boot-msg">initializing</div>
-      <div class="bar"><div id="boot-bar"></div></div>
-    </div>
+      <canvas id="boot-motes"></canvas>
+      <div id="boot-dawn"></div>
+      <div id="boot-beaconGlow"></div>
+
+      <div id="boot-rite">
+        <!-- the terraced city, drawn stroke by stroke as the world is prepared -->
+        <svg id="boot-city" viewBox="0 0 560 252" aria-hidden="true"></svg>
+        <div id="boot-stones">
+          <div id="boot-baseline"><div id="boot-baseline-fill"></div></div>
+          <!-- twelve stones injected by BootUI -->
+        </div>
+        <div id="boot-gemname"></div>
+      </div>
+
+      <div id="boot-word">
+        <div id="boot-verse"></div>
+        <div id="boot-cite"></div>
+      </div>
+
+      <div id="boot-mark">
+        <div class="name">FAR&nbsp;COUNTRY</div>
+        <div class="sub">The New Jerusalem</div>
+      </div>
+
+      <div id="boot-status">
+        <div id="boot-stage">kindling the light</div>
+        <div id="boot-msg">initializing</div>
+        <div class="bar"><div id="boot-bar"></div></div>
+      </div>
+
+      <div id="boot-hint">the light follows your lamp</div>
+    </div>
   </body>
 </html>
