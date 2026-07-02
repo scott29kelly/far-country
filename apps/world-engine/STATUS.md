@@ -246,6 +246,28 @@ unchanged below.
    reflects the finished art direction, and paired with the audio first
    deliverable (spawn-meadow ambient bed + south-approach score cue,
    roadmap Operational backlog) as one coherent arrival package.
+   **Scoping pass done (2026-07-02):** BootUI is a self-contained
+   DOM/SVG/Canvas2D overlay (~810 lines incl. index.html CSS), zero GPU
+   dependence; progress flows main.ts → `bootUI.set(0.1 + p*0.85, msg)`;
+   `window.__laas` progress/ready is the tooling contract every probe
+   depends on. HARD INVARIANTS for any redesign: first ~8% of boot has no
+   GPU; the main thread stalls 0.5–2 s between rAF frames throughout gen
+   (pace on wall-clock, never dt — existing pattern at BootUI.ts:388);
+   overlay must vanish <1 s after hide() for shoot.ts unless a `?rite=0`
+   tooling bypass ships with the change; keep `#boot` id (Diagnostics
+   force-hides by id), reduced-motion paths, ESV short-excerpt+citation
+   rule, and the FOUNDATION_GEMS import (the one visual link to the city).
+   Candidate directions, effort-ranked: (1) richer 2D cinematic rite
+   in-place (S-M, zero risk); (2) pre-rendered stills carousel of the real
+   world via shoot.ts captures (S, needs a one-line ADR exempting
+   self-produced captures from the zero-asset rule + a regen step);
+   (3) live WebGPU shader background after 8% (M, must be
+   stateless-per-frame or it hitches on gen stalls); (4a) cinematic hide():
+   exposure ramp + staged dissolve + camera ease after engine.start()
+   (S, fully GPU-safe — the ending is where the bar is felt);
+   (4b) early-start flythrough descent from ~95% (M-L, needs a
+   render-while-finishing audit). Recommended shape: (1 or 2) + (4a) +
+   the audio package; (4b) as fast-follow.
 
 **(2026-07-01, evening) TERRAIN-INTEGRATED HOLY ALLOTMENT — ADR 0015.**
 User verdict on the scene as it stood: "8-bit… OOMs below the bar." Root
