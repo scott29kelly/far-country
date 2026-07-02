@@ -115,6 +115,55 @@ CREATE TABLE verification (
   created_at      TEXT NOT NULL
 );
 
+-- Measurements: cited dimensional data driving parametric geometry
+-- (ADR 0017). Values are TEXT-NATIVE — the unit is what the text says
+-- (long cubits, reeds, spans, stadia, counts), never a metric conversion;
+-- meters happen in the units/scale resolver (ADR 0018) at consumption.
+CREATE TABLE measurement (
+  id              TEXT PRIMARY KEY,          -- STABLE SLUG, e.g. 'ezt-precinct-side'
+                                             -- (geometry code references measurements
+                                             -- by id — ADR 0017 decision 3)
+  entity_id       TEXT NOT NULL REFERENCES entity(id),
+  subject         TEXT NOT NULL,             -- what is measured, plain prose
+  dimension       TEXT NOT NULL CHECK (dimension IN
+                    ('length','breadth','height','thickness','depth',
+                     'distance','side','count')),
+  value           REAL NOT NULL,             -- the number as given in the text
+  unit            TEXT NOT NULL CHECK (unit IN
+                    ('long-cubit','cubit','reed','handbreadth','span',
+                     'stadia','step','story','item')),
+  basis           TEXT,                      -- derivation note, e.g. 'reed = 6 long cubits (Ezek 40:5)'
+  tier            TEXT NOT NULL CHECK (tier IN
+                    ('clear','fuzzy','debated','symbolic')),
+  notes           TEXT,                      -- text-critical / interpretive notes (ESV footnotes etc.)
+  review_status   TEXT NOT NULL CHECK (review_status IN
+                    ('pending','approved','rejected','needs-discussion'))
+                    DEFAULT 'pending',
+  reviewer_notes  TEXT,
+  provenance      TEXT,                      -- JSON: which run/session authored it
+  created_at      TEXT NOT NULL,
+  updated_at      TEXT NOT NULL
+);
+
+-- Citations for measurements — same shape as `citation`, keyed to
+-- measurement rows (additive mirror; `citation.descriptor_id` stays NOT NULL)
+CREATE TABLE measurement_citation (
+  id              TEXT PRIMARY KEY,
+  measurement_id  TEXT NOT NULL REFERENCES measurement(id),
+  source_type     TEXT NOT NULL CHECK (source_type IN ('scripture','willis','secondary')),
+  book            TEXT,
+  chapter         INTEGER,
+  verse_start     INTEGER,
+  verse_end       INTEGER,
+  willis_chapter  TEXT,
+  willis_page_start INTEGER,
+  willis_page_end INTEGER,
+  secondary_work  TEXT,
+  secondary_locator TEXT,
+  quote           TEXT,
+  created_at      TEXT NOT NULL
+);
+
 CREATE INDEX idx_descriptor_entity ON descriptor(entity_id);
 CREATE INDEX idx_descriptor_tier   ON descriptor(tier);
 CREATE INDEX idx_descriptor_status ON descriptor(review_status);
@@ -122,6 +171,9 @@ CREATE INDEX idx_citation_descriptor ON citation(descriptor_id);
 CREATE INDEX idx_verification_run        ON verification(run_id);
 CREATE INDEX idx_verification_descriptor ON verification(descriptor_id);
 CREATE INDEX idx_verification_citation   ON verification(citation_id);
+CREATE INDEX idx_measurement_entity ON measurement(entity_id);
+CREATE INDEX idx_measurement_status ON measurement(review_status);
+CREATE INDEX idx_measurement_citation_measurement ON measurement_citation(measurement_id);
 ```
 
 ---
@@ -202,6 +254,28 @@ A descriptor must have at least one citation. Typical pattern:
 - For `debated` descriptors, often 2–3 scripture citations spanning different passages.
 - `secondary` citations are supporting only; they cannot stand alone.
 
+### `measurement`
+
+A cited dimensional fact (ADR 0017). Distinctives vs descriptors:
+
+- **`id` is a stable slug**, not a UUID — geometry code consumes measurements
+  by id (e.g. `ezt-precinct-side`), so ids are part of the public contract.
+- **`value` + `unit` are text-native.** "One reed" is stored as `1 reed`, not
+  `6` and not `3.15 m`. `basis` records in-text derivations ("reed = 6 long
+  cubits, Ezek 40:5"). The metric realization is the resolver's job
+  (ADR 0018); the store never contains meters.
+- **Counts use `unit='item'|'story'|'step'`** with `dimension='count'`
+  (thirty chambers, three stories, seven steps).
+- **No `temporal_phase`.** Phase belongs to the entity and its descriptors;
+  a measurement is a property of the structure the entity describes. (This
+  also avoids the known millennial-phase enum gap, ADR 0012.)
+- **Tiers work as for descriptors.** Text-critical variants (ESV following
+  the Septuagint at Ezek 40:48–49; the cubits-vs-reeds question at Ezek
+  42:16–20) are tiered `fuzzy`/`debated` with the variant documented in
+  `notes` — rendered readings follow the ESV as printed, recorded in
+  `RENDERING-DECISIONS.md` per ADR 0009 rule 4.
+- Only `approved` measurements export or drive geometry.
+
 ### `entity_relation`
 
 Used for the world model graph. Examples:
@@ -254,6 +328,32 @@ The canonical export is a flat JSON file plus per-entity files for the browse UI
 ```
 
 Only `review_status='approved'` descriptors appear in exports.
+
+Measurements export to their own file (additive — existing consumers are
+untouched), and to a generated, citation-annotated TypeScript module vendored
+into the world engine (ADR 0017 decision 3):
+
+```json
+// data/exports/measurements.json
+{
+  "schema_version": "0.1.0",
+  "generated_at": "...",
+  "measurements": [
+    {
+      "id": "ezt-outer-wall-thickness",
+      "entity_id": "ezekiel-temple",
+      "subject": "thickness of the wall around the outside of the temple area",
+      "dimension": "thickness",
+      "value": 1, "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "clear",
+      "citations": [
+        {"source_type": "scripture", "book": "Ezekiel", "chapter": 40, "verse_start": 5}
+      ]
+    }
+  ]
+}
+```
 
 ---
 

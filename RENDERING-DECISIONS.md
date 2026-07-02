@@ -251,3 +251,97 @@ Both reasons point the same direction, so the engine's default terrain is used a
 - [`docs/adr/0013-fork-laas-engine-for-3d-world.md`](docs/adr/0013-fork-laas-engine-for-3d-world.md) — why the terrain tech is worth keeping unchanged
 - `docs/specs/phase-3-engine-integration.md` §5 — the original "idealized paradisal terrain" proposal this entry reverses
 - Code: `apps/world-engine/src/nj/NewJerusalemScene.ts` (`buildTerrainScene(ctx)` call, unmodified)
+
+---
+
+## Entry #6 — Ezekiel's city and John's city: held `debated`, rendered per Willis's harmonization
+
+- **Date:** 2026-07-02
+- **Tier:** `debated` — whether the city of Ezekiel 48:30–35 (4,500 cubits per
+  side plus suburbs, twelve tribal gates) and the New Jerusalem of Rev 21–22
+  (12,000 stadia, twelve tribal gates) are the **same** structure, **nested**
+  structures, or **distinct** cities is a genuine interpretive dispute; the
+  dataset commits to no position (plan §4 answer h, 2026-07-02).
+- **Question:** When the 3D world renders one city with twelve tribe-named
+  gates on the Holy Allotment, whose identification is it depicting?
+- **Decision:** **Render Willis's harmonization** — one city, Ezekiel's and
+  John's descriptions mutually interpreting (her signature move: Ezekiel's
+  ~11-mi city compatible with John's ~12-mi under her area reading of Rev
+  21:16), sited at the south-centre of the allotment with Ezekiel's gate
+  order (Entry #2). The **dataset stays uncommitted**: descriptors for the
+  identification question remain `debated`, and no descriptor asserts the
+  cities are identical.
+
+### What is grounded vs. a rendering choice
+
+- **Grounded:** each city's own measured description (Ezek 48:30–35; Rev
+  21:12–17); the twelve tribal gates in both; the allotment siting
+  (Ezek 48:15–19).
+- **Rendering choice:** depicting them as one structure (Willis), rather
+  than two cities or an agnostic omission.
+
+### Governing sources
+
+- [`docs/sources/willis-new-jerusalem-model.md`](docs/sources/willis-new-jerusalem-model.md) (size/harmonization sections; 4Q554 corroboration)
+- [`docs/plans/world-tooling-and-scriptural-grounding.md`](docs/plans/world-tooling-and-scriptural-grounding.md) §4 answer h
+- [ADR 0017](docs/adr/0017-scripture-as-grounding-data.md) consequences; ADR 0009 rule 4
+- Code: `apps/world-engine/src/nj/CityMassing.ts` (one city, Ezekiel gate order), `apps/world-engine/src/nj/Allotment.ts` (south-centre siting)
+
+---
+
+## Entry #7 — Ezekiel's temple: literal-cubit compound; the interpretive remainder
+
+- **Date:** 2026-07-02
+- **Tier:** mixed — the dimensions are mostly `clear` measurements
+  ([`data/exports/measurements.json`](data/exports/measurements.json), ADR
+  0017); this entry records the `debated`/`fuzzy` readings rendered and the
+  dimensions Ezekiel does not give, which are rendering choices.
+- **Question:** How is the Ezek 40–42 temple complex realized as geometry
+  where the text is contested or silent?
+- **Decision:**
+  1. **Precinct at 500 cubits per side (ESV), not 500 reeds (MT/NASB).**
+     Ezek 42:16–20 is a genuine translation dispute (`ezt-precinct-side`,
+     tier `debated`). The ESV's 500 cubits is rendered; it also closes the
+     survey's own east–west arithmetic exactly (gate 50 + court 100 + gate
+     50 + inner court 100 + house 100 + yard/building 100 = 500, Ezek
+     40:15, 19, 47; 41:13).
+  2. **ESV's Septuagint readings render as printed** (vestibule breadth 12,
+     Ezek 40:49; gate breadth 14, Ezek 40:48; ten steps, 40:49) — each
+     recorded `fuzzy` with the Hebrew variant in its notes.
+  3. **Heights Ezekiel omits are interpretive:** the house walls render at
+     ~30 cubits (the 1 Kgs 6:2 Solomonic-temple analogy — an analogy, not a
+     citation), gatehouses tower over the one-reed perimeter wall
+     (fortified-gatehouse massing implied by their 50×25 guardroom plans),
+     step risers ~0.22 m. Explicit verticals ARE grounded: the one-reed
+     outer wall (Ezek 40:5), the six-cubit house platform (41:8), the
+     eleven-cubit altar stack (43:13–15), three-story chamber blocks
+     (41:6; 42:3–6).
+  4. **Materials and fortress dressing are art direction:** warm red
+     sandstone, crenellations, and corner towers come from the approved
+     reference set (USER-REFS #5), not the text — same illustrative posture
+     as Entry #5's landscape. The text's own dressing that IS rendered:
+     windows (40:16), palm-tree jamb motifs (40:16; 41:18–20, simplified),
+     the glowing sanctuary interior (glory imagery, Ezek 43:4–5).
+  5. **Placement stays compressed placeholder geography** (ADR 0009 rule 6,
+     ADR 0015): the compound's *dimensions* are literal (ADR 0018), its
+     *location* on the allotment (north of the city, in the priests' band)
+     is proportional, not surveyed. The Ezek 47 river issuing from under
+     the threshold is deferred to the Millennial-Kingdom milestone
+     (roadmap M4) and not yet rendered.
+
+### What is grounded vs. a rendering choice
+
+- **Grounded:** every dimension in `measurements.json` (plans of gates,
+  courts, house, chambers, west building, precinct, altar — Ezek 40:5–47;
+  40:48–41:15; 42:1–20; 43:13–17), gate/steps counts, eastward altar steps
+  (43:17), three outer + three inner gates (E/N/S; none on the west).
+- **Rendering choice:** house/gatehouse heights, step risers, red-sandstone
+  palette, crenellations and corner towers, window glow intensity, and the
+  plinth that seats the literal-scale compound on the rolling meadow.
+
+### Governing sources
+
+- ESV Ezekiel 40–43 (via the ESV API; text not stored, ADR 0006)
+- [ADR 0017](docs/adr/0017-scripture-as-grounding-data.md), [ADR 0018](docs/adr/0018-units-and-scale-resolution.md), [ADR 0012](docs/adr/0012-eschatological-framing-premillennial.md)
+- `apps/world-engine/reference-city/USER-REFS.md` directive #5 (temple identity)
+- Code: `apps/world-engine/src/nj/Temple.ts` (world-space literal-cubit build), `apps/world-engine/src/nj/templeModel.ts` (resolver), `apps/world-engine/src/nj/templeMeasurements.gen.ts` (generated dataset module)
