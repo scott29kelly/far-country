@@ -38,6 +38,7 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
     params,
     seed,
     (p, m) => ctx.progress(p * 0.92, m),
+    ctx.macroPatch,
   );
   (engine as unknown as { heightfield?: Heightfield }).heightfield = hf;
 

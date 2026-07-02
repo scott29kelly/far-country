@@ -200,6 +200,19 @@ close facade (`p:[0,900,6500], pitch:-0.25`), summit top-down
     to hold at distance (city nearly vanishes into haze beyond ~3 km, before
     even reaching the "distance holds" bar the terrain already clears).
 
+**Progress, 2026-07-01 (evening) — the LANDSCAPE side of the bar is
+restored (ADR 0015).** Delta #4's plateau seam and the wider "the world
+around the city is a flat box" failure are gone: the Holy Allotment is now
+real terrain (scene-selected 12.3 km domain, plateau composited into
+heightfield + far shell, scatter exclusions shrunk to built footprints).
+The plain has the engine's own grass, meadows, groves, stones and ponds;
+the wild scene is regression-verified untouched. With real trees now
+standing next to the city, **#1/#3 (flat box massing + no gem/crystal
+materials) and #5 (sphere-blob trees of life) are the dominant remaining
+gap** — the M3 material-quality milestone is the next big lever. #6
+(dwelling variation) and the zone-map manicured planting (fields, orchard
+rows, hedgerows — replacing the removed box fields properly) follow.
+
 **Top three for the next execution pass** (ranked by visual impact ÷ effort):
 **#1/#3 together** (real relief geometry + true crystal/gem materials on the
 existing tier structure — the two are one material-and-mesh pass, not two

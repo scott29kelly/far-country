@@ -7,16 +7,18 @@
  * volumetric clouds, froxel fog, particles, wind, caustics, and the HDR post
  * pipeline — and then places the New Jerusalem on that terrain as a landmark.
  *
- * This deliberately reverses the earlier milestone, which stripped the
- * vegetation down to a bare pad. The surrounding world is the "new earth"
- * (Rev 21:1) rendered at the engine's full quality bar — illustrative context,
- * not a cited descriptor.
+ * TERRAIN-INTEGRATED HOLY ALLOTMENT (ADR 0015, 2026-07-01): the plain the
+ * city stands on is REAL TERRAIN, not a box. This scene selects the enlarged
+ * 12.3 km detailed domain (WorldConst keys WORLD_SIZE off ?scene=) and
+ * injects a broad, gently-rolling plateau rise into the heightfield +
+ * far-shell via ctx.macroPatch — so the splat material, micro-displacement,
+ * grass ring, debris, scatter, hydrology, probes and fog all treat the
+ * Holy Allotment as land. Willis's hero composition drives the art
+ * direction: "elevated green land… verdant and gently rolling, with
+ * scattered trees and meadow", ringed by distant mountains.
  *
- * The city geometry (buildCityMassing) is still placeholder massing — a gold
- * base plaza + crystal step-pyramid. Detailing it (jasper wall, twelve pearl
- * gates, jewelled foundations, throne glory, river of life, trees of life, the
- * multitude) follows in later increments. The landscape it sits in now matches
- * ?scene=world.
+ * The surrounding world is the "new earth" (Rev 21:1) rendered at the
+ * engine's full quality bar — illustrative context, not a cited descriptor.
  */
 
 import { buildTerrainScene } from '../debug/TerrainScene';
@@ -30,100 +32,108 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // Front-light the city. The sun arcs east → south → west across the day, so
   // only in the AFTERNOON does it swing into the south and rake the city's
   // south face — which is the face the primary spawn/establishing view looks
-  // at (the walker spawns south of the city, looking north). The engine
-  // default (T=11, late-morning ESE sun) TOP-lights the terraces into a flat,
-  // washed silhouette that dissolves into the bright sky. T=17 keeps the bright
-  // "high-key daytime" mood (Willis's establishing note) while lighting the
-  // gold faces and arches so the city reads as glowing — the single biggest
-  // lever on the wash. A user ?T= still wins. Set BEFORE buildTerrainScene so
-  // the probe GI, sky LUTs, and sun all bake consistently at this sun.
+  // at (the walker spawns south of the city, looking north). T=17 keeps the
+  // bright "high-key daytime" mood (Willis's establishing note) while lighting
+  // the gold faces and arches so the city reads as glowing. A user ?T= wins.
+  // Set BEFORE buildTerrainScene so probes, sky LUTs, and sun bake at this sun.
   if (!new URLSearchParams(window.location.search).has('T')) {
     params.timeOfDay = 17.0;
   }
 
-  // Citywide scale ramp toward Willis's ~12-mile New Jerusalem (she reads Rev
-  // 21:16's 12,000 stadia as the AREA of the square base → ~12 mi/side, height
-  // ≈ base). The whole composition scales uniformly from this one factor; tuned
-  // by eye against screenshots. At citywide scale the plateau dominates the
-  // detailed terrain and the forest reads on the far-shell foothills beyond.
-  // The user deliberately targets ~2-3 mi (NOT the literal 12 mi, which becomes
-  // an unviewable sky-wall); 16 ~= 2 mi base, 24 ~= 3 mi. See ADR 0014.
-  const NJ_SCALE = 20; // ~2.5 mi base (mid of the 2-3 mi band, art-director call)
+  // Citywide scale (ADR 0014): ~2.5 mi base. See cityModel.ts for the model.
+  const NJ_SCALE = 20;
 
-  // Keep the procedural forest/rock scatter off the Holy Allotment footprint so
-  // the city sits on a clean plain rather than in a pine forest. Must be set
-  // BEFORE buildTerrainScene runs the scatter; scaled to the enlarged plateau.
+  // --- the Holy Allotment as authored geography (ADR 0015) --------------------
+  // A broad rise whose flat core carries the city + forecourt; the open plain
+  // rolls gently; the rim slopes down to the wild terrain over ~2 km. The
+  // whole footprint (compressed Willis proportions — placeholder per ADR 0009
+  // rule 6) fits inside the far shell; the city + approach sit inside the
+  // detailed ring.
+  const PLATEAU_Y = 470;
+  const footHalfX = ALLOT_X * NJ_SCALE + 400;
+  const footHalfZ = ((ALLOT_Z_SOUTH - ALLOT_Z_NORTH) / 2) * NJ_SCALE + 400;
+  const footCz = ((ALLOT_Z_SOUTH + ALLOT_Z_NORTH) / 2) * NJ_SCALE;
+  ctx.macroPatch = (mp) => {
+    mp.plateau = {
+      c: [0, footCz],
+      half: [footHalfX, footHalfZ],
+      cornerR: 1600,
+      y: PLATEAU_Y,
+      falloff: 1900,
+      // flat core: city (±2000) + gold forecourt (±2320) + margin
+      flatC: [0, 150],
+      flatHalf: [2750, 2850],
+      flatFalloff: 950,
+      rollAmp: 13,
+      // Willis directive #2 — water at the approach: a shallow basin SE of
+      // the spawn that the hydrology fills as a meadow pond
+      basin: { c: [1150, 3550], r: 520, depth: 9 },
+    };
+  };
+
+  // Keep-out rects for the procedural scatter: only where BUILT content
+  // stands. The meadow, groves and treelines claim everything else —
+  // "scattered trees and meadow" (Willis) instead of a blanket exclusion.
   ctx.scatterExclude = [
-    -ALLOT_X * NJ_SCALE,
-    ALLOT_X * NJ_SCALE,
-    ALLOT_Z_NORTH * NJ_SCALE,
-    ALLOT_Z_SOUTH * NJ_SCALE,
+    // city + gold forecourt (spawn meadow begins just south of the plaza)
+    [-2600, 2600, -2600, 2380],
+    // processional approach: open meadow sightline from the spawn to the
+    // south gate (grass still grows here — only trees/rocks stay out)
+    [-450, 450, 2380, 3300],
+    // dwelling grid + temple campus (north plain)
+    [-6300, 6300, -10400, -5000],
   ];
 
   // The new earth: the engine's complete, detailed procedural landscape.
-  // Reused unchanged so the world here is exactly the ?scene=world quality bar.
   await buildTerrainScene(ctx);
 
-  // De-haze the city. At citywide distance the boundary-layer aerial haze
-  // washes the New Jerusalem toward the sky tone, so it reads pale instead of
-  // as the brightest thing (Rev 21:23 — "the glory of God gives it light").
-  // Pull that humid term back HARD for this scene only; ?scene=world keeps the
-  // tuned default (0.22). The thinner air lets the city's self-glow (raised in
-  // CityMassing) and its saturated gold read THROUGH the atmosphere — the part
-  // of the wash the per-frame auto-exposure cannot compensate for. See ADR 0014.
+  // De-haze the city MODERATELY. With a real landscape restored, keep more
+  // of the atmosphere's depth layering than the old box-plateau tuning did
+  // (0.08/0.55 flattened the world); the city's raised emissives still read
+  // through. See ADR 0014/0015.
   const sunSky = (engine as unknown as {
     sunSky?: { atmosphere: { aerialFogK: { value: number }; aerialClarity: { value: number } } };
   }).sunSky;
   if (sunSky) {
-    sunSky.atmosphere.aerialFogK.value = 0.08; // thin the humid valley haze
-    sunSky.atmosphere.aerialClarity.value = 0.55; // de-haze ALL aerial terms 55%
+    sunSky.atmosphere.aerialFogK.value = 0.12;
+    sunSky.atmosphere.aerialClarity.value = 0.35;
   }
 
-  // Place the Holy Allotment (the lifted plain carrying the city) at the origin.
-  // buildTerrainScene stashes the generated heightfield on the engine; read it
-  // back for ground height, then lift the plateau above the local terrain.
+  // Place the built content ON the terrain plateau. The flat core makes the
+  // city trivial; outlying content (dwellings, temple) snaps per-object to
+  // the rolling ground via the sampler.
   const hf = (engine as unknown as { heightfield?: Heightfield }).heightfield ?? null;
-  const baseY = hf ? hf.heightAtCpu(0, 0) : 0;
-  // The allotment footprint (up to ~9.6 km E-W, ~21 km N-S at NJ_SCALE=20) is
-  // far larger than the ±2048 m detailed terrain ring (WORLD_HALF) — most of
-  // it, including the temple, sits out in the analytic far-shell, whose
-  // synthesized peaks can reach well above a small fixed lift above the
-  // origin's height. A 12 m lift (the pre-citywide-scale value) let distant
-  // massifs visually collide with the plateau edge (CITY-QUALITY-BAR.md delta
-  // #4 — reads as a geometry bug, not "distant foothills"). Willis's own
-  // reading also wants the plain to sit CLEARLY above the surrounding land
-  // (a mountain "rising" over it), so a generous lift is thematically
-  // correct, not just a workaround.
-  const PLAIN_LIFT = 600;
-  const plainTopY = baseY + PLAIN_LIFT;
-  const allot = buildHolyAllotment();
+  const coreY = hf ? hf.heightAtCpu(0, 0) : PLATEAU_Y;
+  // the gold plaza rides 2.8 m proud of the meadow: covers the flat core's
+  // residual roll (±2 m) + terrain micro-displacement, and reads as a raised
+  // street-of-gold platform
+  const plazaTopY = coreY + 2.8;
+  const allot = buildHolyAllotment(
+    hf
+      ? (lx, lz) => (hf.heightAtCpu(lx * NJ_SCALE, lz * NJ_SCALE) - plazaTopY) / NJ_SCALE
+      : undefined,
+  );
   allot.scale.setScalar(NJ_SCALE);
-  allot.position.set(0, plainTopY, 0);
+  allot.position.set(0, plazaTopY, 0);
   engine.scene.add(allot);
 
-  // Walk physics: clamp to the plateau top while standing on the allotment, else
-  // fall back to the procedural terrain probe buildTerrainScene installed.
-  const baseProbe = ctx.hooks.groundProbe;
-  ctx.hooks.groundProbe = (x, z) => {
-    const base = baseProbe ? baseProbe(x, z) : { ground: baseY, water: baseY - 100 };
-    const onPlain =
-      x >= -ALLOT_X * NJ_SCALE &&
-      x <= ALLOT_X * NJ_SCALE &&
-      z >= ALLOT_Z_NORTH * NJ_SCALE &&
-      z <= ALLOT_Z_SOUTH * NJ_SCALE;
-    return onPlain ? { ground: plainTopY, water: base.water } : base;
-  };
+  // Walk physics: the heightfield IS the plateau now — the terrain scene's
+  // own groundProbe handles everything (no special-case override).
 
-  // Spawn on the plain, south of the city, grounded and free to roam (V toggles
-  // fly), looking north up the meridian toward the city, fields, and temple.
+  // Spawn on the meadow south of the city, grounded and free to roam (V
+  // toggles fly), looking north up the meridian at the terraced holy
+  // mountain rising over the plain.
   if (params.cam === null && hf) {
-    // Stand on the plain south of the now city-scale New Jerusalem, looking
-    // north and up at the terraced holy mountain rising above the land.
-    const cityHalf = 100 * NJ_SCALE;
+    // east bank of the river, ~2.2 km out on the approach meadow: far enough
+    // that the whole terraced mountain-city fits the view rising over the
+    // plain (Willis's hero composition), with the river and approach pond
+    // leading the eye to the south gate
+    const spawnX = 350;
+    const spawnZ = 4150;
     const pose = {
-      p: [0, plainTopY + 1.7, cityHalf + 500] as [number, number, number],
-      yaw: 0, // 0 = looking -Z (north), toward the city
-      pitch: 0.32, // steeper up-tilt — the summit is far overhead now
+      p: [spawnX, hf.heightAtCpu(spawnX, spawnZ) + 1.7, spawnZ] as [number, number, number],
+      yaw: 0, // 0 = looking -Z (north); the gate reads slightly left
+      pitch: 0.22, // up-tilt to the summit glory
     };
     ctx.hooks.initialPose = pose;
     ctx.hooks.initialPoseMode = 'walk';

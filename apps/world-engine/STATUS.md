@@ -138,6 +138,44 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-01, evening) TERRAIN-INTEGRATED HOLY ALLOTMENT — ADR 0015.**
+User verdict on the scene as it stood: "8-bit… OOMs below the bar." Root
+cause was architectural, not rendering: the flat-box plateau covered the
+ENTIRE ±2048 m detailed ring, the blanket scatter exclusion zeroed all
+vegetation (`veg.trees: 0` in every 07-01 capture), and the 600 m lift put
+grass/debris/water permanently below the visible ground. Fixed by making the
+allotment REAL TERRAIN:
+
+- `WorldConst.ts` keys `WORLD_SIZE` off `?scene=`: newjerusalem runs a
+  12,288 m domain (ring ±6,144 m, ~3 m/texel macro), wild scenes keep
+  4,096 m at 1 m/texel untouched (regression-shot verified at bm4).
+  `FAR_RADIUS` + far-band anchors derive from `WORLD_HALF`; the literal
+  `4096` in `WaterMaterial`'s flow lookup is fixed to `WORLD_SIZE`.
+- `MacroParams.plateau` (new, via `ctx.macroPatch`): broad gently-rolling
+  rise composited inside `macroTerrain` — bake and far shell agree at the
+  seam by construction. Flat core rides the roll's CREST (a low core became
+  a city-ringing hydrology lake on first boot — fixed). Approach basin pond
+  SE of the spawn (Willis "water at the approach").
+- `ctx.scatterExclude` is a rect LIST (city+forecourt, approach sightline,
+  dwelling/temple campus); larger domains thin scatter per class (unbiased)
+  so instance caps can't truncate in dispatch order (extras pinned its cap
+  exactly on first boot — biased-band risk, now budgeted).
+- `Allotment.ts`: platform/skirt/chunks/fields/hedges/perimeter-wall boxes
+  REMOVED; dwellings + temple snap per-object to the rolling meadow; extents
+  compressed to fit the far shell (placeholder proportions, ADR 0009 r6).
+- `RiverOfLife`: channel width now `cityModel.RIVER.width` (the tier-scaled
+  width was an 800 m water sheet filling the spawn view). Spawn moved to the
+  river's east bank ~2.2 km out so the whole mountain-city composes.
+- VERIFIED (shots/wip/ti-*): spawn = grass underfoot, treeline, luminous
+  city rising (Willis hero composition); high oblique = rolling meadows,
+  forest stands, kettle ponds, dwelling grids on the plain; counters 508k
+  trees / 597k under / 1.2M stones / 137k extras (was 0/0/0/0).
+- REMAINING (next passes): city massing materials are now the dominant gap
+  (CITY-QUALITY-BAR #1/#3 — flat boxes vs real trees beside them), zone-map
+  manicured planting (orchards/hedgerows/fields), trees-of-life quality
+  (#5), dwellings/temple close-up check on the north plain, far-shell
+  close-up softness if the rim is walked.
+
 **What's built** (`NewJerusalemScene.ts`, `CityMassing.ts`, `Allotment.ts`,
 `RiverOfLife.ts` — corresponds to integration-spec M1–M2, partial M3):
 

@@ -4,13 +4,26 @@
  * valley, karst zone, and lake live) is in MacroMap.ts.
  */
 
-/** world edge length in meters; world spans [-WORLD_HALF, +WORLD_HALF]² */
-export const WORLD_SIZE = 4096;
+/**
+ * World edge length in meters; world spans [-WORLD_HALF, +WORLD_HALF]².
+ *
+ * SCENE-SELECTED (ADR 0015): the New Jerusalem scene runs a 12.3 km detailed
+ * domain so the plain around its ±2 km city sits inside the detailed ring
+ * (at 4096² that is ~3 m/texel macro — shader-side micro detail is
+ * unaffected); the wild demo scenes keep the original 4 km at 1 m/texel,
+ * whose tuned look is texel-density dependent. `?worldsize=N` overrides for
+ * A/B. Read once at module load — everything below derives from it.
+ */
+const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+const wsOverride = Number(q?.get('worldsize') ?? NaN);
+const njScene = (q?.get('scene') ?? '') === 'newjerusalem';
+export const WORLD_SIZE =
+  Number.isFinite(wsOverride) && wsOverride >= 2048 ? wsOverride : njScene ? 12288 : 4096;
 export const WORLD_HALF = WORLD_SIZE / 2;
 
-/** final composed heightfield resolution (1 m/texel) */
+/** final composed heightfield resolution (1 m/texel at WORLD_SIZE 4096) */
 export const HEIGHT_RES = 4096;
-/** erosion / hydrology simulation grid (2 m/texel) — spec floor ≥2048 */
+/** erosion / hydrology simulation grid (2 m/texel at 4096) — spec floor ≥2048 */
 export const SIM_RES = 2048;
 
 /** vertical range: heights are meters above sea/datum 0 */
@@ -21,8 +34,10 @@ export const TREELINE = 950;
 export const SNOWLINE_BASE = 1050;
 export const SUMMIT_MAX = 1620;
 
-/** far-shell vista ring: analytic terrain from WORLD_HALF out to FAR_RADIUS */
-export const FAR_RADIUS = 14000;
+/** far-shell vista ring: analytic terrain from WORLD_HALF out to FAR_RADIUS.
+ *  Derived so the shell keeps its ~12 km depth at any domain size (14000 at
+ *  the original WORLD_HALF 2048). */
+export const FAR_RADIUS = WORLD_HALF + 11952;
 
 /** biome ids (stored quantized in classification texture r-channel) */
 export const enum Biome {

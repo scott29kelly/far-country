@@ -1,19 +1,26 @@
 /**
  * The Holy Allotment — Ezekiel 45/48, placeholder scale.
  *
- * Composes the regional layout from Willis's video aerial: a flat green, lifted
- * plain (the "new earth" plateau, Zech 14:10) ringed by a perimeter wall, with
- * the New Jerusalem at the SOUTH-CENTRE, crop fields flanking it east and west,
- * and the priests' dwelling grid plus a standalone temple to the NORTH (the
- * temple sits OUTSIDE the city, Ezek 48:10).
+ * Composes the regional layout from Willis's video aerial: the New Jerusalem
+ * at the SOUTH-CENTRE of the district, with the priests' dwelling grid and a
+ * standalone temple to the NORTH (the temple sits OUTSIDE the city,
+ * Ezek 48:10).
  *
- * Convention (matches cityModel): +X east, -X west, +Z south, -Z north; the
- * plain's top surface and the city plaza share local y = 0. The scene lifts the
- * whole group above the procedural terrain so it reads as a plateau.
+ * TERRAIN-INTEGRATED (ADR 0015): the plain itself is REAL TERRAIN — a broad,
+ * gently-rolling plateau rise injected into the heightfield by
+ * NewJerusalemScene's macroPatch. The old flat-box platform/skirt/rock-chunk
+ * plateau, the box crop-field planes and hedges, and the 19-km perimeter
+ * wall are GONE: grass, groves, debris and streams come from the engine's
+ * own systems now. Field plots and hedgerows return properly with the
+ * allotment ZONE-MAP milestone (managed planting), not as floating boxes.
  *
- * Placeholder proportions only (ADR 0009 rule 6): the real allotment is ~57 mi
- * wide with an ~11 mi city; here the ratio is approximated, not the true scale.
- * Materials are flat PBR; crop/temple/dwelling detailing is illustrative fill.
+ * Convention (matches cityModel): +X east, -X west, +Z south, -Z north;
+ * local y = 0 is the city plaza top. Outlying content (dwellings, temple)
+ * snaps to the rolling ground via the `groundAt` sampler (local units).
+ *
+ * Placeholder proportions only (ADR 0009 rule 6): compressed from the
+ * earlier layout so the whole district fits the far shell (the real
+ * allotment is ~57 mi wide; the ratio is approximated, not the scale).
  */
 
 import { BoxGeometry, Color, DoubleSide, Group, Mesh } from 'three';
@@ -22,35 +29,13 @@ import { MeshStandardNodeMaterial } from 'three/webgpu';
 import { buildCityMassing, makeArchWindow } from './CityMassing';
 import { buildRiverOfLife } from './RiverOfLife';
 
-export const ALLOT_X = 480; // E-W half-extent
-export const ALLOT_Z_SOUTH = 180; // +Z edge (south, behind the spawn)
-export const ALLOT_Z_NORTH = -880; // -Z edge (north) — extra room behind the temple
-const ALLOT_CZ = (ALLOT_Z_SOUTH + ALLOT_Z_NORTH) / 2;
-const ALLOT_DEPTH = ALLOT_Z_SOUTH - ALLOT_Z_NORTH;
+export const ALLOT_X = 360; // E-W half-extent (local units; ×NJ_SCALE = world m)
+export const ALLOT_Z_SOUTH = 200; // +Z edge (south, behind the spawn meadow)
+export const ALLOT_Z_NORTH = -540; // -Z edge (north, beyond the temple)
 
-const GRASS = new Color(0x4f7a3a);
-const ROCK = new Color(0x9d8a6a); // tan escarpment rock
-const FIELD = new Color(0x5f8a44);
-const HEDGE = new Color(0x33572a);
 const DWELL = new Color(0x6b6358); // darker stone so the grid reads from afar
-const SANDSTONE = new Color(0xc8b98f); // warm perimeter wall
 const TGOLD = new Color(0xd9a441); // temple gold (matches the city)
 const TCRYS = new Color(0xe9dca0); // temple upper grade
-
-function mat(
-  color: Color,
-  opts?: { metal?: number; rough?: number; emit?: number },
-): MeshStandardNodeMaterial {
-  const m = new MeshStandardNodeMaterial();
-  m.color.copy(color);
-  m.metalness = opts?.metal ?? 0;
-  m.roughness = opts?.rough ?? 0.9;
-  if (opts?.emit) {
-    m.emissive.copy(color);
-    m.emissiveIntensity = opts.emit;
-  }
-  return m;
-}
 
 const TEMPLE_FACES: Array<{ axis: 'x' | 'z'; sign: 1 | -1 }> = [
   { axis: 'z', sign: 1 },
@@ -164,88 +149,26 @@ function buildTemple(): Group {
   return g;
 }
 
-export function buildHolyAllotment(): Group {
+/**
+ * Built content of the Holy Allotment, resting on the terrain plateau.
+ * `groundAt(lx, lz)` returns the LOCAL-frame ground height at a local (x, z)
+ * (the scene wires it to the heightfield); outlying objects snap to it.
+ */
+export function buildHolyAllotment(groundAt?: (lx: number, lz: number) => number): Group {
   const allot = new Group();
   allot.name = 'holy-allotment';
+  const ground = (lx: number, lz: number): number => groundAt?.(lx, lz) ?? 0;
 
-  // Lifted plain as a natural plateau: a grass-topped slab on rugged rock cliffs,
-  // widening into a rock base step so it reads as land rising out of the terrain
-  // rather than a cement box. Box material order is [+x,-x,+y,-y,+z,-z] — only
-  // the top (+y) is grass; every side is rock.
-  const grassMat = mat(GRASS, { rough: 1 });
-  const rockMat = mat(ROCK, { rough: 1 });
-  const topThick = 30;
-  const platform = new Mesh(new BoxGeometry(2 * ALLOT_X, topThick, ALLOT_DEPTH), [
-    rockMat,
-    rockMat,
-    grassMat,
-    rockMat,
-    rockMat,
-    rockMat,
-  ]);
-  platform.position.set(0, -topThick / 2, ALLOT_CZ);
-  platform.receiveShadow = true;
-  platform.castShadow = true;
-  allot.add(platform);
-
-  // Wider rock base step beneath, for a natural escarpment foot.
-  const skirt = new Mesh(
-    new BoxGeometry(2 * ALLOT_X + 120, 50, ALLOT_DEPTH + 120),
-    rockMat,
-  );
-  skirt.position.set(0, -topThick - 22, ALLOT_CZ);
-  skirt.receiveShadow = true;
-  skirt.castShadow = true;
-  allot.add(skirt);
-
-  // Low warm-sandstone perimeter wall on the grass edge (not a grey lip).
-  const wallH = 6;
-  const wallT = 3;
-  const wallMat = mat(SANDSTONE, { rough: 0.7 });
-  const addWall = (w: number, d: number, x: number, z: number): void => {
-    const m = new Mesh(new BoxGeometry(w, wallH, d), wallMat);
-    m.position.set(x, wallH / 2, z);
-    m.castShadow = true;
-    m.receiveShadow = true;
-    allot.add(m);
-  };
-  addWall(2 * ALLOT_X, wallT, 0, ALLOT_Z_NORTH);
-  addWall(2 * ALLOT_X, wallT, 0, ALLOT_Z_SOUTH);
-  addWall(wallT, ALLOT_DEPTH, -ALLOT_X, ALLOT_CZ);
-  addWall(wallT, ALLOT_DEPTH, ALLOT_X, ALLOT_CZ);
-
-  // Crop fields E/W of the city: hedgerow grid over a second green.
-  const hedgeMat = mat(HEDGE, { rough: 1 });
-  const fieldMat = mat(FIELD, { rough: 1 });
-  const addFields = (x0: number, x1: number, z0: number, z1: number): void => {
-    const base = new Mesh(new BoxGeometry(x1 - x0, 0.6, z1 - z0), fieldMat);
-    base.position.set((x0 + x1) / 2, 0.3, (z0 + z1) / 2);
-    base.receiveShadow = true;
-    allot.add(base);
-    const step = 70;
-    for (let x = x0; x <= x1 + 0.1; x += step) {
-      const h = new Mesh(new BoxGeometry(2, 2.4, z1 - z0), hedgeMat);
-      h.position.set(x, 1.2, (z0 + z1) / 2);
-      h.receiveShadow = true;
-      allot.add(h);
-    }
-    for (let z = z0; z <= z1 + 0.1; z += step) {
-      const h = new Mesh(new BoxGeometry(x1 - x0, 2.4, 2), hedgeMat);
-      h.position.set((x0 + x1) / 2, 1.2, z);
-      h.receiveShadow = true;
-      allot.add(h);
-    }
-  };
-  addFields(150, ALLOT_X - 20, -280, 160); // east of the city
-  addFields(-(ALLOT_X - 20), -150, -280, 160); // west of the city
-
-  // Priests' dwelling grid, north of the city (Zadok priests' portion) — a dense,
-  // darker grid so it reads clearly across the plain.
-  const dwellMat = mat(DWELL, { rough: 0.85 });
-  const gx0 = -340;
-  const gx1 = 340;
-  const gz0 = -640;
-  const gz1 = -180;
+  // Priests' dwelling grid, north of the city (Zadok priests' portion) — a
+  // dense, darker grid so it reads clearly across the plain. Each dwelling
+  // snaps to the rolling meadow it stands on.
+  const dwellMat = new MeshStandardNodeMaterial();
+  dwellMat.color.copy(DWELL);
+  dwellMat.roughness = 0.85;
+  const gx0 = -300;
+  const gx1 = 300;
+  const gz0 = -500;
+  const gz1 = -260;
   const cols = 12;
   const rows = 7;
   for (let i = 0; i < cols; i++) {
@@ -253,49 +176,26 @@ export function buildHolyAllotment(): Group {
       const x = gx0 + (gx1 - gx0) * ((i + 0.5) / cols);
       const z = gz0 + (gz1 - gz0) * ((j + 0.5) / rows);
       const d = new Mesh(new BoxGeometry(34, 12, 22), dwellMat);
-      d.position.set(x, 6, z);
+      d.position.set(x, ground(x, z) + 6 - 1.5, z); // sunk 1.5 into the meadow
       d.castShadow = true;
       d.receiveShadow = true;
       allot.add(d);
     }
   }
 
-  // Standalone temple (Ezek 48:10), outside the city, set well inside the north
-  // edge so it is free-standing and walkable/enterable on all four sides.
+  // Standalone temple (Ezek 48:10), outside the city on the north plain,
+  // free-standing and enterable on all four sides. Its ~2 km-wide base sinks
+  // slightly so the rolling ground never undercuts a corner.
   const temple = buildTemple();
-  temple.position.set(0, 0, -710);
+  const templeZ = -480;
+  temple.position.set(0, ground(0, templeZ) - 0.8, templeZ);
   allot.add(temple);
 
-  // Rock chunks along the plateau edge, to break the flat cliff face.
-  const chunkMat = mat(ROCK, { rough: 1 });
-  const edgeZ = [ALLOT_Z_SOUTH, ALLOT_Z_NORTH];
-  for (let k = 0; k < 22; k++) {
-    const along = -ALLOT_X + 0.5 + (2 * ALLOT_X) * (k / 21);
-    const s = 26 + ((k * 37) % 22);
-    // north/south edges
-    const z = edgeZ[k % 2] + (k % 2 === 0 ? 8 : -8);
-    const c1 = new Mesh(new BoxGeometry(s, s * 0.7, s * 0.8), chunkMat);
-    c1.position.set(along, -10 - (k % 3) * 6, z);
-    c1.rotation.y = k * 0.7;
-    c1.castShadow = true;
-    c1.receiveShadow = true;
-    allot.add(c1);
-    // east/west edges
-    const ex = (k % 2 === 0 ? ALLOT_X : -ALLOT_X) + (k % 2 === 0 ? -8 : 8);
-    const c2 = new Mesh(new BoxGeometry(s * 0.8, s * 0.7, s), chunkMat);
-    c2.position.set(ex, -10 - (k % 3) * 6, ALLOT_CZ + along * 0.9);
-    c2.rotation.y = k * 0.5;
-    c2.castShadow = true;
-    c2.receiveShadow = true;
-    allot.add(c2);
-  }
-
-  // The New Jerusalem at the south-centre, resting on the plain (plaza at y = 0).
+  // The New Jerusalem at the south-centre, on the flat core (plaza at y = 0).
   allot.add(buildCityMassing());
 
   // The river of life cascading the south terraces to the plain, trees of life
-  // on its banks (Rev 22:1-2). Shares the city's local frame, so it scales/lifts
-  // with everything.
+  // on its banks (Rev 22:1-2). Shares the city's local frame.
   allot.add(buildRiverOfLife());
 
   return allot;

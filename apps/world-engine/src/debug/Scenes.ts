@@ -4,6 +4,7 @@ import type { Engine } from '../core/Engine';
 import type { LaasHooks } from '../core/Hooks';
 import type { LaasParams } from '../core/Params';
 import type { WorldSeed } from '../core/Seed';
+import type { MacroParams } from '../world/MacroMap';
 
 export interface WorldContext {
   engine: Engine;
@@ -13,12 +14,19 @@ export interface WorldContext {
   /** report build progress 0..1 */
   progress: (p: number, msg: string) => void;
   /**
-   * Optional world-space keep-out rect [x0, x1, z0, z1] for procedural scatter
-   * (trees/understory/rocks). Scenes that place built geometry on the terrain
-   * (e.g. the New Jerusalem Holy Allotment) set it so vegetation doesn't grow
-   * through their footprint.
+   * Optional world-space keep-out rects [x0, x1, z0, z1] for procedural
+   * scatter (trees/understory/rocks). Scenes that place built geometry on the
+   * terrain (e.g. the New Jerusalem city forecourt, dwelling grid) list their
+   * footprints so vegetation doesn't grow through them.
    */
-  scatterExclude?: readonly [number, number, number, number];
+  scatterExclude?: readonly (readonly [number, number, number, number])[];
+  /**
+   * Optional patch applied to the seeded MacroParams before world-gen —
+   * scenes inject authored geography (e.g. the Holy Allotment plateau rise,
+   * ADR 0015) that the heightfield bake and the analytic far shell then
+   * share.
+   */
+  macroPatch?: (mp: MacroParams) => void;
 }
 
 export type SceneBuilder = (ctx: WorldContext) => Promise<void>;

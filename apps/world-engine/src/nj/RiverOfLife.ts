@@ -18,6 +18,7 @@
 
 import { BoxGeometry, Color, Group, Mesh, SphereGeometry } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
+import { RIVER } from './cityModel';
 
 // Mirror of CityMassing's tiers (half-width + height), base → crown.
 const TIERS = [
@@ -90,7 +91,12 @@ export function buildRiverOfLife(): Group {
   const yTop = yBot.map((b, i) => b + TIERS[i].h);
   const summitY = acc; // 156, crown top — the glory sits just above
 
-  const chanW = (half: number): number => half * 0.4; // river width on a tier
+  // Constant river width from the shared model (RIVER.width = 5 → ~100 m at
+  // citywide scale): a crystal THREAD cascading the mountain, not a sheet.
+  // The old `half * 0.4` scaled with the tier — at the base tier that was an
+  // 800 m-wide wall of water that filled the whole spawn view (found live,
+  // 2026-07-01 terrain-integration pass).
+  const chanW = (_half: number): number => RIVER.width;
   const fallProud = 2.2; // sit in front of the piers (which reach ~half+1.5)
   const poolProud = 0.7;
 

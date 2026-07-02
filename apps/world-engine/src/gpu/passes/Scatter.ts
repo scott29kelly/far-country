@@ -365,29 +365,56 @@ export async function runScatter(
   renderer: Renderer,
   hf: Heightfield,
   seed: WorldSeed,
-  exclude?: readonly [number, number, number, number],
+  exclude?: readonly (readonly [number, number, number, number])[],
 ): Promise<ScatterResult> {
   const sT = seed.sub('scatter/trees') & 0x7fffffff;
   const sU = seed.sub('scatter/understory') & 0x7fffffff;
   const sE = seed.sub('scatter/extras') & 0x7fffffff;
 
-  // Optional keep-out rect (world xz) [x0, x1, z0, z1] — built scenes (e.g. the
-  // New Jerusalem plateau) pass their footprint so nothing scatters onto it.
-  // Emitted as an early reject in each kernel, like the water/river masks.
-  const excludeGuard = exclude
-    ? (wxz: NV2): void => {
-        If(
-          wxz.x
-            .greaterThan(exclude[0])
-            .and(wxz.x.lessThan(exclude[1]))
-            .and(wxz.y.greaterThan(exclude[2]))
-            .and(wxz.y.lessThan(exclude[3])),
-          () => {
-            Return();
-          },
-        );
-      }
-    : null;
+  // Domain scaling (ADR 0015): the candidate grids derive from WORLD_SIZE, so
+  // a larger domain multiplies candidate cells quadratically while the
+  // instance caps stay fixed (VRAM). Over-cap atomic appends truncate in GPU
+  // dispatch order — whole geographic bands would come up empty — so larger
+  // domains apply UNBIASED random thinning sized from each class's measured
+  // fill fraction at the reference 4096 m domain (seed-1 wild world), with a
+  // 0.8 safety margin. The wild scenes (DOMAIN_AREA = 1) are untouched.
+  const DOMAIN_AREA = (WORLD_SIZE / 4096) ** 2;
+  const thinFor = (referenceFill: number): number =>
+    Math.min(1, 0.8 / (referenceFill * DOMAIN_AREA));
+  const thinT = thinFor(0.27); // trees   162k / 600k
+  const thinU = thinFor(0.67); // under   467k / 700k
+  // extras' wild fill is tiny (7.4k/180k) but meadow-heavy worlds accept far
+  // more flowers/ferns — the first integration boot pinned the cap exactly
+  // (biased truncation). Budget against a meadow-world fill instead.
+  const thinE = thinFor(0.15);
+  const thinS = thinFor(0.31); // stones  451k / 1.5M
+  const thinGuard = (cell: NV2, s: number, thin: number): void => {
+    if (thin >= 1) return;
+    If(cellHash2(cell.add(vec2(0.377, 0.911)), (s ^ 0x5bd1) & 0x7fffffff).x.greaterThan(thin), () => {
+      Return();
+    });
+  };
+
+  // Optional keep-out rects (world xz) [x0, x1, z0, z1] — built scenes (e.g.
+  // the New Jerusalem forecourt / dwelling grid) pass their footprints so
+  // nothing scatters onto them. Early reject, like the water/river masks.
+  const excludeGuard =
+    exclude && exclude.length > 0
+      ? (wxz: NV2): void => {
+          for (const r of exclude) {
+            If(
+              wxz.x
+                .greaterThan(r[0])
+                .and(wxz.x.lessThan(r[1]))
+                .and(wxz.y.greaterThan(r[2]))
+                .and(wxz.y.lessThan(r[3])),
+              () => {
+                Return();
+              },
+            );
+          }
+        }
+      : null;
 
   // ---------------------------------------------------------------- trees --
   const treeG = Math.round(WORLD_SIZE / TREE_CELL);
@@ -404,6 +431,7 @@ export async function runScatter(
     const jit = cellHash2(cell, sT);
     const wpos = cell.add(jit).div(treeG).sub(0.5).mul(WORLD_SIZE);
     excludeGuard?.(wpos);
+    thinGuard(cell, sT, thinT);
     const s = sampleSite(hf, wpos);
 
     // hard exclusions: open/standing water, river channels, lake shelf
@@ -521,6 +549,7 @@ export async function runScatter(
     const jit = cellHash2(cell, sU);
     const wpos = cell.add(jit).div(underG).sub(0.5).mul(WORLD_SIZE);
     excludeGuard?.(wpos);
+    thinGuard(cell, sU, thinU);
     const s = sampleSite(hf, wpos);
 
     If(s.h.lessThan(LAKE_LEVEL + 0.35), () => {
@@ -624,6 +653,7 @@ export async function runScatter(
     const jit = cellHash2(cell, sE);
     const wpos = cell.add(jit).div(extraG).sub(0.5).mul(WORLD_SIZE);
     excludeGuard?.(wpos);
+    thinGuard(cell, sE, thinE);
     const s = sampleSite(hf, wpos);
 
     If(s.h.lessThan(LAKE_LEVEL + 0.3), () => {
@@ -739,6 +769,7 @@ export async function runScatter(
     const jit = cellHash2(cell, sS);
     const wpos = cell.add(jit).div(stoneG).sub(0.5).mul(WORLD_SIZE);
     excludeGuard?.(wpos);
+    thinGuard(cell, sS, thinS);
     const s = sampleSite(hf, wpos);
     If(s.h.lessThan(LAKE_LEVEL + 0.25), () => {
       Return();

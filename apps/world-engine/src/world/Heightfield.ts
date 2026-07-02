@@ -110,9 +110,14 @@ export class Heightfield {
     params: LaasParams,
     seed: WorldSeed,
     progress: ProgressFn,
+    macroPatch?: (mp: MacroParams) => void,
   ): Promise<Heightfield> {
     const cfg = qualityConfig(params.preset);
     const mp = makeMacroParams(seed);
+    // scene-authored geography (e.g. the Holy Allotment plateau, ADR 0015) —
+    // applied before ANY kernel reads mp so the bake, erosion grid, far
+    // shell, hydrology, and biome classification all see the same world
+    macroPatch?.(mp);
 
     progress(0.04, `terrain: synthesizing ${cfg.heightRes}² heightfield`);
     const synth = await runHeightSynthesis(renderer, cfg.heightRes, mp);

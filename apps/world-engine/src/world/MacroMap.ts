@@ -20,6 +20,7 @@ import {
   float,
   max,
   min,
+  mix,
   mx_fractal_noise_float,
   mx_noise_float,
   mx_worley_noise_float,
@@ -30,7 +31,36 @@ import {
 } from 'three/tsl';
 import type { Rng, WorldSeed } from '../core/Seed';
 import type { NF, NV2 } from '../gpu/TSLTypes';
-import { KARST_PLATEAU, LAKE_LEVEL, WORLD_HALF } from './WorldConst';
+import { FAR_RADIUS, KARST_PLATEAU, LAKE_LEVEL, WORLD_HALF } from './WorldConst';
+
+/**
+ * Scene-authored plateau (ADR 0015 — the Holy Allotment rise): a broad,
+ * gently-rolling elevated table that OVERRIDES valleys/lakes/ranges inside
+ * its rounded-rect footprint. Composited inside macroTerrain so the 4096²
+ * bake and the analytic far shell get identical geometry (seam continuity
+ * for free). Willis's directive is "elevated green land… gently rolling",
+ * not a sheer mesa: the rim is a kilometers-wide slope, the top keeps a
+ * low-amplitude roll that flattens to near-billiard inside `flat*` (where
+ * built content stands).
+ */
+export interface PlateauParams {
+  /** footprint center / half-extents / corner radius (world m) */
+  c: [number, number];
+  half: [number, number];
+  cornerR: number;
+  /** nominal top elevation (m, absolute) */
+  y: number;
+  /** rim falloff width (m) — the breadth of the rise's slopes */
+  falloff: number;
+  /** flat core (city + forecourt) — roll is attenuated ~8× inside */
+  flatC: [number, number];
+  flatHalf: [number, number];
+  flatFalloff: number;
+  /** gentle undulation amplitude on the open plain (m) */
+  rollAmp: number;
+  /** optional shallow basin (approach water — hydrology fills it) */
+  basin?: { c: [number, number]; r: number; depth: number };
+}
 
 export interface MacroParams {
   alpC: [number, number];
@@ -50,6 +80,8 @@ export interface MacroParams {
   tribWidth: number;
   /** noise domain offsets (decorrelate fields per seed) */
   off: Record<'warp' | 'ridge' | 'hills' | 'karst' | 'detail' | 'hard' | 'far', [number, number]>;
+  /** scene-authored plateau (ADR 0015); absent for the wild demo scenes */
+  plateau?: PlateauParams;
 }
 
 function jit(rng: Rng, base: [number, number], amount: number): [number, number] {
@@ -334,7 +366,13 @@ export function macroTerrain(p: NV2, mp: MacroParams, detail: 'full' | 'far'): M
   // --- far shell: outer ranges beyond the world edge --------------------------
   if (!full) {
     const r = max(abs(p.x), abs(p.y));
-    const band = smoothstep(WORLD_HALF + 600, 5200, r).mul(smoothstep(13500, 7600, r));
+    // band anchors expressed relative to the ring edge / shell rim so any
+    // WORLD_SIZE keeps the original proportions (at WORLD_HALF 2048 /
+    // FAR_RADIUS 14000 these evaluate to the historical 2648→5200 rise and
+    // 13500→7600 fall exactly)
+    const band = smoothstep(WORLD_HALF + 600, WORLD_HALF + 3152, r).mul(
+      smoothstep(FAR_RADIUS - 500, WORLD_HALF + 5552, r),
+    );
     const pf = p.div(2600).add(vec2(o.far[0], o.far[1]));
     let outer: NF = float(0);
     let amp = 0.5;
@@ -377,6 +415,48 @@ export function macroTerrain(p: NV2, mp: MacroParams, detail: 'full' | 'far'): M
   // keep the lake basin genuinely below lake level (tight to the basin core)
   const lakeBed = float(LAKE_LEVEL - 13);
   h = h.sub(max(0, h.sub(lakeBed)).mul(tLake.pow(3.4).mul(0.95)));
+
+  // --- scene-authored plateau (ADR 0015): the Holy Allotment rise --------------
+  // Applied LAST so it overrides valleys/lakes/outer ranges inside its
+  // footprint and blends into whatever the wild terrain was doing at the rim.
+  // Runs in BOTH detail branches — the bake and the far shell agree at the
+  // ring boundary by construction.
+  if (mp.plateau) {
+    const pl = mp.plateau;
+    // rounded-rect SDF (≤0 inside)
+    const rrect = (c: [number, number], half: [number, number], rad: number): NF => {
+      const qx = abs(p.x.sub(c[0])).sub(half[0] - rad);
+      const qy = abs(p.y.sub(c[1])).sub(half[1] - rad);
+      const outside = vec2(max(qx, 0), max(qy, 0)).length();
+      return outside.add(min(max(qx, qy), 0)).sub(rad);
+    };
+    const d = rrect(pl.c, pl.half, pl.cornerR);
+    const rise = smoothstep(pl.falloff, 0, d);
+    const dFlat = rrect(pl.flatC, pl.flatHalf, Math.max(60, pl.cornerR * 0.5));
+    const flat = smoothstep(pl.flatFalloff, 0, dFlat);
+    // gentle roll on the open plain; the flat core rides near the roll's
+    // CREST (not its floor) so the built zone drains outward — a low flat
+    // core reads as a closed depression and the hydrology floods it into a
+    // city-ringing lake (found live, first integration boot)
+    const rollN = mx_fractal_noise_float(
+      p.div(1150).add(vec2(o.hills[1] + 37, o.hills[0] - 37)),
+      3,
+      2.1,
+      0.5,
+      1,
+    )
+      .mul(0.5)
+      .add(0.5)
+      .mul(pl.rollAmp);
+    const roll = mix(rollN, float(pl.rollAmp * 0.85), flat);
+    let plTop: NF = float(pl.y).add(roll);
+    if (pl.basin) {
+      const b = pl.basin;
+      const dB = p.sub(vec2(b.c[0], b.c[1])).length();
+      plTop = plTop.sub(smoothstep(b.r, b.r * 0.3, dB).mul(b.depth));
+    }
+    h = mix(h, plTop, rise);
+  }
 
   // --- hardness (erosion resistance + later: strata/talus behavior) -----------
   const strata = mx_noise_float(
