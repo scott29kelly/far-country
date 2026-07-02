@@ -24,8 +24,10 @@
 import { buildTerrainScene } from '../debug/TerrainScene';
 import type { WorldContext } from '../debug/Scenes';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
+import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './Allotment';
+import { riverSurfaceLocalY } from './RiverOfLife';
 import { buildTreesOfLife } from './TreesOfLife';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
@@ -93,9 +95,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // of the atmosphere's depth layering than the old box-plateau tuning did
   // (0.08/0.55 flattened the world); the city's raised emissives still read
   // through. See ADR 0014/0015.
-  const sunSky = (engine as unknown as {
-    sunSky?: { atmosphere: { aerialFogK: { value: number }; aerialClarity: { value: number } } };
-  }).sunSky;
+  const sunSky = (engine as unknown as { sunSky?: SunSky }).sunSky;
   if (sunSky) {
     sunSky.atmosphere.aerialFogK.value = 0.12;
     sunSky.atmosphere.aerialClarity.value = 0.35;
@@ -115,11 +115,24 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     hf
       ? (lx, lz) => (hf.heightAtCpu(lx * NJ_SCALE, lz * NJ_SCALE) - plazaTopY) / NJ_SCALE
       : undefined,
-    gi,
+    { gi, hf, atm: sunSky?.atmosphere ?? null },
   );
   allot.scale.setScalar(NJ_SCALE);
   allot.position.set(0, plazaTopY, 0);
   engine.scene.add(allot);
+
+  // The hydrology underwater guard can't see the authored river — wrap the
+  // terrain groundProbe with the analytic reach table so the walker's eye
+  // stays above the crystal water (same wade clearance as terrain water).
+  const baseProbe = ctx.hooks.groundProbe;
+  if (baseProbe) {
+    ctx.hooks.groundProbe = (x, z) => {
+      const g = baseProbe(x, z);
+      const local = riverSurfaceLocalY(x / NJ_SCALE, z / NJ_SCALE);
+      if (local <= -1e5) return g;
+      return { ground: g.ground, water: Math.max(g.water, local * NJ_SCALE + plazaTopY) };
+    };
+  }
 
   // Trees of life flanking the river's approach reach (Rev 22:2) — real
   // trees from the engine's own pipeline, placed in WORLD space (the ×20

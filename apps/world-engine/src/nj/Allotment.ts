@@ -27,8 +27,16 @@ import { BoxGeometry, Color, DoubleSide, Group, Mesh } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
+import type { Atmosphere } from '../sky/Atmosphere';
+import type { Heightfield } from '../world/Heightfield';
 import { buildCityMassing, makeArchWindow } from './CityMassing';
 import { buildRiverOfLife } from './RiverOfLife';
+
+export interface AllotmentDeps {
+  gi?: ProbeGI | null;
+  hf?: Heightfield | null;
+  atm?: Atmosphere | null;
+}
 
 export const ALLOT_X = 360; // E-W half-extent (local units; ×NJ_SCALE = world m)
 export const ALLOT_Z_SOUTH = 200; // +Z edge (south, behind the spawn meadow)
@@ -157,8 +165,9 @@ function buildTemple(): Group {
  */
 export function buildHolyAllotment(
   groundAt?: (lx: number, lz: number) => number,
-  gi: ProbeGI | null = null,
+  deps: AllotmentDeps = {},
 ): Group {
+  const gi = deps.gi ?? null;
   const allot = new Group();
   allot.name = 'holy-allotment';
   const ground = (lx: number, lz: number): number => groundAt?.(lx, lz) ?? 0;
@@ -198,9 +207,10 @@ export function buildHolyAllotment(
   // The New Jerusalem at the south-centre, on the flat core (plaza at y = 0).
   allot.add(buildCityMassing(gi));
 
-  // The river of life cascading the south terraces to the plain, trees of life
-  // on its banks (Rev 22:1-2). Shares the city's local frame.
-  allot.add(buildRiverOfLife());
+  // The river of life cascading the south terraces to the plain (Rev 22:1) —
+  // crystal-water pass; shares the city's local frame. Trees of life are
+  // world-space pipeline trees (TreesOfLife.ts), not built here.
+  allot.add(buildRiverOfLife(deps));
 
   return allot;
 }

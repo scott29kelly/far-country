@@ -100,6 +100,11 @@ function faceYaw(face: Face): number {
   return face.sign > 0 ? -Math.PI / 2 : Math.PI / 2;
 }
 
+/** The river cascades the south (+Z) meridian — relief courses skip its slot. */
+function riverSlot(face: Face, u: number): boolean {
+  return face.axis === 'z' && face.sign === 1 && Math.abs(u) < 5;
+}
+
 // ---------------------------------------------------------------------------
 // Probe-GI opt-in (fragment stage — tier faces are far larger than the 16 m
 // probe grid, so the veg-style vertex hoist would smear; see Forests.patchGI)
@@ -174,7 +179,7 @@ function interiorMaterial(f: number, tierH: number, gi: ProbeGI | null): MeshSta
   const colsZ = smoothstep(0.0, 0.12, fz).mul(smoothstep(1.0, 0.88, fz) as unknown as NF) as unknown as NF;
   const cols = colsX.mul(colsZ).mul(0.35).add(0.65) as unknown as NF;
   // warm interior light; K stays under the 1.5 bloom line at every tier
-  const K = 0.85 + 0.55 * f;
+  const K = 1.05 + 0.4 * f;
   m.emissiveNode = vec3(1.0, 0.85, 0.556)
     .mul(grad.mul(floors).mul(cols))
     .mul(K) as unknown as NV3;
@@ -193,7 +198,7 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   m.color.copy(GOLD.clone().lerp(CRYSTAL, f));
   m.metalness = 0;
   m.roughness = 0.07;
-  m.transmission = 0.85;
+  m.transmission = 0.7; // 0.85 muddied the panes to beige — keep more gold body
   m.ior = 1.45;
   m.thickness = 0.9; // local units — ×20 world scale ⇒ ~18 m of gold glass depth
   m.attenuationColor.copy(GOLD);
@@ -209,16 +214,17 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   const dx = cx.sub(0.5).abs() as unknown as NF;
   const ay = cy.sub(0.58).max(0).mul(1.5) as unknown as NF;
   const rr = dx.mul(dx).add(ay.mul(ay)).sqrt() as unknown as NF;
-  const pane = smoothstep(0.46, 0.4, rr).mul(
-    smoothstep(0.02, 0.08, cy) as unknown as NF,
+  // thin ribs, bright panes — thick dark spandrels read as a waffle grid
+  const pane = smoothstep(0.475, 0.435, rr).mul(
+    smoothstep(0.015, 0.05, cy) as unknown as NF,
   ) as unknown as NF;
-  const grad = mix(float(1.0), float(0.5), positionLocal.y.div(paneH).clamp(0, 1)) as unknown as NF;
+  const grad = mix(float(1.0), float(0.55), positionLocal.y.div(paneH).clamp(0, 1)) as unknown as NF;
   const jit = slotHash(instanceIndex as unknown as NU, 7).mul(0.25).add(0.85) as unknown as NF;
-  // bloom contract: K·grad·Y(warm) ≤ ~0.7 at the base tier, rising with f;
+  // bloom contract: K·grad·Y(warm) ≤ ~0.85 at the base tier, rising with f;
   // only the crown/glory cross the 1.5 threshold
-  const K = 0.9 + 1.1 * f;
+  const K = 1.05 + 1.0 * f;
   m.emissiveNode = vec3(1.0, 0.74, 0.42)
-    .mul(pane.mul(0.8).add(0.2))
+    .mul(pane.mul(0.62).add(0.38))
     .mul(grad)
     .mul(jit)
     .mul(K) as unknown as NV3;
@@ -230,11 +236,11 @@ function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
   m.color.copy(JASPER);
   m.metalness = 0.05;
-  m.roughness = 0.18;
+  m.roughness = 0.3; // 0.18 + 0.35 emissive washed the wall flat white
   m.clearcoat = 1.0;
   m.clearcoatRoughness = 0.15;
   m.emissive.copy(JASPER);
-  m.emissiveIntensity = 0.35;
+  m.emissiveIntensity = 0.22;
   patchCityGI(m, gi);
   return m;
 }
@@ -263,8 +269,8 @@ function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
   m.color.set(hex);
   m.metalness = 0;
-  m.roughness = 0.06;
-  m.transmission = 1.0;
+  m.roughness = 0.12; // enough micro-spread that facets catch distinct light
+  m.transmission = 0.75; // full transmission washed the facets to pastel
   m.ior = 2.0;
   m.thickness = 1.2;
   m.attenuationColor.copy(m.color);
@@ -273,9 +279,9 @@ function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
   m.specularIntensity = 1.0;
   m.side = FrontSide;
   m.emissive.copy(m.color);
-  // saturated hues have low luminance — 0.45 stays far under bloom; the
+  // saturated hues have low luminance — 0.7 stays far under bloom; the
   // grade's c.max(0) clamp (PostStack) protects the saturated-dark case
-  m.emissiveIntensity = 0.45;
+  m.emissiveIntensity = 0.7;
   return m;
 }
 
@@ -728,6 +734,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       for (const face of FACES) {
         for (let i = 0; i <= t.arches; i++) {
           const u = -W / 2 + bay * i;
+          if (riverSlot(face, u)) continue; // the cascade owns the meridian
           pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
         }
       }
@@ -756,6 +763,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       for (let i = 0; i < n; i++) {
         const u = -t.half + 1.55 * (i + 0.5);
         if (ti === 0 && GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_WIDTH / 2 + 1.6)) continue;
+        if (riverSlot(face, u)) continue;
         dentilPlaces.push({ u, y: yTop - 3.1, off: t.half + 2.1, face });
       }
     }
@@ -776,6 +784,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
           const n = Math.floor((2 * ringHalf - 3) / 2.9);
           for (let i = 0; i < n; i++) {
             const u = -ringHalf + 1.5 + 2.9 * (i + 0.5);
+            if (riverSlot(face, u)) continue;
             arcadePlaces.push({ u, y: yb + 0.5, off: ringHalf + 1.8, face });
             arcadeGlowPlaces.push({ u, y: yb + 0.6, off: ringHalf + 1.35, face });
           }
@@ -807,6 +816,68 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
   const glory = new Mesh(new SphereGeometry(11, 32, 24), gloryMat);
   glory.position.y = yBot + 10;
   city.add(glory);
+
+  // Sea of glass before the throne (Rev 4:6, clear tier — rendered as the
+  // figure of the vision per ADR 0009 rule 2): a reflective crystalline
+  // floor across the crown top.
+  const seaMat = new MeshPhysicalNodeMaterial();
+  seaMat.color.setHex(0xcfe8ee);
+  seaMat.metalness = 0;
+  seaMat.roughness = 0.05;
+  seaMat.clearcoat = 1.0;
+  seaMat.clearcoatRoughness = 0.06;
+  seaMat.emissive.setHex(0xbfe2ec);
+  seaMat.emissiveIntensity = 0.5;
+  const crownHalf = tiers[tiers.length - 1].half;
+  const seaGeo = new CircleGeometry(crownHalf - 0.5, 48);
+  seaGeo.rotateX(-Math.PI / 2);
+  const sea = new Mesh(seaGeo, seaMat);
+  sea.position.y = yBot + 0.06;
+  sea.receiveShadow = true;
+  city.add(sea);
+
+  // The rainbow around the throne (Rev 4:3) — full spectrum with emerald
+  // prominence per RENDERING-DECISIONS #4: a horizontal spectral ring
+  // encircling the glory, additive-glow read; the emerald band alone grazes
+  // the bloom threshold (its stated prominence).
+  const RING_R = 17;
+  const RING_TUBE = 2.4;
+  const rainGeo = new TorusGeometry(RING_R, RING_TUBE, 16, 96);
+  rainGeo.rotateX(Math.PI / 2);
+  const rainMat = new MeshStandardNodeMaterial();
+  rainMat.transparent = true;
+  rainMat.depthWrite = false;
+  rainMat.side = DoubleSide;
+  const rad = positionLocal.xz.length() as unknown as NF;
+  const fSpec = rad.sub(RING_R - RING_TUBE).div(2 * RING_TUBE).clamp(0, 1) as unknown as NF;
+  const cBlue = mix(
+    vec3(0.45, 0.15, 0.85),
+    vec3(0.15, 0.35, 0.95),
+    smoothstep(0.0, 0.22, fSpec) as unknown as NF,
+  ) as unknown as NV3;
+  const cEmerald = mix(
+    cBlue,
+    vec3(0.05, 0.9, 0.4),
+    smoothstep(0.22, 0.45, fSpec) as unknown as NF,
+  ) as unknown as NV3;
+  const cYellow = mix(
+    cEmerald,
+    vec3(0.85, 0.85, 0.2),
+    smoothstep(0.58, 0.78, fSpec) as unknown as NF,
+  ) as unknown as NV3;
+  const cRed = mix(
+    cYellow,
+    vec3(0.9, 0.2, 0.15),
+    smoothstep(0.78, 0.95, fSpec) as unknown as NF,
+  ) as unknown as NV3;
+  rainMat.colorNode = vec3(0, 0, 0) as unknown as typeof rainMat.colorNode;
+  rainMat.emissiveNode = cRed.mul(2.1) as unknown as typeof rainMat.emissiveNode;
+  rainMat.opacityNode = smoothstep(0.0, 0.12, fSpec)
+    .mul(smoothstep(1.0, 0.88, fSpec) as unknown as NF)
+    .mul(0.75) as unknown as typeof rainMat.opacityNode;
+  const rainbow = new Mesh(rainGeo, rainMat);
+  rainbow.position.y = glory.position.y;
+  city.add(rainbow);
 
   return city;
 }
