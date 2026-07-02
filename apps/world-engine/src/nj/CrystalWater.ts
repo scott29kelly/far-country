@@ -20,7 +20,7 @@
  * threshold.
  */
 
-import { Vector2 } from 'three';
+import { Vector2, Vector3 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import {
   Break,
@@ -307,6 +307,88 @@ export function crystalFallMaterial(
   mat.opacityNode = body
     .mul(0.62)
     .add(0.18)
+    .mul(edge)
+    .mul(sideFade) as unknown as typeof mat.opacityNode;
+
+  return mat;
+}
+
+/**
+ * World-space waterfall ribbon (the plateau-rim falls, ADR 0016) — sibling of
+ * crystalFallMaterial, which is welded to the ×20 allotment frame (the city
+ * cascades depend on that; do not unify). Differences: geometry is authored
+ * in METRES (no ×20), the sheet faces an arbitrary outward azimuth around the
+ * rim so fresnel/facing use the sheet's world normal (passed in — rim falls
+ * never rotate after build), and dimensions are world metres.
+ */
+export function crystalFallMaterialWorld(
+  hf: Heightfield,
+  atm: Atmosphere,
+  widthM: number,
+  heightM: number,
+  outwardNormal: Vector2,
+): MeshStandardNodeMaterial {
+  const noiseA = hf.noiseA;
+  if (!noiseA) throw new Error('crystalFallMaterialWorld needs baked noise');
+
+  const mat = new MeshStandardNodeMaterial();
+  mat.transparent = true;
+  mat.depthWrite = false;
+  mat.metalness = 0;
+  mat.roughness = 0.35;
+
+  const u = positionLocal.x as unknown as NF;
+  const yNorm = positionLocal.y.div(heightM).clamp(0, 1) as unknown as NF;
+  const v = positionLocal.y as unknown as NF;
+
+  const ph1 = fract(time.mul(FALL_CYC)) as unknown as NF;
+  const ph2 = fract(time.mul(FALL_CYC).add(0.5)) as unknown as NF;
+  const w2 = abs(ph1.sub(0.5)).mul(2) as unknown as NF;
+  const speed = 14;
+  const streakAt = (off: NF, s: number, xk: number): NF =>
+    (
+      texture(
+        noiseA,
+        vec2(u.mul(xk).div(s * PERIOD_FBM), v.add(off).div(s * PERIOD_FBM * 3.4)),
+      ) as unknown as NV4
+    ).y as unknown as NF;
+  const offA = ph1.div(FALL_CYC).mul(speed) as unknown as NF;
+  const offB = ph2.div(FALL_CYC).mul(speed).add(37.1) as unknown as NF;
+  const sA = streakAt(offA, 0.5, 3.2)
+    .mul(0.62)
+    .add(streakAt(offA.mul(1.31), 0.2, 5.1).mul(0.38)) as unknown as NF;
+  const sB = streakAt(offB, 0.5, 3.2)
+    .mul(0.62)
+    .add(streakAt(offB.mul(1.31), 0.2, 5.1).mul(0.38)) as unknown as NF;
+  const streak = mix(sA, sB, w2) as unknown as NF;
+
+  const plunge = smoothstep(0.22, 0.0, yNorm) as unknown as NF;
+  const body = smoothstep(0.3, 0.72, streak.add(plunge.mul(0.25))) as unknown as NF;
+  const edge = smoothstep(0.0, 0.06, yNorm).mul(smoothstep(1.0, 0.965, yNorm)) as unknown as NF;
+  const uEdge = u.div(widthM).add(0.5) as unknown as NF;
+  const sideFade = smoothstep(0.0, 0.09, uEdge).mul(smoothstep(1.0, 0.91, uEdge)) as unknown as NF;
+
+  // grazing fresnel against the sheet's WORLD normal (rim falls face outward
+  // at arbitrary azimuths — the local-frame ±Z assumption does not hold here)
+  const nU = uniform(new Vector3(outwardNormal.x, 0, outwardNormal.y).normalize());
+  const toCam = cameraPosition.sub(positionWorld) as unknown as NV3;
+  const viewDir = toCam.div(toCam.length().max(1e-4)) as unknown as NV3;
+  const cosT = clamp(viewDir.dot(nU as unknown as NV3).abs(), 0, 1) as unknown as NF;
+  const fres = float(0.15).add(float(0.85).mul(cosT.oneMinus().pow(3))) as unknown as NF;
+
+  const sky = atm.skyColor(vec3(0, 0.35, 0.94).normalize() as unknown as NV3) as unknown as NV3;
+  const waterCol = vec3(0.62, 0.78, 0.86).mul(
+    sky.mul(0.5).add(vec3(0.5, 0.5, 0.5)),
+  ) as unknown as NV3;
+  const white = vec3(0.92, 0.95, 0.97) as unknown as NV3;
+  mat.colorNode = vec3(0.2, 0.24, 0.26).mul(body) as unknown as typeof mat.colorNode;
+  // brighter/denser than the city cascades: rim falls are judged from ~1 km
+  // against pale rock, where the city's close-range translucency vanishes
+  mat.emissiveNode = mix(waterCol.mul(0.6), white.mul(1.0), plunge.mul(0.6).add(fres.mul(0.25)))
+    .mul(body.mul(0.7).add(0.3)) as unknown as typeof mat.emissiveNode;
+  mat.opacityNode = body
+    .mul(0.55)
+    .add(0.38)
     .mul(edge)
     .mul(sideFade) as unknown as typeof mat.opacityNode;
 

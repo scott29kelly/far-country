@@ -27,6 +27,7 @@ import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
+import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { riverSurfaceLocalY } from './RiverOfLife';
 import { buildTreesOfLife } from './TreesOfLife';
@@ -136,6 +137,16 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // allotment scale would distort them). Null when veg is ablated.
   const treesOfLife = await buildTreesOfLife(ctx);
   if (treesOfLife) engine.scene.add(treesOfLife);
+
+  // Waterfalls off the mesa rim (ADR 0016): authored crystal ribbons at the
+  // seed's REAL drainage crossings (the hydrology field cannot express
+  // vertical falls); anchor sites near the basin's spill side keep the
+  // south-face composition on seeds that drain nothing to the rim.
+  if (hf && sunSky) {
+    const emergent = findRimFallSites(hf);
+    const sites = emergent.length > 0 ? emergent : anchorFallSites(hf);
+    engine.scene.add(buildRimFalls(sites, hf, sunSky.atmosphere, gi));
+  }
 
   // Walk physics: the heightfield IS the plateau now — the terrain scene's
   // own groundProbe handles everything (no special-case override).

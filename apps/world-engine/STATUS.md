@@ -233,7 +233,28 @@ unchanged below.
    render and read the true live values (fog 0.120/clarity 0.350 = the NJ
    overrides; ToD 17.0). Superseded eventually by Phase B's
    NewJerusalemConfig.
-2. Plateau rim → stratified cliff-and-waterfall band (USER-REFS directive #2).
+2. ~~Plateau rim → stratified cliff-and-waterfall band~~ **BUILT 2026-07-02**
+   (ADR 0016). MacroMap's plateau branch gains a mesa profile: rolling top →
+   noise-meandered lip (±70 m) → stepped face carrying an ABSOLUTE 260 m
+   wall (a fraction-of-local-rise first cut vanished where the wild fringe
+   ran high) → talus tail; the face band gets a strata-modulated hardness
+   boost (0.72 interbeds / 0.97 beds) so erosion carves ledges instead of
+   shedding the wall. Rim constants live once in `src/nj/rimModel.ts`.
+   WATERFALLS: `RimFalls.ts` scans the post-generate CPU mirrors for wet
+   cells in a band just inside the lip (the hydrology cliff-cut dries the
+   slope itself), clusters to ≤4 sites ranked by wet depth, and drops
+   world-space crystal ribbons (`crystalFallMaterialWorld` — the ×20 city
+   variant is untouched) + plunge pools at the seed's REAL drainage
+   crossings; anchor sites near the basin spill keep the south-face
+   composition on dry seeds. LIVE-VERIFIED (shots/wip/rim2-*/rim3-*/rim4-*):
+   eye-level south wall with benched treads under the city; basin-side
+   framing matches the holy-allotment reference composition (strata bands +
+   pond + falls + city); spawn hero view unchanged; wild bm4 regression
+   unchanged. Debts: fall ribbons read as translucent veils at 1 km (white
+   column drama = tuning knob); rock palette is the engine's alpine pale vs
+   the refs' warm sandstone (cohesion vs refs tradeoff — surface if judged);
+   E/W/N rims are far-shell only (ADR 0016 accepted); plunge pools lack a
+   wade guard (off-path, logged).
 3. Allotment zone map (managed planting through the scatter/grass kernels).
 4. Temple PoC — Scripture-as-data concept ADR + Ezek 40–42 measurement
    extraction + units/scale ADR; doubles as the delta #8 temple rebuild.
