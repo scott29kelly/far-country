@@ -44,8 +44,10 @@ import {
 import type { WorldSeed } from '../../core/Seed';
 import type { Heightfield } from '../../world/Heightfield';
 import { LAKE_LEVEL, TREELINE, WORLD_SIZE } from '../../world/WorldConst';
+import { zoneField, type AllotmentZoneParams } from '../../world/ZoneField';
 import { fbm3 } from '../noise/NoiseTSL';
 import type { NF, NI, NU, NV2, NV4 } from '../TSLTypes';
+import { cellHash, cellHash2 } from './CellHash';
 
 /** geometry-pool class ids (variant index lives in the low 3 bits of idF) */
 export const enum VegClass {
@@ -113,42 +115,9 @@ const PARENT_PROB = 0.62;
 
 const TAU = 6.2831853;
 
-// ---------------------------------------------------------------------------
-// integer hash: pcg2d over (cell + salt) — stable at any cell magnitude
-// ---------------------------------------------------------------------------
-
-function pcg2d(p: NV2, salt: number): NV2 {
-  // PURE expression chain — no toVar/assign, so it works in material node
-  // graphs too (assign needs a Fn() stack). +40000 keeps negative ring cell
-  // coords positive before the uint cast (world cells span ±~10k).
-  const M = uint(1664525);
-  const C = uint(1013904223);
-  const a0 = p.x.add(40000 + (salt & 0x3fff)).toUint();
-  const b0 = p.y.add(40000 + ((salt >> 14) & 0x3fff)).toUint();
-  const a1 = a0.mul(M).add(C);
-  const b1 = b0.mul(M).add(C);
-  const a2 = a1.add(b1.mul(M));
-  const b2 = b1.add(a2.mul(M));
-  const a3 = a2.bitXor(a2.shiftRight(uint(16)));
-  const b3 = b2.bitXor(b2.shiftRight(uint(16)));
-  const a4 = a3.add(b3.mul(M));
-  const b4 = b3.add(a4.mul(M));
-  const a5 = a4.bitXor(a4.shiftRight(uint(16)));
-  const b5 = b4.bitXor(b4.shiftRight(uint(16)));
-  const inv = 1 / 16777216;
-  return vec2(
-    float(a5.bitAnd(uint(0xffffff))).mul(inv),
-    float(b5.bitAnd(uint(0xffffff))).mul(inv),
-  );
-}
-
-export function cellHash2(cell: NV2, salt: number): NV2 {
-  return pcg2d(cell, salt);
-}
-
-export function cellHash(cell: NV2, salt: number): NF {
-  return pcg2d(cell, salt).x;
-}
+// integer hash lives in CellHash.ts (shared with ZoneField without a cycle);
+// re-exported here so existing call sites keep their import path
+export { cellHash, cellHash2 };
 
 // ---------------------------------------------------------------------------
 
@@ -395,6 +364,13 @@ export async function runScatter(
     });
   };
 
+  // Managed land-use zones (ZoneField): the Holy Allotment's plateau
+  // patchwork — crop plots reject wild growth, orchard plots plant lattice
+  // rows, hedgerows override the understory, the lawn stays specimen-sparse.
+  // JS-guarded on presence: wild scenes never set plateau.zones, so their
+  // compiled kernels stay bit-identical (the `if (mp.plateau)` law).
+  const zones: AllotmentZoneParams | undefined = hf.mp.plateau?.zones;
+
   // Optional keep-out rects (world xz) [x0, x1, z0, z1] — built scenes (e.g.
   // the New Jerusalem forecourt / dwelling grid) pass their footprints so
   // nothing scatters onto them. Early reject, like the water/river masks.
@@ -431,7 +407,23 @@ export async function runScatter(
     const jit = cellHash2(cell, sT);
     const wpos = cell.add(jit).div(treeG).sub(0.5).mul(WORLD_SIZE);
     excludeGuard?.(wpos);
-    thinGuard(cell, sT, thinT);
+    const zW = zones ? zoneField(wpos, zones) : null;
+    if (zW && thinT < 1) {
+      // managed plots + lawn bypass the domain thinning: the orchard lattice
+      // needs every cell evaluated (dedup = cell-contains-point below), and
+      // the suppressed zones reject cheaply anyway
+      If(
+        cellHash2(cell.add(vec2(0.377, 0.911)), (sT ^ 0x5bd1) & 0x7fffffff)
+          .x.greaterThan(thinT)
+          .and(zW.manage.lessThan(0.5))
+          .and(zW.park.lessThan(0.5)),
+        () => {
+          Return();
+        },
+      );
+    } else {
+      thinGuard(cell, sT, thinT);
+    }
     const s = sampleSite(hf, wpos);
 
     // hard exclusions: open/standing water, river channels, lake shelf
@@ -442,6 +434,59 @@ export async function runScatter(
       Return();
     });
 
+    if (zones) {
+      // ORCHARD rows (USER-REFS #3): candidates snap to the row lattice.
+      // Cell pitch (3.4 m) < spacing, so exactly one candidate cell contains
+      // each lattice point — "this cell contains the point" is an exact
+      // dedup. The zone re-tests AT the point so rows stop cleanly at the
+      // plot margin regardless of which side of a border the candidate fell.
+      const od = zones.orchard;
+      const L = vec2(
+        wpos.x.div(od.dx).round().mul(od.dx),
+        wpos.y.div(od.dz).round().mul(od.dz),
+      );
+      const zL = zoneField(L, zones);
+      const cellOfL = L.div(WORLD_SIZE).add(0.5).mul(treeG).floor();
+      If(
+        zL.orch
+          .greaterThan(0.5)
+          .and(zL.borderD.greaterThan(od.margin))
+          .and(zL.park.lessThan(0.5))
+          .and(cellOfL.x.equal(cell.x))
+          .and(cellOfL.y.equal(cell.y)),
+        () => {
+          const hz = cellHash2(cell, sT ^ 0x0a7c);
+          const jitO = hz.sub(0.5).mul(1.6); // ±0.8 m planting slack
+          const pO = L.add(jitO);
+          const hO = hf.sampleHeight(pO);
+          // planted stock: small, even-aged, straight-trunked — species
+          // alternates by PLOT between beech and birch (visual variety, and
+          // each pool's impostor compact-region stays within budget at
+          // aerial framings)
+          const spO = zL.plotR.y.lessThan(0.5).select(float(2), float(3));
+          const scaleO = cellHash(cell, sT ^ 0x3b8d).mul(0.12).add(0.46);
+          const variantO = cellHash(cell, sT ^ 0x49a1)
+            .mul(TREE_VARIANTS)
+            .floor()
+            .min(TREE_VARIANTS - 1);
+          append(
+            treeCount,
+            TREE_CAP,
+            treeA,
+            treeB,
+            vec4(pO.x, hO.sub(scaleO.mul(0.12)), pO.y, scaleO) as unknown as NV4,
+            vec4(
+              cellHash(cell, sT ^ 0x6c2f).mul(TAU),
+              0,
+              0,
+              spO.mul(8).add(variantO),
+            ) as unknown as NV4,
+          );
+          Return();
+        },
+      );
+    }
+
     const clump = clumpField(wpos, sT ^ 0x51f3);
     const dens = byBiome(s.bioId, [0, 0.22, 0.8, 0.85, 0.06, 0.26]);
     const clumpFloor = byBiome(s.bioId, [0, 0.15, 0.3, 0.35, 0.04, 0.12]);
@@ -450,13 +495,24 @@ export async function runScatter(
       smoothstep(TREELINE - 110, TREELINE + 50, s.h),
     );
     const snowFade = float(1).sub(s.snow.mul(0.85));
-    const accept = dens
+    let accept: NF = dens
       .mul(clumpFloor.add(float(1).sub(clumpFloor).mul(clump)))
       .mul(slopeFade)
       .mul(treelineFade)
       .mul(snowFade)
       .mul(s.vegDens.mul(0.85).add(0.15))
       .mul(float(1).sub(s.rockExp.mul(0.65)));
+    if (zW) {
+      // worked land: wild trees keep out of crop/orchard plots; a rare
+      // loner survives on fallow pasture; the lawn keeps sparse specimens
+      const fallow = zW.manage.sub(zW.crop).sub(zW.orch);
+      accept = accept
+        .mul(float(1).sub(zW.crop.mul(0.99)))
+        .mul(float(1).sub(zW.orch.mul(0.99)))
+        .mul(float(1).sub(fallow.mul(0.55)))
+        .mul(float(1).sub(zW.park.mul(0.85)))
+        .mul(float(1).sub(zW.lane.mul(0.95)));
+    }
     If(cellHash(cell, sT ^ 0x1234f).greaterThanEqual(accept), () => {
       Return();
     });
@@ -549,7 +605,21 @@ export async function runScatter(
     const jit = cellHash2(cell, sU);
     const wpos = cell.add(jit).div(underG).sub(0.5).mul(WORLD_SIZE);
     excludeGuard?.(wpos);
-    thinGuard(cell, sU, thinU);
+    const zW = zones ? zoneField(wpos, zones) : null;
+    if (zW && thinU < 1) {
+      // hedgerows bypass the domain thinning — a hedge is a continuous
+      // band, and unbiased thinning would gap it
+      If(
+        cellHash2(cell.add(vec2(0.377, 0.911)), (sU ^ 0x5bd1) & 0x7fffffff)
+          .x.greaterThan(thinU)
+          .and(zW.hedge.lessThan(0.3)),
+        () => {
+          Return();
+        },
+      );
+    } else {
+      thinGuard(cell, sU, thinU);
+    }
     const s = sampleSite(hf, wpos);
 
     If(s.h.lessThan(LAKE_LEVEL + 0.35), () => {
@@ -566,12 +636,24 @@ export async function runScatter(
     const treelineFade = float(1).sub(
       smoothstep(TREELINE - 40, TREELINE + 140, s.h),
     );
-    const accept = dens
+    let accept: NF = dens
       .mul(slopeFade)
       .mul(treelineFade)
       .mul(float(1).sub(s.snow.mul(0.9)))
       .mul(s.vegDens.mul(0.9).add(0.1))
       .mul(float(1).sub(s.rockExp.mul(0.85)));
+    if (zW) {
+      // crop rows are weeded, orchard floors mown, the lawn kept clear;
+      // hedgerows OVERRIDE to a near-continuous band (streambed idiom)
+      const fallow = zW.manage.sub(zW.crop).sub(zW.orch);
+      accept = accept
+        .mul(float(1).sub(zW.crop.mul(0.96)))
+        .mul(float(1).sub(zW.orch.mul(0.85)))
+        .mul(float(1).sub(fallow.mul(0.4)))
+        .mul(float(1).sub(zW.park.mul(0.9)))
+        .mul(float(1).sub(zW.lane.mul(0.97)))
+        .max(zW.hedge.mul(0.88));
+    }
     If(cellHash(cell, sU ^ 0x2477).greaterThanEqual(accept), () => {
       Return();
     });
@@ -621,7 +703,18 @@ export async function runScatter(
     });
 
     const h2 = cellHash2(cell, sU ^ 0x71c9);
-    const scale = h2.x.pow(1.4).mul(0.7).add(0.6);
+    let scale: NF = h2.x.pow(1.4).mul(0.7).add(0.6);
+    if (zW) {
+      // hedge shrubs: fuller planted stock — hazel with juniper accents
+      If(zW.hedge.greaterThan(0.5), () => {
+        cls.assign(
+          cellHash(cell, sU ^ 0x7e57)
+            .lessThan(0.82)
+            .select(int(VegClass.BushHazel), int(VegClass.Juniper)),
+        );
+      });
+      scale = scale.mul(zW.hedge.mul(0.45).add(1));
+    }
     const yaw = h2.y.mul(TAU);
     const variant = cellHash(cell, sU ^ 0x1ee7).mul(4).floor().min(3);
     const idF = float(cls).mul(8).add(variant);
@@ -676,7 +769,15 @@ export async function runScatter(
     const dens = byBiome(s.bioId, [0.08, 0.25, 0.62, 0.65, 0.22, 0.5]);
     const slopeFade = float(1).sub(smoothstep(0.55, 1.1, s.slope));
     const wSum = w0.add(w1).add(w2).add(w3);
-    const accept = dens.mul(slopeFade).mul(wSum.min(1));
+    let accept: NF = dens.mul(slopeFade).mul(wSum.min(1));
+    if (zones) {
+      // worked land is cleared land — no deadfall or boulders on the
+      // patchwork or the lawn
+      const zE = zoneField(wpos, zones);
+      accept = accept
+        .mul(float(1).sub(zE.manage.mul(0.97)))
+        .mul(float(1).sub(zE.park.mul(0.92)));
+    }
     If(cellHash(cell, sE ^ 0x3f21).greaterThanEqual(accept), () => {
       Return();
     });
@@ -816,7 +917,15 @@ export async function runScatter(
     const branchW = canopy.mul(0.6).mul(
       byBiome(s.bioId, [0, 0.2, 1, 1, 0.3, 0.7]),
     ).mul(branchFlat);
-    const accept = stoneBase.add(branchW).min(1);
+    let accept: NF = stoneBase.add(branchW).min(1);
+    if (zones) {
+      // fields are picked clean — stones belong to the wild fringe, the rim
+      // band and the streambeds, not the patchwork
+      const zS = zoneField(wpos, zones);
+      accept = accept
+        .mul(float(1).sub(zS.manage.mul(0.96)))
+        .mul(float(1).sub(zS.park.mul(0.9)));
+    }
     If(cellHash(cell, sS ^ 0x71f1).greaterThanEqual(accept), () => {
       Return();
     });

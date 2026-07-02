@@ -76,6 +76,7 @@ import type { NB, NF, NI, NU, NV2, NV3, NV4 } from '../gpu/TSLTypes';
 import type { Heightfield } from '../world/Heightfield';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import { WORLD_SIZE } from '../world/WorldConst';
+import { cropRows, cropTint, zoneField } from '../world/ZoneField';
 import {
   barkChipGeometry,
   debrisMaterial,
@@ -340,6 +341,9 @@ export class GroundRing {
   init(beechAtlas: DataTexture | null): void {
     this.group.add(this.prepassGroup);
     const hf = this.hf;
+    // managed land-use zones (ZoneField) — JS-guarded on presence so wild
+    // scenes compile bit-identical kernels (the `if (mp.plateau)` law)
+    const zones = hf.mp.plateau?.zones;
     const salt = this.seed.sub('groundring') & 0x7fffffff;
     const camU = this.camU;
     const planesU = this.planesU;
@@ -465,6 +469,15 @@ export class GroundRing {
         .mul(float(1).sub(bio.w.mul(0.55)))
         .mul(float(1).sub(canopy.mul(0.45)))
         .mul(fl.x.mul(0.35).add(0.75));
+      if (zones) {
+        // worn lanes thin to scruff; crop plots stand DENSE (the sward IS
+        // the crop — streambed-override idiom); the lawn stays full
+        const zG = zoneField(wpos, zones);
+        dens = dens
+          .mul(float(1).sub(zG.lane.mul(0.78)))
+          .max(zG.crop.mul(0.92).mul(bank).mul(float(1).sub(zG.lane)))
+          .max(zG.park.mul(0.8).mul(bank));
+      }
       // near-field scruff floor: NOTHING within ~12 m may be totally bald
       // (Pillar A) — thin dry blades survive even on poor soil. Hard gates
       // (water, snow, steep rock) still apply below.
@@ -564,12 +577,19 @@ export class GroundRing {
       const wLitter = canopy.mul(3.0).add(0.08).mul(float(1).sub(streamK.mul(0.8))).mul(dry);
       const wSum = wCobble.add(wPebble).add(wTwig).add(wChip).add(wLitter);
       // streambeds are FULLY cobbled geometry (spec §9) — override biome density
-      const dens = byBio(bioId, [0.4, 0.6, 1.0, 1.0, 0.6, 0.75])
+      let dens = byBio(bioId, [0.4, 0.6, 1.0, 1.0, 0.6, 0.75])
         .mul(float(1).sub(bio.y.mul(0.9)))
         .mul(wSum.mul(0.5).min(1))
         .max(streamK.mul(0.95))
         .max(marginK.mul(0.85))
         .mul(float(1).sub(smoothstep(0.7, 1.05, ns.w)));
+      if (zones) {
+        // tended ground: no litter/cobble scatter on the patchwork or lawn
+        const zD = zoneField(wpos, zones);
+        dens = dens
+          .mul(float(1).sub(zD.manage.mul(0.94)))
+          .mul(float(1).sub(zD.park.mul(0.9)));
+      }
       const edge = float(1).sub(smoothstep(DEB_R * 0.72, DEB_R, dist));
       If(cellHash(wc, salt ^ 0x132f).greaterThanEqual(dens.mul(edge)), () => {
         Return();
@@ -636,13 +656,22 @@ export class GroundRing {
       const bank = smoothstep(0.06, 0.5, above).mul(
         float(1).sub(smoothstep(0.2, 1.1, fl.z).mul(0.78)),
       );
-      const dens = byBio(bioId, [0.18, 0.7, 0.62, 0.7, 1.5, 1.1])
+      let dens = byBio(bioId, [0.18, 0.7, 0.62, 0.7, 1.5, 1.1])
         .mul(bank)
         .mul(bio.z.mul(0.85).add(0.15))
         .mul(float(1).sub(bio.w.mul(0.55)))
         .mul(float(1).sub(canopy.mul(0.45)))
         .mul(float(1).sub(bio.y.mul(0.95)))
         .mul(float(1).sub(smoothstep(0.55, 0.95, ns.w)));
+      if (zones) {
+        // match the fine ring's zone treatment or the patchwork pops at the
+        // g2→g3 handoff
+        const zG = zoneField(wpos, zones);
+        dens = dens
+          .mul(float(1).sub(zG.lane.mul(0.78)))
+          .max(zG.crop.mul(0.9).mul(bank).mul(float(1).sub(zG.lane)))
+          .max(zG.park.mul(0.7).mul(bank));
+      }
       // ramp IN over the fine band's dissolve, OUT at the splat handoff
       const fadeIn = smoothstep(FAR_R0 - 16, FAR_R0 + 14, dist);
       const edge = float(1).sub(smoothstep(FAR_R * 0.93, FAR_R, dist));
@@ -783,22 +812,35 @@ export class GroundRing {
   ): MeshStandardNodeMaterial {
     const mat = new MeshStandardNodeMaterial();
     const { wc, y, wpos } = fetchRing(bind);
+    const zones = this.hf.mp.plateau?.zones;
+    const zG = zones ? zoneField(wpos, zones) : null;
     const h2 = cellHash2(wc, bind.salt ^ 0x9191);
     // patch-level (≈1.6 m) dryness/hue so meadows read as drifts, not noise
     const patch = cellHash2(wc.mul(0.125).floor(), bind.salt ^ 0x3333);
-    const tilt = cellHash2(wc, bind.salt ^ 0x4545).sub(0.5).mul(0.5);
+    let tilt: NV2 = cellHash2(wc, bind.salt ^ 0x4545).sub(0.5).mul(0.5);
     const dist = wpos.sub(vec2(cameraPosition.x, cameraPosition.z)).length();
     // width compensation for the continuous thinning — coverage conserved.
     // far mode: coarse-grid super-tufts have their own fixed footprint
     const widen = far
       ? h2.y.mul(0.8).add(1.6)
       : float(1).div(grassThin(dist).sqrt()).clamp(1, 4);
-    const bladeH = h2.x
+    let bladeH: NF = h2.x
       .pow(1.3)
       .mul(far ? 0.42 : 0.3)
       .add(far ? 0.34 : 0.2)
       .mul(tuft && !far ? 2.0 : 1)
       .mul(widen.sub(1).mul(0.3).add(1));
+    if (zG) {
+      // crop stands are a tall even-height sward (per-plot height), the
+      // lawn is mown short, lanes are trodden down; crops grow upright —
+      // random shear reads as wild meadow, not planted grain
+      const cropH = zG.plotR.y.mul(0.5).add(1.45);
+      bladeH = bladeH
+        .mul(mix(float(1), cropH, zG.crop))
+        .mul(float(1).sub(zG.park.mul(0.45)))
+        .mul(float(1).sub(zG.lane.mul(0.5)));
+      tilt = tilt.mul(float(1).sub(zG.crop.mul(0.55))) as unknown as NV2;
+    }
     const yawA = h2.y.mul(6.2831853);
     const c = yawA.cos();
     const s = yawA.sin();
@@ -900,6 +942,19 @@ export class GroundRing {
     let albedo = mix(fresh, dry, dryK) as unknown as NV3;
     albedo = albedo.mul(patch.y.sub(0.5).mul(0.3).add(1)) as unknown as NV3;
     albedo = mix(albedo, vec3(0.018, 0.052, 0.014), cov.mul(0.55)) as unknown as NV3;
+    if (zG && zones) {
+      // patchwork read: per-plot crop tint + row striping (same palette and
+      // stripe phase as the terrain splat, so blades dissolve into the
+      // field they stand in); the lawn reads fresh, lanes trodden dry
+      const tintC = cropTint(zones, zG.plotR.y);
+      const rows = cropRows(zones, wpos);
+      albedo = mix(albedo, tintC, zG.crop.mul(0.8)) as unknown as NV3;
+      albedo = albedo.mul(
+        float(1).sub(zG.crop.mul(rows.mul(0.14))),
+      ) as unknown as NV3;
+      albedo = mix(albedo, fresh, zG.park.mul(0.55)) as unknown as NV3;
+      albedo = mix(albedo, dry, zG.lane.mul(0.5)) as unknown as NV3;
+    }
     mat.colorNode = varying(
       albedo as unknown as Parameters<typeof varying>[0],
     ) as unknown as typeof mat.colorNode;

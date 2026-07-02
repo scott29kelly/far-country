@@ -40,6 +40,7 @@ import {
 import { sunU } from './VegMaterials';
 import { zoneMasks, type MacroParams } from '../world/MacroMap';
 import { LAKE_LEVEL, WORLD_HALF, WORLD_SIZE } from '../world/WorldConst';
+import { cropRows, cropTint, zoneField, type ZoneNodes } from '../world/ZoneField';
 
 export interface TerrainShadingInputs {
   /** rgba16f: xyz world normal, w slope */
@@ -202,6 +203,28 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
     grassDry,
     smoothstep(0.6, 0.92, patchN.mul(0.55).add(macroB.mul(0.45))),
   ).mul(meso.mul(0.25).add(0.85));
+  // managed-zone patchwork on the plateau top (ZoneField; JS-guarded so
+  // wild scenes compile bit-identical). The splat is the layer that carries
+  // the field grid at aerial range and onto the far shell, where blade
+  // geometry no longer exists — same palette + stripe phase as the blades.
+  const zones = inp.mp.plateau?.zones;
+  let zT: ZoneNodes | null = null;
+  let grassZ: NV3 = grassCol as unknown as NV3;
+  if (zones) {
+    zT = zoneField(wxz, zones);
+    const tintC = cropTint(zones, zT.plotR.y);
+    const rows = cropRows(zones, wxz);
+    // heavy mix — the residual patchy grassCol otherwise mottles the plot
+    // fill and the mosaic loses its aerial read (the blueprint look)
+    grassZ = mix(grassZ, tintC, zT.crop.mul(0.85)) as unknown as NV3;
+    grassZ = grassZ.mul(
+      float(1).sub(zT.crop.mul(rows.mul(0.12))),
+    ) as unknown as NV3;
+    // mown lawn: fresh and even — no straw drift patches
+    grassZ = mix(grassZ, grassG.mul(1.05), zT.park.mul(0.6)) as unknown as NV3;
+    // worn lanes: packed pale earth between plots
+    grassZ = mix(grassZ, vec3(0.21, 0.175, 0.12), zT.lane.mul(0.82)) as unknown as NV3;
+  }
   // forest floor: litter brown blended w/ moss by moisture
   const litter = mix(soil, vec3(0.18, 0.15, 0.095), meso);
   const mossy = vec3(0.11, 0.185, 0.065);
@@ -245,7 +268,7 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   // the real Phase-6 water surface + Beer–Lambert absorption sit above this
   const pondK = smoothstep(1.1, 2.6, riverDepth).mul(smoothstep(0.3, 0.12, slope));
   let col: NV3 = soil;
-  col = mix(col, grassCol, grassW);
+  col = mix(col, grassZ, grassW);
   col = mix(col, forestFloor, forestW);
   col = mix(col, scree, screeW);
   col = mix(col, rockCol, rockW);
@@ -253,6 +276,11 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   col = mix(col, vec3(0.055, 0.052, 0.038), pondK);
   col = mix(col, snowCol, snowW);
   col = col.mul(macroTint.add(1));
+  if (zT) {
+    // hedgerow lines — dark green bands lining the lanes; these draw the
+    // patchwork borders at aerial range
+    col = mix(col, vec3(0.045, 0.085, 0.028), zT.hedge.mul(grassW).mul(0.75));
+  }
 
   // feedback 2.8 (splat half): a real grass field is DIRECTIONAL — forward
   // scatter through backlit blades brightens and warms it toward the sun at
