@@ -148,18 +148,15 @@ This roadmap is reviewed at the end of each phase. Material reshuffling (e.g., p
   offline-generated ambient bed for the spawn meadow + one score cue for the
   south approach.
 
-- **Establish an official `main` branch at origin** *(added 2026-07-02, open)*.
-  There is currently no `main` branch on the remote; `claude/setup-far-country-docs-dbpMh`
-  is the de-facto default branch and Vercel's production branch. Cut over in one
-  sitting, at a quiet moment (not mid work-batch), in this order:
-  1. Create `main` at the current default tip:
-     `git push origin claude/setup-far-country-docs-dbpMh:refs/heads/main`.
-  2. Switch the GitHub default branch to `main`
-     (`gh repo edit --default-branch main`; open PRs retarget automatically).
-  3. Switch the Vercel project's Production Branch to `main`
-     (Settings → Git → Production Branch) in the same sitting, then push to `main`
-     and confirm a production deployment builds from it.
-  4. Update every reference to the de-facto default branch (session handoff notes,
-     AI memory, docs) to say `main`.
-  5. Keep the old branch until a production deploy from `main` has succeeded;
-     retire it afterwards at the owner's discretion.
+- **Establish an official `main` branch at origin** *(added 2026-07-02;
+  **done 2026-07-02**)*. Executed with one surprise: `origin/main` turned out
+  to already exist as a stale pointer from the June PR #22 merge (no unique
+  content — both parents of its tip were ancestors of the de-facto main), so
+  step 1 became a lease-guarded force-update of `main` to the de-facto tip
+  (`f3e91a8`) rather than a branch creation. GitHub default branch switched
+  to `main` via `gh repo edit`; Vercel's Production environment tracked the
+  repo default branch, so it followed automatically (verified showing `main`
+  in Settings → Environments). This entry's own commit is the verification
+  push — a production deployment from `main` confirms the cut-over. The old
+  `claude/setup-far-country-docs-dbpMh` branch is retired (or parked) at the
+  owner's discretion once that deploy is green.
