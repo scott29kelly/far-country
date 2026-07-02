@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-01)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-02)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,70 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-02) M3 CITY MATERIAL/GEOMETRY PASS — CITY-QUALITY-BAR #1/#3/#5/#7.**
+The flat-box city is gone. What landed (branch `claude/m3-city-material-pass`,
+one commit per step, every step live-verified via `tools/shoot.ts`):
+
+- **Shared massing table**: `cityModel.CITY_TIERS` is the single source of
+  truth; `CityMassing` geometry and `RiverOfLife` reaches both consume it
+  (the hand-mirrored TIERS copy and its desync risk are gone).
+- **Engine plumbing**: `TerrainScene` stashes `gi` (ProbeGI), `canopyTex`
+  and `vegLib` on the engine (same idiom as `heightfield`/`sunSky`) — city
+  materials opt into probe GI; the trees of life reuse the baked bark/atlas.
+- **Glass tiers (#1/#3)**: tier faces are translucent gold glass —
+  `MeshPhysicalNodeMaterial` transmission (VERIFIED working on WebGPU 0.184:
+  RenderList auto-routes transmission>0 to the transparent list, mid-pass
+  framebuffer copy + mip chain, `getIBLVolumeRefraction` backdrop) over an
+  opaque emissive "interior" core the refraction parallaxes, with an
+  emissive mullion grid of small ARCHED panes (USER-REFS directive #1).
+  Kit-bash relief is instanced real geometry (plain `InstancedMesh`, the
+  sanctioned static path — NOT the scatter system): voussoir arch frames,
+  fluted piers, gold dentil courses, ivory cornice slabs, gold-on-ivory
+  arcade courses at every setback. Bloom contract kept: base tier under the
+  1.5 threshold, only crown + glory cross.
+- **Wall & foundations (#2 upgrade)**: wall segments are crystal-jasper
+  (Rev 21:18); the twelve foundation courses are faceted gem volumes
+  (deterministic vertex jitter → flat facet normals; transmission 0.75 +
+  dispersion 0.25; stylised hues per ADR 0009 r2); pearl gate heads have
+  nacre iridescence + a voussoir ring.
+- **Trees of life (#5)**: `TreesOfLife.ts` — four unique hero variants of a
+  beech-derived species through the real pipeline (`buildTree` hybrid,
+  meshAnchorTarget 1200), twelve WORLD-SPACE placements flanking the
+  approach reach (never under the ×20 allot group), wind wired into
+  positionNode/castShadowPositionNode, probe-GI parity, card shadow-alpha
+  contract, instanced glowing fruit at real skeleton anchors, same-skeleton
+  lod-1 twins beyond 220 m. Fruit is rigid (spheres carry no vdata) —
+  pulled 0.92 crown-inward to mask sway drift.
+- **Crystal river (#7)**: `CrystalWater.ts` — purpose-built materials
+  copying WaterMaterial's proven idioms (viewport refraction + depth-leak
+  guard, Beer–Lambert at ~0.15× SIGMA, 18-step SSR, flattened-normal
+  fresnel, two-phase advection) with AUTHORED per-reach flow (hydrology is
+  untouched — its cliff-cut kernel cannot express falls, and the plaza
+  reach rides above the heightfield). Reaches are top-surface planes over
+  opaque gold beds carrying an authored-depth caustic pass
+  (`causticContext()` reuse); tier cascades are downward-advected ribbon
+  sheets; `riverSurfaceLocalY` wraps the scene groundProbe so the walker's
+  eye can't cross the authored water. The wall cascade sheets over the
+  jewelled foundation course; relief courses skip the river's meridian.
+- **Summit (RENDERING-DECISIONS #4, now IMPLEMENTED in this engine)**:
+  full-spectrum rainbow ring with emerald prominence around the glory
+  (Rev 4:3) + reflective sea-of-glass disc on the crown top (Rev 4:6).
+
+**Live verification (tools/shoot.ts, shots/wip/m3-*)**: south establishing
+(0,1000,5200) — arch bays/piers/ivory bands/arcades read as the
+width-comparison reference language; gate level (0,530,2750) — relief +
+mullion lattice hold up close; spawn (350,482,4150) — hero composition with
+real trees; summit (500,3950,1500) — rainbow ring + sea of glass verified.
+`tsc --noEmit` clean throughout. Known pre-existing console warning
+(`Vertex attribute "normal" not found`) appears in the pre-pass baseline
+shot too — not introduced by this work.
+
+**Remaining polish debts logged**: glass panes read best front-lit (judge
+shaded faces at other ToD); gem facets still soft at establishing range;
+fall ribbons unverified at close range; arcade glow panes could use
+per-course hue drift. Backlog (plateau rim cliffs, allotment zone map,
+dwellings/temple identity, Issachar-gate re-judge) unchanged below.
 
 **(2026-07-01, evening) TERRAIN-INTEGRATED HOLY ALLOTMENT — ADR 0015.**
 User verdict on the scene as it stood: "8-bit… OOMs below the bar." Root

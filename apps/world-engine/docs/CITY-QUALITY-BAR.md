@@ -258,3 +258,21 @@ east gate (Benjamin) was re-judged with a dedicated framing and renders an
 open portal over its correct onyx foundation band. The south-centre
 (Issachar) gate remains visually covered by the river approach — re-judge
 it whenever the river/gate composition changes (delta #7 work).
+
+**Progress, 2026-07-02 — the M3 material/geometry pass landed (#1/#3/#5/#7
+closed to first-pass quality; #2 upgraded).** Tier faces are translucent
+gold glass (real WebGPU transmission over a glowing interior core, emissive
+mullion grids of small arched panes); all relief is instanced real geometry
+(voussoir arch frames, fluted piers, dentil courses, ivory cornices,
+gold-on-ivory arcade courses at every setback — the USER-REFS directive #1
+composition); the wall is crystal-jasper with faceted transmission+dispersion
+foundation gems and iridescent pearl gates; the trees of life are real
+pipeline-built hero trees with wind/GI/fruit (delta #5 closed); the river is
+real crystal water with SSR/refraction/foam, ribbon cascades, caustic gold
+beds and a walk-guard (delta #7 closed to first pass); the summit carries
+RENDERING-DECISIONS #4's rainbow halo + sea of glass. Full inventory and
+verification log: `STATUS.md` "New Jerusalem scene" 2026-07-02 entry.
+Remaining top deltas: #6 (dwelling variation), #8 (temple identity —
+USER-REFS says red-sandstone Ezekiel compound), #9 (population), #10
+(wayfinding), plus the logged polish debts (gem facet punch at range,
+shaded-face glass read, fall ribbons at close range).

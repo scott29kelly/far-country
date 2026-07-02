@@ -220,7 +220,7 @@ debate, so no separate entry.
 
 - Rev 4:3; Rev 4:6; ADR 0009 rule 4.
 - Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/components/Throne.tsx` (`RainbowHalo`, sea of glass)
-- Code (current `/world-preview`): **not yet ported.** `apps/world-engine/src/nj/CityMassing.ts` renders only an emissive sphere ("glory") at the summit conflating throne and glory-light into one primitive — no rainbow halo, no sea of glass. This entry's decision applies whenever the throne environment is rebuilt there.
+- Code (current `/world-preview`, **implemented 2026-07-02** in the M3 material pass): `apps/world-engine/src/nj/CityMassing.ts` now renders a horizontal full-spectrum ring (violet → emerald-prominent green → red, the emerald band alone grazing the bloom threshold) encircling the summit glory, plus a reflective crystalline sea-of-glass disc across the crown top. The glory sphere itself remains the conflated throne/glory-light primitive (aniconic per ADR 0010); a distinct throne treatment stays open.
 
 ---
 
