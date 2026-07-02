@@ -82,7 +82,13 @@ app.add_typer(extract_app, name="extract")
 verify_app = typer.Typer(no_args_is_help=True, help="Citation verification commands.")
 app.add_typer(verify_app, name="verify")
 
+measure_app = typer.Typer(
+    no_args_is_help=True, help="Measurement dataset commands (ADR 0017)."
+)
+app.add_typer(measure_app, name="measure")
+
 DEFAULT_EXPORT_DIR = Path("data/exports")
+DEFAULT_ENGINE_MODULE = Path("apps/world-engine/src/nj/templeMeasurements.gen.ts")
 
 
 # ---------------------------------------------------------------- ingest
@@ -456,6 +462,66 @@ def _descriptors_for_run(session, run_id: str) -> list[Descriptor]:
         if payload.get("run_id") == run_id:
             matches.append(descriptor)
     return matches
+
+
+# ---------------------------------------------------------------- measure
+
+
+@measure_app.command("seed-temple")
+def measure_seed_temple(
+    db_path: Annotated[Path, typer.Option("--db-path")] = DEFAULT_DB_PATH,
+    review_status: Annotated[
+        str,
+        typer.Option(
+            "--review-status",
+            help="Status to write ('pending' default; 'approved' only after verification).",
+        ),
+    ] = "pending",
+    reviewer_notes: Annotated[
+        str | None,
+        typer.Option("--reviewer-notes", help="Notes recorded on every seeded row."),
+    ] = None,
+) -> None:
+    """Upsert the authored Ezekiel temple measurements (idempotent by slug)."""
+    from far_country.measure import seed_temple
+
+    engine = create_engine_for_path(db_path)
+    init_db(engine)
+    session_factory = create_session_factory(engine)
+    with session_factory() as session:
+        outcome = seed_temple(
+            session, review_status=review_status, reviewer_notes=reviewer_notes
+        )
+    typer.echo(
+        f"Seeded temple measurements to {db_path}: "
+        f"inserted={outcome.inserted} updated={outcome.updated} "
+        f"entity_created={outcome.entity_created} review_status={review_status}"
+    )
+
+
+@measure_app.command("export")
+def measure_export(
+    db_path: Annotated[Path, typer.Option("--db-path")] = DEFAULT_DB_PATH,
+    out_dir: Annotated[Path, typer.Option("--out-dir")] = DEFAULT_EXPORT_DIR,
+    engine_module: Annotated[
+        Path,
+        typer.Option(
+            "--engine-module",
+            help="Path of the generated TS module the world engine consumes.",
+        ),
+    ] = DEFAULT_ENGINE_MODULE,
+) -> None:
+    """Write measurements.json + the generated engine module (approved only)."""
+    from far_country.measure import emit_engine_module, export_measurements
+
+    engine = create_engine_for_path(db_path)
+    init_db(engine)
+    session_factory = create_session_factory(engine)
+    with session_factory() as session:
+        json_path = export_measurements(session, out_dir)
+        ts_path = emit_engine_module(session, engine_module)
+    typer.echo(f"Wrote {json_path}")
+    typer.echo(f"Wrote {ts_path}")
 
 
 # ---------------------------------------------------------------- export

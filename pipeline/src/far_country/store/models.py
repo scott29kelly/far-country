@@ -15,6 +15,27 @@ TEMPORAL_PHASES = ("intermediate", "final", "either", "unspecified")
 REVIEW_STATUSES = ("pending", "approved", "rejected", "needs-discussion")
 SOURCE_TYPES = ("scripture", "willis", "secondary")
 VERIFICATION_STATUSES = ("pass", "partial", "fail")
+DIMENSIONS = (
+    "length",
+    "breadth",
+    "height",
+    "thickness",
+    "depth",
+    "distance",
+    "side",
+    "count",
+)
+MEASUREMENT_UNITS = (
+    "long-cubit",
+    "cubit",
+    "reed",
+    "handbreadth",
+    "span",
+    "stadia",
+    "step",
+    "story",
+    "item",
+)
 
 
 def _in_clause(column: str, values: tuple[str, ...]) -> str:
@@ -104,6 +125,78 @@ class Citation(Base):
     created_at: Mapped[str] = mapped_column(Text, nullable=False)
 
     descriptor: Mapped[Descriptor] = relationship(back_populates="citations")
+
+
+class Measurement(Base):
+    """A cited dimensional fact (ADR 0017).
+
+    Values are text-native (long cubits, reeds, spans, stadia, counts) —
+    never a metric conversion; the units/scale resolver (ADR 0018) converts
+    at consumption. Ids are stable slugs: geometry code references
+    measurements by id.
+    """
+
+    __tablename__ = "measurement"
+    __table_args__ = (
+        CheckConstraint(_in_clause("dimension", DIMENSIONS), name="ck_measurement_dimension"),
+        CheckConstraint(_in_clause("unit", MEASUREMENT_UNITS), name="ck_measurement_unit"),
+        CheckConstraint(_in_clause("tier", TIERS), name="ck_measurement_tier"),
+        CheckConstraint(
+            _in_clause("review_status", REVIEW_STATUSES),
+            name="ck_measurement_review_status",
+        ),
+        Index("idx_measurement_entity", "entity_id"),
+        Index("idx_measurement_status", "review_status"),
+    )
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    entity_id: Mapped[str] = mapped_column(Text, ForeignKey("entity.id"), nullable=False)
+    subject: Mapped[str] = mapped_column(Text, nullable=False)
+    dimension: Mapped[str] = mapped_column(Text, nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    unit: Mapped[str] = mapped_column(Text, nullable=False)
+    basis: Mapped[str | None] = mapped_column(Text)
+    tier: Mapped[str] = mapped_column(Text, nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    review_status: Mapped[str] = mapped_column(Text, nullable=False, default="pending")
+    reviewer_notes: Mapped[str | None] = mapped_column(Text)
+    provenance: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+    citations: Mapped[list[MeasurementCitation]] = relationship(back_populates="measurement")
+
+
+class MeasurementCitation(Base):
+    """Citation for a measurement — same shape as `Citation`, additive mirror."""
+
+    __tablename__ = "measurement_citation"
+    __table_args__ = (
+        CheckConstraint(
+            _in_clause("source_type", SOURCE_TYPES),
+            name="ck_measurement_citation_source_type",
+        ),
+        Index("idx_measurement_citation_measurement", "measurement_id"),
+    )
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    measurement_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("measurement.id"), nullable=False
+    )
+    source_type: Mapped[str] = mapped_column(Text, nullable=False)
+    book: Mapped[str | None] = mapped_column(Text)
+    chapter: Mapped[int | None] = mapped_column(Integer)
+    verse_start: Mapped[int | None] = mapped_column(Integer)
+    verse_end: Mapped[int | None] = mapped_column(Integer)
+    willis_chapter: Mapped[str | None] = mapped_column(Text)
+    willis_page_start: Mapped[int | None] = mapped_column(Integer)
+    willis_page_end: Mapped[int | None] = mapped_column(Integer)
+    secondary_work: Mapped[str | None] = mapped_column(Text)
+    secondary_locator: Mapped[str | None] = mapped_column(Text)
+    quote: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+    measurement: Mapped[Measurement] = relationship(back_populates="citations")
 
 
 class EntityRelation(Base):
