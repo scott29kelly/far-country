@@ -68,3 +68,6 @@ Thumbs.db
 !.vscode/settings.json.example
 *.swp
 *.swo
+
+# local-only reference imagery (AI renders + Willis-derived; licensing posture)
+/public/images/
