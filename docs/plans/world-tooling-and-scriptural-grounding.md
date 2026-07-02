@@ -1,13 +1,25 @@
 # Plan — World-building tooling + Scripture-as-grounding-data
 
-> **Status:** DRAFT / under active discussion. Captured 2026-06-22. Scott plans to
-> resume ~2026-06-23 and respond to the open questions in §4.
+> **Status:** ANSWERED 2026-07-02 — Scott responded to all §4 open questions
+> (answers recorded inline there). The plan is now actionable: Phase A (live
+> panel) → B (config) → C (staging), and the Scripture-as-data track starts
+> with the temple (Ezek 40–42) proof-of-concept. Next artifacts owed: the
+> concept ADR for Scripture-as-grounding-data (§3 step 1), the units/scale
+> ADR building on ADR 0014, and a `debated`-tier RENDERING-DECISIONS entry
+> for the Ezekiel-city/John-city harmonization when rendered.
 > **Nature:** This is a *planning + investigation* doc, not an accepted decision.
 > When the Scripture-as-data approach (§3) is decided, open a real ADR for it
 > (ADRs are append-only decisions; this draft is not one).
 > **Why it exists:** so the 2026-06-22 discussion is not lost. It distills a
 > research pass over an external reference and the design conversation that
 > followed.
+>
+> **Overtaken by events (2026-07-02, M3 city material pass):** Phase B's
+> "latent tier-table bug" is FIXED (`cityModel.CITY_TIERS` is now the shared
+> source of truth for CityMassing + RiverOfLife), and Phase C's "instance the
+> repeats" is partly DONE (arcade arches, piers, dentil courses instanced;
+> trees of life rebuilt as real pipeline trees). Scope Phases B/C against
+> the current source, not §2's snapshot.
 
 ---
 
@@ -210,27 +222,40 @@ scale* (it's small), so no city/cube interpretive baggage. Cleanest first win.
 
 ---
 
-## 4. Open questions for Scott (respond next session)
+## 4. Open questions for Scott — ANSWERED 2026-07-02
 
 **Ideas #1–3**
 - a. Confirm sequencing A → B → C, starting with Phase A (the live panel)?
+  **✔ Confirmed** — A → B → C, Phase A first.
 - b. GUI lib: **Tweakpane** (my pick — small, modern) vs lil-gui / dat.GUI?
+  **✔ Tweakpane.**
 - c. Gating: panel stays dev-only behind `?edit=1`, never in the public build — agreed?
+  **✔ Agreed** — dev-only; the panel never ships in the deployed `/world-preview`.
 - d. "Copy config → JSON" round-trip — paste-back into `config.ts`, or write to a
   file the build reads?
+  **✔ Copy → paste-back into `config.ts`** — config stays typed, in source, reviewable in git.
 
 **Idea #4 (Scripture-as-data)**
 - e. Start the extraction with the **temple (Ezek 40–42)** as the proof-of-concept? (recommended)
+  **✔ Yes — temple first** (doubles as the CITY-QUALITY-BAR delta #8 temple-identity rebuild).
 - f. Cubit/stadia interpretation to fix first: keep the **viewable-scale
   compromise** ([ADR 0014](../adr/0014-citywide-scale-rendering.md)) layered on
   top of literal measurements? Proposed split: **temple = literal-grounded**
   (it's small/viewable); **city = grounded-form + interpreted-scale.** Confirm?
+  **✔ Split confirmed** — record it as an ADR building on ADR 0014.
 - g. Does the **measurement dataset** live in the same canonical store as
   descriptors (new record type), or separate?
+  **✔ Same canonical store, new `measurement` record type** — same citation +
+  review discipline as descriptors; needs a `docs/data-model.md` addition.
 - h. Harmonization stance (Ezekiel city vs John city: same / nested / distinct) —
   your call, or hold as `debated` and render Willis's harmonization?
+  **✔ Hold as `debated`; render Willis's harmonization** — record a
+  RENDERING-DECISIONS entry when rendered; the dataset commits to no position.
 - i. Want me to **open the linked Playda demo/write-up** (`t.co/kIpkbbgulV`) for
   any extra technique detail before we build?
+  **✔ Opened 2026-07-02:** it redirects to `play-monaco.vercel.app` — the live
+  "Monaco in 3D" WebGL demo itself (app shell, no write-up). No technique
+  detail beyond what §0 already distilled. Closed; nothing to fold in.
 
 ---
 
