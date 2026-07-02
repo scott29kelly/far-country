@@ -125,3 +125,23 @@ This phase exists because of the eschatological pivot in [`adr/0012-eschatologic
 This roadmap is reviewed at the end of each phase. Material reshuffling (e.g., promoting the 3D layer before Q&A, or splitting Phase 2) is captured in a new ADR.
 
 **2026-05-29 — eschatological pivot.** [ADR 0012](adr/0012-eschatological-framing-premillennial.md) superseded the amillennial framing of [ADR 0008](adr/0008-eschatological-framing.md) with premillennial (pre-wrath) New Creationism. This **added Phase 4 (Millennial-Kingdom surroundings)**, which the prior framing had ruled out of scope. The earlier phases are unchanged in deliverable; only the extraction/review rubric polarity shifts (per ADR 0012's consequences) and the Phase-3 city gains a millennial *setting* rather than being modified.
+
+---
+
+## Operational backlog (repository/deployment tasks, not product phases)
+
+- **Establish an official `main` branch at origin** *(added 2026-07-02, open)*.
+  There is currently no `main` branch on the remote; `claude/setup-far-country-docs-dbpMh`
+  is the de-facto default branch and Vercel's production branch. Cut over in one
+  sitting, at a quiet moment (not mid work-batch), in this order:
+  1. Create `main` at the current default tip:
+     `git push origin claude/setup-far-country-docs-dbpMh:refs/heads/main`.
+  2. Switch the GitHub default branch to `main`
+     (`gh repo edit --default-branch main`; open PRs retarget automatically).
+  3. Switch the Vercel project's Production Branch to `main`
+     (Settings → Git → Production Branch) in the same sitting, then push to `main`
+     and confirm a production deployment builds from it.
+  4. Update every reference to the de-facto default branch (session handoff notes,
+     AI memory, docs) to say `main`.
+  5. Keep the old branch until a production deploy from `main` has succeeded;
+     retire it afterwards at the owner's discretion.
