@@ -269,8 +269,8 @@ function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
   m.color.set(hex);
   m.metalness = 0;
-  m.roughness = 0.12; // enough micro-spread that facets catch distinct light
-  m.transmission = 0.75; // full transmission washed the facets to pastel
+  m.roughness = 0.08;
+  m.transmission = 0.6; // enough body that per-facet shading survives
   m.ior = 2.0;
   m.thickness = 1.2;
   m.attenuationColor.copy(m.color);
@@ -279,9 +279,10 @@ function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
   m.specularIntensity = 1.0;
   m.side = FrontSide;
   m.emissive.copy(m.color);
-  // saturated hues have low luminance — 0.7 stays far under bloom; the
-  // grade's c.max(0) clamp (PostStack) protects the saturated-dark case
-  m.emissiveIntensity = 0.7;
+  // low enough that facet shading reads (0.7 flattened the cut faces to a
+  // uniform pastel strip); saturated hues stay far under bloom either way,
+  // and the grade's c.max(0) clamp (PostStack) covers the saturated-dark case
+  m.emissiveIntensity = 0.4;
   return m;
 }
 
@@ -375,8 +376,11 @@ function arcadeGlowGeometry(): BufferGeometry {
  * deterministic vertex jitter, then flat facet normals (non-indexed).
  */
 function facetedBandGeometry(len: number, h: number, thick: number, seed: number): BufferGeometry {
-  const segs = Math.max(6, Math.round(len / 7));
-  const geo = new BoxGeometry(len, h, thick, segs, 2, 2);
+  // facet pitch ~2.2 local (≈44 m world): big enough to read from the plaza,
+  // small enough to break the band into distinct cut faces (len/7 gave 140 m
+  // undulations that read as a smooth wavy strip, not a jewelled course)
+  const segs = Math.max(12, Math.round(len / 2.2));
+  const geo = new BoxGeometry(len, h, thick, segs, 3, 3);
   const pos = geo.getAttribute('position');
   let state = (seed * 2654435761) >>> 0;
   const rand = (): number => {
@@ -388,7 +392,7 @@ function facetedBandGeometry(len: number, h: number, thick: number, seed: number
     const y = pos.getY(i);
     // keep the ends and the ground line intact so courses still meet cleanly
     if (Math.abs(x) > len / 2 - 0.6 || y < -h / 2 + 0.3) continue;
-    pos.setXYZ(i, x + rand() * 1.6, y + rand() * 0.9, pos.getZ(i) + rand() * 1.1);
+    pos.setXYZ(i, x + rand() * 1.1, y + rand() * 0.85, pos.getZ(i) + rand() * 1.0);
   }
   const faceted = geo.toNonIndexed();
   geo.dispose();

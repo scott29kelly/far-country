@@ -196,11 +196,24 @@ real trees; summit (500,3950,1500) — rainbow ring + sea of glass verified.
 (`Vertex attribute "normal" not found`) appears in the pre-pass baseline
 shot too — not introduced by this work.
 
-**Remaining polish debts logged**: glass panes read best front-lit (judge
-shaded faces at other ToD); gem facets still soft at establishing range;
-fall ribbons unverified at close range; arcade glow panes could use
-per-course hue drift. Backlog (plateau rim cliffs, allotment zone map,
-dwellings/temple identity, Issachar-gate re-judge) unchanged below.
+**Polish round (2026-07-02, late) — two debts closed, live-verified:**
+- **Gem facets FIXED**: facet pitch was ~140 m (len/7 segments) — read as a
+  smooth wavy strip. Now ~44 m facets (len/2.2, 3×3 cross-sections), tighter
+  jitter, transmission 0.75→0.6, emissive 0.7→0.4 so per-facet shading
+  survives. Verified at the 150 m oblique (shots/wip/m3-polish-gems2.png):
+  distinct cut faces with per-plane light variation.
+- **Issachar (south-centre) gate RE-JUDGED — pass, with a composition note:**
+  the river deliberately owns that slot (RENDERING-DECISIONS #1 cascade →
+  approach). Head-on (shots/wip/m3-polish-issachar.png) the wall cascade
+  pours from a pearl-crowned mouth at the wall top into the plunge pool and
+  channel; the gate opening behind it is not enterable — by design, entry is
+  via the flanking Simeon/Zebulun gates. No geometry bug. Fall streak
+  texture verified at close range in the same shots.
+
+**Remaining polish debts**: glass panes read best front-lit (judge shaded
+faces at other ToD — shoot.ts would need a ?T= passthrough); arcade glow
+panes could use per-course hue drift. Backlog (plateau rim cliffs, allotment
+zone map, dwellings/temple identity) unchanged below.
 
 **(2026-07-01, evening) TERRAIN-INTEGRATED HOLY ALLOTMENT — ADR 0015.**
 User verdict on the scene as it stood: "8-bit… OOMs below the bar." Root
