@@ -33,7 +33,7 @@ import {
 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import {
-  CITY_HALF,
+  CITY_TIERS,
   FOUNDATION_BANDS,
   FOUNDATION_BAND_LENGTH,
   FOUNDATION_GEMS,
@@ -240,8 +240,6 @@ function makeArcadeBand(
   return g;
 }
 
-type Tier = { half: number; h: number; arches: number };
-
 export function buildCityMassing(): Group {
   const city = new Group();
   city.name = 'new-jerusalem';
@@ -257,14 +255,9 @@ export function buildCityMassing(): Group {
   plaza.castShadow = true;
   city.add(plaza);
 
-  // Plinth + three grand terraces (12 arched gates per side) + glowing crown.
-  const tiers: Tier[] = [
-    { half: CITY_HALF, h: 16, arches: 4 }, // jasper wall + street-of-gold plinth / gates
-    { half: 82, h: 42, arches: 4 },
-    { half: 60, h: 38, arches: 4 },
-    { half: 40, h: 34, arches: 4 },
-    { half: 22, h: 26, arches: 0 }, // crown (solid, glowing) under the glory
-  ];
+  // Plinth + three grand terraces + glowing crown — the shared massing table
+  // (cityModel.CITY_TIERS; RiverOfLife's cascade reads the same source).
+  const tiers = CITY_TIERS;
 
   let yBot = 0;
   const last = tiers.length - 1;

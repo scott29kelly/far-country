@@ -18,16 +18,11 @@
 
 import { BoxGeometry, Color, Group, Mesh, SphereGeometry } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
-import { RIVER } from './cityModel';
+import { CITY_TIERS, RIVER } from './cityModel';
 
-// Mirror of CityMassing's tiers (half-width + height), base → crown.
-const TIERS = [
-  { half: 100, h: 16 }, // street-of-gold plinth
-  { half: 82, h: 42 },
-  { half: 60, h: 38 },
-  { half: 40, h: 34 },
-  { half: 22, h: 26 }, // crown (solid) under the glory
-];
+// Shared massing table (cityModel.CITY_TIERS) — the old hand-kept mirror of
+// CityMassing's tiers is gone; both now read the same source of truth.
+const TIERS = CITY_TIERS;
 
 const LEAF = new Color(0x3f8f3a);
 

@@ -89,6 +89,10 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
   await gi.init(engine.renderer);
   sunSky.dimAmbientForGI();
   engine.onUpdate(() => gi.tick(engine.renderer));
+  // stash for content scenes built after this (NJ city materials opt into
+  // probe GI / reuse the canopy map the same way heightfield/sunSky are reached)
+  (engine as unknown as { gi?: ProbeGI }).gi = gi;
+  (engine as unknown as { canopyTex?: typeof canopyTex }).canopyTex = canopyTex;
 
   // Phase 6 caustics: per-frame analytic bake + module context — MUST be
   // set before any material factory runs (terrain tiles, rocks, debris all
@@ -160,6 +164,9 @@ export async function buildTerrainScene(ctx: WorldContext): Promise<void> {
     const lib = await buildVegLibrary(engine.renderer, seed, (p, m) =>
       ctx.progress(0.963 + p * 0.006, m),
     );
+    // stash for content scenes (NJ trees of life reuse the baked bark
+    // textures + card atlases instead of re-capturing). Null when ?ablate=veg.
+    (engine as unknown as { vegLib?: typeof lib }).vegLib = lib;
     const forests = new Forests(
       hf,
       scatter,

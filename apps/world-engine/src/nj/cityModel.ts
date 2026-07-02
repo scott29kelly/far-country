@@ -148,6 +148,36 @@ export const FOUNDATION_BANDS: FoundationBand[] = (() => {
   return bands;
 })();
 
+/**
+ * The live engine massing tiers (consumed by CityMassing.ts geometry and
+ * RiverOfLife.ts cascade reaches) — LOCAL units, ×NJ_SCALE(20) = world metres,
+ * base → crown. Single source of truth: RiverOfLife used to hand-mirror this
+ * table, a known desync risk (STATUS.md). Distinct from the legacy PYRAMID
+ * model above, which belongs to the retired R3F scene's proportions.
+ */
+export type CityTier = { half: number; h: number; arches: number };
+export const CITY_TIERS: readonly CityTier[] = [
+  { half: CITY_HALF, h: 16, arches: 4 }, // jasper wall ring + plinth + gates
+  { half: 82, h: 42, arches: 4 },
+  { half: 60, h: 38, arches: 4 },
+  { half: 40, h: 34, arches: 4 },
+  { half: 22, h: 26, arches: 0 }, // crown (solid, glowing) under the glory
+];
+
+/** Cumulative tier-bottom Ys (local; index i = bottom of CITY_TIERS[i]). */
+export function cityTierBottoms(): number[] {
+  const y: number[] = [];
+  let acc = 0;
+  for (const t of CITY_TIERS) {
+    y.push(acc);
+    acc += t.h;
+  }
+  return y;
+}
+
+/** Local Y of the crown top — the summit the glory sits just above. */
+export const CITY_SUMMIT_Y = CITY_TIERS.reduce((a, t) => a + t.h, 0);
+
 /** River of the Water of Life (Rev 22:1) — a single cascade from the summit. */
 export const RIVER = { width: 5, surfaceY: 0.05 } as const;
 
