@@ -261,6 +261,55 @@ at high aerial; park lawn keeps some dry scruff (tune the blade dryK
 park suppression if judged); orchard rows loosen at oblique angles
 (±0.8 m planting slack — tighten if judged).
 
+**(2026-07-02, late-3) TEMPLE PoC — SCRIPTURE-AS-DATA BEGINS (queued item
+4 BUILT).** The full program from the plan's §4 answers landed in one
+pass:
+- **ADR 0017** (Scripture as grounding data): measurements are a
+  first-class record type in the canonical store — text-native values
+  (cubits/reeds/spans, never meters), stable slug ids that geometry
+  references directly, same citation/tier/review discipline as
+  descriptors. **ADR 0018** (units/scale): LONG_CUBIT_M = 0.525; the
+  temple renders LITERAL ×1 (small/viewable); the city keeps ADR 0014's
+  viewable scale — the scale disparity is deliberate and documented.
+- **Dataset**: 88 measurement records for Ezek 40-42 + the 43:13-17
+  altar, hand-authored against the ESV API text (fetched to scratchpad,
+  never stored — ADR 0006), adversarially verified by a 5-agent panel
+  (79/81 first pass; a mistiered LXX reading and a wrong span basis
+  fixed; completeness sweep added 7 records). Seeded approved into
+  data/canonical.sqlite via the new `far-country measure seed-temple`
+  (+ migration 0003, Measurement/MeasurementCitation models); exports:
+  measurements.json + the GENERATED `src/nj/templeMeasurements.gen.ts`
+  (`far-country measure export` regenerates both — the vendoring flow).
+  Source of truth in git: `pipeline/src/far_country/measure/temple.py`.
+  All 151 pipeline tests pass. Text-critical calls documented in-record:
+  ESV's LXX readings (40:48-49; 41:3; 41:22; 42:4) tiered fuzzy; the
+  42:16-20 cubits-vs-reeds dispute tiered DEBATED, rendered per ESV
+  (500 cubits — which closes the survey's own E-W arithmetic
+  50+100+50+100+100+100 = 500 exactly).
+- **RENDERING-DECISIONS #6** (Ezekiel/John city harmonization: dataset
+  stays debated, render follows Willis) and **#7** (temple render: ESV
+  readings at disputed points; interpretive heights incl. the 1 Kgs 6:2
+  ~30-cubit house walls; red sandstone/crenellations/corner towers as
+  USER-REFS #5 art direction; literal dimensions on compressed
+  placeholder placement).
+- **Temple rebuilt** (`src/nj/Temple.ts` + `templeModel.ts` resolver;
+  delta #8): world-space at (0, -5600) — inside the detailed ring and
+  the campus scatter exclusion, on a plinth, old ×20 gold placeholder
+  removed, dwelling grid clears the temple close. Gates/courts/house/
+  altar/chambers/west building all measurement-driven. LIVE-VERIFIED
+  (shots/wip/temple1-*): the USER-REFS temple-complex-wide composition
+  (red fortified compound, gold city rising behind) reads at
+  (0,520,-6050,3.1416,-0.03,60); east elevation with glowing gate
+  portal at (380,492,-5600,1.5708,0,62); plan correct from overhead.
+  tsc clean; nj/-only changes (no shared engine files → wild scenes
+  structurally unaffected by construction).
+- **Debts**: sandstone is flat-shaded v1 (needs macro/meso variation to
+  meet "nothing is bare" within 20 m — polish with dwelling pass);
+  Ezek 47 river from under the threshold deferred to roadmap M4
+  (noted in entry #7); the 240 m dwelling megaboxes now VISIBLY dwarf
+  the literal-scale temple — queued item 5 (dwelling variation +
+  right-scaling) is the direct fix and next in line.
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
@@ -302,9 +351,14 @@ park suppression if judged); orchard rows loosen at oblique angles
 3. ~~Allotment zone map~~ **BUILT 2026-07-02** (dated entry above:
    `ZoneField.ts` + `allotmentZones.ts` planted through scatter, the
    grass ring and the splat; wild scene regression-verified).
-4. Temple PoC — Scripture-as-data concept ADR + Ezek 40–42 measurement
-   extraction + units/scale ADR; doubles as the delta #8 temple rebuild.
-5. Dwelling variation (delta #6).
+4. ~~Temple PoC — Scripture-as-data~~ **BUILT 2026-07-02** (dated entry
+   above: ADRs 0017/0018, the 88-record verified measurement dataset +
+   pipeline surface, RENDERING-DECISIONS #6/#7, and the literal-cubit
+   Temple.ts rebuild at (0, -5600)).
+5. Dwelling variation (delta #6) — now urgent: the placeholder 680×440
+   ×240 m dwelling slabs visibly dwarf the literal-scale temple beside
+   them (see the item-4 entry's debts; right-scale the campus while
+   adding roofs/doors/variation).
 6. **Arrival experience (added 2026-07-02, Scott):** MAJOR overhaul of the
    boot/loading screen (`src/core/BootUI.ts`, "The Preparation" rite) — the
    current line-art ziggurat + gem diamonds screen is "really bad, clunky,
