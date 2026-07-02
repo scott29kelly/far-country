@@ -78,7 +78,13 @@ Dependency: **#2 (a config object) is the spine**; #1 (panel) binds to it; #3
 (staging/instancing) optimizes it. But a live panel can ship *before* the full
 refactor because many params are already live-mutable. Phased:
 
-### Phase A — Live tuning panel, quick win (`?edit=1`)
+### Phase A — Live tuning panel, quick win (`?edit=1`) — BUILT 2026-07-02
+
+> Shipped as `apps/world-engine/src/debug/EditPanel.ts` per the §4 answers
+> (Tweakpane, dev-only via a literal `import.meta.env.DEV` guard that
+> `vite build` eliminates — verified; clipboard JSON round-trip). Bindings
+> below landed as specced, plus exposure lock, pose readout/jump buttons,
+> and a glory-intensity handle via a small `njLive` registry in CityMassing.
 A small **Tweakpane** panel, gated behind a URL flag so it never ships to the
 public world. Bind to handles we *already* mutate live (no refactor needed):
 

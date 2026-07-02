@@ -78,6 +78,13 @@ const PEARL = new Color(0xf3ecdf);
 const IVORY = new Color(0xf1e9d7);
 const JASPER = new Color(0xbfd6d2); // pale crystal-jasper (stylised, ADR 0009 r2)
 
+/**
+ * Live-tunable handles for the dev-only ?edit=1 panel (plan doc §1 Phase A).
+ * Populated when the city builds; the full data-driven NewJerusalemConfig
+ * (Phase B) supersedes this ad-hoc registry.
+ */
+export const njLive: { glory?: MeshStandardNodeMaterial } = {};
+
 type Face = { axis: 'x' | 'z'; sign: 1 | -1 };
 const FACES: Face[] = [
   { axis: 'z', sign: 1 },
@@ -817,6 +824,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
   // citywide distance (Rev 21:23; 22:5). Abstract light only (ADR 0010).
   gloryMat.emissiveIntensity = 12;
   gloryMat.roughness = 1;
+  njLive.glory = gloryMat;
   const glory = new Mesh(new SphereGeometry(11, 32, 24), gloryMat);
   glory.position.y = yBot + 10;
   city.add(glory);

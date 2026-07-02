@@ -106,6 +106,15 @@ async function boot(): Promise<void> {
   hooks.ready = true;
   // eslint-disable-next-line no-console
   console.log('[laas] ready');
+
+  // dev-only live tuning panel (?edit=1 — plan doc §1 Phase A). The literal
+  // import.meta.env.DEV guard lets `vite build` dead-code-eliminate the
+  // dynamic import, so neither the panel nor tweakpane ever reaches the
+  // public bundle (verified by grepping dist for 'tweakpane').
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('edit') === '1') {
+    const { initEditPanel } = await import('./debug/EditPanel');
+    initEditPanel(engine, params, hooks);
+  }
 }
 
 boot().catch((e: unknown) => {

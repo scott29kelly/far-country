@@ -644,6 +644,11 @@ export class PostStack {
   // dominates the signal (probe-cloudlag pitch runs)
   private lockExposure = new URLSearchParams(window.location.search).get('lockexp') === '1';
 
+  /** live exposure-adaptation freeze (the dev ?edit=1 panel; ?lockexp=1 sets it at boot) */
+  setExposureLocked(on: boolean): void {
+    this.lockExposure = on;
+  }
+
   setTimeOfDay(tod: number): void {
     this.grade.apply(gradeParamsAt(tod));
     this.uniformsRefresh();

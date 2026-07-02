@@ -211,9 +211,41 @@ shot too — not introduced by this work.
   texture verified at close range in the same shots.
 
 **Remaining polish debts**: glass panes read best front-lit (judge shaded
-faces at other ToD — shoot.ts would need a ?T= passthrough); arcade glow
-panes could use per-course hue drift. Backlog (plateau rim cliffs, allotment
-zone map, dwellings/temple identity) unchanged below.
+faces at other ToD — shoot.ts ALREADY forwards `--T N` and any unconsumed
+flag as raw page params, e.g. `--edit 1`; the earlier "needs a passthrough"
+note was stale); arcade glow panes could use per-course hue drift. Backlog
+(plateau rim cliffs, allotment zone map, dwellings/temple identity)
+unchanged below.
+
+**Queued program (agreed with Scott 2026-07-02, in order):**
+1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
+   Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
+   the dynamic import sits inside a literal `import.meta.env.DEV` branch and
+   `vite build` eliminates it (verified: dist greps clean for tweakpane).
+   Binds live handles with no refactor: time of day (through
+   hooks.setTimeOfDay's full re-bake chain, 250 ms trailing debounce),
+   aerialFogK/aerialClarity uniforms, summit glory intensity (njLive
+   registry in CityMassing), exposure lock (new PostStack.setExposureLocked),
+   live pose readout + the four judging framings as jump buttons, copy-pose
+   (?cam= string) and copy-values (JSON) clipboard round-trips. Panel
+   keydown is isolated from the fly-camera hotkeys. LIVE-VERIFIED
+   (shots/wip/phase-a-panel.png via `shoot.ts --edit 1`): all folders
+   render and read the true live values (fog 0.120/clarity 0.350 = the NJ
+   overrides; ToD 17.0). Superseded eventually by Phase B's
+   NewJerusalemConfig.
+2. Plateau rim → stratified cliff-and-waterfall band (USER-REFS directive #2).
+3. Allotment zone map (managed planting through the scatter/grass kernels).
+4. Temple PoC — Scripture-as-data concept ADR + Ezek 40–42 measurement
+   extraction + units/scale ADR; doubles as the delta #8 temple rebuild.
+5. Dwelling variation (delta #6).
+6. **Arrival experience (added 2026-07-02, Scott):** MAJOR overhaul of the
+   boot/loading screen (`src/core/BootUI.ts`, "The Preparation" rite) — the
+   current line-art ziggurat + gem diamonds screen is "really bad, clunky,
+   outdated" vs the world's new bar; open to a complete rethink of how to
+   hold the user through the 60–90 s world-gen. Deliberately LAST so it
+   reflects the finished art direction, and paired with the audio first
+   deliverable (spawn-meadow ambient bed + south-approach score cue,
+   roadmap Operational backlog) as one coherent arrival package.
 
 **(2026-07-01, evening) TERRAIN-INTEGRATED HOLY ALLOTMENT — ADR 0015.**
 User verdict on the scene as it stood: "8-bit… OOMs below the bar." Root
