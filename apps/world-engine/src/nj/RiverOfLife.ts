@@ -16,51 +16,13 @@
  * tier geometry here MUST track CityMassing's tiers (half-widths and heights).
  */
 
-import { BoxGeometry, Color, Group, Mesh, SphereGeometry } from 'three';
+import { BoxGeometry, Group, Mesh } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import { CITY_TIERS, RIVER } from './cityModel';
 
 // Shared massing table (cityModel.CITY_TIERS) — the old hand-kept mirror of
 // CityMassing's tiers is gone; both now read the same source of truth.
 const TIERS = CITY_TIERS;
-
-const LEAF = new Color(0x3f8f3a);
-
-/** A tree of life: trunk + layered canopy + a few glowing fruit. */
-function makeTreeOfLife(
-  trunkMat: MeshStandardNodeMaterial,
-  leafMat: MeshStandardNodeMaterial,
-  fruitMat: MeshStandardNodeMaterial,
-  seed: number,
-): Group {
-  const t = new Group();
-  const th = 3.0 + (seed % 3) * 0.4; // trunk height (local; ~60-80 m at city scale)
-  const trunk = new Mesh(new BoxGeometry(0.6, th, 0.6), trunkMat);
-  trunk.position.y = th / 2;
-  trunk.castShadow = true;
-  t.add(trunk);
-  // canopy: two offset spheres for a fuller, less geometric crown
-  const r = 1.8 + (seed % 2) * 0.3;
-  const c1 = new Mesh(new SphereGeometry(r, 16, 12), leafMat);
-  c1.position.y = th + r * 0.6;
-  c1.castShadow = true;
-  t.add(c1);
-  const c2 = new Mesh(new SphereGeometry(r * 0.7, 14, 10), leafMat);
-  c2.position.set(r * 0.4, th + r * 0.2, r * 0.2);
-  t.add(c2);
-  // twelve kinds of fruit (Rev 22:2) — a scatter of warm glowing points
-  for (let k = 0; k < 5; k++) {
-    const a = (k / 5) * Math.PI * 2 + seed;
-    const fr = new Mesh(new SphereGeometry(0.18, 8, 6), fruitMat);
-    fr.position.set(
-      Math.cos(a) * r * 0.8,
-      th + r * 0.6 + Math.sin(a * 1.7) * r * 0.4,
-      Math.sin(a) * r * 0.8,
-    );
-    t.add(fr);
-  }
-  return t;
-}
 
 export function buildRiverOfLife(): Group {
   const g = new Group();
@@ -136,31 +98,10 @@ export function buildRiverOfLife(): Group {
   channel.position.set(0, 0.4, (chStart + chEnd) / 2);
   g.add(channel);
 
-  // Trees of life on either side of the river (Rev 22:2).
-  const trunkMat = new MeshStandardNodeMaterial();
-  trunkMat.color.setHex(0x5a4326);
-  trunkMat.roughness = 0.9;
-  const leafMat = new MeshStandardNodeMaterial();
-  leafMat.color.copy(LEAF);
-  leafMat.emissive.copy(LEAF);
-  leafMat.emissiveIntensity = 0.12; // leaves "for the healing of the nations"
-  leafMat.roughness = 0.85;
-  const fruitMat = new MeshStandardNodeMaterial();
-  fruitMat.color.setHex(0xffcf6b);
-  fruitMat.emissive.setHex(0xffcf6b);
-  fruitMat.emissiveIntensity = 1.0;
-  fruitMat.roughness = 0.5;
-
-  const bankX = chanW(base.half) / 2 + 9;
-  const nTrees = 6;
-  for (let k = 0; k < nTrees; k++) {
-    const z = chStart + 12 + ((chEnd - chStart - 18) * k) / (nTrees - 1);
-    for (const sx of [-1, 1]) {
-      const tree = makeTreeOfLife(trunkMat, leafMat, fruitMat, k * 2 + (sx > 0 ? 1 : 0));
-      tree.position.set(sx * bankX, 0, z);
-      g.add(tree);
-    }
-  }
+  // Trees of life (Rev 22:2) are no longer built here: they are REAL trees
+  // from the engine's tree pipeline now, placed in world space by
+  // TreesOfLife.ts (this group is inside the ×20 allotment scale, which
+  // would blow a buildTree tree up to 300-500 m).
 
   return g;
 }

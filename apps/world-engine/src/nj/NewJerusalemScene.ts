@@ -26,6 +26,7 @@ import type { WorldContext } from '../debug/Scenes';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { Heightfield } from '../world/Heightfield';
 import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './Allotment';
+import { buildTreesOfLife } from './TreesOfLife';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
@@ -119,6 +120,12 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   allot.scale.setScalar(NJ_SCALE);
   allot.position.set(0, plazaTopY, 0);
   engine.scene.add(allot);
+
+  // Trees of life flanking the river's approach reach (Rev 22:2) — real
+  // trees from the engine's own pipeline, placed in WORLD space (the ×20
+  // allotment scale would distort them). Null when veg is ablated.
+  const treesOfLife = await buildTreesOfLife(ctx);
+  if (treesOfLife) engine.scene.add(treesOfLife);
 
   // Walk physics: the heightfield IS the plateau now — the terrain scene's
   // own groundProbe handles everything (no special-case override).
