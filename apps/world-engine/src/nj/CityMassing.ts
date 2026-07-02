@@ -1,37 +1,66 @@
 /**
- * New Jerusalem massing — M3, the arched golden mountain-city (toward Willis).
+ * New Jerusalem massing — M3 material/geometry pass (CITY-QUALITY-BAR #1/#3).
  *
- * Built to read like Janet Willis's book-cover renderings: a jasper wall with
- * twelve pearl gates (Ezekiel 48:30-34 tribe order) and a jewelled foundation
- * course at its base, three grand terraces each faced with FOUR tall arched
- * window-gates (twelve per side), and a glowing crown under the open-air
- * glory. Every arched bay is a recessed luminous window framed by gold piers
- * with an arched head, so the city reads as detailed translucent gold
- * "glowing from within its arches" rather than smooth or striped blocks.
- * Lower tiers are warm gold; upper tiers grade toward pale crystal; the glow
- * intensifies toward the throne.
+ * The city reads as Rev 21:18 states it: "the wall was built of jasper, while
+ * the city was pure gold, like clear glass." Tier faces are TRANSLUCENT GOLD
+ * GLASS (MeshPhysicalNodeMaterial transmission) lit from within — giant arch
+ * bays carrying a mullion grid of small arched panes (emissiveNode mask) over
+ * an opaque glowing interior core that the refraction parallaxes — framed by
+ * real kit-bash relief: fluted gold piers, voussoir arch rings, IVORY cornice
+ * bands with gold dentil courses, and gold-on-ivory arcade courses at every
+ * setback (the USER-REFS directive #1 composition: gold lattice faces
+ * alternating with white arcade bands). All relief is instanced geometry
+ * (plain InstancedMesh — the engine's sanctioned static-content path), not
+ * paint: ≥0.3 m real depth at world scale everywhere within near range.
  *
- * The base tier is split into an inner solid plinth (structural support for
- * the terraces above) and an outer wall RING with real gaps at the twelve
- * named gates (RENDERING-DECISIONS #2 governs the tribe/side assignment) —
- * a camera can fly/walk through a gate gap, not just past a decorative panel.
+ * The base tier stays the jasper WALL with real gaps at the twelve named
+ * gates (Ezekiel 48:30-34 order, RENDERING-DECISIONS #2), now in a pale
+ * crystal-jasper material; the twelve foundation courses are FACETED gem
+ * volumes (Rev 21:19-20, transmission + dispersion, stylised hues per ADR
+ * 0009 rule 2); the pearl gate heads get a nacre iridescence pass.
  *
- * Abstract glory-light only at the summit (Rev 21:23; 22:5; ADR 0010 — no
- * figure). Materials are placeholder PBR approximations (no true gem
- * transmission yet — CITY-QUALITY-BAR.md delta #3). Still to come: the
- * vaulted interior.
+ * Abstract glory-light only at the summit (Rev 21:23; 22:5; ADR 0010).
+ * Emissive contract: base-tier emissives stay under the PostStack bloom
+ * threshold (luminance 1.5); only the crown and the glory cross it.
  */
 
 import {
   BoxGeometry,
+  BufferGeometry,
   CircleGeometry,
   Color,
   DoubleSide,
+  FrontSide,
   Group,
+  InstancedMesh,
+  Matrix4,
   Mesh,
+  PlaneGeometry,
+  Quaternion,
   SphereGeometry,
+  TorusGeometry,
+  Vector3,
 } from 'three';
-import { MeshStandardNodeMaterial } from 'three/webgpu';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {
+  IrradianceNode,
+  MeshPhysicalNodeMaterial,
+  MeshStandardNodeMaterial,
+} from 'three/webgpu';
+import {
+  float,
+  fract,
+  instanceIndex,
+  mix,
+  normalWorld,
+  positionLocal,
+  positionWorld,
+  smoothstep,
+  vec3,
+} from 'three/tsl';
+import type { ProbeGI } from '../gpu/passes/ProbeGI';
+import type { NF, NU, NV3 } from '../gpu/TSLTypes';
+import { slotHash } from '../render/VegInstance';
 import {
   CITY_TIERS,
   FOUNDATION_BANDS,
@@ -46,6 +75,8 @@ import {
 const GOLD = new Color(0xd9a441);
 const CRYSTAL = new Color(0xdfeaf0);
 const PEARL = new Color(0xf3ecdf);
+const IVORY = new Color(0xf1e9d7);
+const JASPER = new Color(0xbfd6d2); // pale crystal-jasper (stylised, ADR 0009 r2)
 
 type Face = { axis: 'x' | 'z'; sign: 1 | -1 };
 const FACES: Face[] = [
@@ -62,6 +93,334 @@ const SIDE_FACE: Record<Side, Face> = {
   east: { axis: 'x', sign: 1 },
   west: { axis: 'x', sign: -1 },
 };
+
+/** Yaw so +Z-facing geometry looks outward from the given face. */
+function faceYaw(face: Face): number {
+  if (face.axis === 'z') return face.sign > 0 ? 0 : Math.PI;
+  return face.sign > 0 ? -Math.PI / 2 : Math.PI / 2;
+}
+
+// ---------------------------------------------------------------------------
+// Probe-GI opt-in (fragment stage — tier faces are far larger than the 16 m
+// probe grid, so the veg-style vertex hoist would smear; see Forests.patchGI)
+// ---------------------------------------------------------------------------
+
+function patchCityGI(mat: MeshStandardNodeMaterial, gi: ProbeGI | null): void {
+  if (!gi) return;
+  const irr = gi.irradiance(positionWorld as unknown as NV3, normalWorld as unknown as NV3);
+  (mat as unknown as { setupLightMap: () => unknown }).setupLightMap = () =>
+    new IrradianceNode(irr as unknown as ConstructorParameters<typeof IrradianceNode>[0]);
+}
+
+// ---------------------------------------------------------------------------
+// Materials
+// ---------------------------------------------------------------------------
+
+/** Opaque gold trim for INSTANCED relief (per-instance value jitter). */
+function trimGoldInstanced(gi: ProbeGI | null): MeshStandardNodeMaterial {
+  const m = new MeshStandardNodeMaterial();
+  m.metalness = 0.85;
+  m.roughness = 0.3;
+  const jit = slotHash(instanceIndex as unknown as NU, 11).mul(0.14).add(0.93) as unknown as NF;
+  m.colorNode = vec3(GOLD.r, GOLD.g, GOLD.b).mul(jit) as unknown as NV3;
+  // faint self-light so shaded courses stay legible gold, far under bloom
+  m.emissiveNode = vec3(GOLD.r, GOLD.g, GOLD.b).mul(jit).mul(0.18) as unknown as NV3;
+  patchCityGI(m, gi);
+  return m;
+}
+
+/** Opaque gold trim for plain (non-instanced) meshes — no instanceIndex nodes. */
+function trimGoldPlain(gi: ProbeGI | null): MeshStandardNodeMaterial {
+  const m = new MeshStandardNodeMaterial();
+  m.color.copy(GOLD);
+  m.metalness = 0.85;
+  m.roughness = 0.3;
+  m.emissive.copy(GOLD);
+  m.emissiveIntensity = 0.18;
+  patchCityGI(m, gi);
+  return m;
+}
+
+/** Ivory/white course material — the pale bands alternating with the gold. */
+function ivoryMaterial(gi: ProbeGI | null): MeshStandardNodeMaterial {
+  const m = new MeshStandardNodeMaterial();
+  m.color.copy(IVORY);
+  m.metalness = 0.05;
+  m.roughness = 0.5;
+  m.emissive.copy(IVORY);
+  m.emissiveIntensity = 0.12;
+  patchCityGI(m, gi);
+  return m;
+}
+
+/**
+ * The opaque interior core behind each tier's glass skin: a warm glowing
+ * "inhabited interior" — floor bands and column shading under a vertical
+ * gradient — that the glass transmission refracts into real parallax depth.
+ */
+function interiorMaterial(f: number, tierH: number, gi: ProbeGI | null): MeshStandardNodeMaterial {
+  const m = new MeshStandardNodeMaterial();
+  const col = GOLD.clone().lerp(CRYSTAL, f * 0.6).multiplyScalar(0.55);
+  m.color.copy(col);
+  m.metalness = 0.2;
+  m.roughness = 0.6;
+  const ly = positionLocal.y.div(tierH).add(0.5).clamp(0, 1) as unknown as NF; // 0 floor..1 ceiling
+  const grad = mix(float(1.0), float(0.45), ly) as unknown as NF;
+  const fy = fract(positionLocal.y.div(2.6)) as unknown as NF;
+  const floors = smoothstep(0.5, 0.35, fy).mul(0.5).add(0.5) as unknown as NF;
+  const fx = fract(positionLocal.x.div(3.4)) as unknown as NF;
+  const fz = fract(positionLocal.z.div(3.4)) as unknown as NF;
+  const colsX = smoothstep(0.0, 0.12, fx).mul(smoothstep(1.0, 0.88, fx) as unknown as NF) as unknown as NF;
+  const colsZ = smoothstep(0.0, 0.12, fz).mul(smoothstep(1.0, 0.88, fz) as unknown as NF) as unknown as NF;
+  const cols = colsX.mul(colsZ).mul(0.35).add(0.65) as unknown as NF;
+  // warm interior light; K stays under the 1.5 bloom line at every tier
+  const K = 0.85 + 0.55 * f;
+  m.emissiveNode = vec3(1.0, 0.85, 0.556)
+    .mul(grad.mul(floors).mul(cols))
+    .mul(K) as unknown as NV3;
+  patchCityGI(m, gi);
+  return m;
+}
+
+/**
+ * Translucent gold glass for the giant arch-bay panes ("pure gold, like clear
+ * glass", Rev 21:18): WebGPU transmission for real see-into depth, plus an
+ * emissive mullion grid of small ARCHED panes with an interior-glow gradient.
+ * Pane-local coordinates (origin bottom-centre of each bay pane).
+ */
+function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
+  const m = new MeshPhysicalNodeMaterial();
+  m.color.copy(GOLD.clone().lerp(CRYSTAL, f));
+  m.metalness = 0;
+  m.roughness = 0.07;
+  m.transmission = 0.85;
+  m.ior = 1.45;
+  m.thickness = 0.9; // local units — ×20 world scale ⇒ ~18 m of gold glass depth
+  m.attenuationColor.copy(GOLD);
+  m.attenuationDistance = 1.4;
+  m.specularIntensity = 1.0;
+  m.side = FrontSide; // avoids the DoubleSide double-pass + second framebuffer copy
+
+  // mullion grid: cells ~21×29 m world, each cell an arched pane (bright
+  // glass inside a gold rib + arched head — the "whole facades of small
+  // arched panes" directive), under a vertical interior-glow gradient.
+  const cx = fract(positionLocal.x.div(1.05)) as unknown as NF;
+  const cy = fract(positionLocal.y.div(1.45)) as unknown as NF;
+  const dx = cx.sub(0.5).abs() as unknown as NF;
+  const ay = cy.sub(0.58).max(0).mul(1.5) as unknown as NF;
+  const rr = dx.mul(dx).add(ay.mul(ay)).sqrt() as unknown as NF;
+  const pane = smoothstep(0.46, 0.4, rr).mul(
+    smoothstep(0.02, 0.08, cy) as unknown as NF,
+  ) as unknown as NF;
+  const grad = mix(float(1.0), float(0.5), positionLocal.y.div(paneH).clamp(0, 1)) as unknown as NF;
+  const jit = slotHash(instanceIndex as unknown as NU, 7).mul(0.25).add(0.85) as unknown as NF;
+  // bloom contract: K·grad·Y(warm) ≤ ~0.7 at the base tier, rising with f;
+  // only the crown/glory cross the 1.5 threshold
+  const K = 0.9 + 1.1 * f;
+  m.emissiveNode = vec3(1.0, 0.74, 0.42)
+    .mul(pane.mul(0.8).add(0.2))
+    .mul(grad)
+    .mul(jit)
+    .mul(K) as unknown as NV3;
+  return m;
+}
+
+/** Crystal-jasper wall material (Rev 21:18 "wall built of jasper... clear as glass"). */
+function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
+  const m = new MeshPhysicalNodeMaterial();
+  m.color.copy(JASPER);
+  m.metalness = 0.05;
+  m.roughness = 0.18;
+  m.clearcoat = 1.0;
+  m.clearcoatRoughness = 0.15;
+  m.emissive.copy(JASPER);
+  m.emissiveIntensity = 0.35;
+  patchCityGI(m, gi);
+  return m;
+}
+
+/** Nacre pearl for the gate heads (Rev 21:21 — each gate a single pearl). */
+function pearlMaterial(): MeshPhysicalNodeMaterial {
+  const m = new MeshPhysicalNodeMaterial();
+  m.color.copy(PEARL);
+  m.metalness = 0;
+  m.roughness = 0.32;
+  m.clearcoat = 1.0;
+  m.clearcoatRoughness = 0.12;
+  m.iridescence = 1.0;
+  m.iridescenceIOR = 1.8;
+  m.iridescenceThicknessRange = [180, 480];
+  m.sheen = 0.5;
+  m.sheenColor.set(0xfff2e0);
+  m.emissive.copy(PEARL);
+  m.emissiveIntensity = 0.5;
+  m.side = DoubleSide;
+  return m;
+}
+
+/** Faceted gem material for one foundation stone (transmission + dispersion). */
+function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
+  const m = new MeshPhysicalNodeMaterial();
+  m.color.set(hex);
+  m.metalness = 0;
+  m.roughness = 0.06;
+  m.transmission = 1.0;
+  m.ior = 2.0;
+  m.thickness = 1.2;
+  m.attenuationColor.copy(m.color);
+  m.attenuationDistance = 0.9;
+  m.dispersion = 0.25;
+  m.specularIntensity = 1.0;
+  m.side = FrontSide;
+  m.emissive.copy(m.color);
+  // saturated hues have low luminance — 0.45 stays far under bloom; the
+  // grade's c.max(0) clamp (PostStack) protects the saturated-dark case
+  m.emissiveIntensity = 0.45;
+  return m;
+}
+
+// ---------------------------------------------------------------------------
+// Kit-bash module geometries (all facing +Z, origin at the mount point)
+// ---------------------------------------------------------------------------
+
+/** Glass bay pane: rect + semicircular head, origin bottom-centre. */
+function glassPaneGeometry(ow: number, winH: number): BufferGeometry {
+  const rect = new PlaneGeometry(ow, winH);
+  rect.translate(0, winH / 2, 0);
+  const head = new CircleGeometry(ow / 2, 24, 0, Math.PI);
+  head.translate(0, winH, 0);
+  const merged = mergeGeometries([rect, head]);
+  rect.dispose();
+  head.dispose();
+  return merged;
+}
+
+/** Arch bay frame: two jambs + capitals + a voussoir half-ring, origin bottom-centre. */
+function archFrameGeometry(ow: number, winH: number, jambW: number, depth: number): BufferGeometry {
+  const parts: BufferGeometry[] = [];
+  for (const s of [-1, 1]) {
+    const jamb = new BoxGeometry(jambW, winH, depth);
+    jamb.translate(s * (ow / 2 + jambW / 2), winH / 2, 0);
+    parts.push(jamb);
+    const cap = new BoxGeometry(jambW * 1.5, 1.1, depth * 1.2);
+    cap.translate(s * (ow / 2 + jambW / 2), winH + 0.55, 0);
+    parts.push(cap);
+  }
+  const ring = new TorusGeometry(ow / 2 + jambW / 2, jambW / 2, 10, 28, Math.PI);
+  ring.translate(0, winH, 0);
+  parts.push(ring);
+  const merged = mergeGeometries(parts);
+  for (const p of parts) p.dispose();
+  return merged;
+}
+
+/** Fluted pier: core + three proud ridges + plinth + capital, origin bottom-centre. */
+function flutedPierGeometry(w: number, h: number, d: number): BufferGeometry {
+  const parts: BufferGeometry[] = [];
+  const core = new BoxGeometry(w, h, d);
+  core.translate(0, h / 2, 0);
+  parts.push(core);
+  for (const k of [-0.3, 0, 0.3]) {
+    const ridge = new BoxGeometry(w * 0.16, h * 0.92, d * 0.3);
+    ridge.translate(k * w, h / 2, d / 2);
+    parts.push(ridge);
+  }
+  const plinth = new BoxGeometry(w * 1.25, 1.6, d * 1.25);
+  plinth.translate(0, 0.8, 0);
+  parts.push(plinth);
+  const cap = new BoxGeometry(w * 1.3, 1.4, d * 1.3);
+  cap.translate(0, h - 0.7, 0);
+  parts.push(cap);
+  const merged = mergeGeometries(parts);
+  for (const p of parts) p.dispose();
+  return merged;
+}
+
+/** Arcade module: two mini piers + arch ring (the gold arches on ivory bands). */
+function arcadeArchGeometry(): BufferGeometry {
+  const parts: BufferGeometry[] = [];
+  for (const s of [-1, 1]) {
+    const pier = new BoxGeometry(0.5, 3.4, 0.8);
+    pier.translate(s * 1.05, 1.7, 0);
+    parts.push(pier);
+  }
+  const ring = new TorusGeometry(1.05, 0.26, 8, 20, Math.PI);
+  ring.translate(0, 3.4, 0);
+  parts.push(ring);
+  const merged = mergeGeometries(parts);
+  for (const p of parts) p.dispose();
+  return merged;
+}
+
+/** Warm glow pane recessed inside each arcade arch. */
+function arcadeGlowGeometry(): BufferGeometry {
+  const rect = new PlaneGeometry(1.7, 3.4);
+  rect.translate(0, 1.7, 0);
+  const head = new CircleGeometry(0.85, 14, 0, Math.PI);
+  head.translate(0, 3.4, 0);
+  const merged = mergeGeometries([rect, head]);
+  rect.dispose();
+  head.dispose();
+  return merged;
+}
+
+/**
+ * Faceted foundation gem course: a coarsely-cut crystalline prism —
+ * deterministic vertex jitter, then flat facet normals (non-indexed).
+ */
+function facetedBandGeometry(len: number, h: number, thick: number, seed: number): BufferGeometry {
+  const segs = Math.max(6, Math.round(len / 7));
+  const geo = new BoxGeometry(len, h, thick, segs, 2, 2);
+  const pos = geo.getAttribute('position');
+  let state = (seed * 2654435761) >>> 0;
+  const rand = (): number => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0xffffffff - 0.5;
+  };
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    // keep the ends and the ground line intact so courses still meet cleanly
+    if (Math.abs(x) > len / 2 - 0.6 || y < -h / 2 + 0.3) continue;
+    pos.setXYZ(i, x + rand() * 1.6, y + rand() * 0.9, pos.getZ(i) + rand() * 1.1);
+  }
+  const faceted = geo.toNonIndexed();
+  geo.dispose();
+  faceted.computeVertexNormals();
+  return faceted;
+}
+
+// ---------------------------------------------------------------------------
+// Instanced placement
+// ---------------------------------------------------------------------------
+
+type Placement = { u: number; y: number; off: number; face: Face; sy?: number };
+
+function instancedOnFaces(
+  geo: BufferGeometry,
+  mat: MeshStandardNodeMaterial,
+  places: Placement[],
+  opts?: { castShadow?: boolean },
+): InstancedMesh {
+  const mesh = new InstancedMesh(geo, mat, places.length);
+  const m = new Matrix4();
+  const q = new Quaternion();
+  const p = new Vector3();
+  const s = new Vector3();
+  const Y = new Vector3(0, 1, 0);
+  places.forEach((pl, i) => {
+    if (pl.face.axis === 'z') p.set(pl.u, pl.y, pl.face.sign * pl.off);
+    else p.set(pl.face.sign * pl.off, pl.y, pl.u);
+    q.setFromAxisAngle(Y, faceYaw(pl.face));
+    s.set(1, pl.sy ?? 1, 1);
+    m.compose(p, q, s);
+    mesh.setMatrixAt(i, m);
+  });
+  mesh.computeBoundingSphere();
+  mesh.castShadow = opts?.castShadow ?? true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
 
 /** Tangent-axis (x for z-faces, z for x-faces) segment ranges with gate gaps cut out. */
 function wallSegments(outer: number): Array<[number, number]> {
@@ -83,9 +442,15 @@ function wallSegments(outer: number): Array<[number, number]> {
  * `h`, split into segments so the three gate gaps on this side are genuinely
  * open (no infill mesh across them).
  */
-function buildWallSide(face: Face, inner: number, outer: number, h: number, mat: MeshStandardNodeMaterial): Mesh[] {
+function buildWallSide(
+  face: Face,
+  inner: number,
+  outer: number,
+  h: number,
+  mat: MeshStandardNodeMaterial,
+): Mesh[] {
   const meshes: Mesh[] = [];
-  const radialMid = face.sign * (inner + outer) / 2;
+  const radialMid = (face.sign * (inner + outer)) / 2;
   const radialThick = outer - inner;
   for (const [t0, t1] of wallSegments(outer)) {
     const len = t1 - t0;
@@ -104,23 +469,22 @@ function buildWallSide(face: Face, inner: number, outer: number, h: number, mat:
   return meshes;
 }
 
-/** A pearl gate portal: two jambs framing the gap + an arched pearl lintel over it (walkable). */
-function buildGatePortal(face: Face, offset: number, inner: number, outer: number, h: number): Group {
+/**
+ * A pearl gate portal: gold jambs framing the gap, a nacre voussoir ring on
+ * the outer wall plane, and the pearl arch head over the walkable opening.
+ */
+function buildGatePortal(
+  face: Face,
+  offset: number,
+  inner: number,
+  outer: number,
+  h: number,
+  jambMat: MeshStandardNodeMaterial,
+  pearlMat: MeshPhysicalNodeMaterial,
+): Group {
   const g = new Group();
-  const jambMat = new MeshStandardNodeMaterial();
-  jambMat.color.copy(GOLD);
-  jambMat.metalness = 0.6;
-  jambMat.roughness = 0.28;
-  const pearlMat = new MeshStandardNodeMaterial();
-  pearlMat.color.copy(PEARL);
-  pearlMat.emissive.copy(PEARL);
-  pearlMat.emissiveIntensity = 0.6;
-  pearlMat.roughness = 0.22;
-  pearlMat.metalness = 0.15;
-  pearlMat.side = DoubleSide;
-
   const radialThick = outer - inner;
-  const radialMid = face.sign * (inner + outer) / 2;
+  const radialMid = (face.sign * (inner + outer)) / 2;
   const jambW = 1.4;
   const archH = GATE_WIDTH * 0.42; // clearance under the arch stays walkable
 
@@ -133,6 +497,22 @@ function buildGatePortal(face: Face, offset: number, inner: number, outer: numbe
     jamb.receiveShadow = true;
     g.add(jamb);
   }
+
+  // Nacre voussoir ring around the opening on the outer wall plane — real
+  // relief a visitor stands under, not a painted arch.
+  const ring = new Mesh(
+    new TorusGeometry(GATE_WIDTH / 2 + 0.8, 0.85, 12, 28, Math.PI),
+    pearlMat,
+  );
+  const ringOff = face.sign * (outer + 0.3);
+  if (face.axis === 'z') {
+    ring.position.set(offset, h - archH, ringOff);
+  } else {
+    ring.position.set(ringOff, h - archH, offset);
+    ring.rotation.y = Math.PI / 2;
+  }
+  ring.castShadow = true;
+  g.add(ring);
 
   // Pearl arch head — a luminous half-disc capping the gap's top, thin along
   // the radial axis so it reads from both inside and outside the wall.
@@ -151,36 +531,26 @@ function buildGatePortal(face: Face, offset: number, inner: number, outer: numbe
   return g;
 }
 
-/** Twelve jewelled foundation stones (Rev 21:19-20) as a course at the wall's base. */
+/** Twelve jewelled foundation courses (Rev 21:19-20) as faceted gem volumes. */
 function buildFoundationCourse(outer: number): Group {
   const g = new Group();
-  const bandH = 3;
-  const bandThick = 3;
-  for (const band of FOUNDATION_BANDS) {
+  const bandH = 4.5;
+  const bandThick = 4;
+  FOUNDATION_BANDS.forEach((band, bi) => {
     const face = SIDE_FACE[band.side];
-    const gemMat = new MeshStandardNodeMaterial();
     // FOUNDATION_GEMS colours are ESV-order stylised hues (ADR 0009 rule 2 —
-    // not photoreal mineralogy); ordered access here mirrors cityModel's own
+    // not photoreal mineralogy); ordered access mirrors cityModel's own
     // FOUNDATION_BANDS↔FOUNDATION_GEMS[band.gem] pairing.
-    gemMat.color.set(FOUNDATION_GEMS[band.gem].color);
-    gemMat.emissive.copy(gemMat.color);
-    gemMat.emissiveIntensity = 0.35;
-    gemMat.roughness = 0.35;
-    gemMat.metalness = 0.1;
-    // Sits just OUTSIDE the wall's outer face, on the plaza, so it reads as a
-    // distinct girdling course rather than being buried inside the wall mass.
-    const radialMid = face.sign * (outer + bandThick / 2);
-    const geo =
-      face.axis === 'z'
-        ? new BoxGeometry(FOUNDATION_BAND_LENGTH - 1, bandH, bandThick)
-        : new BoxGeometry(bandThick, bandH, FOUNDATION_BAND_LENGTH - 1);
-    const stone = new Mesh(geo, gemMat);
-    if (face.axis === 'z') stone.position.set(band.offset, bandH / 2, radialMid);
-    else stone.position.set(radialMid, bandH / 2, band.offset);
-    stone.castShadow = true;
+    const mat = gemMaterial(FOUNDATION_GEMS[band.gem].color);
+    const geo = facetedBandGeometry(FOUNDATION_BAND_LENGTH - 2, bandH, bandThick, bi + 3);
+    const stone = new Mesh(geo, mat);
+    const radialMid = face.sign * (outer + bandThick / 2 - 0.6);
+    if (face.axis === 'z') stone.position.set(band.offset, bandH / 2 - 0.3, radialMid);
+    else stone.position.set(radialMid, bandH / 2 - 0.3, band.offset);
+    stone.rotation.y = face.axis === 'x' ? Math.PI / 2 : 0;
     stone.receiveShadow = true;
     g.add(stone);
-  }
+  });
   return g;
 }
 
@@ -207,190 +577,222 @@ export function makeArchWindow(width: number, height: number, m: MeshStandardNod
   return g;
 }
 
-/**
- * A blind-arcade frieze — a fascia carrying a row of small recessed arches,
- * facing +Z. This is the dense "little arches" banding that runs along every
- * step-back in Willis's renderings (a Lombard band). Cheap by design: shares
- * two materials and casts no shadows.
- */
-function makeArcadeBand(
-  width: number,
-  height: number,
-  count: number,
-  body: MeshStandardNodeMaterial,
-  recess: MeshStandardNodeMaterial,
-): Group {
-  const g = new Group();
-  const fascia = new Mesh(new BoxGeometry(width, height, 1.4), body);
-  fascia.position.y = height / 2;
-  g.add(fascia);
-  const bay = width / count;
-  const aw = bay * 0.66;
-  const stem = height * 0.42;
-  const base = height * 0.14;
-  for (let i = 0; i < count; i++) {
-    const u = -width / 2 + bay * (i + 0.5);
-    const jamb = new Mesh(new BoxGeometry(aw, stem, 0.5), recess);
-    jamb.position.set(u, base + stem / 2, 0.7);
-    g.add(jamb);
-    const head = new Mesh(new CircleGeometry(aw / 2, 10, 0, Math.PI), recess);
-    head.position.set(u, base + stem, 0.72);
-    g.add(head);
-  }
-  return g;
-}
+// ---------------------------------------------------------------------------
+// The city
+// ---------------------------------------------------------------------------
 
-export function buildCityMassing(): Group {
+export function buildCityMassing(gi: ProbeGI | null = null): Group {
   const city = new Group();
   city.name = 'new-jerusalem';
+
+  const trimInst = trimGoldInstanced(gi);
+  const trimPlain = trimGoldPlain(gi);
+  const ivory = ivoryMaterial(gi);
+  const pearl = pearlMaterial();
 
   // Street-of-gold apron around the base.
   const apron = new MeshStandardNodeMaterial();
   apron.color.copy(GOLD);
   apron.metalness = 0.5;
   apron.roughness = 0.3;
+  patchCityGI(apron, gi);
   const plaza = new Mesh(new BoxGeometry(232, 5, 232), apron);
   plaza.position.y = -2.5;
   plaza.receiveShadow = true;
   plaza.castShadow = true;
   city.add(plaza);
 
-  // Plinth + three grand terraces + glowing crown — the shared massing table
-  // (cityModel.CITY_TIERS; RiverOfLife's cascade reads the same source).
+  // Shared massing table (cityModel.CITY_TIERS — RiverOfLife reads the same).
   const tiers = CITY_TIERS;
+  const last = tiers.length - 1;
+
+  // Warm glow panes inside the arcade courses (shared, instanced).
+  const arcGlowMat = new MeshStandardNodeMaterial();
+  arcGlowMat.color.copy(GOLD);
+  arcGlowMat.emissiveNode = vec3(1.0, 0.78, 0.47)
+    .mul(slotHash(instanceIndex as unknown as NU, 23).mul(0.3).add(0.8))
+    .mul(0.95) as unknown as NV3;
+  arcGlowMat.roughness = 0.5;
+
+  const arcadeArcGeo = arcadeArchGeometry();
+  const arcadeGlowGeo = arcadeGlowGeometry();
+  const dentilGeo = new BoxGeometry(0.72, 0.85, 0.7);
+  const arcadePlaces: Placement[] = [];
+  const arcadeGlowPlaces: Placement[] = [];
+  const dentilPlaces: Placement[] = [];
 
   let yBot = 0;
-  const last = tiers.length - 1;
   for (let ti = 0; ti < tiers.length; ti++) {
     const t = tiers[ti];
     const f = ti / last; // 0 at base .. 1 at crown
-    const tierColor = GOLD.clone().lerp(CRYSTAL, f);
     const H = t.h;
     const yc = yBot + H / 2;
-
-    // Solid tier mass (the silhouette).
-    const mass = new MeshStandardNodeMaterial();
-    mass.color.copy(tierColor);
-    mass.metalness = 0.55 * (1 - f);
-    mass.roughness = 0.3 - 0.16 * f;
-    mass.emissive.copy(tierColor);
-    // Self-luminous city (Rev 21:23 — the glory of God is its light, so the
-    // city is the brightest thing, glowing THROUGH the km-scale aerial haze
-    // rather than washing into it). The base was ~0.05 (purely sunlit → it
-    // dissolved into the haze at citywide distance); now every tier glows in
-    // its own tier colour (warm gold low → cool crystal high), brightest at
-    // the summit. Tuned to the post stack: the base floor stays below the 1.5
-    // bloom threshold (PostStack bloom) so close-up it glows without blooming
-    // to flat white (the failure mode that toned the windows down); only the
-    // crown crosses the threshold for a gentle apex bloom. Auto-exposure does
-    // the rest — a brighter centre-frame city pulls global exposure down, so
-    // the hazy landscape recedes and the city reads as the source of light.
-    mass.emissiveIntensity = 0.55 + 1.15 * f * f;
+    const yTop = yBot + H;
 
     if (ti === 0) {
-      // Base tier = jasper WALL (RENDERING-DECISIONS #2 governs the gate
-      // order/assignment), split into a solid inner plinth (structural
-      // support for the terraces above) and an outer wall ring with real
-      // gaps at the twelve named gates — a camera can pass through a gate,
-      // not just past a decorative panel.
+      // Base tier = jasper WALL (Rev 21:18; RENDERING-DECISIONS #2 governs
+      // the gate order), split into a solid inner plinth and an outer wall
+      // ring with real gaps at the twelve named gates.
+      const jasper = jasperMaterial(gi);
       const innerHalf = tiers[1].half + 6; // clears tier 1's footprint
-      const plinth = new Mesh(new BoxGeometry(2 * innerHalf, H, 2 * innerHalf), mass);
+      const plinthMat = new MeshStandardNodeMaterial();
+      plinthMat.color.copy(GOLD);
+      plinthMat.metalness = 0.55;
+      plinthMat.roughness = 0.3;
+      plinthMat.emissive.copy(GOLD);
+      plinthMat.emissiveIntensity = 0.55;
+      patchCityGI(plinthMat, gi);
+      const plinth = new Mesh(new BoxGeometry(2 * innerHalf, H, 2 * innerHalf), plinthMat);
       plinth.position.y = yc;
       plinth.castShadow = true;
       plinth.receiveShadow = true;
       city.add(plinth);
 
       for (const face of FACES) {
-        for (const seg of buildWallSide(face, innerHalf, t.half, H, mass)) city.add(seg);
+        for (const seg of buildWallSide(face, innerHalf, t.half, H, jasper)) city.add(seg);
       }
       for (const gate of GATES) {
-        const portal = buildGatePortal(SIDE_FACE[gate.side], gate.offset, innerHalf, t.half, H);
-        city.add(portal);
+        city.add(
+          buildGatePortal(SIDE_FACE[gate.side], gate.offset, innerHalf, t.half, H, trimPlain, pearl),
+        );
       }
       city.add(buildFoundationCourse(t.half));
+
+      // Wall pilasters between the gates (the pier rhythm skips every slot
+      // within a gate width of a gate offset — the portals own those slots).
+      const pilGeo = flutedPierGeometry(4, H, 2.6);
+      const pilPlaces: Placement[] = [];
+      for (const face of FACES) {
+        for (let k = -4; k <= 4; k++) {
+          const u = k * 25;
+          if (GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_WIDTH)) continue;
+          pilPlaces.push({ u, y: 0, off: t.half + 0.6, face });
+        }
+      }
+      city.add(instancedOnFaces(pilGeo, trimInst, pilPlaces));
+    } else if (ti === last) {
+      // Crown — solid, glowing, under the glory (deliberate gentle bloom).
+      const crownMat = new MeshStandardNodeMaterial();
+      const col = GOLD.clone().lerp(CRYSTAL, 1);
+      crownMat.color.copy(col);
+      crownMat.metalness = 0;
+      crownMat.roughness = 0.14;
+      crownMat.emissive.copy(col);
+      crownMat.emissiveIntensity = 1.7;
+      const crown = new Mesh(new BoxGeometry(2 * t.half, H, 2 * t.half), crownMat);
+      crown.position.y = yc;
+      crown.castShadow = true;
+      crown.receiveShadow = true;
+      city.add(crown);
     } else {
-      const box = new Mesh(new BoxGeometry(2 * t.half, H, 2 * t.half), mass);
-      box.position.y = yc;
-      box.castShadow = true;
-      box.receiveShadow = true;
-      city.add(box);
-    }
+      // Terrace tier: opaque glowing interior core + translucent gold glass
+      // skin in giant arch bays + instanced gold relief frames and piers.
+      const coreHalf = t.half - 2;
+      const core = new Mesh(
+        new BoxGeometry(2 * coreHalf, H, 2 * coreHalf),
+        interiorMaterial(f, H, gi),
+      );
+      core.position.y = yc;
+      core.castShadow = true;
+      core.receiveShadow = true;
+      city.add(core);
 
-    // Gold cornice lip at the tier top.
-    const trim = new MeshStandardNodeMaterial();
-    trim.color.copy(GOLD.clone().lerp(CRYSTAL, f));
-    trim.metalness = 0.7;
-    trim.roughness = 0.22;
-    const cornice = new Mesh(new BoxGeometry(2 * t.half + 6, 3, 2 * t.half + 6), trim);
-    cornice.position.y = yBot + H - 1.5;
-    cornice.castShadow = true;
-    city.add(cornice);
-
-    if (t.arches > 0) {
-      const winMat = new MeshStandardNodeMaterial();
-      winMat.color.copy(GOLD.clone().lerp(new Color(0xffffff), f));
-      winMat.emissive.setHex(0xffdf9e);
-      // The lit openings stay the brightest part of each face. Nudged up from
-      // 0.7+1.0f now that the tier mass self-glows too (so the windows read as
-      // openings, not the only light); still kept under the 1.5 bloom
-      // threshold at the base to avoid the old flat-white blowout.
-      winMat.emissiveIntensity = 0.9 + 1.3 * f;
-      winMat.roughness = 0.5;
-      winMat.side = DoubleSide;
-
-      // Frieze materials: a gold fascia and a darker recessed arch (blind).
-      const friezeBody = new MeshStandardNodeMaterial();
-      friezeBody.color.copy(GOLD.clone().lerp(CRYSTAL, f));
-      friezeBody.metalness = 0.6;
-      friezeBody.roughness = 0.32;
-      const friezeRecess = new MeshStandardNodeMaterial();
-      friezeRecess.color.copy(GOLD.clone().lerp(CRYSTAL, f).multiplyScalar(0.5));
-      friezeRecess.roughness = 0.6;
-
-      const off = t.half + 0.2;
       const W = 2 * t.half;
       const bay = W / t.arches;
-      const ow = bay * 0.58;
-      const winH = H * 0.56;
-      const winBot = yBot + H * 0.16;
-      const pierW = bay * 0.34;
+      const ow = bay * 0.62;
+      const coursesBelow = ti === 1 ? 2 : 1;
+      const winBot = yBot + coursesBelow * 4.6 + 1.4;
+      const winH = Math.max(8, yTop - 5.5 - winBot - ow / 2);
+      const paneH = winH + ow / 2;
 
-      const friezeH = Math.min(7, H * 0.16);
-      const friezeBot = yBot + H - friezeH - 2.5; // just under the cornice lip
-      const smallCount = Math.max(6, Math.round(W / 11)); // dense little arches
-
+      const glassGeo = glassPaneGeometry(ow, winH);
+      const frameGeo = archFrameGeometry(ow, winH, bay * 0.07, 2.4);
+      const glassMat = goldGlassMaterial(f, paneH);
+      const glassPlaces: Placement[] = [];
+      const framePlaces: Placement[] = [];
       for (const face of FACES) {
-        // Arched windows.
         for (let i = 0; i < t.arches; i++) {
           const u = -W / 2 + bay * (i + 0.5);
-          const win = makeArchWindow(ow, winH, winMat);
-          placeOnFace(win, u, winBot, off, face);
-          city.add(win);
+          glassPlaces.push({ u, y: winBot, off: t.half + 0.5, face });
+          framePlaces.push({ u, y: winBot, off: t.half + 0.7, face });
         }
-        // Gold piers between/around the bays.
+      }
+      const glassMesh = instancedOnFaces(glassGeo, glassMat, glassPlaces, { castShadow: false });
+      glassMesh.receiveShadow = false;
+      city.add(glassMesh);
+      city.add(instancedOnFaces(frameGeo, trimInst, framePlaces));
+
+      // Full-height fluted piers at the bay lines.
+      const pierGeo = flutedPierGeometry(bay * 0.2, H - 2.2, 3);
+      const pierPlaces: Placement[] = [];
+      for (const face of FACES) {
         for (let i = 0; i <= t.arches; i++) {
           const u = -W / 2 + bay * i;
-          // The base tier's pier rhythm (u = 0, ±50, ±100) lands exactly on
-          // the three gate offsets per side — a solid pier there stands
-          // immediately outside the wall's real gate gap and reads as a
-          // blocked door head-on (found 2026-07-01 once the grade NaN fix
-          // unmasked the forecourt). The pearl portals own those slots.
-          if (ti === 0 && GATE_OFFSETS.some((g) => Math.abs(g - u) < GATE_WIDTH)) continue;
-          const pier = new Mesh(new BoxGeometry(pierW, H, 2.6), trim);
-          placeOnFace(pier, u, yc, off, face);
-          pier.castShadow = true;
-          pier.receiveShadow = true;
-          city.add(pier);
+          pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
         }
-        // Blind-arcade frieze along the tier top (the Willis "little arches").
-        const band = makeArcadeBand(W, friezeH, smallCount, friezeBody, friezeRecess);
-        placeOnFace(band, 0, friezeBot, off + 0.1, face);
-        city.add(band);
+      }
+      city.add(instancedOnFaces(pierGeo, trimInst, pierPlaces));
+
+      // Gold frieze fascia between the glass heads and the cornice.
+      for (const face of FACES) {
+        const fascia = new Mesh(new BoxGeometry(W, 3.6, 1.2), trimPlain);
+        placeOnFace(fascia, 0, yTop - 4.2, t.half + 0.2, face);
+        fascia.castShadow = true;
+        city.add(fascia);
+      }
+    }
+
+    // IVORY cornice slab at the tier top (the pale band at every setback —
+    // also the terrace pavement of the ledge above).
+    const cornice = new Mesh(new BoxGeometry(2 * t.half + 5, 2.4, 2 * t.half + 5), ivory);
+    cornice.position.y = yTop - 1.2;
+    cornice.castShadow = true;
+    cornice.receiveShadow = true;
+    city.add(cornice);
+
+    // Gold dentil course under the cornice lip.
+    for (const face of FACES) {
+      const n = Math.floor((2 * t.half) / 1.55);
+      for (let i = 0; i < n; i++) {
+        const u = -t.half + 1.55 * (i + 0.5);
+        if (ti === 0 && GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_WIDTH / 2 + 1.6)) continue;
+        dentilPlaces.push({ u, y: yTop - 3.1, off: t.half + 2.1, face });
+      }
+    }
+
+    // Arcade course(s) ringing the next tier's base on this ledge: ivory
+    // fascia bands carrying rows of gold arches with warm glow panes.
+    if (ti < last) {
+      const ringHalf = tiers[ti + 1].half;
+      const courses = ti === 0 ? 2 : 1;
+      for (let c = 0; c < courses; c++) {
+        const yb = yTop + c * 4.6;
+        for (const face of FACES) {
+          const fascia = new Mesh(new BoxGeometry(2 * ringHalf + 4, 4.6, 1.4), ivory);
+          placeOnFace(fascia, 0, yb + 2.3, ringHalf + 0.9, face);
+          fascia.castShadow = true;
+          fascia.receiveShadow = true;
+          city.add(fascia);
+          const n = Math.floor((2 * ringHalf - 3) / 2.9);
+          for (let i = 0; i < n; i++) {
+            const u = -ringHalf + 1.5 + 2.9 * (i + 0.5);
+            arcadePlaces.push({ u, y: yb + 0.5, off: ringHalf + 1.8, face });
+            arcadeGlowPlaces.push({ u, y: yb + 0.6, off: ringHalf + 1.35, face });
+          }
+        }
       }
     }
 
     yBot += H;
   }
+
+  city.add(instancedOnFaces(arcadeArcGeo, trimInst, arcadePlaces));
+  const glows = instancedOnFaces(arcadeGlowGeo, arcGlowMat, arcadeGlowPlaces, {
+    castShadow: false,
+  });
+  glows.receiveShadow = false;
+  city.add(glows);
+  city.add(instancedOnFaces(dentilGeo, trimInst, dentilPlaces));
 
   // Throne glory: a radiant, self-luminous source at the open-air summit, which
   // the engine's bloom turns into a beacon. Abstract light only (ADR 0010).

@@ -23,6 +23,7 @@
 
 import { buildTerrainScene } from '../debug/TerrainScene';
 import type { WorldContext } from '../debug/Scenes';
+import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { Heightfield } from '../world/Heightfield';
 import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH, buildHolyAllotment } from './Allotment';
 
@@ -103,6 +104,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // city trivial; outlying content (dwellings, temple) snaps per-object to
   // the rolling ground via the sampler.
   const hf = (engine as unknown as { heightfield?: Heightfield }).heightfield ?? null;
+  const gi = (engine as unknown as { gi?: ProbeGI }).gi ?? null;
   const coreY = hf ? hf.heightAtCpu(0, 0) : PLATEAU_Y;
   // the gold plaza rides 2.8 m proud of the meadow: covers the flat core's
   // residual roll (±2 m) + terrain micro-displacement, and reads as a raised
@@ -112,6 +114,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     hf
       ? (lx, lz) => (hf.heightAtCpu(lx * NJ_SCALE, lz * NJ_SCALE) - plazaTopY) / NJ_SCALE
       : undefined,
+    gi,
   );
   allot.scale.setScalar(NJ_SCALE);
   allot.position.set(0, plazaTopY, 0);

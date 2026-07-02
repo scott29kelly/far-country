@@ -26,6 +26,7 @@
 import { BoxGeometry, Color, DoubleSide, Group, Mesh } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
+import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import { buildCityMassing, makeArchWindow } from './CityMassing';
 import { buildRiverOfLife } from './RiverOfLife';
 
@@ -154,7 +155,10 @@ function buildTemple(): Group {
  * `groundAt(lx, lz)` returns the LOCAL-frame ground height at a local (x, z)
  * (the scene wires it to the heightfield); outlying objects snap to it.
  */
-export function buildHolyAllotment(groundAt?: (lx: number, lz: number) => number): Group {
+export function buildHolyAllotment(
+  groundAt?: (lx: number, lz: number) => number,
+  gi: ProbeGI | null = null,
+): Group {
   const allot = new Group();
   allot.name = 'holy-allotment';
   const ground = (lx: number, lz: number): number => groundAt?.(lx, lz) ?? 0;
@@ -192,7 +196,7 @@ export function buildHolyAllotment(groundAt?: (lx: number, lz: number) => number
   allot.add(temple);
 
   // The New Jerusalem at the south-centre, on the flat core (plaza at y = 0).
-  allot.add(buildCityMassing());
+  allot.add(buildCityMassing(gi));
 
   // The river of life cascading the south terraces to the plain, trees of life
   // on its banks (Rev 22:1-2). Shares the city's local frame.

@@ -158,9 +158,9 @@ export const FOUNDATION_BANDS: FoundationBand[] = (() => {
 export type CityTier = { half: number; h: number; arches: number };
 export const CITY_TIERS: readonly CityTier[] = [
   { half: CITY_HALF, h: 16, arches: 4 }, // jasper wall ring + plinth + gates
-  { half: 82, h: 42, arches: 4 },
+  { half: 82, h: 42, arches: 5 },
   { half: 60, h: 38, arches: 4 },
-  { half: 40, h: 34, arches: 4 },
+  { half: 40, h: 34, arches: 3 },
   { half: 22, h: 26, arches: 0 }, // crown (solid, glowing) under the glory
 ];
 
