@@ -128,7 +128,25 @@ This roadmap is reviewed at the end of each phase. Material reshuffling (e.g., p
 
 ---
 
-## Operational backlog (repository/deployment tasks, not product phases)
+## Operational backlog (repository/deployment and cross-cutting tasks, not product phases)
+
+- **Audio layer (score, ambience, voices, SFX) via ElevenLabs** *(added
+  2026-07-02, open)*. An `ELEVENLABS_API_KEY` lives in the local `.env`
+  (untracked and gitignored; verified 2026-07-02 never committed on any ref —
+  no rotation needed). Ground rules, settled 2026-07-02:
+  1. **The key must never reach the browser** — no `VITE_` prefix, no
+     client-side ElevenLabs calls. Audio is generated OFFLINE (or server-side
+     in `apps/web`) and the output vendored into the app, exactly like the
+     `/laas` engine bundle.
+  2. **Voiced ESV Scripture requires a Crossway audio-licensing check before
+     shipping** — the [ADR 0006](adr/0006-source-licensing-posture.md)
+     personal-study posture governs audio just as it does text.
+  3. **Score/ambience is illustrative context, not cited content** (the
+     `RENDERING-DECISIONS.md` entry #5 posture) — record a short decision
+     entry when it is built.
+  Suggested first deliverable (no licensing questions involved): an
+  offline-generated ambient bed for the spawn meadow + one score cue for the
+  south approach.
 
 - **Establish an official `main` branch at origin** *(added 2026-07-02, open)*.
   There is currently no `main` branch on the remote; `claude/setup-far-country-docs-dbpMh`
