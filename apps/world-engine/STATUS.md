@@ -370,6 +370,47 @@ direction):
   until they are seeded and consumed per ADR 0017 (queued follow-up;
   entry #8 records the deferral).
 
+**(2026-07-02, late-5) BUG REPORT — walk over the plateau edge flings the
+walker skyward (Scott, deferred: "whenever it makes sense to safely
+address").** Symptom: walking past the plateau edge (beyond the world
+limit?) casts the user violently upward "and all around," eventually
+vacillating up and down HIGH above the city (screenshot: aerial from
+roughly cloud height over the whole allotment; note it shows the
+pre-rebuild megabox bundle, so it predates the late-4 deploy — the
+mechanism is untouched by that work and presumed live). Code-grounded
+candidates, ranked (walk mode has NO spring to explode — the eye is
+hard-snapped to `max(ground + 1.7, water + 0.45)` per frame at
+FlyCamera.ts:339-362, so a violent upward cast means the PROBE returned
+a hugely higher floor):
+1. The river-surface groundProbe wrap (NewJerusalemScene.ts, installed
+   right after the allotment mounts) raises water to authored reach
+   surfaces: `riverSurfaceLocalY(x/20, z/20) * 20 + plazaTopY`. Upper
+   tier-cascade reaches sit at local y ≈ 150 → world ≈ 3.5 km — the
+   reported "high above the city" altitude. If any reach rect's
+   containment misfires for far-outside-the-allotment coordinates (the
+   kind you only reach by walking over the edge), the wade floor
+   teleports the walker there instantly; drifting in/out of the rect
+   while airborne = the up/down vacillation. AUDIT
+   `RiverOfLife.riverSurfaceLocalY` reach bounds first.
+2. Beyond the CPU mirror (|x| or |z| > 6144) outside the campus rect,
+   `heightAtCpu`/`waterYAtCpu` clamp to frozen edge-row texels — a wet
+   or high edge texel pins a whole column's floor (the campus wrap fixed
+   this for the Levites' band only; E/W plateau top and the wild fringe
+   still ride frozen values while the rendered far shell diverges).
+3. E/W/N plateau rims exist only in the far shell (ADR 0016), so the
+   walkable probe never descends them — walking east/west off the
+   plateau floats the walker at plateau height over the shell's 260 m
+   cliff drop (float, not fling — but disorienting and adjacent).
+Repro/probe plan for the fix session: drive the walker programmatically
+over each rim compass direction (probe-mousesteer.ts is the trusted-input
+template; or setPose + WASD key events), logging per frame the walker
+position and BOTH probe components (base terrain vs each wrap's
+contribution) to isolate which wrap injects the spike; then clamp reach
+containment (and consider bounding every groundProbe wrap to its authored
+footprint rect). Must be fixed before the arrival experience ships —
+first-session walk feel is the whole point of that package. Fix belongs
+to whichever next session touches walk physics, the probes, or the rim.
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
