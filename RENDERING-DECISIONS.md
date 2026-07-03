@@ -345,3 +345,75 @@ Both reasons point the same direction, so the engine's default terrain is used a
 - [ADR 0017](docs/adr/0017-scripture-as-grounding-data.md), [ADR 0018](docs/adr/0018-units-and-scale-resolution.md), [ADR 0012](docs/adr/0012-eschatological-framing-premillennial.md)
 - `apps/world-engine/reference-city/USER-REFS.md` directive #5 (temple identity)
 - Code: `apps/world-engine/src/nj/Temple.ts` (world-space literal-cubit build), `apps/world-engine/src/nj/templeModel.ts` (resolver), `apps/world-engine/src/nj/templeMeasurements.gen.ts` (generated dataset module)
+
+---
+
+## Entry #8 — The dwelling campus: cited zone, illustrative content
+
+- **Date:** 2026-07-02
+- **Tier:** mixed — the *zone* is grounded (`clear`); everything built *in* it
+  is interpretive art direction this entry records (ADR 0009 rule 4). This is
+  a third posture class alongside entry #5 (wholly non-cited landscape) and
+  entry #7 (measured structure with an interpretive remainder): a zone
+  Scripture names and even measures at district scale, filled with content
+  Scripture does not describe.
+- **Question:** How is the dwelling zone of the holy district realized as
+  geometry when the text grounds its existence and band structure but gives
+  no house dimensions, counts, or village layouts?
+- **Decision:** render TWO named bands of world-space, human-scale
+  garden-court blocks (`apps/world-engine/src/nj/Dwellings.ts`), replacing
+  the ×20-frame placeholder slab grid.
+
+### What is grounded vs. a rendering choice
+
+- **Grounded (zone level only):** the holy district contains a portion for
+  the ministering priests, the sons of Zadok, which is "a place for their
+  houses" beside the sanctuary (Ezek 45:4; 48:10–12); the Levites have their
+  own adjacent, equally-sized portion (Ezek 45:5; 48:13–14); the sanctuary
+  stands within the priests' portion, "in the midst" of it (Ezek 48:8, 10) —
+  rendered by placing the temple among the priests' band rows, flanked north
+  and south. The city strip lies to the south (Ezek 45:6; 48:15–19 — the
+  siting entry #6 already governs).
+- **Rendering choice (not a textual claim):** every dimension and count —
+  108 m court blocks on a 150 m pitch (priests' band), 190 m podium-ring
+  blocks on a 300 m pitch (Levites' band), house plans (5.5–13 m footprints,
+  1–2 stories), attached row-house perimeters with stepped rooflines, hedges,
+  court wells, gate posts, gable/hip clay roofs, limewash/sandstone/whitewash
+  palettes, warm window glow, the temple close and east processional widths,
+  the meridian lane on the city→temple axis, and the northward thinning of
+  the Levites' band. House counts are a legibility stand-in for an inhabited
+  district, not a census (the entry #3 multitude precedent). Art direction
+  sources: the approved reference set (gemini-render-1 garden-court blocks;
+  USER-REFS directives #3 hedgerows / #6 inhabited ordinary-scaled villages)
+  — the same illustrative posture as entry #7 point 4. Houses render at
+  literal human scale inside the compressed district geography (the ADR 0018
+  two-regime honesty; placement remains ADR 0009 rule 6 placeholder).
+- **Knowingly not honoured yet:** the district's own measured proportions
+  (Ezek 45:1–6; 48:8–22 — the 25,000 × 10,000-cubit strips). ADR 0017's
+  scope table lists these, but the canonical store carries no allotment-strip
+  measurement records yet, and hand-typing their ratios into the builder is
+  the exact failure mode ADR 0017 decision 3 forbids. The band split rendered
+  here is therefore explicitly UNCITED art direction echoing the two-band
+  structure, until the allotment measurements are seeded (queued follow-up)
+  and consumed through a generated module per ADR 0017 — at which point the
+  campus proportions become resolver-driven and this entry gets a successor.
+- **Guardrails:** no POI/HUD card may anchor a Scripture citation to a
+  specific house, hedge, or well — the zone-level descriptor cites Ezek
+  45:4–5; individual buildings assert nothing. Wayfinding signposts and
+  invented place-names (USER-REFS #6 shows "ZADOKSBURG / LEVITESVILLE") are
+  EXCLUDED from this milestone; invented proper names are a materially larger
+  posture risk needing their own decision when M3.4 wayfinding lands.
+
+### Governing sources
+
+- Ezek 45:1–6; 48:8–22 (zone structure; ESV via API at authoring time, text
+  not stored — ADR 0006)
+- [ADR 0009](docs/adr/0009-symbolic-vs-literal-rendering.md) rules 4/6,
+  [ADR 0017](docs/adr/0017-scripture-as-grounding-data.md) decisions 3–4,
+  [ADR 0018](docs/adr/0018-units-and-scale-resolution.md)
+- `apps/world-engine/reference-city/USER-REFS.md` directives #3/#6;
+  gemini-render-1 (local reference set)
+- Code: `apps/world-engine/src/nj/Dwellings.ts` (both bands, kit, podium
+  footings), `apps/world-engine/src/nj/NewJerusalemScene.ts` (mount + far
+  groundProbe wrap), `apps/world-engine/src/nj/Allotment.ts` (megabox grid
+  removed)

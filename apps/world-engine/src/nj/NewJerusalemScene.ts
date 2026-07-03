@@ -28,6 +28,7 @@ import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
+import { buildDwellings } from './Dwellings';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { riverSurfaceLocalY } from './RiverOfLife';
@@ -88,8 +89,10 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     // processional approach: open meadow sightline from the spawn to the
     // south gate (grass still grows here — only trees/rocks stay out)
     [-450, 450, 2380, 3300],
-    // dwelling grid + temple campus (north plain)
-    [-6300, 6300, -10400, -5000],
+    // dwelling campus + temple close (north plain) — sized to the campus
+    // content envelope + margin so wild meadow runs right up to the first
+    // hedgerows (grass still grows here — only trees/rocks stay out)
+    [-6150, 6150, -10400, -4950],
   ];
 
   // The new earth: the engine's complete, detailed procedural landscape.
@@ -115,12 +118,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // residual roll (±2 m) + terrain micro-displacement, and reads as a raised
   // street-of-gold platform
   const plazaTopY = coreY + 2.8;
-  const allot = buildHolyAllotment(
-    hf
-      ? (lx, lz) => (hf.heightAtCpu(lx * NJ_SCALE, lz * NJ_SCALE) - plazaTopY) / NJ_SCALE
-      : undefined,
-    { gi, hf, atm: sunSky?.atmosphere ?? null },
-  );
+  const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null });
   allot.scale.setScalar(NJ_SCALE);
   allot.position.set(0, plazaTopY, 0);
   engine.scene.add(allot);
@@ -148,6 +146,27 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // literal-cubit compound built from the cited measurement dataset
   // (ADR 0017/0018; RENDERING-DECISIONS #7) on the priests' campus band.
   engine.scene.add(buildTemple({ hf, gi }));
+
+  // The dwelling campus (Ezek 45:4-5; 48:10-14): human-scale garden-court
+  // blocks in world space — the priests' band flanking the temple inside the
+  // detailed ring, the Levites' podium band marching north across the far
+  // shell (RENDERING-DECISIONS #8; USER-REFS #6; delta #6).
+  const dwellings = await buildDwellings({ hf, gi, renderer: engine.renderer });
+  engine.scene.add(dwellings.group);
+
+  // Beyond the heightfield mirror the terrain groundProbe clamps to the ring
+  // edge while the far shell keeps rolling — wrap it with the campus far-
+  // ground sampler (same idiom as the river-surface wrap above) so walk/fly
+  // grounding stays sane across the Levites' band.
+  const terrainProbe = ctx.hooks.groundProbe;
+  if (terrainProbe) {
+    ctx.hooks.groundProbe = (x, z) => {
+      const g = terrainProbe(x, z);
+      const far = dwellings.farGroundAt(x, z);
+      if (far === null) return g;
+      return { ground: far, water: g.water };
+    };
+  }
 
   // Waterfalls off the mesa rim (ADR 0016): authored crystal ribbons at the
   // seed's REAL drainage crossings (the hydrology field cannot express

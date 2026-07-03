@@ -310,6 +310,66 @@ pass:
   the literal-scale temple — queued item 5 (dwelling variation +
   right-scaling) is the direct fix and next in line.
 
+**(2026-07-02, late-4) DWELLING CAMPUS REBUILT — delta #6 (queued item 5).**
+The 82 identical ×20-frame megaboxes (680×440×240 m each — they dwarfed the
+literal-cubit temple) are GONE from `Allotment.ts`. `src/nj/Dwellings.ts`
+builds the campus in WORLD SPACE at human scale (RENDERING-DECISIONS **#8**
+— new entry: cited zone, illustrative content; two named bands honouring
+Ezek 45:4-5 / 48:10-14's structure, all dimensions explicitly art
+direction):
+- **Priests' (Zadok) band**: continuous 108 m garden-court blocks on a
+  150 m pitch (7 rows, z -5021..-6029 — ENTIRELY inside the heightfield CPU
+  mirror so every house snaps exactly to rendered ground) flanking the
+  temple. Attached row-house perimeters (5.5-13 m units, stepped facades +
+  rooflines, 25% two-story), hip-roofed corner houses, gate gaps with stone
+  posts, court wells, timber doors + warm window panes RECESSED inside open
+  trim frames (pillar-A reveal, not a decal; glow 1.05 — bloom contract
+  kept). 3 wall pools (limewash/sandstone/whitewash) × 2 clay roof pools;
+  deterministic per-cell hash; temple close + east processional + a meridian
+  lane on the city→temple axis cleared by construction.
+- **Levites' band**: beyond the detailed ring (rows z -6450..-10050) the
+  only rendered ground is the far shell (analytic macro MINUS 2.5 m on a
+  coarse 160×42 ring — ±2-3 m chord error between vertices). Blocks there
+  are RING-SLAB podium footings (temple-plinth idiom, mitered stone bands
+  whose skirts absorb the approximation) carrying simplified sand-heavy
+  house runs + 2.2 m hedges around REAL shell-meadow courts. Sites come
+  from a one-shot GPU eval of `macroTerrain(p, hf.mp, 'far')` on a 512×192
+  grid (HeightSynthesis idiom + readback) — never `heightAtCpu`, which
+  clamps at ±6144. `ctx.hooks.groundProbe` is wrapped (river-guard idiom)
+  so walk/fly grounding follows the shell across the band.
+- **Engine discipline**: plain InstancedMesh kit (CityMassing idiom),
+  chunked into column groups (~90 meshes) so bounding spheres stay local
+  for main + CSM culling; only priests'-band bodies/roofs cast shadows.
+  nj/-only change (Dwellings.ts new; Allotment.ts megaboxes removed;
+  NewJerusalemScene.ts wiring + campus exclusion rect tightened to
+  [-6150,6150,-10400,-4950]). tsc clean.
+- **Design process**: a 3-lens adversarial panel (scale/engine/doctrine)
+  ran BEFORE implementation and reshaped it — caught the far-shell -2.5 m
+  sink + chord error (would have floated every far-band house), the ~3%
+  built-coverage sparseness of the first layout, single-sphere culling
+  waste, and the missing RENDERING-DECISIONS entry; a solid-frame-box bug
+  (frames occluding every door/window plate) was caught by the court
+  ground-level shot and fixed with a true open-ring frame geometry.
+- **LIVE-VERIFIED** (shots/wip/dw1-*, dw2-*, dw3-*): temple-wide regression
+  framing (0,520,-6050) now shows the temple DOMINANT among human-scale
+  rooftops (the scale inversion this item existed to fix); NE 3/4 aerial
+  (900,700,-6650,2.43,-0.28,55) = dense ordered court grid around the clear
+  temple precinct; east processional eye-level (400,492.5,-5600,1.5708,0,62)
+  = crenellated temple front over village rows; court interior
+  (375,488,-5225,0.7854,0,62) = doors/panes/roof-steps at walking scale;
+  north campus aerial (0,2800,-12500,3.1416,-0.35,55) = two-band ordered
+  march toward temple + city; spawn hero framing unchanged.
+- **Debts**: campus ground keeps the wild meadow's dark scrub/moisture
+  veins (pre-existing splat character — a campus zone-tint through the
+  ZoneField idiom is the queued polish); courts are pure lawn (no court
+  trees — scatter is excluded there; instanced court orchards = polish);
+  Levites'-band walkers ride the analytic shell mean (visual shell can
+  deviate ±2-3 m between ring vertices — off-path, documented);
+  allotment-strip measurements (Ezek 45:1-6; 48:8-22) NOT yet in the
+  canonical store — the band split is explicitly uncited art direction
+  until they are seeded and consumed per ADR 0017 (queued follow-up;
+  entry #8 records the deferral).
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
@@ -355,10 +415,10 @@ pass:
    above: ADRs 0017/0018, the 88-record verified measurement dataset +
    pipeline surface, RENDERING-DECISIONS #6/#7, and the literal-cubit
    Temple.ts rebuild at (0, -5600)).
-5. Dwelling variation (delta #6) — now urgent: the placeholder 680×440
-   ×240 m dwelling slabs visibly dwarf the literal-scale temple beside
-   them (see the item-4 entry's debts; right-scale the campus while
-   adding roofs/doors/variation).
+5. ~~Dwelling variation (delta #6)~~ **BUILT 2026-07-02** (dated late-4
+   entry above: world-space two-band garden-court campus in Dwellings.ts,
+   megaboxes gone, RENDERING-DECISIONS #8; follow-ups queued — allotment
+   measurement seeding per ADR 0017, campus zone tint, court orchards).
 6. **Arrival experience (added 2026-07-02, Scott):** MAJOR overhaul of the
    boot/loading screen (`src/core/BootUI.ts`, "The Preparation" rite) — the
    current line-art ziggurat + gem diamonds screen is "really bad, clunky,
