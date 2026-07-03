@@ -372,7 +372,9 @@ direction):
 
 **(2026-07-02, late-5) BUG REPORT — walk over the plateau edge flings the
 walker skyward (Scott, deferred: "whenever it makes sense to safely
-address").** Symptom: walking past the plateau edge (beyond the world
+address"). FIXED 2026-07-03 — candidate 1 confirmed as the mechanism,
+with a sharper shape than predicted; see the dated 2026-07-03 entry
+below.** Symptom: walking past the plateau edge (beyond the world
 limit?) casts the user violently upward "and all around," eventually
 vacillating up and down HIGH above the city (screenshot: aerial from
 roughly cloud height over the whole allotment; note it shows the
@@ -410,6 +412,54 @@ containment (and consider bounding every groundProbe wrap to its authored
 footprint rect). Must be fixed before the arrival experience ships —
 first-session walk feel is the whole point of that package. Fix belongs
 to whichever next session touches walk physics, the probes, or the rim.
+
+**(2026-07-03) WALKER-FLING BUG FIXED — stacked river reaches claimed at
+any altitude (late-5 candidate 1, confirmed).** Root cause, sharper than
+the "far-outside containment misfire" guess: `riverSurfaceLocalY` is a 2D
+PLAN lookup over reaches that are vertically STACKED up the city tiers
+(ledge pools at local y 16.18/58.18/96.18/130.18, crown basin 156.35 —
+world ≈ 796/1636/2396/3076/3600 m). The lookup has no vertical sense, so a
+walker at plaza level (~473 m) anywhere on the meridian corridor (|x| ≤
+56 m world) inherited whatever reach owned that (x,z) in plan as a hard
+wade floor, and FlyCamera's per-frame snap teleported them to it. NOT
+confined to the city interior: the lowest ledge pool's rect (z local
+85.2..102.6 → world 1704..2052, +0.4 margin) deliberately runs 60 m past
+the wall line to meet the wall cascade — so WADING THE RIVER UP TO THE
+WALL, the normal approach path, crossed into it at world z ≈ 2060 and
+flung the eye 475 → 797 m; drifting between rects while airborne stepped
+across pool heights up to 3.6 km (the reported "up and all around" +
+vacillation). Fix (all four files small, nj-scoped semantics, wild scenes
+behaviour-identical):
+- `FlyCamera.GroundProbe` + `Hooks.groundProbe` gain an optional third
+  param `y` = the querying eye's CURRENT height; FlyCamera passes it at
+  all probe sites (walk, fly soft-collision, walk-entry snap).
+- `riverSurfaceLocalY(lx, lz, maxSurfaceY?)`: a matched reach whose
+  surface exceeds the cap returns −1e6 (unclaimed). Cap omitted =
+  unchanged legacy behaviour.
+- The scene's river wrap converts eye y → local cap with a 6 m
+  wade-tunnel margin (`WATER_CLAIM_M` — covers wade clearance 0.45 m and
+  fast-fall tunnelling ≈ 3.6 m/frame for a full 260 m rim fall at the
+  30 fps dt floor). The campus far-ground wrap passes `y` through. Wrap
+  chain order preserved (river first, campus composing it).
+- VERIFIED via `tools/probe-walkfling.ts` (NEW, CPU-only — no browser/
+  GPU/dev server: shims window/DOM, drives the REAL FlyCamera physics
+  against the REAL reach table + a mirror of the scene wrap): pre-fix it
+  reproduces the fling (walk-entry snap under the crown 471.7 → 3600.25 m;
+  840 m single-frame jump between stacked pools on the approach; fly-mode
+  shove 480 → 797 m); post-fix ALL PASS — approach wade floor 475.25
+  intact, max per-frame |Δy| on the whole corridor 1.2 m (the authored
+  channel→plunge-pool step), under-crown plaza walker stays 471.7,
+  crown-top water STILL claims a walker standing on it (3600.25), fly
+  soft-collision no longer shoved. `tsc --noEmit` clean; `vite build`
+  clean; keep the tool's wrap copy in sync if the scene wrap changes.
+- Session env note: fixed + verified in a cloud session (Linux, no
+  usable GPU — SwiftShader adapter only, full NJ world-gen impractical),
+  hence the CPU-sim verification path instead of a live shoot.ts probe.
+  Interactive walk-feel re-check on real hardware still owed (Scott's
+  pending verdict, plus first-walk feel gates the arrival experience).
+  Candidates 2/3 (frozen edge texels beyond ±6144; E/W/N rim float over
+  the far shell) are UNCHANGED and remain documented debts — they float,
+  not fling, and stay within metres of true ground.
 
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
