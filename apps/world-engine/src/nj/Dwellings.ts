@@ -396,16 +396,18 @@ function buildNearBlock(
     let u = -runSpan / 2;
     while (u < runSpan / 2 - 3) {
       const w = Math.min(5.5 + rand() * 4.0, runSpan / 2 - u);
-      // gate: leave a gap in the run, flanked by stone posts
+      // gate: leave a gap in the run, posts just INSIDE its edges so they
+      // stand clear of the flanking house faces by construction
       if (!gateDone && u + w > gateAt - gateW / 2) {
+        const g0 = Math.max(u, gateAt - gateW / 2);
+        const g1 = gateAt + gateW / 2;
         const wallOff = half - 4; // posts sit on the run line
-        for (const s of [-1, 1] as const) {
-          const gu = gateAt + s * (gateW / 2 + 0.35);
+        for (const gu of [g0 + 0.35, g1 - 0.35] as const) {
           const px = horizontal ? cx + gu : cx + edge * wallOff;
           const pz = horizontal ? cz + edge * wallOff : cz + gu;
           kit.post.add(px, ground(px, pz) - 0.3, pz, 0, 0.5, 2.7, 0.5);
         }
-        u = gateAt + gateW / 2 + 0.3;
+        u = g1 + 0.5;
         gateDone = true;
         continue;
       }
@@ -422,14 +424,17 @@ function buildNearBlock(
       const bd = horizontal ? depth : w;
       const pool = (rand() * kit.body.length) | 0;
       kit.body[pool]?.add(px, y, pz, 0, bw, h, bd);
-      // roof: ridge along the run; occasional hip
+      // roof: ridge along the run; occasional hip. compose() scales in
+      // OBJECT space before the yaw, so pass object extents (x = across the
+      // ridge = house depth, z = along the ridge = unit width) and let the
+      // yaw orient them — passing world extents transposed every N/S roof
       const roofH = 1.7 + rand() * 0.9;
       const ry = y + h;
       const yawRoof = horizontal ? Math.PI / 2 : 0; // prism ridge is along Z
       if (rand() < 0.82) {
-        kit.gable[(rand() * kit.gable.length) | 0]?.add(px, ry, pz, yawRoof, bw + 0.7, roofH, bd + 0.7);
+        kit.gable[(rand() * kit.gable.length) | 0]?.add(px, ry, pz, yawRoof, depth + 0.7, roofH, w + 0.7);
       } else {
-        kit.hip[(rand() * kit.hip.length) | 0]?.add(px, ry, pz, yawRoof, bw + 0.7, roofH, bd + 0.7);
+        kit.hip[(rand() * kit.hip.length) | 0]?.add(px, ry, pz, yawRoof, depth + 0.7, roofH, w + 0.7);
       }
       // court-facing face: door + windows; street face: windows
       const courtDir = -edge; // court is inward
@@ -497,18 +502,28 @@ function buildFarBlock(cx: number, cz: number, seed: number, grid: Float32Array,
     const pz = horizontal ? cz + edge * off : cz;
     // mitered ring: N/S slabs run the full width, E/W slabs fit between
     const len = horizontal ? FAR_BLOCK : FAR_BLOCK - 2 * SLAB;
+    // The rendered shell is PIECEWISE-LINEAR over ~290-460 m ring chords, so
+    // its surface at the slab can ride above the local analytic value by
+    // whatever the bridged chord endpoints reach. Those endpoints are ring
+    // vertices within ~half a chord (<= ~240 m), so the analytic MAX over a
+    // +-240 m neighborhood upper-bounds the rendered surface — seat the top
+    // just proud of THAT, and skirt through the local minimum.
     let hi = -1e9;
     let lo = 1e9;
+    for (let sx = -240; sx <= 240; sx += 80) {
+      for (let sz = -240; sz <= 240; sz += 80) {
+        const g = farGridAt(grid, px + sx, pz + sz) - FAR_SHELL_SINK;
+        hi = Math.max(hi, g);
+      }
+    }
     for (const t of [-0.5, 0, 0.5] as const) {
       for (const n of [-0.5, 0.5] as const) {
         const sx = horizontal ? px + t * len : px + n * SLAB;
         const sz = horizontal ? pz + n * SLAB : pz + t * len;
-        const g = farGridAt(grid, sx, sz) - FAR_SHELL_SINK;
-        hi = Math.max(hi, g);
-        lo = Math.min(lo, g);
+        lo = Math.min(lo, farGridAt(grid, sx, sz) - FAR_SHELL_SINK);
       }
     }
-    const top = hi + 0.7;
+    const top = hi + 0.5;
     const depth = top - lo + 6;
     const sw = horizontal ? len : SLAB;
     const sd = horizontal ? SLAB : len;
@@ -740,7 +755,10 @@ export async function buildDwellings(deps: DwellingsDeps): Promise<DwellingsResu
   );
 
   const farGroundAt = (x: number, z: number): number | null => {
-    if (x < FARGRID_X0 || x > FARGRID_X1 || z < FARGRID_Z0 || z > -Math.max(WORLD_HALF - 40, 0)) {
+    // active only BEYOND the tile edge — the CDLOD tiles render baked ground
+    // (the base probe's own source) all the way to |z| = WORLD_HALF; the
+    // shell surface this sampler mirrors only takes over past it
+    if (x < FARGRID_X0 || x > FARGRID_X1 || z < FARGRID_Z0 || z > -(WORLD_HALF + 2)) {
       return null;
     }
     return farGridAt(grid, x, z) - FAR_SHELL_SINK;

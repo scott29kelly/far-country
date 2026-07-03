@@ -164,7 +164,12 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       const g = terrainProbe(x, z);
       const far = dwellings.farGroundAt(x, z);
       if (far === null) return g;
-      return { ground: far, water: g.water };
+      // the terrain probe's water term is CLAMPED to the mirror's edge row
+      // out here (a wet/high edge texel would pin the walker's wade floor
+      // above the rolling shell for a whole 4 km column) — there is no
+      // authored water in the band, so keep water at the dry-cell
+      // convention (~2 m below the bed) relative to the shell ground
+      return { ground: far, water: far - 2 };
     };
   }
 
