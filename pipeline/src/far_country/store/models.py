@@ -180,9 +180,7 @@ class MeasurementCitation(Base):
     )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
-    measurement_id: Mapped[str] = mapped_column(
-        Text, ForeignKey("measurement.id"), nullable=False
-    )
+    measurement_id: Mapped[str] = mapped_column(Text, ForeignKey("measurement.id"), nullable=False)
     source_type: Mapped[str] = mapped_column(Text, nullable=False)
     book: Mapped[str | None] = mapped_column(Text)
     chapter: Mapped[int | None] = mapped_column(Integer)

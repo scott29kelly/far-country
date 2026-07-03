@@ -56,8 +56,10 @@ export interface LaasHooks {
   /** 'walk' only for the default interactive spawn (no explicit pose
    *  params) — every explicit/programmatic pose keeps fly semantics */
   initialPoseMode: 'walk' | 'fly' | null;
-  /** terrain/water heights at (x, z) — walk mode + fly soft collision */
-  groundProbe: ((x: number, z: number) => { ground: number; water: number }) | null;
+  /** terrain/water heights at (x, z) — walk mode + fly soft collision.
+   *  `y` = querying eye height; wraps guarding STACKED authored water use it
+   *  to claim only surfaces near/below the eye (see FlyCamera.GroundProbe) */
+  groundProbe: ((x: number, z: number, y?: number) => { ground: number; water: number }) | null;
   setTimeOfDay: ((t: number) => void) | null;
   /** settle frames (TAA/temporal effects) then resolve — call before screenshots */
   settle: ((frames?: number) => Promise<void>) | null;

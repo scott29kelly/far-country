@@ -28,8 +28,15 @@ const FORWARD = new Vector3();
 const RIGHT = new Vector3();
 const MOVE = new Vector3();
 
-/** terrain/water heights at (x, z) — installed by the world scene */
-export type GroundProbe = (x: number, z: number) => { ground: number; water: number };
+/**
+ * terrain/water heights at (x, z) — installed by the world scene. `y` is the
+ * querying eye's CURRENT height: probe wraps that guard authored water use it
+ * to claim only surfaces at/near/below the eye, never one far overhead (the
+ * NJ river reaches are vertically STACKED up the city tiers — a 2D lookup
+ * alone hands a plaza-level walker the crown basin ~3.1 km up as a wade
+ * floor and the hard ground snap catapults them there: the walker-fling bug).
+ */
+export type GroundProbe = (x: number, z: number, y?: number) => { ground: number; water: number };
 
 export type CamMode = 'walk' | 'fly';
 
@@ -162,7 +169,7 @@ export class FlyCamera {
         return;
       }
       this.basePos.copy(this.camera.position);
-      const g = this.groundProbe(this.basePos.x, this.basePos.z);
+      const g = this.groundProbe(this.basePos.x, this.basePos.z, this.basePos.y);
       this.basePos.y = Math.max(g.ground + EYE_HEIGHT, g.water + WADE_CLEAR);
       this.velY = 0;
       this.vel.set(0, 0, 0);
@@ -281,7 +288,7 @@ export class FlyCamera {
     // the refraction texture is garbage from below — hold above the water)
     if (this.groundProbe) {
       const c = this.camera.position;
-      const g = this.groundProbe(c.x, c.z);
+      const g = this.groundProbe(c.x, c.z, c.y);
       const floor = Math.max(g.ground + FLY_GROUND_CLEAR, g.water + WADE_CLEAR);
       if (c.y < floor) c.y = floor;
     }
@@ -336,7 +343,7 @@ export class FlyCamera {
     this.basePos.y += (this.velY - GRAVITY * dt * 0.5) * dt;
     this.velY -= GRAVITY * dt;
 
-    const g = probe(this.basePos.x, this.basePos.z);
+    const g = probe(this.basePos.x, this.basePos.z, this.basePos.y);
     const eyeFloor = g.ground + EYE_HEIGHT;
     if (this.basePos.y <= eyeFloor) {
       // landing dip ∝ impact speed (skip the trivial walk-downhill touches)

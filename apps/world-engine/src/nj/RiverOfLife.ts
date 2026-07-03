@@ -105,11 +105,23 @@ export function riverReaches(): RiverReach[] {
  * Analytic water-surface height (LOCAL frame) for the walk/underwater guard —
  * −1e6 when (lx, lz) is not over the river. The scene wraps the terrain
  * groundProbe with this so the walker's eye can't cross the authored water.
+ *
+ * The reach table is vertically STACKED (crown basin + ledge pools, local y
+ * up to 156.35 ≈ 3.1 km world over the plaza) while this lookup is 2D in
+ * plan — so a reach must only be CLAIMED when the walker could actually be
+ * wading it. `maxSurfaceY` (local units) is that cap: a matched reach whose
+ * surface sits above it returns −1e6 instead. Without the cap, a walker at
+ * plaza level anywhere on the meridian corridor (the lowest ledge pool
+ * reaches 60 m past the wall line to meet the wall cascade — on the normal
+ * approach path) was floor-snapped hundreds of metres to kilometres upward:
+ * the plateau-edge walker-fling bug (STATUS 2026-07-02 late-5).
  */
-export function riverSurfaceLocalY(lx: number, lz: number): number {
+export function riverSurfaceLocalY(lx: number, lz: number, maxSurfaceY?: number): number {
   if (Math.abs(lx) > RIVER.width / 2 + 0.3) return -1e6;
   for (const r of riverReaches()) {
-    if (lz >= r.z0 - 0.4 && lz <= r.z1 + 0.4) return r.y;
+    if (lz >= r.z0 - 0.4 && lz <= r.z1 + 0.4) {
+      return maxSurfaceY !== undefined && r.y > maxSurfaceY ? -1e6 : r.y;
+    }
   }
   return -1e6;
 }

@@ -82,9 +82,7 @@ app.add_typer(extract_app, name="extract")
 verify_app = typer.Typer(no_args_is_help=True, help="Citation verification commands.")
 app.add_typer(verify_app, name="verify")
 
-measure_app = typer.Typer(
-    no_args_is_help=True, help="Measurement dataset commands (ADR 0017)."
-)
+measure_app = typer.Typer(no_args_is_help=True, help="Measurement dataset commands (ADR 0017).")
 app.add_typer(measure_app, name="measure")
 
 DEFAULT_EXPORT_DIR = Path("data/exports")
@@ -489,9 +487,7 @@ def measure_seed_temple(
     init_db(engine)
     session_factory = create_session_factory(engine)
     with session_factory() as session:
-        outcome = seed_temple(
-            session, review_status=review_status, reviewer_notes=reviewer_notes
-        )
+        outcome = seed_temple(session, review_status=review_status, reviewer_notes=reviewer_notes)
     typer.echo(
         f"Seeded temple measurements to {db_path}: "
         f"inserted={outcome.inserted} updated={outcome.updated} "
