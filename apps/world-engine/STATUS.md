@@ -461,6 +461,41 @@ behaviour-identical):
   the far shell) are UNCHANGED and remain documented debts — they float,
   not fling, and stay within metres of true ground.
 
+**(2026-07-03, local) FLING FIX LIVE-VERIFIED on real hardware — new
+`tools/probe-walkfling-live.ts`, ALL PASS.** In-browser complement to the
+CPU sim: real GPU terrain, the scene's ACTUAL groundProbe wrap chain (not
+the sim's mirror), real trusted keyboard input via Playwright CDP, one NJ
+boot per scenario group. Fix-sensitive checks (each would FAIL pre-fix):
+pool0-rect walk-entry snap at (0, 1900) landed eye 482.75 m (pre-fix
+~797); corridor-center entry under the crown at (0, 100) landed 482.75 m
+(pre-fix ~3600); the reported repro wade from z 2260 across the pool-rect
+line to z 1927 showed max upward step 1.2 m (the authored channel step),
+max eye 487.5. Canaries: channel wade floor intact (entry 486.30 = the
+live-probed floor exactly); crown basin still claims from above — walker
+stands at 3611.30 = crown surface 3610.85 + wade clearance. NOTE the real
+crown surface is 3610.85, not the CPU sim's 3600.25: real plazaTopY =
+coreY 481.05 + 2.8 = 483.85 vs the sim's mock flat 470 — live floor
+expectations must come from `__laas.groundProbe`, never sim-derived
+constants. All four rim walk-offs clean with real displacement asserted
+(south descends the real rim face 477.8 -> 289.9 over 221 m; E/W float
+per ADR 0016; the north edge is GROUNDED by the campus far-ground grid,
+not floated). Every walk entry asserts the eye snapped DOWN off the fly
+seed onto the live-probed floor, so a dropped V press cannot false-pass;
+the check design was adversarially reviewed (sensitivity/semantics/
+false-pass) before trusting the green run. Environment notes: headless
+Chromium's adapter roulette picked the Intel iGPU (xe-lpg) — the probe's
+fps 12-17 in heavy framings is an iGPU number, not a machine verdict; and
+run the probe FOREGROUND in harness sessions (backgrounded shells die
+~2 min in regardless of requested timeout) with `--only a,b` then
+`--only c,d` to stay under the 600 s command cap. Visual observation for
+the polish list: at plaza level inside pool0's plan rect (meridian z
+1696..2060) the walker now legitimately walks UNDER the elevated pool
+sheet, which reads as an unlit near-black ceiling
+(shots/wip/flingfix-live-a.png) — pool undersides have no lit material;
+cosmetic, queue with the polish debts. Still owed (subjective,
+Scott-only): first-walk FEEL pass, campus visual verdict (hard refresh),
+M1 Max performance verdict.
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
