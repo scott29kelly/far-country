@@ -20,6 +20,11 @@
  *
  * Controls: `?audio=0` disables construction entirely (main.ts); `M` toggles
  * mute. Volumes are deliberately restrained — a bed, not a mix.
+ *
+ * Internals are typed against BaseAudioContext and the context comes from an
+ * injectable factory, so tools/probe-ambience.ts can render the same graph
+ * through an OfflineAudioContext and assert RMS/clipping/NaN headlessly —
+ * the only way to "hear" this on a GPU-less runner.
  */
 
 import type { LaasHooks } from '../core/Hooks';
@@ -48,7 +53,8 @@ const CHORD = [146.83, 220.0, 329.63, 369.99, 554.37];
 
 export class Ambience {
   private hooks: LaasHooks;
-  private ctx: AudioContext | null = null;
+  private createContext: () => BaseAudioContext;
+  private ctx: BaseAudioContext | null = null;
   private master: GainNode | null = null;
   private droneBus: GainNode | null = null;
   private meadowBus: GainNode | null = null;
@@ -70,8 +76,9 @@ export class Ambience {
     if (e.code === 'KeyM' && !e.repeat) this.setMuted(!this.muted);
   };
 
-  constructor(hooks: LaasHooks) {
+  constructor(hooks: LaasHooks, createContext?: () => BaseAudioContext) {
     this.hooks = hooks;
+    this.createContext = createContext ?? ((): BaseAudioContext => new AudioContext());
     // arm the autoplay unlock: any click/keypress during (or after) the rite
     window.addEventListener('pointerdown', this.onGesture);
     window.addEventListener('keydown', this.onGesture);
@@ -90,10 +97,14 @@ export class Ambience {
   private unlock(): void {
     if (this.disposed) return;
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') void this.ctx.resume();
+      // resume/close live on AudioContext only (an OfflineAudioContext renders
+      // once and has neither) — guard for the probe's injected context
+      if (this.ctx instanceof AudioContext && this.ctx.state === 'suspended') {
+        void this.ctx.resume();
+      }
       return;
     }
-    const ctx = new AudioContext();
+    const ctx = this.createContext();
     this.ctx = ctx;
     const master = ctx.createGain();
     master.gain.value = this.muted ? 0 : MASTER_LEVEL;
@@ -116,7 +127,7 @@ export class Ambience {
 
   /** Looping white-noise source. All sources share ONE 2 s buffer (filled
    *  once) and decorrelate via random start offsets + their own filters. */
-  private noiseSource(ctx: AudioContext): AudioBufferSourceNode {
+  private noiseSource(ctx: BaseAudioContext): AudioBufferSourceNode {
     if (!this.noiseBuf) {
       const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
       const d = buf.getChannelData(0);
@@ -131,7 +142,7 @@ export class Ambience {
   }
 
   /** LFO helper: slow oscillator scaled into an AudioParam. */
-  private lfo(ctx: AudioContext, hz: number, depth: number, param: AudioParam): void {
+  private lfo(ctx: BaseAudioContext, hz: number, depth: number, param: AudioParam): void {
     const osc = ctx.createOscillator();
     osc.frequency.value = hz;
     const g = ctx.createGain();
@@ -288,6 +299,11 @@ export class Ambience {
 
   // --- lifecycle --------------------------------------------------------------------
 
+  /** Tooling (probe-ambience): has the one-shot south-approach cue fired? */
+  get cueFired(): boolean {
+    return this.cueDone;
+  }
+
   /** The world is ready: resolve the drone into the meadow bed + a soft swell. */
   arrive(): void {
     if (this.arrived) return;
@@ -340,7 +356,7 @@ export class Ambience {
     window.removeEventListener('pointerdown', this.onGesture);
     window.removeEventListener('keydown', this.onGesture);
     window.removeEventListener('keydown', this.onKey);
-    if (this.ctx) void this.ctx.close();
+    if (this.ctx instanceof AudioContext) void this.ctx.close();
     this.ctx = null;
   }
 }

@@ -4,7 +4,7 @@
  * in .cache/webgpu-flags.json so subsequent runs start instantly.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser } from 'playwright';
 
 interface LaunchRecipe {
@@ -81,6 +81,19 @@ export async function launchWebGPU(): Promise<{ browser: Browser; recipe: Launch
     'No Chromium launch recipe produced a WebGPU adapter (requires dev server on :5173 for the secure-context probe). ' +
       'Tried channel:chromium headless and headed.',
   );
+}
+
+/** Any Chromium — no GPU needed (BootUI / ambience-class probes). Falls back
+ *  to a system-provided build (cloud runners preinstall one) when the pinned
+ *  Playwright browser is missing, so these probes run where WebGPU cannot. */
+export async function launchAnyChromium(): Promise<Browser> {
+  try {
+    return await chromium.launch({ headless: true });
+  } catch (e) {
+    const sys = '/opt/pw-browsers/chromium';
+    if (existsSync(sys)) return chromium.launch({ headless: true, executablePath: sys });
+    throw e;
+  }
 }
 
 export interface LaasPageOptions {
