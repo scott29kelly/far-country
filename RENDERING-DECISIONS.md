@@ -417,3 +417,37 @@ Both reasons point the same direction, so the engine's default terrain is used a
   footings), `apps/world-engine/src/nj/NewJerusalemScene.ts` (mount + far
   groundProbe wrap), `apps/world-engine/src/nj/Allotment.ts` (megabox grid
   removed)
+
+---
+
+## Entry #9 — Arrival audio: procedural illustrative ambience, no cited soundscape
+
+- **Date:** 2026-07-06
+- **Tier:** none — this is wholly ILLUSTRATIVE context (the entry #5 posture
+  applied to sound), recorded because `docs/roadmap.md`'s audio ground rule 3
+  requires a decision entry when score/ambience ships.
+- **Question:** How does the arrival experience gain sound (boot bed, spawn
+  meadow ambience, an approach score cue) without making any uncited claim
+  about heaven's soundscape and without external assets or licensing risk?
+- **Decision:** synthesize everything at runtime with WebAudio
+  (`apps/world-engine/src/audio/Ambience.ts`): a preparation drone under the
+  boot rite, a wind/river/birdsong bed for the spawn meadow, and one slow
+  gold-chord cue on the first south-approach crossing (a softer voicing marks
+  ready). No audio files exist, so the engine's zero-external-assets rule and
+  ADR 0006's licensing posture are untouched (nothing is redistributed), and
+  the roadmap's suggested ElevenLabs first deliverable is superseded by this
+  zero-asset equivalent for the same two deliverables.
+- **Guardrails:** no voiced Scripture of any kind without the Crossway
+  licensing check (roadmap ground rule 2); no sound is presented as a
+  descriptor or cited content — it is mood, exactly like the wild landscape;
+  `?audio=0` disables construction entirely and `M` mutes, so every probe and
+  capture path is silent by default (tooling passes `rite=0`, which also
+  skips audio).
+
+### Governing sources
+
+- None (illustrative). Posture: entry #5; `docs/roadmap.md` Operational
+  backlog "Audio layer" ground rules 1–3.
+- Code: `apps/world-engine/src/audio/Ambience.ts`,
+  `apps/world-engine/src/main.ts` (NJ-only literal branch, arrive/update
+  wiring)
