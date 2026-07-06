@@ -126,7 +126,6 @@ export class BootUI {
   private root: HTMLElement | null;
   private msg: HTMLElement | null;
   private stage: HTMLElement | null;
-  private bar: HTMLElement | null;
   private baseline: HTMLElement | null;
   private veil: HTMLElement | null;
   private gemName: HTMLElement | null;
@@ -166,12 +165,10 @@ export class BootUI {
    *  spans the whole wait instead of finishing in the first third and
    *  stalling at 90% */
   private displayP = 0;
-  private converge = false;
   private hidden = false;
   private reduced = false;
   /** ?rite=0 — tooling bypass: no pacing, near-instant hide() */
   private riteOff = false;
-  private hideTimers: number[] = [];
 
   private verseTimer = 0;
   private verseIdx = 0;
@@ -200,7 +197,6 @@ export class BootUI {
     this.root = document.getElementById('boot');
     this.msg = document.getElementById('boot-msg');
     this.stage = document.getElementById('boot-stage');
-    this.bar = document.getElementById('boot-bar');
     this.baseline = document.getElementById('boot-baseline-fill');
     this.veil = document.getElementById('boot-veil');
     this.gemName = document.getElementById('boot-gemname');
@@ -236,7 +232,6 @@ export class BootUI {
     this.hooks.progressMsg = message;
     this.realP = Math.min(1, Math.max(0, progress));
     if (this.msg) this.msg.textContent = message;
-    if (this.bar) this.bar.style.width = `${Math.round(progress * 100)}%`;
     if (this.stage) {
       const line = STAGES.find(([re]) => re.test(message));
       if (line && this.stage.textContent !== line[1]) this.stage.textContent = line[1];
@@ -265,47 +260,40 @@ export class BootUI {
     this.set(1, 'ready');
     this.applyDisplay(1); // snap: remaining stones/descent complete in the fade
     this.hidden = true;
-    this.converge = true;
     const el = this.root;
     if (!el) {
       this.teardown();
       return;
     }
     el.classList.add('leaving');
+    // the stage timers below never need cancelling: teardown only ever runs
+    // FROM the last of them (hide() is one-way and guarded by `hidden`)
     if (this.riteOff || this.reduced) {
       el.style.transitionDuration = '0.22s';
       el.style.opacity = '0';
-      this.hideTimers.push(
-        window.setTimeout(() => {
-          el.style.display = 'none';
-          this.teardown();
-        }, 320),
-      );
-      return;
-    }
-    // stage 1: glory veil blooms while the night still holds
-    this.hideTimers.push(
-      window.setTimeout(() => {
-        if (this.veil) this.veil.style.opacity = '0.94';
-      }, 120),
-    );
-    // stage 2: the night lifts — the world shows through the settling veil
-    this.hideTimers.push(
-      window.setTimeout(() => {
-        el.style.opacity = '0';
-        if (this.veil) {
-          this.veil.style.transition = 'opacity 1.1s ease-out';
-          this.veil.style.opacity = '0';
-        }
-      }, 720),
-    );
-    // stage 3: gone
-    this.hideTimers.push(
       window.setTimeout(() => {
         el.style.display = 'none';
         this.teardown();
-      }, 1850),
-    );
+      }, 320);
+      return;
+    }
+    // stage 1: glory veil blooms while the night still holds
+    window.setTimeout(() => {
+      if (this.veil) this.veil.style.opacity = '0.94';
+    }, 120);
+    // stage 2: the night lifts — the world shows through the settling veil
+    window.setTimeout(() => {
+      el.style.opacity = '0';
+      if (this.veil) {
+        this.veil.style.transition = 'opacity 1.1s ease-out';
+        this.veil.style.opacity = '0';
+      }
+    }, 720);
+    // stage 3: gone
+    window.setTimeout(() => {
+      el.style.display = 'none';
+      this.teardown();
+    }, 1850);
   }
 
   // --- pre-rendered painting layers ---------------------------------------------
@@ -941,7 +929,7 @@ export class BootUI {
     ctx.globalCompositeOperation = 'lighter';
 
     // the lamp: a soft halo riding the cursor
-    if (this.mouseX > -1e4 && !this.converge) {
+    if (this.mouseX > -1e4 && !this.hidden) {
       ctx.globalAlpha = 0.1;
       ctx.drawImage(sp, this.mouseX - 60, this.mouseY - 60, 120, 120);
     }
@@ -951,8 +939,8 @@ export class BootUI {
       m.vx += Math.sin(now * 0.45 + m.phase) * 2.4 * dt;
       m.vy += (Math.cos(now * 0.3 + m.phase * 1.7) * 1.6 - 1.2) * dt;
 
-      if (this.converge) {
-        // the lights enter the city
+      if (this.hidden) {
+        // the lights enter the city (the dissolve is under way)
         const dx = convergeAt[0] - m.x;
         const dy = convergeAt[1] - m.y;
         m.vx += dx * 6 * dt;
@@ -1033,7 +1021,6 @@ export class BootUI {
     window.clearTimeout(this.verseTimer);
     window.clearTimeout(this.gemNameTimer);
     window.clearTimeout(this.resizeTimer);
-    for (const t of this.hideTimers) window.clearTimeout(t);
     window.removeEventListener('mousemove', this.onMove);
     window.removeEventListener('mousedown', this.onDown);
     window.removeEventListener('resize', this.onResize);
