@@ -108,6 +108,17 @@ async function main(): Promise<void> {
     );
     check('pacing: displayP chases realP without passing it', disp > 0.2 && disp <= 0.951, `displayP=${disp.toFixed(3)}`);
 
+    // the seat line: drive the descent to rest and capture the p=1
+    // composition — wall base just behind the meadow's back ridge
+    await setP(page, 1, 'ready');
+    await page.waitForFunction(
+      () => ((window as unknown as { __rig: { ui: unknown } }).__rig.ui as { displayP: number }).displayP >= 0.999,
+      undefined,
+      { timeout: 15000, polling: 100 },
+    );
+    await page.waitForTimeout(250);
+    await page.screenshot({ path: 'shots/wip/bootrite-seated.png' });
+
     await hide(page);
     await page.waitForTimeout(700); // veil ease-in (0.7 s from t+120 ms) near peak
     const veilUp = await page.evaluate(() => {

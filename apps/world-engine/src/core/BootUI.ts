@@ -113,6 +113,13 @@ const SPR_OX = 80; // city-local x + SPR_OX = sprite x
 const SPR_OY = 96; // city-local y + SPR_OY = sprite y
 const SUMMIT = { x: 280 + SPR_OX, y: 44 + SPR_OY };
 const WALL_BASE_Y = 246 + SPR_OY;
+/** viewport fraction of the horizon the wall base seats on at p=1 — just
+ *  above the stones row (74%), so the city lands between ridge and rite */
+const HORIZON_F = 0.725;
+/** how far the wall base sinks behind the meadow's back ridge (CSS px):
+ *  deep enough that the base never floats on sky at the ridge's dips,
+ *  shallow enough that the gates stay readable at its rises */
+const RIDGE_SINK = 12;
 
 export class BootUI {
   private hooks: LaasHooks;
@@ -603,9 +610,12 @@ export class BootUI {
       });
     }
 
-    // meadow: two overlapping hill silhouettes closing the frame's base
+    // meadow: a calm distant back ridge the city seats behind (its crest
+    // rides RIDGE_SINK px over the wall-base horizon, weaving only a few px,
+    // so at p=1 the base sits in grass, never on sky) plus a freer rolling
+    // silhouette closing the frame's base
     const m = document.createElement('canvas');
-    const mh = Math.max(80, Math.round(h * 0.24));
+    const mh = Math.max(120, Math.round(h * 0.34));
     m.width = w;
     m.height = mh;
     const g = m.getContext('2d');
@@ -623,8 +633,9 @@ export class BootUI {
         g.closePath();
         g.fill();
       };
-      hill(mh * 0.5, mh * 0.14, 2.2, 5.1, 'rgba(10, 13, 21, 0.9)');
-      hill(mh * 0.68, mh * 0.1, 3.1, 7.3, 'rgba(7, 9, 15, 0.96)');
+      const ridgeC = h * HORIZON_F - RIDGE_SINK - (h - mh); // canvas coords
+      hill(ridgeC, h * 0.006, 2.2, 5.1, 'rgba(10, 13, 21, 0.9)');
+      hill(mh * 0.62, mh * 0.07, 3.1, 7.3, 'rgba(7, 9, 15, 0.96)');
     }
     this.meadow = m;
   }
@@ -768,7 +779,7 @@ export class BootUI {
     const drawW = Math.min(680, vw * 0.76) * (0.82 + 0.18 * e);
     const scale = drawW / SPR_W;
     const drawH = SPR_H * scale;
-    const horizonY = vh * 0.66;
+    const horizonY = vh * HORIZON_F;
     // rest: wall base seated on the horizon; start: city high in the night
     const restY = horizonY - WALL_BASE_Y * scale;
     const startY = -drawH * 1.08; // fully above the frame — only its glow precedes it
