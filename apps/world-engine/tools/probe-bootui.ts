@@ -71,6 +71,11 @@ async function main(): Promise<void> {
     `(() => { const b = document.getElementById('boot'); return b ? getComputedStyle(b).display === 'none' : true; })()`,
   );
   console.log(`[probe] overlay removed after ready: ${String(gone)}`);
+  // the rite hands off to the 5 s camera arrival ease — skip it with a
+  // movement-intent key (the designed skip) so the final capture is the
+  // landed spawn pose every run, not a random point of the descent
+  await page.keyboard.press('KeyW');
+  await page.waitForTimeout(150);
   await page.evaluate('window.__laas.settle ? window.__laas.settle(10) : 0');
   await page.screenshot({ path: 'shots/wip/bootui-after.png' });
   console.log('[probe] wrote shots/wip/bootui-after.png');

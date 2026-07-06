@@ -555,6 +555,49 @@ ADR + regen step were NOT created). All hard invariants held:
   wait, the arrival ease + audio feel pass, plus the three pending
   verdicts from 07-03 (walk feel, campus visuals, M1 Max perf).
 
+**(2026-07-06, Scott's Windows machine, worktree) ARRIVAL REFINEMENT P0 —
+the review's confirmed correctness findings fixed, probed, and run against
+the real GPU.** Worked in a git worktree on the PR #25 branch: `main`'s
+working tree holds Scott's UNCOMMITTED direction-2 stills exploration
+(bootStills.ts, boot-stills/, ADR 0019 draft) and was not touched.
+
+- Arrival ease gated to its narrative: arms only for scene=newjerusalem
+  without `?fly=1` (it raced the Bookmarks flythrough for the pose — both
+  wrote it every frame). Skip is movement INTENT only (WASD/arrows/Space/V)
+  — `M` stays mute, click keeps its rite meaning (audio unlock), and the
+  eased y clamps to groundProbe + 1.7 each frame (collision is off during
+  the descent).
+- Ambience lifecycle: constructed only after the WebGPU gate passes;
+  boot().catch now calls dispose() (it existed, uncalled — failed boots
+  leaked gesture listeners + AudioContext). Drone progress swell moved to
+  a 500 ms wall-clock interval reading hooks.progress — engine updateFns
+  never tick during world-gen, so the update()-driven swell had been dead
+  code. River-hush corridor now DERIVED from geometry (RIVER width + curbs,
+  CITY_HALF, NJ_SCALE, exported CHANNEL_END): |x|<=60, z 2080..3700 — the
+  hand-tuned z 4500 overran the authored water by 800 m. CUE_Z 2950 stays
+  an explicit design choice.
+- Rim-band water hole FIXED (pre-existing from the fling fix): adjacent
+  reaches' plan-claim bands overlap 0.2 local (4 m world) at every tier
+  lip, and riverSurfaceLocalY returned -1e6 on the first cap-rejected
+  match — a walker wading the LOWER pool inside a shared band lost the
+  floor and sank under the crystal. Scan now skips capped matches and
+  returns the highest claimable surface. The scene's groundProbe wrap
+  moved into RiverOfLife (`wrapGroundProbeWithRiver(base, plazaTopY,
+  scale)`; scale is a param — importing rimModel would cycle through
+  Allotment and break RIM's module-scope init) and probe-walkfling now
+  composes the REAL wrap: the documented mirror-desync risk is gone.
+- probe-walkfling grew B1-B3 (rim band lz 42.9 / control 43.1 / plaza-eye
+  cap): B1 verified FAILING on pre-fix code (water 468 dry vs 2396.40),
+  8/8 PASS post-fix, all pre-existing expectations byte-identical.
+- probe-bootui made deterministic: after the dissolve it presses KeyW (the
+  designed skip) so bootui-after.png is the landed spawn pose every run —
+  and the probe RAN GREEN here on a real adapter (headless channel:chromium,
+  hardware WebGPU): rite stills reviewed, overlay gone, final frame is the
+  grounded meadow view. probe-bootrite 8/8, tsc clean. Still Scott-only:
+  the subjective feel pass (rite pace, ease duration, audio levels) and the
+  three 07-03 verdicts. Known cosmetic: at p=0.92 the city sprite still
+  floats slightly above the meadow ridge (P1 seat-the-city item, next).
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
