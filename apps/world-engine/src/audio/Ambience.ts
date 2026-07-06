@@ -23,12 +23,21 @@
  */
 
 import type { LaasHooks } from '../core/Hooks';
+import { CITY_HALF, RIVER } from '../nj/cityModel';
+import { NJ_SCALE } from '../nj/rimModel';
+import { CHANNEL_END } from '../nj/RiverOfLife';
 
-/** approach river corridor (world m): |x| within, z range on the south meadow */
-const RIVER_HALF_X = 90;
-const RIVER_Z0 = 1900;
-const RIVER_Z1 = 4500;
-/** south-approach cue trigger: entering the processional meadow, once */
+/**
+ * Approach river corridor (world m), derived from the authored geometry so
+ * the hush can never drift off the water: half the channel width plus its
+ * gold curbs (outer edge 2.70 local) and a stride of bank, spanning the
+ * plunge pool at the wall base through the channel's end on the meadow.
+ */
+const RIVER_HALF_X = (RIVER.width / 2 + 0.5) * NJ_SCALE; // 60
+const RIVER_Z0 = (CITY_HALF + 4) * NJ_SCALE; // 2080 — the plunge pool's north lip
+const RIVER_Z1 = CHANNEL_END * NJ_SCALE; // 3700 — the authored water ends here
+/** south-approach cue trigger: a DESIGN choice, not geometry — far enough out
+ *  on the processional meadow that the swell resolves before the gate */
 const CUE_Z = 2950;
 const CUE_HALF_X = 900;
 
@@ -49,6 +58,7 @@ export class Ambience {
   private cueDone = false;
   private nextBirdAt = 0;
   private disposed = false;
+  private swellTimer: number;
 
   private onGesture = (): void => this.unlock();
   private onKey = (e: KeyboardEvent): void => {
@@ -61,6 +71,14 @@ export class Ambience {
     window.addEventListener('pointerdown', this.onGesture);
     window.addEventListener('keydown', this.onGesture);
     window.addEventListener('keydown', this.onKey);
+    // the engine's update loop doesn't tick during world-gen, so the drone's
+    // progress swell runs on wall clock until arrive()/dispose() end it
+    this.swellTimer = window.setInterval(() => {
+      const ctx = this.ctx;
+      if (!ctx || !this.droneBus) return;
+      const target = 0.07 + 0.06 * Math.min(1, Math.max(0, this.hooks.progress));
+      this.droneBus.gain.setTargetAtTime(target, ctx.currentTime, 0.8);
+    }, 500);
   }
 
   /** Idempotent: builds the graph on the first user gesture, resumes after. */
@@ -265,6 +283,7 @@ export class Ambience {
   arrive(): void {
     if (this.arrived) return;
     this.arrived = true;
+    window.clearInterval(this.swellTimer);
     const ctx = this.ctx;
     if (!ctx) return; // no gesture yet — meadow starts on unlock instead
     if (this.droneBus) {
@@ -275,18 +294,11 @@ export class Ambience {
     this.playChord(0.09);
   }
 
-  /** Per-frame: drone swell with gen progress; river distance; bird scheduler;
-   *  the one-shot south-approach cue. Cheap — a few compares per frame. */
+  /** Per-frame (post-arrival): river distance; bird scheduler; the one-shot
+   *  south-approach cue. Cheap — a few compares per frame. */
   update(x: number, z: number): void {
     const ctx = this.ctx;
-    if (!ctx) return;
-    if (!this.arrived) {
-      if (this.droneBus) {
-        const target = 0.07 + 0.06 * Math.min(1, Math.max(0, this.hooks.progress));
-        this.droneBus.gain.setTargetAtTime(target, ctx.currentTime, 0.8);
-      }
-      return;
-    }
+    if (!ctx || !this.arrived) return; // pre-arrival swell runs on the interval
     // river hush by distance to the approach corridor
     if (this.riverGain) {
       const dx = Math.max(0, Math.abs(x) - RIVER_HALF_X);
@@ -309,6 +321,7 @@ export class Ambience {
 
   dispose(): void {
     this.disposed = true;
+    window.clearInterval(this.swellTimer);
     window.removeEventListener('pointerdown', this.onGesture);
     window.removeEventListener('keydown', this.onGesture);
     window.removeEventListener('keydown', this.onKey);

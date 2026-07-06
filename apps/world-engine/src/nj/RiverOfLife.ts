@@ -54,8 +54,9 @@ export type RiverReach = {
 const DEPTH_L = 0.12;
 /** how far the fall sheets stand proud of each tier face (clears the cornice lip) */
 const FALL_PROUD = 3.0;
-/** end of the approach channel (~plateau flat core's south reach) */
-const CHANNEL_END = 185;
+/** end of the approach channel (~plateau flat core's south reach), local
+ *  units — exported for the arrival audio's river-corridor bounds */
+export const CHANNEL_END = 185;
 
 let reachCache: RiverReach[] | null = null;
 
