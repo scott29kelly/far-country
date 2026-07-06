@@ -1,0 +1,69 @@
+<!doctype html>
+<!--
+  ambience-harness.html — headless test rig for the arrival audio (Ambience).
+
+  Builds the REAL Ambience graph against an injected OfflineAudioContext (the
+  class takes a context factory for exactly this), schedules one movement per
+  render, then renders 10 s offline and reports RMS / peak / NaN stats via
+  window.__ambRender — the only way to "hear" the graph on a GPU-less,
+  speaker-less runner. Driven by tools/probe-ambience.ts. Dev-server only;
+  never part of the built bundle.
+
+  Determinism note: Ambience's drone-swell interval runs on wall clock, so the
+  rig disposes the instance (clears the interval, keeps the built graph) after
+  scheduling and before startRendering — nothing mutates params mid-render.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ambience harness</title>
+  </head>
+  <body>
+    <script type="module">
+      const { Ambience } = await import('/src/audio/Ambience.ts');
+
+      /** Render one movement offline and return soundness stats. */
+      window.__ambRender = async (movement) => {
+        const sr = 48000;
+        const off = new OfflineAudioContext(2, sr * 10, sr);
+        const hooks = { progress: 0.6, progressMsg: 'harness' };
+        const amb = new Ambience(hooks, () => off);
+
+        if (movement !== 'drone') amb.arrive(); // meadow path builds on unlock
+        window.dispatchEvent(new Event('pointerdown')); // gesture → unlock
+
+        let cueOnce = null;
+        if (movement === 'meadow') {
+          amb.update(0, 3000); // on the river: hush gain > 0 (but no cue: |x|<900 → guard z)
+        } else if (movement === 'cue') {
+          amb.update(0, 2900); // first crossing south of CUE_Z → chord
+          cueOnce = amb.cueFired;
+          amb.update(0, 2900); // second call must not re-fire (one-shot flag)
+        }
+        const cueStill = amb.cueFired;
+        amb.dispose(); // stop the wall-clock swell interval; graph keeps playing
+
+        const buf = await off.startRendering();
+        let sum = 0;
+        let peak = 0;
+        let nan = 0;
+        let n = 0;
+        for (let c = 0; c < buf.numberOfChannels; c++) {
+          const d = buf.getChannelData(c);
+          for (let i = 0; i < d.length; i++) {
+            const v = d[i];
+            if (Number.isNaN(v)) {
+              nan++;
+              continue;
+            }
+            sum += v * v;
+            if (Math.abs(v) > peak) peak = Math.abs(v);
+            n++;
+          }
+        }
+        return { rms: Math.sqrt(sum / n), peak, nan, cueOnce, cueStill };
+      };
+      window.__ambReady = true;
+    </script>
+  </body>
+</html>

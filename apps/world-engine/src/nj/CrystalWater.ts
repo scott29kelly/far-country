@@ -20,7 +20,7 @@
  * threshold.
  */
 
-import { Vector2, Vector3 } from 'three';
+import { DoubleSide, Vector2, Vector3 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import {
   Break,
@@ -406,6 +406,11 @@ export function riverBedMaterial(flow: Vector2, depthM: number): MeshStandardNod
   mat.color.setHex(0xd9a441);
   mat.metalness = 0.6;
   mat.roughness = 0.35;
+  // the ledge pools overhang the plaza (pool0 reaches 2.6 local past the wall
+  // line) and the walker legitimately passes under them — single-sided beds
+  // were backface-culled from below, opening a hole straight through the
+  // water to the zenith sky that read as an unlit near-black ceiling
+  mat.side = DoubleSide;
   const c = causticContext();
   if (!c) return mat;
   const CAUSTIC_TILE = 11; // world metres per tile (Caustics.ts)

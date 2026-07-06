@@ -25,7 +25,16 @@ async function main(): Promise<void> {
   });
 
   mkdirSync('shots/wip', { recursive: true });
-  const url = laasUrl({ scene: 'newjerusalem', width: W, height: H, hud: false, freeze: false });
+  // rite=1: this probe exercises the arrival rite itself, overriding the
+  // rite=0 tooling default in laasUrl
+  const url = laasUrl({
+    scene: 'newjerusalem',
+    width: W,
+    height: H,
+    hud: false,
+    freeze: false,
+    extra: { rite: '1' },
+  });
   console.log(`[probe] ${url}`);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
 
@@ -57,11 +66,16 @@ async function main(): Promise<void> {
   });
   const err = await page.evaluate('window.__laas.error');
   if (err) throw new Error(`app error: ${String(err)}`);
-  await page.waitForTimeout(1200); // overlay fade + display:none
+  await page.waitForTimeout(2400); // staged dissolve (~1.85 s) + display:none
   const gone = await page.evaluate(
     `(() => { const b = document.getElementById('boot'); return b ? getComputedStyle(b).display === 'none' : true; })()`,
   );
   console.log(`[probe] overlay removed after ready: ${String(gone)}`);
+  // the rite hands off to the 5 s camera arrival ease — skip it with a
+  // movement-intent key (the designed skip) so the final capture is the
+  // landed spawn pose every run, not a random point of the descent
+  await page.keyboard.press('KeyW');
+  await page.waitForTimeout(150);
   await page.evaluate('window.__laas.settle ? window.__laas.settle(10) : 0');
   await page.screenshot({ path: 'shots/wip/bootui-after.png' });
   console.log('[probe] wrote shots/wip/bootui-after.png');

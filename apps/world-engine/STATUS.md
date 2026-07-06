@@ -496,6 +496,197 @@ cosmetic, queue with the polish debts. Still owed (subjective,
 Scott-only): first-walk FEEL pass, campus visual verdict (hard refresh),
 M1 Max performance verdict.
 
+**(2026-07-06, cloud) ARRIVAL EXPERIENCE BUILT — queued item 6: boot rite
+overhauled as "The Descent", staged cinematic hide, procedural audio
+package.** Direction question (rite background 1 vs 2) could not reach
+Scott from the cloud session, so the scoping's recommended shape was built:
+direction (1) richer 2D cinematic + (4a) cinematic hide() + the audio
+package; direction (2) stills-carousel stays open as a later layer (its
+ADR + regen step were NOT created). All hard invariants held:
+
+- `src/core/BootUI.ts` + `index.html` rewritten: the load IS the descent
+  (Rev 21:2/21:10) — a painterly Canvas2D night (parallax star layers,
+  drifting cloud deck, meadow silhouette) through which a pre-rendered
+  luminous terraced-city sprite (gold gradient tiers, lit windows, three
+  pearl gates, twelve-gem foundation course, river thread, summit glory
+  with god-ray fan) descends from above the frame to seat on the horizon
+  at 100%. Kept: FOUNDATION_GEMS stones row + gemname, ESV
+  short-excerpt+citation verse cycle (Rev 21:2 added), stage lines, lamp
+  motes + click pulses, `#boot` id, `set()/hide()` + `__laas` mirror. All
+  layers pre-rendered offscreen once (per-frame cost is composition only);
+  zero GPU anywhere in the overlay; display pacing unchanged (wall-clock
+  chase, ~3.5%/s + catch-up, never dt).
+- Staged dissolve (4a, DOM-only so fully GPU-safe): text bows out, a
+  glory veil blooms to ~0.94 then settles while the night lifts (the
+  exposure-ramp feel), gone at ~1.85 s. Tooling contract PRESERVED by a
+  `?rite=0` bypass that `tools/launch.ts laasUrl()` now sets by DEFAULT:
+  bypass hides in <350 ms and also skips display pacing, camera ease, and
+  audio, so every probe/shot sees the bare world unless it opts in with
+  extra `{rite:'1'}` (probe-bootui.ts does, and now waits 2.4 s).
+  Reduced motion: static painting, direct set() application, fast hide.
+- Camera arrival ease (main.ts): default interactive walk spawn only —
+  starts held 120 m up / 260 m south of the spawn in fly with input
+  disabled, eases (easeInOutCubic on wall-clock, 5 s) onto the spawn pose
+  after `engine.start()`, then setMode('walk') + re-enable. Any keydown /
+  mousedown skips straight to the ground. Explicit `?cam=`, `?walk=0`,
+  `?rite=0`, and reduced motion all keep exact legacy placement semantics
+  (no ease). FlyCamera itself UNTOUCHED — fling-fix invariants intact.
+- Procedural audio (`src/audio/Ambience.ts`, NJ-only literal branch in
+  main.ts, RENDERING-DECISIONS entry #9, roadmap backlog item updated):
+  zero assets, one AudioContext unlocked by the first gesture. Movement 1
+  boot drone (E2/B2 + beating-octave pair + band-passed shimmer) swells
+  with real gen progress; movement 2 meadow bed on arrive() (two
+  decorrelated gust-LFO wind channels, river hush gained by live distance
+  to the approach corridor |x|<=90 / z 1900..4500, sparse synthesized
+  birdsong); movement 3 gold chord (D lydian, slow attack) — soft voicing
+  at ready, full voicing once on first south-approach crossing
+  (z<2950, |x|<900). `?audio=0` disables construction; `M` mutes.
+- VERIFIED headlessly (cloud has no GPU): new `bootrite-harness.html`
+  (adopts the REAL #boot markup+CSS by fetching /index.html — nothing
+  duplicated to drift) + `tools/probe-bootrite.ts` (plain Chromium, no
+  WebGPU; falls back to /opt/pw-browsers/chromium where the pinned
+  Playwright browser is absent): 8/8 PASS — pacing chases without
+  overshoot, veil blooms mid-dissolve, cinematic hide <2.4 s, hooks
+  mirror pinned, rite=0 unpaced + hidden <600 ms, reduced-motion direct +
+  hidden <600 ms. Descent stages visually reviewed
+  (shots/wip/bootrite-*.png). `tsc --noEmit` clean, `vite build` clean,
+  `probe-walkfling.ts` ALL PASS (walk physics untouched). STILL OWED on
+  real hardware (Scott): `probe-bootui.ts` (now rite=1) over a real gen
+  wait, the arrival ease + audio feel pass, plus the three pending
+  verdicts from 07-03 (walk feel, campus visuals, M1 Max perf).
+
+**(2026-07-06, Scott's Windows machine, worktree) ARRIVAL REFINEMENT P0 —
+the review's confirmed correctness findings fixed, probed, and run against
+the real GPU.** Worked in a git worktree on the PR #25 branch: `main`'s
+working tree holds Scott's UNCOMMITTED direction-2 stills exploration
+(bootStills.ts, boot-stills/, ADR 0019 draft) and was not touched.
+
+- Arrival ease gated to its narrative: arms only for scene=newjerusalem
+  without `?fly=1` (it raced the Bookmarks flythrough for the pose — both
+  wrote it every frame). Skip is movement INTENT only (WASD/arrows/Space/V)
+  — `M` stays mute, click keeps its rite meaning (audio unlock), and the
+  eased y clamps to groundProbe + 1.7 each frame (collision is off during
+  the descent).
+- Ambience lifecycle: constructed only after the WebGPU gate passes;
+  boot().catch now calls dispose() (it existed, uncalled — failed boots
+  leaked gesture listeners + AudioContext). Drone progress swell moved to
+  a 500 ms wall-clock interval reading hooks.progress — engine updateFns
+  never tick during world-gen, so the update()-driven swell had been dead
+  code. River-hush corridor now DERIVED from geometry (RIVER width + curbs,
+  CITY_HALF, NJ_SCALE, exported CHANNEL_END): |x|<=60, z 2080..3700 — the
+  hand-tuned z 4500 overran the authored water by 800 m. CUE_Z 2950 stays
+  an explicit design choice.
+- Rim-band water hole FIXED (pre-existing from the fling fix): adjacent
+  reaches' plan-claim bands overlap 0.2 local (4 m world) at every tier
+  lip, and riverSurfaceLocalY returned -1e6 on the first cap-rejected
+  match — a walker wading the LOWER pool inside a shared band lost the
+  floor and sank under the crystal. Scan now skips capped matches and
+  returns the highest claimable surface. The scene's groundProbe wrap
+  moved into RiverOfLife (`wrapGroundProbeWithRiver(base, plazaTopY,
+  scale)`; scale is a param — importing rimModel would cycle through
+  Allotment and break RIM's module-scope init) and probe-walkfling now
+  composes the REAL wrap: the documented mirror-desync risk is gone.
+- probe-walkfling grew B1-B3 (rim band lz 42.9 / control 43.1 / plaza-eye
+  cap): B1 verified FAILING on pre-fix code (water 468 dry vs 2396.40),
+  8/8 PASS post-fix, all pre-existing expectations byte-identical.
+- probe-bootui made deterministic: after the dissolve it presses KeyW (the
+  designed skip) so bootui-after.png is the landed spawn pose every run —
+  and the probe RAN GREEN here on a real adapter (headless channel:chromium,
+  hardware WebGPU): rite stills reviewed, overlay gone, final frame is the
+  grounded meadow view. probe-bootrite 8/8, tsc clean. Still Scott-only:
+  the subjective feel pass (rite pace, ease duration, audio levels) and the
+  three 07-03 verdicts. Known cosmetic: at p=0.92 the city sprite still
+  floats slightly above the meadow ridge (P1 seat-the-city item, next).
+
+**(2026-07-06, same session, continued) ARRIVAL REFINEMENT P1+P2 — the
+whole refinement list landed and probed; engine re-vendored.**
+
+- City SEATED: horizon drops to 0.725vh (just above the stones row at 74%)
+  and the meadow gains a calm distant back ridge whose crest rides
+  RIDGE_SINK(12) px above it, weaving only a few px — at p=1 the wall base
+  lands in grass, never on sky, gates stay readable at the ridge's rises.
+  probe-bootrite captures bootrite-seated.png as the recurring seat check.
+- Sky stability: star fields / twinklers / cloud banks seed from fixed Rng
+  streams (fractional positions) — resize rebuilds keep every star put;
+  the rebuild debounces 150 ms (canvas resizes immediately). Per-frame
+  hygiene: meadow glow is a pre-rendered sprite (recentred under the
+  seated base), renderMotes hoists its clock, pulse filtering skips when
+  idle; Ambience throttles the river-hush setTargetAtTime to ~5 Hz +
+  0.0015 epsilon and all noise sources share ONE 2 s buffer.
+- Ease moved into FlyCamera.flyTo(pose, ms, onDone): advances inside
+  update() (first in registration order — the one-frame cloud/aerial lag
+  during the descent is gone), owns the movement-intent skip set, clamps
+  the path to groundProbe + eye height, lands exact; programmatic setPose
+  CANCELS it (tooling exact-placement semantics); V can't toggle modes
+  mid-cinematic. easeInOutCubic lives once in core/Easing.ts (rite +
+  camera share the curve). NEW tools/probe-arrival.ts (real FlyCamera,
+  fake clock): 11/11 — monotonic descent, exact landing, walk handoff,
+  KeyW skips / KeyM doesn't, clamp engages 30.4 m over a rise, setPose
+  cancels.
+- Audio heard headlessly: Ambience types against BaseAudioContext with an
+  injectable context factory; NEW tools/ambience-harness.html renders each
+  movement 10 s through an OfflineAudioContext and NEW
+  tools/probe-ambience.ts asserts soundness: 12/12 — drone rms 0.0134,
+  meadow 0.0053, cue 0.0105 (chord audibly over the bed), peaks < 0.07,
+  zero NaNs, south-approach cue one-shot latched.
+- Tooling consolidated: launchAnyChromium shared from tools/launch.ts;
+  bootrite-harness.html lives under tools/; the three arrival probes share
+  tools/check.ts; rite/audio/walk are typed LaasParams fields consumed by
+  main.ts + BootUI (harness passes parseParams().rite — launch.ts's
+  literal rite=0 stays the contract). Vestiges swept: #boot-bar
+  (field/write/markup/CSS), converge (hidden covers it), hideTimers.
+- probe-bootrite also asserts CONTENT now: lit stones always a prefix of
+  the foundation order and all twelve in exact Rev 21:19-20 gem colors at
+  rest; verse block is a short quoted excerpt + book-chapter:verse ESV
+  citation; mid-rite resize leaves the Rng-seeded stars byte-stable.
+  13/13.
+- Verification matrix at HEAD: tsc clean, vite build clean, walkfling 8/8,
+  arrival 11/11, ambience 12/12, bootrite 13/13, and probe-bootui rite=1
+  over a REAL adapter end-to-end (rite stills reviewed, deterministic
+  landed final frame). Engine re-vendored into apps/web/public/laas.
+  NOT done: pool-underside polish (GPU-visual, still queued) and the
+  stills-carousel / Ezek 45-48 items (blocked on Scott by design).
+
+**(2026-07-06, Scott's Windows machine, worktree, later) POOL-UNDERSIDE
+POLISH (P2 item 15) — investigated, diagnosis corrected, holes closed.**
+
+- CI on 802c6fd confirmed green first (all six checks, world-engine job
+  included); baseline re-proved before touching anything: walkfling 8/8,
+  arrival 11/11.
+- The debt's diagnosis was wrong in an instructive way. "Pool undersides
+  have no lit material" — actually the pool undersides were INVISIBLE
+  from below (surface + bed are single-sided top-facing planes,
+  backface-culled), so under a pool you looked straight THROUGH the
+  water to the zenith sky. And under most of a pool's plan rect the
+  walker never sees the bed at all: every tier top carries a
+  full-footprint ivory cornice slab (CityMassing, 2*half+5 square,
+  2.4 thick at yTop) that occludes the bed from below except the ~2 m
+  sliver where the pool lip (half+2.6) outreaches the cornice
+  (half+2.5). The "unlit near-black ceiling" in flingfix-live-a.png was
+  the CORNICE underside + the dark ZENITH SKY through the culled pool
+  lip, under auto-exposure keyed to the bright meadow — not a missing
+  pool material. At T=11 today the whole undercroft reads properly lit
+  pale-ivory in every shot (probe-GI ambient reaches down-faces);
+  the walker-height approach/undercroft matrix shows no black anywhere
+  (shots/wip/poolunder-*.png).
+- Fix that remains real: riverBedMaterial is now DoubleSide, so every
+  pool's gold bed renders from below and the see-through-to-sky slivers
+  at every pool lip are closed (crown basin + all ledge pools + plunge
+  pool inherit it). Verified on-GPU: zenith shot from under the pool0
+  lip (0,700,2051) shows the caustic gold bed strip where sky leaked
+  before (poolunder-a-liptest.png). Beds are tiny planes — the
+  DoubleSide double-pass cost is negligible (CityMassing's FrontSide
+  discipline is about its huge meshes, not these).
+- Mapped pool0's true world rect via a throwaway groundProbe scan
+  (surface y 807.4, x ±50, z 1696..2060 — matches the reach table);
+  scan tool deleted after use, not committed.
+- Verified after: tsc clean, vite build clean, walkfling 8/8 (water
+  materials sit near walk physics — probe is the spec). Engine
+  re-vendored into apps/web/public/laas.
+- If the black-ceiling read ever returns in a live walk, tune exposure
+  or the cornice underside ambient — not the water. The pool undersides
+  are now accounted for.
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
@@ -545,7 +736,11 @@ M1 Max performance verdict.
    entry above: world-space two-band garden-court campus in Dwellings.ts,
    megaboxes gone, RENDERING-DECISIONS #8; follow-ups queued — allotment
    measurement seeding per ADR 0017, campus zone tint, court orchards).
-6. **Arrival experience (added 2026-07-02, Scott):** MAJOR overhaul of the
+6. ~~Arrival experience~~ **BUILT 2026-07-06** (dated entry above: descent
+   rite + staged cinematic hide + camera arrival ease + procedural audio;
+   direction 2 stills-carousel remains an open later layer, pending Scott's
+   verdict on the shipped direction 1). Original scoping kept below for the
+   invariants record. **(added 2026-07-02, Scott):** MAJOR overhaul of the
    boot/loading screen (`src/core/BootUI.ts`, "The Preparation" rite) — the
    current line-art ziggurat + gem diamonds screen is "really bad, clunky,
    outdated" vs the world's new bar; open to a complete rethink of how to

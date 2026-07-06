@@ -27,6 +27,7 @@
 
 import { BoxGeometry, Group, Mesh, PlaneGeometry, Vector2 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
+import type { GroundProbe } from '../core/FlyCamera';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { Atmosphere } from '../sky/Atmosphere';
 import type { Heightfield } from '../world/Heightfield';
@@ -54,8 +55,9 @@ export type RiverReach = {
 const DEPTH_L = 0.12;
 /** how far the fall sheets stand proud of each tier face (clears the cornice lip) */
 const FALL_PROUD = 3.0;
-/** end of the approach channel (~plateau flat core's south reach) */
-const CHANNEL_END = 185;
+/** end of the approach channel (~plateau flat core's south reach), local
+ *  units — exported for the arrival audio's river-corridor bounds */
+export const CHANNEL_END = 185;
 
 let reachCache: RiverReach[] | null = null;
 
@@ -110,20 +112,65 @@ export function riverReaches(): RiverReach[] {
  * up to 156.35 ≈ 3.1 km world over the plaza) while this lookup is 2D in
  * plan — so a reach must only be CLAIMED when the walker could actually be
  * wading it. `maxSurfaceY` (local units) is that cap: a matched reach whose
- * surface sits above it returns −1e6 instead. Without the cap, a walker at
- * plaza level anywhere on the meridian corridor (the lowest ledge pool
- * reaches 60 m past the wall line to meet the wall cascade — on the normal
- * approach path) was floor-snapped hundreds of metres to kilometres upward:
- * the plateau-edge walker-fling bug (STATUS 2026-07-02 late-5).
+ * surface sits above it is SKIPPED and the scan continues. Without the cap,
+ * a walker at plaza level anywhere on the meridian corridor (the lowest
+ * ledge pool reaches 60 m past the wall line to meet the wall cascade — on
+ * the normal approach path) was floor-snapped hundreds of metres to
+ * kilometres upward: the plateau-edge walker-fling bug (STATUS 2026-07-02
+ * late-5).
+ *
+ * The scan must not end on a capped match: adjacent reaches' plan-claim
+ * bands OVERLAP by 0.2 local at each tier lip (this pool's z1 + 0.4 vs the
+ * next pool's z0 - 0.4), and inside the shared band the walker wading the
+ * LOWER pool still needs its floor. Returns the highest claimable surface.
  */
 export function riverSurfaceLocalY(lx: number, lz: number, maxSurfaceY?: number): number {
   if (Math.abs(lx) > RIVER.width / 2 + 0.3) return -1e6;
+  let best = -1e6;
   for (const r of riverReaches()) {
-    if (lz >= r.z0 - 0.4 && lz <= r.z1 + 0.4) {
-      return maxSurfaceY !== undefined && r.y > maxSurfaceY ? -1e6 : r.y;
-    }
+    if (lz < r.z0 - 0.4 || lz > r.z1 + 0.4) continue;
+    if (maxSurfaceY !== undefined && r.y > maxSurfaceY) continue;
+    if (r.y > best) best = r.y;
   }
-  return -1e6;
+  return best;
+}
+
+/** claim margin (world m) for the groundProbe wrap: covers the legit cases
+ *  where the eye dips under a claimed surface for a frame — wading (0.45 m)
+ *  and a fast fall landing in a pool (a full 260 m rim fall tunnels
+ *  ≈ 3.6 m/frame at the 30 fps dt floor). Fling-fix invariant: 6. */
+const WATER_CLAIM_M = 6;
+
+/**
+ * Wrap a terrain groundProbe so the walker's eye can't cross the authored
+ * water (same wade clearance as terrain water). The reaches are vertically
+ * STACKED up the tiers (crown basin ≈ 3.1 km over the plaza) and the lowest
+ * ledge pool overlaps 60 m past the wall line in plan — so a reach is only
+ * claimed when its surface sits at/below the querying eye plus the wade-
+ * tunnel margin above. Without the cap, a plaza-level walker on the meridian
+ * corridor inherited a tier-top pool as a wade floor and the walk snap
+ * catapulted them kilometres up (the plateau-edge walker-fling bug, STATUS
+ * 2026-07-02 late-5).
+ *
+ * Shared by NewJerusalemScene and tools/probe-walkfling.ts so the probe
+ * exercises the REAL wrap — the old hand-mirrored copy was a documented
+ * desync risk. `scale` is the allotment scale (rimModel's NJ_SCALE), passed
+ * in rather than imported: RiverOfLife → rimModel → Allotment → RiverOfLife
+ * would be an import cycle whose evaluation order breaks rimModel's
+ * module-scope RIM initializer.
+ */
+export function wrapGroundProbeWithRiver(
+  base: GroundProbe,
+  plazaTopY: number,
+  scale: number,
+): GroundProbe {
+  return (x, z, y) => {
+    const g = base(x, z, y);
+    const maxSurf = y === undefined ? undefined : (y + WATER_CLAIM_M - plazaTopY) / scale;
+    const local = riverSurfaceLocalY(x / scale, z / scale, maxSurf);
+    if (local <= -1e5) return g;
+    return { ground: g.ground, water: Math.max(g.water, local * scale + plazaTopY) };
+  };
 }
 
 /** legacy fallback water (debug boots without noise/atmosphere) */

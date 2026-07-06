@@ -4,7 +4,7 @@
  * in .cache/webgpu-flags.json so subsequent runs start instantly.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser } from 'playwright';
 
 interface LaunchRecipe {
@@ -83,6 +83,19 @@ export async function launchWebGPU(): Promise<{ browser: Browser; recipe: Launch
   );
 }
 
+/** Any Chromium — no GPU needed (BootUI / ambience-class probes). Falls back
+ *  to a system-provided build (cloud runners preinstall one) when the pinned
+ *  Playwright browser is missing, so these probes run where WebGPU cannot. */
+export async function launchAnyChromium(): Promise<Browser> {
+  try {
+    return await chromium.launch({ headless: true });
+  } catch (e) {
+    const sys = '/opt/pw-browsers/chromium';
+    if (existsSync(sys)) return chromium.launch({ headless: true, executablePath: sys });
+    throw e;
+  }
+}
+
 export interface LaasPageOptions {
   scene?: string;
   seed?: number;
@@ -105,6 +118,10 @@ export function laasUrl(opts: LaasPageOptions, base = 'http://localhost:5173/'):
   if (opts.preset) q.set('preset', opts.preset);
   q.set('hud', opts.hud ? '1' : '0');
   if (opts.freeze !== false) q.set('freeze', '1');
+  // tooling bypasses the arrival rite: instant overlay hide (<400 ms after
+  // ready), no camera ease, no audio — captures/probes see the bare world.
+  // Override with extra: {rite: '1'} to exercise the cinematic itself.
+  q.set('rite', '0');
   for (const [k, v] of Object.entries(opts.extra ?? {})) q.set(k, v);
   return `${base}?${q.toString()}`;
 }

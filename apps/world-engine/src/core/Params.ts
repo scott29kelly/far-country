@@ -21,6 +21,13 @@ export interface LaasParams {
   freeze: boolean;
   /** device pixel ratio cap override */
   dpr: number | null;
+  /** arrival rite on — tooling passes rite=0 (launch.ts laasUrl default) for
+   *  the instant-hide bypass: no display pacing, no camera ease, no audio */
+  rite: boolean;
+  /** procedural arrival audio on (New Jerusalem only; ?audio=0 disables) */
+  audio: boolean;
+  /** grounded walk spawn on (?walk=0 keeps legacy fly placement semantics) */
+  walk: boolean;
 }
 
 function num(v: string | null, fallback: number): number {
@@ -46,6 +53,9 @@ export function parseParams(search: string = window.location.search): LaasParams
     shot: shotN >= 1 && shotN <= 9 ? Math.floor(shotN) : null,
     freeze: q.get('freeze') === '1',
     dpr: q.get('dpr') !== null ? num(q.get('dpr'), 1) : null,
+    rite: q.get('rite') !== '0',
+    audio: q.get('audio') !== '0',
+    walk: q.get('walk') !== '0',
   };
 }
 

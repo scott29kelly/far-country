@@ -147,6 +147,13 @@ This roadmap is reviewed at the end of each phase. Material reshuffling (e.g., p
   Suggested first deliverable (no licensing questions involved): an
   offline-generated ambient bed for the spawn meadow + one score cue for the
   south approach.
+  **First deliverable done 2026-07-06, procedurally** — the spawn-meadow
+  ambient bed and south-approach score cue shipped as runtime WebAudio
+  synthesis (`apps/world-engine/src/audio/Ambience.ts`, RENDERING-DECISIONS
+  entry #9) instead of ElevenLabs generation: zero assets, zero key exposure,
+  ground rules 1 and 3 satisfied by construction. ElevenLabs remains the
+  path for voices/SFX that synthesis can't reach (ground rule 2 still gates
+  any voiced Scripture).
 
 - **Establish an official `main` branch at origin** *(added 2026-07-02;
   **done 2026-07-02**)*. Executed with one surprise: `origin/main` turned out
