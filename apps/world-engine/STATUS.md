@@ -598,6 +598,55 @@ working tree holds Scott's UNCOMMITTED direction-2 stills exploration
   three 07-03 verdicts. Known cosmetic: at p=0.92 the city sprite still
   floats slightly above the meadow ridge (P1 seat-the-city item, next).
 
+**(2026-07-06, same session, continued) ARRIVAL REFINEMENT P1+P2 — the
+whole refinement list landed and probed; engine re-vendored.**
+
+- City SEATED: horizon drops to 0.725vh (just above the stones row at 74%)
+  and the meadow gains a calm distant back ridge whose crest rides
+  RIDGE_SINK(12) px above it, weaving only a few px — at p=1 the wall base
+  lands in grass, never on sky, gates stay readable at the ridge's rises.
+  probe-bootrite captures bootrite-seated.png as the recurring seat check.
+- Sky stability: star fields / twinklers / cloud banks seed from fixed Rng
+  streams (fractional positions) — resize rebuilds keep every star put;
+  the rebuild debounces 150 ms (canvas resizes immediately). Per-frame
+  hygiene: meadow glow is a pre-rendered sprite (recentred under the
+  seated base), renderMotes hoists its clock, pulse filtering skips when
+  idle; Ambience throttles the river-hush setTargetAtTime to ~5 Hz +
+  0.0015 epsilon and all noise sources share ONE 2 s buffer.
+- Ease moved into FlyCamera.flyTo(pose, ms, onDone): advances inside
+  update() (first in registration order — the one-frame cloud/aerial lag
+  during the descent is gone), owns the movement-intent skip set, clamps
+  the path to groundProbe + eye height, lands exact; programmatic setPose
+  CANCELS it (tooling exact-placement semantics); V can't toggle modes
+  mid-cinematic. easeInOutCubic lives once in core/Easing.ts (rite +
+  camera share the curve). NEW tools/probe-arrival.ts (real FlyCamera,
+  fake clock): 11/11 — monotonic descent, exact landing, walk handoff,
+  KeyW skips / KeyM doesn't, clamp engages 30.4 m over a rise, setPose
+  cancels.
+- Audio heard headlessly: Ambience types against BaseAudioContext with an
+  injectable context factory; NEW tools/ambience-harness.html renders each
+  movement 10 s through an OfflineAudioContext and NEW
+  tools/probe-ambience.ts asserts soundness: 12/12 — drone rms 0.0134,
+  meadow 0.0053, cue 0.0105 (chord audibly over the bed), peaks < 0.07,
+  zero NaNs, south-approach cue one-shot latched.
+- Tooling consolidated: launchAnyChromium shared from tools/launch.ts;
+  bootrite-harness.html lives under tools/; the three arrival probes share
+  tools/check.ts; rite/audio/walk are typed LaasParams fields consumed by
+  main.ts + BootUI (harness passes parseParams().rite — launch.ts's
+  literal rite=0 stays the contract). Vestiges swept: #boot-bar
+  (field/write/markup/CSS), converge (hidden covers it), hideTimers.
+- probe-bootrite also asserts CONTENT now: lit stones always a prefix of
+  the foundation order and all twelve in exact Rev 21:19-20 gem colors at
+  rest; verse block is a short quoted excerpt + book-chapter:verse ESV
+  citation; mid-rite resize leaves the Rng-seeded stars byte-stable.
+  13/13.
+- Verification matrix at HEAD: tsc clean, vite build clean, walkfling 8/8,
+  arrival 11/11, ambience 12/12, bootrite 13/13, and probe-bootui rite=1
+  over a REAL adapter end-to-end (rite stills reviewed, deterministic
+  landed final frame). Engine re-vendored into apps/web/public/laas.
+  NOT done: pool-underside polish (GPU-visual, still queued) and the
+  stills-carousel / Ezek 45-48 items (blocked on Scott by design).
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
