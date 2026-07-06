@@ -105,6 +105,10 @@ export function laasUrl(opts: LaasPageOptions, base = 'http://localhost:5173/'):
   if (opts.preset) q.set('preset', opts.preset);
   q.set('hud', opts.hud ? '1' : '0');
   if (opts.freeze !== false) q.set('freeze', '1');
+  // tooling bypasses the arrival rite: instant overlay hide (<400 ms after
+  // ready), no camera ease, no audio — captures/probes see the bare world.
+  // Override with extra: {rite: '1'} to exercise the cinematic itself.
+  q.set('rite', '0');
   for (const [k, v] of Object.entries(opts.extra ?? {})) q.set(k, v);
   return `${base}?${q.toString()}`;
 }

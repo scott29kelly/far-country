@@ -25,7 +25,16 @@ async function main(): Promise<void> {
   });
 
   mkdirSync('shots/wip', { recursive: true });
-  const url = laasUrl({ scene: 'newjerusalem', width: W, height: H, hud: false, freeze: false });
+  // rite=1: this probe exercises the arrival rite itself, overriding the
+  // rite=0 tooling default in laasUrl
+  const url = laasUrl({
+    scene: 'newjerusalem',
+    width: W,
+    height: H,
+    hud: false,
+    freeze: false,
+    extra: { rite: '1' },
+  });
   console.log(`[probe] ${url}`);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
 
@@ -57,7 +66,7 @@ async function main(): Promise<void> {
   });
   const err = await page.evaluate('window.__laas.error');
   if (err) throw new Error(`app error: ${String(err)}`);
-  await page.waitForTimeout(1200); // overlay fade + display:none
+  await page.waitForTimeout(2400); // staged dissolve (~1.85 s) + display:none
   const gone = await page.evaluate(
     `(() => { const b = document.getElementById('boot'); return b ? getComputedStyle(b).display === 'none' : true; })()`,
   );

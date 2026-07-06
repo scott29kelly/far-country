@@ -1,0 +1,183 @@
+/**
+ * probe-bootrite.ts — headless verification of the boot rite (BootUI) via
+ * bootrite-harness.html. No GPU, no world-gen: plain headless Chromium
+ * drives BootUI.set() through a staged fake gen (including multi-second
+ * stalls, matching the real loader's rAF starvation) and asserts the three
+ * hide() contracts:
+ *
+ *   1. cinematic path: staged dissolve completes — #boot display:none within
+ *      2.4 s of hide(), veil blooms mid-dissolve
+ *   2. ?rite=0 tooling bypass: display:none within 600 ms of hide()
+ *   3. prefers-reduced-motion: no rAF pacing (set() applies directly),
+ *      display:none within 600 ms of hide()
+ *
+ * Also captures shots/wip/bootrite-*.png at several descent stages for
+ * visual review (the paced displayP chases realP at ~3.5%/s, so waits are
+ * generous). Requires the dev server on :5173.
+ *
+ * Usage: npx tsx tools/probe-bootrite.ts
+ */
+
+import { existsSync, mkdirSync } from 'node:fs';
+import { chromium, type Browser, type Page } from 'playwright';
+
+const W = 1280;
+const H = 800;
+const BASE = 'http://localhost:5173/bootrite-harness.html';
+
+let failures = 0;
+function check(name: string, ok: boolean, detail = ''): void {
+  console.log(`[${ok ? 'PASS' : 'FAIL'}] ${name}${detail ? ` — ${detail}` : ''}`);
+  if (!ok) failures++;
+}
+
+async function bootGone(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const b = document.getElementById('boot');
+    return b ? getComputedStyle(b).display === 'none' : true;
+  });
+}
+
+async function setP(page: Page, p: number, msg: string): Promise<void> {
+  await page.evaluate(
+    ([pp, mm]) => {
+      const rig = (window as unknown as { __rig: { ui: { set(p: number, m: string): void } } }).__rig;
+      rig.ui.set(Number(pp), String(mm));
+    },
+    [String(p), msg],
+  );
+}
+
+async function hide(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const rig = (window as unknown as { __rig: { ui: { hide(): void } } }).__rig;
+    rig.ui.hide();
+  });
+}
+
+async function waitRig(page: Page): Promise<void> {
+  await page.waitForFunction(() => '__rig' in window, undefined, { timeout: 20000 });
+}
+
+/** No GPU needed — any Chromium does. Falls back to a system-provided build
+ *  (cloud runners preinstall one) when the pinned Playwright browser is
+ *  missing, so this probe runs where the WebGPU probes cannot. */
+async function launchAnyChromium(): Promise<Browser> {
+  try {
+    return await chromium.launch({ headless: true });
+  } catch (e) {
+    const sys = '/opt/pw-browsers/chromium';
+    if (existsSync(sys)) return chromium.launch({ headless: true, executablePath: sys });
+    throw e;
+  }
+}
+
+async function main(): Promise<void> {
+  mkdirSync('shots/wip', { recursive: true });
+  const browser = await launchAnyChromium();
+
+  // --- run 1: the cinematic rite (descent stages + staged dissolve) ------------
+  {
+    const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+    page.on('pageerror', (err) => {
+      console.error('[pageerror]', err.message);
+      failures++;
+    });
+    await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await waitRig(page);
+    await page.mouse.move(W * 0.62, H * 0.42, { steps: 6 });
+
+    // staged fake gen with a stall, as the real loader starves rAF
+    await setP(page, 0.08, 'creating renderer');
+    await page.waitForTimeout(2500);
+    await page.screenshot({ path: 'shots/wip/bootrite-early.png' });
+    await setP(page, 0.35, 'terrain synth');
+    await page.waitForTimeout(4500);
+    await page.screenshot({ path: 'shots/wip/bootrite-mid.png' });
+    await setP(page, 0.75, 'planting vegetation');
+    await page.waitForTimeout(6000);
+    await setP(page, 0.95, 'preparing the city');
+    await page.waitForTimeout(4500);
+    await page.mouse.click(W * 0.38, H * 0.55);
+    await page.waitForTimeout(240);
+    await page.screenshot({ path: 'shots/wip/bootrite-late.png' });
+
+    // displayP pacing: must lag realP mid-run, never exceed it
+    const disp = await page.evaluate(
+      () => ((window as unknown as { __rig: { ui: unknown } }).__rig.ui as { displayP: number }).displayP,
+    );
+    check('pacing: displayP chases realP without passing it', disp > 0.2 && disp <= 0.951, `displayP=${disp.toFixed(3)}`);
+
+    await hide(page);
+    await page.waitForTimeout(700); // veil ease-in (0.7 s from t+120 ms) near peak
+    const veilUp = await page.evaluate(() => {
+      const v = document.getElementById('boot-veil');
+      return v ? Number(getComputedStyle(v).opacity) : 0;
+    });
+    check('cinematic hide: glory veil blooms mid-dissolve', veilUp > 0.35, `veil opacity=${veilUp.toFixed(2)}`);
+    await page.screenshot({ path: 'shots/wip/bootrite-dissolve.png' });
+    await page.waitForTimeout(1300); // hide()+2.0 s total
+    check('cinematic hide: overlay gone within 2.4 s', await bootGone(page));
+    const prog = await page.evaluate(
+      () => (window as unknown as { __rig: { hooks: { progress: number } } }).__rig.hooks.progress,
+    );
+    check('hooks mirror: progress pinned to 1 after hide', prog === 1);
+    await page.close();
+  }
+
+  // --- run 2: ?rite=0 tooling bypass -------------------------------------------
+  {
+    const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+    page.on('pageerror', (err) => {
+      console.error('[pageerror]', err.message);
+      failures++;
+    });
+    await page.goto(`${BASE}?rite=0`, { waitUntil: 'domcontentloaded' });
+    await waitRig(page);
+    await setP(page, 0.5, 'terrain synth');
+    // bypass pacing: displayP tracks realP immediately
+    const disp = await page.evaluate(
+      () => ((window as unknown as { __rig: { ui: unknown } }).__rig.ui as { displayP: number }).displayP,
+    );
+    check('rite=0: displayP applies immediately (no pacing)', disp === 0.5, `displayP=${disp}`);
+    await hide(page);
+    await page.waitForTimeout(600);
+    check('rite=0: overlay gone within 600 ms of hide()', await bootGone(page));
+    await page.close();
+  }
+
+  // --- run 3: prefers-reduced-motion --------------------------------------------
+  {
+    const ctx = await browser.newContext({
+      viewport: { width: W, height: H },
+      deviceScaleFactor: 1,
+      reducedMotion: 'reduce',
+    });
+    const page = await ctx.newPage();
+    page.on('pageerror', (err) => {
+      console.error('[pageerror]', err.message);
+      failures++;
+    });
+    await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await waitRig(page);
+    await setP(page, 0.6, 'gathering the light');
+    const disp = await page.evaluate(
+      () => ((window as unknown as { __rig: { ui: unknown } }).__rig.ui as { displayP: number }).displayP,
+    );
+    check('reduced motion: set() applies directly (no rAF pacing)', disp === 0.6, `displayP=${disp}`);
+    await page.screenshot({ path: 'shots/wip/bootrite-reduced.png' });
+    await hide(page);
+    await page.waitForTimeout(600);
+    check('reduced motion: overlay gone within 600 ms of hide()', await bootGone(page));
+    await ctx.close();
+  }
+
+  await browser.close();
+  console.log(failures === 0 ? '[probe] ALL PASS' : `[probe] ${failures} FAILURE(S)`);
+  process.exit(failures === 0 ? 0 : 1);
+}
+
+main().catch((e: unknown) => {
+  console.error('[probe] FAILED:', e instanceof Error ? e.message : e);
+  process.exit(1);
+});

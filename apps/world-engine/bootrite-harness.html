@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  bootrite-harness.html — headless test rig for the boot rite (BootUI).
+
+  Adopts the REAL #boot markup + styles by fetching /index.html (no duplicated
+  markup to drift), instantiates BootUI against stub hooks, and exposes
+  window.__rig so tools/probe-bootrite.ts can drive progress and hide()
+  without booting the engine — Canvas2D only, works on GPU-less runners.
+  Honors ?rite=0 / prefers-reduced-motion exactly like the real page (BootUI
+  reads them itself). Dev-server only; never part of the built bundle.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>boot rite harness</title>
+  </head>
+  <body>
+    <script type="module">
+      const res = await fetch('/index.html');
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      for (const style of doc.head.querySelectorAll('style')) {
+        document.head.appendChild(document.adoptNode(style));
+      }
+      document.body.appendChild(document.adoptNode(doc.getElementById('boot')));
+
+      const { BootUI } = await import('/src/core/BootUI.ts');
+      const hooks = { progress: 0, progressMsg: 'boot' };
+      const ui = new BootUI(hooks);
+      window.__rig = { ui, hooks };
+    </script>
+  </body>
+</html>
