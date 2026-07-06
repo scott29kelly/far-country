@@ -24,6 +24,7 @@
 
 import { FOUNDATION_GEMS } from '../nj/cityModel';
 import type { LaasHooks } from './Hooks';
+import { hashString, Rng } from './Seed';
 
 /** Ceremonial stage line keyed off the raw engine progress message. */
 const STAGES: Array<[RegExp, string]> = [
@@ -183,7 +184,14 @@ export class BootUI {
     this.pulses.push({ x: e.clientX, y: e.clientY, t0: performance.now() });
     if (this.hintEl) this.hintEl.style.opacity = '0';
   };
-  private onResize = (): void => this.layout();
+  private resizeTimer = 0;
+  private onResize = (): void => {
+    // the main canvas tracks the viewport immediately (no smeared frame);
+    // the star/meadow layer repaints are the expensive part — debounce them
+    this.layoutCanvas();
+    window.clearTimeout(this.resizeTimer);
+    this.resizeTimer = window.setTimeout(() => this.layout(), 150);
+  };
 
   constructor(hooks: LaasHooks) {
     this.hooks = hooks;
@@ -542,12 +550,9 @@ export class BootUI {
     c.height = 170;
     const g = c.getContext('2d');
     if (!g) return c;
-    // tiny deterministic PRNG so the three variants differ but stay stable
-    let s = seed >>> 0;
-    const rnd = (): number => {
-      s = (s * 1664525 + 1013904223) >>> 0;
-      return s / 0xffffffff;
-    };
+    // deterministic per-variant layout (engine Rng, same idiom as the stars)
+    const rng = new Rng(seed);
+    const rnd = (): number => rng.float();
     const blobs = 9;
     for (let i = 0; i < blobs; i++) {
       const bx = 60 + rnd() * 320;
@@ -574,22 +579,25 @@ export class BootUI {
     return c;
   }
 
-  /** Viewport-sized layers: star fields + the meadow silhouette. */
+  /** Viewport-sized layers: star fields + the meadow silhouette. Seeded from
+   *  fixed Rng streams (fractional positions) so a resize rebuild keeps every
+   *  star where it was instead of reshuffling the sky. */
   private buildViewportLayers(): void {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const mk = (count: number, maxR: number, alpha: number): HTMLCanvasElement => {
+    const mk = (seed: string, count: number, maxR: number, alpha: number): HTMLCanvasElement => {
+      const rng = new Rng(hashString(seed));
       const c = document.createElement('canvas');
       c.width = w;
       c.height = h;
       const g = c.getContext('2d');
       if (!g) return c;
       for (let i = 0; i < count; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h * 0.82;
-        const r = 0.4 + Math.random() * maxR;
-        const warm = Math.random() < 0.3;
-        const a = alpha * (0.35 + Math.random() * 0.65);
+        const x = rng.float() * w;
+        const y = rng.float() * h * 0.82;
+        const r = 0.4 + rng.float() * maxR;
+        const warm = rng.chance(0.3);
+        const a = alpha * (0.35 + rng.float() * 0.65);
         g.fillStyle = warm ? `rgba(238, 222, 188, ${a})` : `rgba(206, 218, 238, ${a})`;
         g.beginPath();
         g.arc(x, y, r, 0, Math.PI * 2);
@@ -597,16 +605,17 @@ export class BootUI {
       }
       return c;
     };
-    this.starsFar = mk(Math.round((w * h) / 6200), 0.7, 0.5);
-    this.starsNear = mk(Math.round((w * h) / 16000), 1.15, 0.8);
+    this.starsFar = mk('boot:stars:far', Math.round((w * h) / 6200), 0.7, 0.5);
+    this.starsNear = mk('boot:stars:near', Math.round((w * h) / 16000), 1.15, 0.8);
     this.brightStars = [];
+    const rng = new Rng(hashString('boot:stars:bright'));
     const nb = 26;
     for (let i = 0; i < nb; i++) {
       this.brightStars.push({
-        fx: Math.random(),
-        fy: Math.random() * 0.7,
-        r: 0.9 + Math.random() * 1.4,
-        phase: Math.random() * Math.PI * 2,
+        fx: rng.float(),
+        fy: rng.float() * 0.7,
+        r: 0.9 + rng.float() * 1.4,
+        phase: rng.float() * Math.PI * 2,
       });
     }
 
@@ -760,13 +769,20 @@ export class BootUI {
     }
   }
 
-  private layout(): void {
+  private layoutCanvas(): void {
     if (this.canvas) {
       const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       this.canvas.width = Math.round(window.innerWidth * dpr);
       this.canvas.height = Math.round(window.innerHeight * dpr);
       this.ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
+    // reduced motion has no rAF loop — repaint now (old layers stretch for
+    // the debounce window; layout() follows with the rebuilt ones)
+    if (this.reduced) this.drawScene(0);
+  }
+
+  private layout(): void {
+    this.layoutCanvas();
     this.buildViewportLayers();
     if (this.reduced) this.drawScene(0);
   }
@@ -991,6 +1007,7 @@ export class BootUI {
     this.ctx = null;
     window.clearTimeout(this.verseTimer);
     window.clearTimeout(this.gemNameTimer);
+    window.clearTimeout(this.resizeTimer);
     for (const t of this.hideTimers) window.clearTimeout(t);
     window.removeEventListener('mousemove', this.onMove);
     window.removeEventListener('mousedown', this.onDown);
