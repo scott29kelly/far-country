@@ -647,6 +647,46 @@ whole refinement list landed and probed; engine re-vendored.**
   NOT done: pool-underside polish (GPU-visual, still queued) and the
   stills-carousel / Ezek 45-48 items (blocked on Scott by design).
 
+**(2026-07-06, Scott's Windows machine, worktree, later) POOL-UNDERSIDE
+POLISH (P2 item 15) — investigated, diagnosis corrected, holes closed.**
+
+- CI on 802c6fd confirmed green first (all six checks, world-engine job
+  included); baseline re-proved before touching anything: walkfling 8/8,
+  arrival 11/11.
+- The debt's diagnosis was wrong in an instructive way. "Pool undersides
+  have no lit material" — actually the pool undersides were INVISIBLE
+  from below (surface + bed are single-sided top-facing planes,
+  backface-culled), so under a pool you looked straight THROUGH the
+  water to the zenith sky. And under most of a pool's plan rect the
+  walker never sees the bed at all: every tier top carries a
+  full-footprint ivory cornice slab (CityMassing, 2*half+5 square,
+  2.4 thick at yTop) that occludes the bed from below except the ~2 m
+  sliver where the pool lip (half+2.6) outreaches the cornice
+  (half+2.5). The "unlit near-black ceiling" in flingfix-live-a.png was
+  the CORNICE underside + the dark ZENITH SKY through the culled pool
+  lip, under auto-exposure keyed to the bright meadow — not a missing
+  pool material. At T=11 today the whole undercroft reads properly lit
+  pale-ivory in every shot (probe-GI ambient reaches down-faces);
+  the walker-height approach/undercroft matrix shows no black anywhere
+  (shots/wip/poolunder-*.png).
+- Fix that remains real: riverBedMaterial is now DoubleSide, so every
+  pool's gold bed renders from below and the see-through-to-sky slivers
+  at every pool lip are closed (crown basin + all ledge pools + plunge
+  pool inherit it). Verified on-GPU: zenith shot from under the pool0
+  lip (0,700,2051) shows the caustic gold bed strip where sky leaked
+  before (poolunder-a-liptest.png). Beds are tiny planes — the
+  DoubleSide double-pass cost is negligible (CityMassing's FrontSide
+  discipline is about its huge meshes, not these).
+- Mapped pool0's true world rect via a throwaway groundProbe scan
+  (surface y 807.4, x ±50, z 1696..2060 — matches the reach table);
+  scan tool deleted after use, not committed.
+- Verified after: tsc clean, vite build clean, walkfling 8/8 (water
+  materials sit near walk physics — probe is the spec). Engine
+  re-vendored into apps/web/public/laas.
+- If the black-ceiling read ever returns in a live walk, tune exposure
+  or the cornice underside ambient — not the water. The pool undersides
+  are now accounted for.
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
