@@ -496,6 +496,65 @@ cosmetic, queue with the polish debts. Still owed (subjective,
 Scott-only): first-walk FEEL pass, campus visual verdict (hard refresh),
 M1 Max performance verdict.
 
+**(2026-07-06, cloud) ARRIVAL EXPERIENCE BUILT — queued item 6: boot rite
+overhauled as "The Descent", staged cinematic hide, procedural audio
+package.** Direction question (rite background 1 vs 2) could not reach
+Scott from the cloud session, so the scoping's recommended shape was built:
+direction (1) richer 2D cinematic + (4a) cinematic hide() + the audio
+package; direction (2) stills-carousel stays open as a later layer (its
+ADR + regen step were NOT created). All hard invariants held:
+
+- `src/core/BootUI.ts` + `index.html` rewritten: the load IS the descent
+  (Rev 21:2/21:10) — a painterly Canvas2D night (parallax star layers,
+  drifting cloud deck, meadow silhouette) through which a pre-rendered
+  luminous terraced-city sprite (gold gradient tiers, lit windows, three
+  pearl gates, twelve-gem foundation course, river thread, summit glory
+  with god-ray fan) descends from above the frame to seat on the horizon
+  at 100%. Kept: FOUNDATION_GEMS stones row + gemname, ESV
+  short-excerpt+citation verse cycle (Rev 21:2 added), stage lines, lamp
+  motes + click pulses, `#boot` id, `set()/hide()` + `__laas` mirror. All
+  layers pre-rendered offscreen once (per-frame cost is composition only);
+  zero GPU anywhere in the overlay; display pacing unchanged (wall-clock
+  chase, ~3.5%/s + catch-up, never dt).
+- Staged dissolve (4a, DOM-only so fully GPU-safe): text bows out, a
+  glory veil blooms to ~0.94 then settles while the night lifts (the
+  exposure-ramp feel), gone at ~1.85 s. Tooling contract PRESERVED by a
+  `?rite=0` bypass that `tools/launch.ts laasUrl()` now sets by DEFAULT:
+  bypass hides in <350 ms and also skips display pacing, camera ease, and
+  audio, so every probe/shot sees the bare world unless it opts in with
+  extra `{rite:'1'}` (probe-bootui.ts does, and now waits 2.4 s).
+  Reduced motion: static painting, direct set() application, fast hide.
+- Camera arrival ease (main.ts): default interactive walk spawn only —
+  starts held 120 m up / 260 m south of the spawn in fly with input
+  disabled, eases (easeInOutCubic on wall-clock, 5 s) onto the spawn pose
+  after `engine.start()`, then setMode('walk') + re-enable. Any keydown /
+  mousedown skips straight to the ground. Explicit `?cam=`, `?walk=0`,
+  `?rite=0`, and reduced motion all keep exact legacy placement semantics
+  (no ease). FlyCamera itself UNTOUCHED — fling-fix invariants intact.
+- Procedural audio (`src/audio/Ambience.ts`, NJ-only literal branch in
+  main.ts, RENDERING-DECISIONS entry #9, roadmap backlog item updated):
+  zero assets, one AudioContext unlocked by the first gesture. Movement 1
+  boot drone (E2/B2 + beating-octave pair + band-passed shimmer) swells
+  with real gen progress; movement 2 meadow bed on arrive() (two
+  decorrelated gust-LFO wind channels, river hush gained by live distance
+  to the approach corridor |x|<=90 / z 1900..4500, sparse synthesized
+  birdsong); movement 3 gold chord (D lydian, slow attack) — soft voicing
+  at ready, full voicing once on first south-approach crossing
+  (z<2950, |x|<900). `?audio=0` disables construction; `M` mutes.
+- VERIFIED headlessly (cloud has no GPU): new `bootrite-harness.html`
+  (adopts the REAL #boot markup+CSS by fetching /index.html — nothing
+  duplicated to drift) + `tools/probe-bootrite.ts` (plain Chromium, no
+  WebGPU; falls back to /opt/pw-browsers/chromium where the pinned
+  Playwright browser is absent): 8/8 PASS — pacing chases without
+  overshoot, veil blooms mid-dissolve, cinematic hide <2.4 s, hooks
+  mirror pinned, rite=0 unpaced + hidden <600 ms, reduced-motion direct +
+  hidden <600 ms. Descent stages visually reviewed
+  (shots/wip/bootrite-*.png). `tsc --noEmit` clean, `vite build` clean,
+  `probe-walkfling.ts` ALL PASS (walk physics untouched). STILL OWED on
+  real hardware (Scott): `probe-bootui.ts` (now rite=1) over a real gen
+  wait, the arrival ease + audio feel pass, plus the three pending
+  verdicts from 07-03 (walk feel, campus visuals, M1 Max perf).
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
@@ -545,7 +604,11 @@ M1 Max performance verdict.
    entry above: world-space two-band garden-court campus in Dwellings.ts,
    megaboxes gone, RENDERING-DECISIONS #8; follow-ups queued — allotment
    measurement seeding per ADR 0017, campus zone tint, court orchards).
-6. **Arrival experience (added 2026-07-02, Scott):** MAJOR overhaul of the
+6. ~~Arrival experience~~ **BUILT 2026-07-06** (dated entry above: descent
+   rite + staged cinematic hide + camera arrival ease + procedural audio;
+   direction 2 stills-carousel remains an open later layer, pending Scott's
+   verdict on the shipped direction 1). Original scoping kept below for the
+   invariants record. **(added 2026-07-02, Scott):** MAJOR overhaul of the
    boot/loading screen (`src/core/BootUI.ts`, "The Preparation" rite) — the
    current line-art ziggurat + gem diamonds screen is "really bad, clunky,
    outdated" vs the world's new bar; open to a complete rethink of how to
