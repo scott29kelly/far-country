@@ -24,8 +24,10 @@
       document.body.appendChild(document.adoptNode(doc.getElementById('boot')));
 
       const { BootUI } = await import('/src/core/BootUI.ts');
+      const { parseParams } = await import('/src/core/Params.ts');
       const hooks = { progress: 0, progressMsg: 'boot' };
-      const ui = new BootUI(hooks);
+      // same typed truth as main.ts: ?rite=0 arrives through LaasParams.rite
+      const ui = new BootUI(hooks, parseParams().rite);
       window.__rig = { ui, hooks };
     </script>
   </body>

@@ -15,6 +15,7 @@
  * Usage: npx tsx tools/probe-ambience.ts
  */
 
+import { makeChecker } from './check';
 import { launchAnyChromium } from './launch';
 
 const BASE = 'http://localhost:5173/tools/ambience-harness.html';
@@ -27,18 +28,14 @@ interface AmbStats {
   cueStill: boolean;
 }
 
-let failures = 0;
-function check(name: string, ok: boolean, detail = ''): void {
-  console.log(`[${ok ? 'PASS' : 'FAIL'}] ${name}${detail ? ` — ${detail}` : ''}`);
-  if (!ok) failures++;
-}
+const { check, fail, finish } = makeChecker();
 
 async function main(): Promise<void> {
   const browser = await launchAnyChromium();
   const page = await browser.newPage();
   page.on('pageerror', (err) => {
     console.error('[pageerror]', err.message);
-    failures++;
+    fail('pageerror');
   });
   await page.goto(BASE, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => '__ambReady' in window, undefined, { timeout: 20000 });
@@ -73,8 +70,7 @@ async function main(): Promise<void> {
   );
 
   await browser.close();
-  console.log(failures === 0 ? '[probe] ALL PASS' : `[probe] ${failures} FAILURE(S)`);
-  process.exit(failures === 0 ? 0 : 1);
+  finish();
 }
 
 main().catch((e: unknown) => {

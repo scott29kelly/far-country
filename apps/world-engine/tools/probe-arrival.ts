@@ -47,14 +47,12 @@ const release = (code: string): void => {
   for (const h of keyupHandlers) h({ code } as KeyboardEvent);
 };
 
+const { makeChecker } = await import('./check');
+
 const domShim = { addEventListener: () => {} } as unknown as HTMLElement;
 const DT = 1 / 60;
 const STEP_MS = 1000 / 60;
-const failures: string[] = [];
-const check = (name: string, ok: boolean, detail: string): void => {
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name} — ${detail}`);
-  if (!ok) failures.push(name);
-};
+const { check, finish } = makeChecker();
 
 // the NJ arrival geometry: aloft +120 y / +260 z behind the walk spawn
 const GROUND_Y = 470;
@@ -185,5 +183,4 @@ const step = (cam: InstanceType<typeof FlyCamera>): void => {
   );
 }
 
-console.log(failures.length === 0 ? '\nALL PASS' : `\n${failures.length} FAILURE(S): ${failures.join(', ')}`);
-process.exit(failures.length === 0 ? 0 : 1);
+finish();

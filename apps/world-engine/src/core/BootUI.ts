@@ -193,7 +193,9 @@ export class BootUI {
     this.resizeTimer = window.setTimeout(() => this.layout(), 150);
   };
 
-  constructor(hooks: LaasHooks) {
+  /** `riteOn` comes from LaasParams.rite (main.ts) — the harness passes its
+   *  own parseParams().rite so ?rite=0 behaves identically there. */
+  constructor(hooks: LaasHooks, riteOn: boolean) {
     this.hooks = hooks;
     this.root = document.getElementById('boot');
     this.msg = document.getElementById('boot-msg');
@@ -207,7 +209,7 @@ export class BootUI {
     this.hintEl = document.getElementById('boot-hint');
     this.canvas = document.getElementById('boot-scene') as HTMLCanvasElement | null;
     this.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.riteOff = new URLSearchParams(window.location.search).get('rite') === '0';
+    this.riteOff = !riteOn;
 
     this.buildSprites();
     this.buildStones();

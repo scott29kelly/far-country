@@ -1,6 +1,6 @@
 /**
  * probe-bootrite.ts — headless verification of the boot rite (BootUI) via
- * bootrite-harness.html. No GPU, no world-gen: plain headless Chromium
+ * tools/bootrite-harness.html. No GPU, no world-gen: plain headless Chromium
  * drives BootUI.set() through a staged fake gen (including multi-second
  * stalls, matching the real loader's rAF starvation) and asserts the three
  * hide() contracts:
@@ -18,18 +18,16 @@
  * Usage: npx tsx tools/probe-bootrite.ts
  */
 
-import { existsSync, mkdirSync } from 'node:fs';
-import { chromium, type Browser, type Page } from 'playwright';
+import { mkdirSync } from 'node:fs';
+import type { Page } from 'playwright';
+import { makeChecker } from './check';
+import { launchAnyChromium } from './launch';
 
 const W = 1280;
 const H = 800;
-const BASE = 'http://localhost:5173/bootrite-harness.html';
+const BASE = 'http://localhost:5173/tools/bootrite-harness.html';
 
-let failures = 0;
-function check(name: string, ok: boolean, detail = ''): void {
-  console.log(`[${ok ? 'PASS' : 'FAIL'}] ${name}${detail ? ` — ${detail}` : ''}`);
-  if (!ok) failures++;
-}
+const { check, fail, finish } = makeChecker();
 
 async function bootGone(page: Page): Promise<boolean> {
   return page.evaluate(() => {
@@ -59,19 +57,6 @@ async function waitRig(page: Page): Promise<void> {
   await page.waitForFunction(() => '__rig' in window, undefined, { timeout: 20000 });
 }
 
-/** No GPU needed — any Chromium does. Falls back to a system-provided build
- *  (cloud runners preinstall one) when the pinned Playwright browser is
- *  missing, so this probe runs where the WebGPU probes cannot. */
-async function launchAnyChromium(): Promise<Browser> {
-  try {
-    return await chromium.launch({ headless: true });
-  } catch (e) {
-    const sys = '/opt/pw-browsers/chromium';
-    if (existsSync(sys)) return chromium.launch({ headless: true, executablePath: sys });
-    throw e;
-  }
-}
-
 async function main(): Promise<void> {
   mkdirSync('shots/wip', { recursive: true });
   const browser = await launchAnyChromium();
@@ -81,7 +66,7 @@ async function main(): Promise<void> {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     page.on('pageerror', (err) => {
       console.error('[pageerror]', err.message);
-      failures++;
+      fail('pageerror');
     });
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
     await waitRig(page);
@@ -141,7 +126,7 @@ async function main(): Promise<void> {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     page.on('pageerror', (err) => {
       console.error('[pageerror]', err.message);
-      failures++;
+      fail('pageerror');
     });
     await page.goto(`${BASE}?rite=0`, { waitUntil: 'domcontentloaded' });
     await waitRig(page);
@@ -167,7 +152,7 @@ async function main(): Promise<void> {
     const page = await ctx.newPage();
     page.on('pageerror', (err) => {
       console.error('[pageerror]', err.message);
-      failures++;
+      fail('pageerror');
     });
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
     await waitRig(page);
@@ -184,8 +169,7 @@ async function main(): Promise<void> {
   }
 
   await browser.close();
-  console.log(failures === 0 ? '[probe] ALL PASS' : `[probe] ${failures} FAILURE(S)`);
-  process.exit(failures === 0 ? 0 : 1);
+  finish();
 }
 
 main().catch((e: unknown) => {

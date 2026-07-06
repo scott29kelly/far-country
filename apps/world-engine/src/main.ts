@@ -32,11 +32,12 @@ async function boot(): Promise<void> {
   // WebGPU each get a clear notice instead of a broken boot (?nogate=1 skips)
   if (!browserGate()) return;
   const params = parseParams();
-  const bootUI = new BootUI(hooks);
+  const bootUI = new BootUI(hooks, params.rite);
 
-  // arrival-experience switches (tooling contract: launch.ts passes rite=0)
+  // arrival-experience switches live in LaasParams (rite/audio/walk — the
+  // tooling contract stays launch.ts's literal rite=0). ?fly=1 is Bookmarks'
+  // own switch, read here only to gate the ease off the flythrough.
   const q = new URLSearchParams(window.location.search);
-  const riteOn = q.get('rite') !== '0';
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   bootUI.set(0.02, 'probing WebGPU');
@@ -61,7 +62,7 @@ async function boot(): Promise<void> {
   // must not leave gesture listeners or an AudioContext behind) but still
   // before world-gen, so the first user gesture during the rite unlocks the
   // AudioContext and the preparation drone plays under the wait.
-  if (params.scene === 'newjerusalem' && riteOn && q.get('audio') !== '0') {
+  if (params.scene === 'newjerusalem' && params.rite && params.audio) {
     ambience = new Ambience(hooks);
   }
 
@@ -106,10 +107,10 @@ async function boot(): Promise<void> {
     const pose = parseCamString(params.cam);
     if (pose) fly.setPose(pose); // explicit pose ⇒ fly semantics
   } else if (hooks.initialPose) {
-    const wantWalk = hooks.initialPoseMode === 'walk' && q.get('walk') !== '0';
+    const wantWalk = hooks.initialPoseMode === 'walk' && params.walk;
     const wantArrival =
       wantWalk &&
-      riteOn &&
+      params.rite &&
       !reducedMotion &&
       params.scene === 'newjerusalem' &&
       q.get('fly') !== '1';
