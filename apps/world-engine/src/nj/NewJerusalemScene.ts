@@ -31,7 +31,7 @@ import { ALLOT_ZONES } from './allotmentZones';
 import { buildDwellings } from './Dwellings';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
-import { riverSurfaceLocalY } from './RiverOfLife';
+import { wrapGroundProbeWithRiver } from './RiverOfLife';
 import { buildTemple } from './Temple';
 import { buildTreesOfLife } from './TreesOfLife';
 
@@ -125,27 +125,13 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
 
   // The hydrology underwater guard can't see the authored river — wrap the
   // terrain groundProbe with the analytic reach table so the walker's eye
-  // stays above the crystal water (same wade clearance as terrain water).
-  // The reaches are vertically STACKED up the tiers (crown basin ≈ 3.1 km
-  // over the plaza) and the lowest ledge pool overlaps 60 m past the wall
-  // line in plan — so claim a reach only when its surface sits at/below the
-  // querying eye plus a wade-tunnel margin. Without the cap, a plaza-level
-  // walker on the meridian corridor inherited a tier-top pool as a wade
-  // floor and the walk snap catapulted them kilometres up (the plateau-edge
-  // walker-fling bug, STATUS 2026-07-02 late-5). The margin covers the
-  // legit cases where the eye dips under a claimed surface for a frame:
-  // wading (0.45 m) and a fast fall landing in a pool (a full 260 m rim
-  // fall tunnels ≈ 3.6 m/frame at the 30 fps dt floor).
-  const WATER_CLAIM_M = 6;
+  // stays above the crystal water. The wrap itself (the claim cap, the wade
+  // margins, the walker-fling story) lives with the reach table in
+  // RiverOfLife.ts and is shared verbatim with tools/probe-walkfling.ts —
+  // no hand-mirrored copy to desync.
   const baseProbe = ctx.hooks.groundProbe;
   if (baseProbe) {
-    ctx.hooks.groundProbe = (x, z, y) => {
-      const g = baseProbe(x, z, y);
-      const maxSurf = y === undefined ? undefined : (y + WATER_CLAIM_M - plazaTopY) / NJ_SCALE;
-      const local = riverSurfaceLocalY(x / NJ_SCALE, z / NJ_SCALE, maxSurf);
-      if (local <= -1e5) return g;
-      return { ground: g.ground, water: Math.max(g.water, local * NJ_SCALE + plazaTopY) };
-    };
+    ctx.hooks.groundProbe = wrapGroundProbeWithRiver(baseProbe, plazaTopY, NJ_SCALE);
   }
 
   // Trees of life flanking the river's approach reach (Rev 22:2) — real

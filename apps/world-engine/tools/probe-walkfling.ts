@@ -2,9 +2,9 @@
  * CPU walk-physics probe for the plateau-edge walker-fling bug (STATUS
  * 2026-07-02 late-5) — no browser, no GPU, no dev server. Runs the REAL
  * FlyCamera walk/fly physics and the REAL RiverOfLife reach table under
- * Node against a mock flat-plateau terrain probe, composing the river
- * groundProbe wrap exactly as NewJerusalemScene does (keep the wrap copy
- * below in sync with NewJerusalemScene.ts if that wrap changes).
+ * Node against a mock flat-plateau terrain probe, composed through the
+ * SHARED wrapGroundProbeWithRiver — the same function NewJerusalemScene
+ * installs, so there is no mirrored wrap copy to fall out of sync.
  *
  * The bug: riverSurfaceLocalY is a 2D plan lookup over VERTICALLY STACKED
  * reaches (ledge pools + crown basin, up to ~3.1 km world over the plaza).
@@ -39,7 +39,8 @@ Object.defineProperty(globalThis, 'window', { value: windowShim, configurable: t
 
 const { PerspectiveCamera } = await import('three');
 const { FlyCamera } = await import('../src/core/FlyCamera');
-const { riverSurfaceLocalY } = await import('../src/nj/RiverOfLife');
+const { riverSurfaceLocalY, wrapGroundProbeWithRiver } = await import('../src/nj/RiverOfLife');
+const { CITY_TIERS, cityTierBottoms } = await import('../src/nj/cityModel');
 const { NJ_SCALE } = await import('../src/nj/rimModel');
 
 const press = (code: string): void => {
@@ -57,15 +58,8 @@ const terrainProbe = (_x: number, _z: number): { ground: number; water: number }
   ground: GROUND_Y,
   water: GROUND_Y - 2, // dry-cell convention: no terrain water on the corridor
 });
-// mirror of NewJerusalemScene.ts's river-surface groundProbe wrap
-const WATER_CLAIM_M = 6;
-const probe = (x: number, z: number, y?: number): { ground: number; water: number } => {
-  const g = terrainProbe(x, z);
-  const maxSurf = y === undefined ? undefined : (y + WATER_CLAIM_M - PLAZA_TOP) / NJ_SCALE;
-  const local = riverSurfaceLocalY(x / NJ_SCALE, z / NJ_SCALE, maxSurf);
-  if (local <= -1e5) return g;
-  return { ground: g.ground, water: Math.max(g.water, local * NJ_SCALE + PLAZA_TOP) };
-};
+// the REAL river wrap, exactly as NewJerusalemScene installs it
+const probe = wrapGroundProbeWithRiver(terrainProbe, PLAZA_TOP, NJ_SCALE);
 
 const domShim = { addEventListener: () => {} } as unknown as HTMLElement;
 const DT = 1 / 60;
@@ -117,6 +111,39 @@ const freshCam = (): InstanceType<typeof FlyCamera> => {
     'A2 no fling on the approach corridor',
     maxJump < 5 && maxY < GROUND_Y + 12,
     `max per-frame |Δy| ${maxJump.toFixed(2)} m at z ${atJump.toFixed(0)}; max eye ${maxY.toFixed(1)} m`,
+  );
+}
+
+// ---- B: tier-boundary rim band — overlapping claim margins ----------------
+// Adjacent ledge pools' plan-claim bands OVERLAP by 0.2 local (4 m world) at
+// each tier lip: the higher pool claims to z1 + 0.4 while the lower pool
+// claims from z0 - 0.4. Pre-fix, riverSurfaceLocalY returned -1e6 as soon as
+// the FIRST plan match was cap-rejected — inside the shared band the higher
+// pool matched first, so a walker wading the LOWER pool lost the water floor
+// entirely and the eye sank under the crystal surface (the no-underwater
+// invariant breaks). lz 42.9 sits in the tier-3/tier-2 shared band
+// (42.8..43.0); lz 43.1 is plain tier-2 pool, the control.
+{
+  const yTop2 = cityTierBottoms()[2] + CITY_TIERS[2].h; // tier-2 pavement, local
+  const pool2Surf = (yTop2 + 0.18) * NJ_SCALE + PLAZA_TOP; // world
+  const wadeEye = pool2Surf + 0.45;
+  const atBand = probe(0, 42.9 * NJ_SCALE, wadeEye);
+  check(
+    'B1 lower pool still claims inside the shared band',
+    Math.abs(atBand.water - pool2Surf) < 1e-6,
+    `water ${atBand.water.toFixed(2)} at lz 42.9 (expect pool-2 surface ${pool2Surf.toFixed(2)})`,
+  );
+  const control = probe(0, 43.1 * NJ_SCALE, wadeEye);
+  check(
+    'B2 plain pool-2 claim unchanged (control)',
+    Math.abs(control.water - pool2Surf) < 1e-6,
+    `water ${control.water.toFixed(2)} at lz 43.1 (expect ${pool2Surf.toFixed(2)})`,
+  );
+  const plazaEye = probe(0, 42.9 * NJ_SCALE, GROUND_Y + 1.7);
+  check(
+    'B3 cap still rejects both pools for a plaza-level eye',
+    plazaEye.water === GROUND_Y - 2,
+    `water ${plazaEye.water.toFixed(2)} at lz 42.9, plaza eye (expect dry ${(GROUND_Y - 2).toFixed(2)})`,
   );
 }
 
