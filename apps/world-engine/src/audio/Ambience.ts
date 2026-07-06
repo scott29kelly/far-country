@@ -59,6 +59,11 @@ export class Ambience {
   private nextBirdAt = 0;
   private disposed = false;
   private swellTimer: number;
+  /** one shared 2 s noise buffer — every source loops it at a random offset */
+  private noiseBuf: AudioBuffer | null = null;
+  /** river-hush write throttle: last gain sent + earliest next write time */
+  private riverSent = -1;
+  private riverNextAt = 0;
 
   private onGesture = (): void => this.unlock();
   private onKey = (e: KeyboardEvent): void => {
@@ -109,13 +114,17 @@ export class Ambience {
     }
   }
 
-  /** Looping white-noise source (2 s buffer; offset decorrelates instances). */
+  /** Looping white-noise source. All sources share ONE 2 s buffer (filled
+   *  once) and decorrelate via random start offsets + their own filters. */
   private noiseSource(ctx: AudioContext): AudioBufferSourceNode {
-    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    if (!this.noiseBuf) {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      this.noiseBuf = buf;
+    }
     const src = ctx.createBufferSource();
-    src.buffer = buf;
+    src.buffer = this.noiseBuf;
     src.loop = true;
     src.start(ctx.currentTime, Math.random() * 2);
     return src;
@@ -299,13 +308,19 @@ export class Ambience {
   update(x: number, z: number): void {
     const ctx = this.ctx;
     if (!ctx || !this.arrived) return; // pre-arrival swell runs on the interval
-    // river hush by distance to the approach corridor
-    if (this.riverGain) {
+    // river hush by distance to the approach corridor — the 0.4 s smoothing
+    // makes per-frame writes pointless, so send at most ~5 Hz and only when
+    // the target actually moved (setTargetAtTime churns the param timeline)
+    if (this.riverGain && ctx.currentTime >= this.riverNextAt) {
       const dx = Math.max(0, Math.abs(x) - RIVER_HALF_X);
       const dz = Math.max(0, RIVER_Z0 - z, z - RIVER_Z1);
       const d = Math.hypot(dx, dz);
       const g = 0.08 * Math.max(0, 1 - d / 520) ** 2;
-      this.riverGain.gain.setTargetAtTime(g, ctx.currentTime, 0.4);
+      if (Math.abs(g - this.riverSent) > 0.0015) {
+        this.riverGain.gain.setTargetAtTime(g, ctx.currentTime, 0.4);
+        this.riverSent = g;
+        this.riverNextAt = ctx.currentTime + 0.2;
+      }
     }
     // sparse birdsong
     if (this.meadowBus && ctx.currentTime >= this.nextBirdAt) {

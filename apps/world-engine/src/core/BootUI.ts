@@ -147,6 +147,7 @@ export class BootUI {
   private haloSprite: HTMLCanvasElement | null = null;
   private raySprite: HTMLCanvasElement | null = null;
   private moteSprite: HTMLCanvasElement | null = null;
+  private glowSprite: HTMLCanvasElement | null = null;
   private cloudSprites: HTMLCanvasElement[] = [];
   private starsFar: HTMLCanvasElement | null = null;
   private starsNear: HTMLCanvasElement | null = null;
@@ -313,6 +314,7 @@ export class BootUI {
     this.haloSprite = this.paintHalo();
     this.raySprite = this.paintRays();
     this.moteSprite = this.paintMoteSprite();
+    this.glowSprite = this.paintGlow();
     this.cloudSprites = [this.paintCloud(11), this.paintCloud(37), this.paintCloud(71)];
     // cloud field: a loose deck below centre — back layer behind the city,
     // a few forward wisps the city descends through
@@ -524,6 +526,22 @@ export class BootUI {
       g.closePath();
       g.fill();
     }
+    return c;
+  }
+
+  /** The city's light pooling on the meadow — drawn per frame via drawImage
+   *  + globalAlpha instead of a per-frame createRadialGradient. */
+  private paintGlow(): HTMLCanvasElement {
+    const c = document.createElement('canvas');
+    c.width = 512;
+    c.height = 512;
+    const g = c.getContext('2d');
+    if (!g) return c;
+    const grad = g.createRadialGradient(256, 256, 0, 256, 256, 256);
+    grad.addColorStop(0, 'rgba(226, 186, 106, 1)');
+    grad.addColorStop(1, 'rgba(226, 186, 106, 0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 512, 512);
     return c;
   }
 
@@ -893,12 +911,16 @@ export class BootUI {
     if (this.meadow) {
       ctx.drawImage(this.meadow, 0, h - this.meadow.height);
       const glowA = 0.14 * p;
-      if (glowA > 0.005) {
-        const gr = ctx.createRadialGradient(w / 2, h * 0.68, 0, w / 2, h * 0.68, w * 0.3);
-        gr.addColorStop(0, `rgba(226, 186, 106, ${glowA})`);
-        gr.addColorStop(1, 'rgba(226, 186, 106, 0)');
-        ctx.fillStyle = gr;
-        ctx.fillRect(0, h * 0.52, w, h * 0.48);
+      if (glowA > 0.005 && this.glowSprite) {
+        // pool the light on the meadow under the seated base; crop the
+        // sprite's upper half so no glow spills back onto the sky
+        const r = w * 0.3;
+        const cy = h * 0.74;
+        const cut = Math.max(cy - r, h * 0.6);
+        const sy = ((cut - (cy - r)) / (2 * r)) * 512;
+        ctx.globalAlpha = glowA;
+        ctx.drawImage(this.glowSprite, 0, sy, 512, 512 - sy, w / 2 - r, cut, r * 2, cy + r - cut);
+        ctx.globalAlpha = 1;
       }
     }
 
@@ -913,6 +935,7 @@ export class BootUI {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const bright = 0.55 + 0.45 * this.displayP;
+    const nowMs = performance.now();
 
     ctx.globalCompositeOperation = 'lighter';
 
@@ -950,7 +973,7 @@ export class BootUI {
 
       // click pulses push outward
       for (const pl of this.pulses) {
-        const age = (performance.now() - pl.t0) / 1000;
+        const age = (nowMs - pl.t0) / 1000;
         if (age > 0.5) continue;
         const dx = m.x - pl.x;
         const dy = m.y - pl.y;
@@ -987,17 +1010,18 @@ export class BootUI {
 
     // expanding pulse rings
     ctx.globalCompositeOperation = 'source-over';
-    const nowMs = performance.now();
-    this.pulses = this.pulses.filter((pl) => nowMs - pl.t0 < 1000);
-    for (const pl of this.pulses) {
-      const age = (nowMs - pl.t0) / 1000;
-      const r = age * 340;
-      ctx.globalAlpha = 0.22 * (1 - age);
-      ctx.strokeStyle = '#e0b45c';
-      ctx.lineWidth = 1.25;
-      ctx.beginPath();
-      ctx.arc(pl.x, pl.y, r, 0, Math.PI * 2);
-      ctx.stroke();
+    if (this.pulses.length > 0) {
+      this.pulses = this.pulses.filter((pl) => nowMs - pl.t0 < 1000);
+      for (const pl of this.pulses) {
+        const age = (nowMs - pl.t0) / 1000;
+        const r = age * 340;
+        ctx.globalAlpha = 0.22 * (1 - age);
+        ctx.strokeStyle = '#e0b45c';
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.arc(pl.x, pl.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
     ctx.globalAlpha = 1;
   }
