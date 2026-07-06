@@ -20,6 +20,7 @@
 
 import { mkdirSync } from 'node:fs';
 import type { Page } from 'playwright';
+import { FOUNDATION_GEMS } from '../src/nj/cityModel';
 import { makeChecker } from './check';
 import { launchAnyChromium } from './launch';
 
@@ -93,6 +94,53 @@ async function main(): Promise<void> {
     );
     check('pacing: displayP chases realP without passing it', disp > 0.2 && disp <= 0.951, `displayP=${disp.toFixed(3)}`);
 
+    // stones: whatever is lit mid-rite must be a PREFIX of the foundation
+    // order — no stone ignites before the ones laid before it
+    const litFlags = await page.evaluate(() => {
+      const row = document.getElementById('boot-stones');
+      return row
+        ? Array.from(row.querySelectorAll('.stone')).map((el) => el.classList.contains('lit'))
+        : [];
+    });
+    const firstUnlit = litFlags.indexOf(false);
+    check(
+      'stones: lit set is a prefix of the foundation order',
+      litFlags.length === 12 && (firstUnlit === -1 || litFlags.slice(firstUnlit).every((v) => !v)),
+      `lit=[${litFlags.map((v) => (v ? '1' : '0')).join('')}]`,
+    );
+
+    // the word: a short quoted excerpt with a book-chapter:verse ESV citation
+    // (the personal-study posture — never uncited, never bulk text)
+    const word = await page.evaluate(() => ({
+      verse: document.getElementById('boot-verse')?.textContent ?? '',
+      cite: document.getElementById('boot-cite')?.textContent ?? '',
+    }));
+    check(
+      'verse: short quoted excerpt',
+      /^“.+”$/.test(word.verse) && word.verse.length < 140,
+      word.verse.slice(0, 44),
+    );
+    check('verse: ESV citation format', /^[A-Za-z][A-Za-z ]* \d+:\d+ · ESV$/.test(word.cite), word.cite);
+
+    // mid-rite resize: the Rng-seeded layers must keep every star in place
+    // across a rebuild (and the debounced rebuild must survive a flurry)
+    const starSig = (): Promise<string> =>
+      page.evaluate(() =>
+        (
+          (window as unknown as { __rig: { ui: unknown } }).__rig.ui as {
+            brightStars: Array<{ fx: number; fy: number }>;
+          }
+        ).brightStars
+          .map((s) => `${s.fx.toFixed(6)},${s.fy.toFixed(6)}`)
+          .join('|'),
+      );
+    const sigBefore = await starSig();
+    await page.setViewportSize({ width: 1100, height: 700 });
+    await page.waitForTimeout(260); // > the 150 ms rebuild debounce
+    await page.setViewportSize({ width: W, height: H });
+    await page.waitForTimeout(260);
+    check('resize: star layout is position-stable', (await starSig()) === sigBefore);
+
     // the seat line: drive the descent to rest and capture the p=1
     // composition — wall base just behind the meadow's back ridge
     await setP(page, 1, 'ready');
@@ -103,6 +151,25 @@ async function main(): Promise<void> {
     );
     await page.waitForTimeout(250);
     await page.screenshot({ path: 'shots/wip/bootrite-seated.png' });
+
+    // at rest all twelve stones burn in the exact Rev 21:19-20 gem colors
+    const stoneColors = await page.evaluate(() => {
+      const row = document.getElementById('boot-stones');
+      return row
+        ? Array.from(row.querySelectorAll('.stone')).map((el) => (el as HTMLElement).style.background)
+        : [];
+    });
+    const hexToRgb = (hex: string): string => {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+    };
+    const expected = FOUNDATION_GEMS.map((g) => hexToRgb(g.color));
+    const orderOk = stoneColors.length === 12 && stoneColors.every((c, i) => c === expected[i]);
+    check(
+      'stones: all twelve ignite in Rev 21:19-20 gem order',
+      orderOk,
+      orderOk ? 'exact color match' : `got [${stoneColors.join('; ')}]`,
+    );
 
     await hide(page);
     await page.waitForTimeout(700); // veil ease-in (0.7 s from t+120 ms) near peak
