@@ -687,6 +687,60 @@ POLISH (P2 item 15) — investigated, diagnosis corrected, holes closed.**
   or the cornice underside ambient — not the water. The pool undersides
   are now accounted for.
 
+**(2026-07-06, cloud, post-#25) WALL/GATE COLLISION BUILT — the first "What's
+NOT built" item closed.** Walkers and the fly camera no longer phase through
+the city: lateral collision against the massing, with the twelve gates as
+REAL passages (Ezek 48:30-34 order, RENDERING-DECISIONS #2).
+
+- Shape per the handoff: a new `hooks.moveProbe` alongside groundProbe (a
+  lateral move resolver, `(fromX, fromZ, toX, toZ, y) -> {x, z}`), consumed
+  by FlyCamera in BOTH modes — walk resolves each step at shin height
+  (WALL_BODY_LIFT 0.5 so pavement lips stay steppable), fly resolves at the
+  camera eye before the ground clamp. Null everywhere but the NJ scene, so
+  wild scenes never block (same opt-in idiom as groundProbe); cinematics
+  (flyTo) stay collision-free as established in the arrival P0 pass.
+- `src/nj/cityCollide.ts` derives the volumes from cityModel's OWN tables
+  (CITY_TIERS, PLINTH_HALF, GATE_OFFSETS/GATE_WIDTH, foundationCourseSpans)
+  and exports the REAL resolver the scene installs — shared-table discipline,
+  no mirrors. Volumes are the MASSING: solid plinth, jasper wall ring with
+  open gate gaps, the jewelled foundation course, terrace tiers at the glass
+  plane (TIER_GLASS_PROUD), crown. Relief (pilasters, piers, frames, dentil/
+  arcade courses, jambs, pearl membranes) stays non-colliding filigree.
+  Resolution is axis-separated swept substeps (1 m world): oblique motion
+  SLIDES along faces, boosted fly speed cannot tunnel the wall, and a start
+  inside a solid moves freely — programmatic poses (setPose anywhere) are
+  never trapped, and walk-entry inside the plinth (the live-probe B path)
+  simply walks out.
+- FOUND ALONG THE WAY: the foundation gem course girdled the wall base
+  ACROSS all twelve gate offsets — ~84 m-tall gem volumes walling off every
+  gate approach at ground level, contradicting RENDERING-DECISIONS #2 (the
+  pilaster and dentil courses already skip gate slots; the gem course was
+  the odd one out). `cityModel.foundationCourseSpans()` now notches the
+  course at the gates (GATE_CLEAR_HALF, the dentil-skip clearance) and BOTH
+  the geometry (CityMassing.buildFoundationCourse) and the collision read
+  that one table. GPU-visual check of the notched course still owed on
+  Scott's machine (cloud session — CPU probes only).
+- Collision is LATERAL only, and the volume extends ~10 m below the plaza
+  top (walkers approach on the meadow 2.8 m below the plaza line). Floors
+  stay groundProbe territory: the plaza slab and terrace pavements are NOT
+  yet walk floors (a meadow-level walker still wades chest-deep through the
+  plaza slab's rim, and a gate passage's floor is the plaza he walks under)
+  — that is the next navigation debt, distinct from collision. Dwellings/
+  temple/curb collision also remains open (city-only scope this pass).
+- VERIFIED: new `tools/probe-wallcollide.ts` (walkfling idiom — REAL
+  FlyCamera + REAL resolver + REAL river wrap under Node, mock flat
+  plateau): 19/19 PASS — wall stop at the course face, gate pass to the
+  plinth (walk AND fly), slide, terrace-face fly stop, free sky above the
+  summit, inside-solid escape, no-probe pass-through (the pre-fix
+  behavior, kept as the opt-in guard), plus 11 pure volume-table checks
+  (notches, corners, course top, tier faces, crown). Full matrix at HEAD:
+  tsc clean, vite build clean, walkfling 8/8 (groundProbe chain untouched),
+  arrival 11/11, bootrite 13/13, ambience 12/12. probe-walkfling-live's
+  expectations were audited against the new collision (A2 reaches z<2000
+  through the south-gate corridor before the plinth at z~1760; B2's
+  in-plinth walk uses the escape rule) — live rerun on Scott's machine
+  still owed. Engine re-vendored into apps/web/public/laas.
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
@@ -858,10 +912,11 @@ allotment REAL TERRAIN:
 ADR 0013, and not yet ported — see `RENDERING-DECISIONS.md` entries #1–#4 for
 the decisions these owe):
 
-- Wall/gate collision of any kind — `FlyCamera.ts` only clamps to ground
-  height (`groundProbe`); a player currently walks straight through every
-  pier and tier of the city (gate gaps are now real openings, so this matters
-  less at the gates specifically, but still applies to the tier masses).
+- ~~Wall/gate collision of any kind~~ **BUILT 2026-07-06** (dated entry
+  above: `hooks.moveProbe` + `src/nj/cityCollide.ts`, gates as real
+  passages, foundation course notched at the gates). Still open in the
+  same area: walkable floors (plaza slab + terrace pavements are not
+  groundProbe surfaces) and dwellings/temple collision.
 - Distinct throne (rainbow halo + sea of glass, RENDERING-DECISIONS #4) — only
   a plain emissive sphere.
 - Mini-map / click-to-teleport.
