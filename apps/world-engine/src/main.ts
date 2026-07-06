@@ -152,56 +152,13 @@ async function boot(): Promise<void> {
     engine.onUpdate(() => amb.update(engine.camera.position.x, engine.camera.position.z));
   }
   if (arrivalTarget) {
-    const target = arrivalTarget;
-    const start = fly.getPose();
-    const t0 = performance.now();
-    const DUR_MS = 5000;
-    // movement INTENT skips the descent — M stays the mute toggle and a click
-    // keeps its rite meaning (audio unlock / mote pulse), neither is "take
-    // control". V counts: asking for fly mode is movement intent.
-    const SKIP_CODES = new Set([
-      'KeyW',
-      'KeyA',
-      'KeyS',
-      'KeyD',
-      'ArrowUp',
-      'ArrowDown',
-      'ArrowLeft',
-      'ArrowRight',
-      'Space',
-      'KeyV',
-    ]);
-    let landed = false;
-    let skip = false;
-    const onSkip = (ev: KeyboardEvent): void => {
-      if (SKIP_CODES.has(ev.code)) skip = true;
-    };
-    window.addEventListener('keydown', onSkip);
-    engine.onUpdate(() => {
-      if (landed) return;
-      const k = Math.min(1, (performance.now() - t0) / DUR_MS);
-      const e = k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
-      if (k >= 1 || skip) {
-        landed = true;
-        fly.setPose(target);
-        fly.setMode('walk');
-        fly.enabled = true;
-        window.removeEventListener('keydown', onSkip);
-        return;
-      }
-      const px = start.p[0] + (target.p[0] - start.p[0]) * e;
-      let py = start.p[1] + (target.p[1] - start.p[1]) * e;
-      const pz = start.p[2] + (target.p[2] - start.p[2]) * e;
-      // collision is off while the ease drives the camera — never let the
-      // eased path sink into terrain even if the straight line to the spawn
-      // grazes a rise (same eye height as the walk spawn pose)
-      const gp = hooks.groundProbe;
-      if (gp) py = Math.max(py, gp(px, pz, py).ground + 1.7);
-      fly.setPose({
-        p: [px, py, pz],
-        yaw: start.yaw + (target.yaw - start.yaw) * e,
-        pitch: start.pitch + (target.pitch - start.pitch) * e,
-      });
+    // the descent runs inside FlyCamera.update() (first in registration
+    // order): no one-frame cloud/aerial lag, no immortal onUpdate closure.
+    // Movement-intent keys skip; M/mouse keep their rite meanings; the
+    // eased path clamps to the ground probe (all inside flyTo).
+    fly.flyTo(arrivalTarget, 5000, () => {
+      fly.setMode('walk');
+      fly.enabled = true;
     });
   }
 

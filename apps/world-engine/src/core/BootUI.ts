@@ -23,6 +23,7 @@
  */
 
 import { FOUNDATION_GEMS } from '../nj/cityModel';
+import { easeInOutCubic } from './Easing';
 import type { LaasHooks } from './Hooks';
 import { hashString, Rng } from './Seed';
 
@@ -94,8 +95,6 @@ interface BrightStar {
   phase: number;
 }
 
-const easeInOutCubic = (t: number): number =>
-  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 
 /** City tier table, sprite-local units (viewBox descends from the old rite). */

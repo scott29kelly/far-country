@@ -22,6 +22,7 @@
 
 import type { PerspectiveCamera } from 'three';
 import { Vector3 } from 'three';
+import { easeInOutCubic } from './Easing';
 import type { CamPose } from './Hooks';
 
 const FORWARD = new Vector3();
@@ -68,6 +69,31 @@ const MAX_PITCH_RATE = 1.1;
 const STEER_DEAD_ZONE = 0.14; // fraction of half-canvas with no rotation
 const PITCH_CLAMP = 1.3; // ~74° up/down — matches the validated legacy feel
 
+// ---- cinematic ease (flyTo — the arrival descent) ---------------------------
+/** movement INTENT skips a cinematic; M stays the mute toggle and clicks keep
+ *  their rite meaning (audio unlock) — neither is "take control" */
+const CINE_SKIP_CODES = new Set([
+  'KeyW',
+  'KeyA',
+  'KeyS',
+  'KeyD',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'Space',
+  'KeyV',
+]);
+
+interface Cinematic {
+  start: CamPose;
+  target: CamPose;
+  t0: number;
+  ms: number;
+  skip: boolean;
+  onDone: (() => void) | null;
+}
+
 /** Dead-zoned, eased steer response from a normalized cursor offset [-1, 1]. */
 function steerResponse(n: number): number {
   const a = Math.abs(n);
@@ -105,6 +131,8 @@ export class FlyCamera {
   // jump input buffer: keydown-edge timestamp — a tap shorter than a frame
   // still jumps on the next grounded update (≤150 ms grace)
   private jumpAt = -1;
+  /** active cinematic ease (flyTo) — null when the camera is interactive */
+  private cine: Cinematic | null = null;
 
   constructor(camera: PerspectiveCamera, dom: HTMLElement) {
     this.camera = camera;
@@ -131,7 +159,8 @@ export class FlyCamera {
         // eslint-disable-next-line no-console
         console.log(`[pose] cam=${this.toCamString()}`);
       }
-      if (e.code === 'KeyV' && this.enabled) {
+      if (this.cine && CINE_SKIP_CODES.has(e.code)) this.cine.skip = true;
+      if (e.code === 'KeyV' && this.enabled && !this.cine) {
         this.setMode(this.modeV === 'walk' ? 'fly' : 'walk');
       }
       if (e.code === 'Space' && !e.repeat) this.jumpAt = performance.now();
@@ -189,9 +218,16 @@ export class FlyCamera {
   /**
    * Programmatic poses imply free placement (bookmarks, ?cam=, flythrough,
    * probes) — they always switch to fly so nothing falls out of the sky or
-   * snaps to terrain. Interactive walking resumes via V.
+   * snaps to terrain, and they CANCEL an active cinematic (exact-placement
+   * semantics win). Interactive walking resumes via V.
    */
   setPose(pose: CamPose): void {
+    this.cine = null;
+    this.applyPose(pose);
+  }
+
+  /** setPose body without the cinematic cancel — flyTo writes through this. */
+  private applyPose(pose: CamPose): void {
     if (this.modeV === 'walk') {
       this.modeV = 'fly';
       this.resetEffects();
@@ -209,6 +245,52 @@ export class FlyCamera {
     // recompose matrixWorld/matrixWorldInverse NOW: subsystems copy camera
     // state in their own updateFns and must never read a stale matrix
     this.camera.updateMatrixWorld();
+  }
+
+  /**
+   * Cinematic wall-clock ease to a pose (the arrival descent). Advances
+   * inside update() — FlyCamera registers first, so every subsystem that
+   * copies camera state in its own updateFn sees the fresh pose the SAME
+   * frame (the update-order contract; the old main.ts closure registered
+   * last and lagged the clouds/aerial one frame). Interactive input is
+   * ignored while active; movement-intent keys skip to the landing; a
+   * programmatic setPose cancels. `onDone` runs once on landing or skip.
+   */
+  flyTo(target: CamPose, ms: number, onDone?: () => void): void {
+    this.cine = {
+      start: this.getPose(),
+      target,
+      t0: performance.now(),
+      ms,
+      skip: false,
+      onDone: onDone ?? null,
+    };
+  }
+
+  private updateCine(): void {
+    const c = this.cine;
+    if (!c) return;
+    const k = Math.min(1, (performance.now() - c.t0) / c.ms);
+    if (k >= 1 || c.skip) {
+      this.cine = null;
+      this.applyPose(c.target);
+      c.onDone?.();
+      return;
+    }
+    const e = easeInOutCubic(k);
+    const px = c.start.p[0] + (c.target.p[0] - c.start.p[0]) * e;
+    let py = c.start.p[1] + (c.target.p[1] - c.start.p[1]) * e;
+    const pz = c.start.p[2] + (c.target.p[2] - c.start.p[2]) * e;
+    // collision is off while the cinematic drives — never let the eased path
+    // sink into terrain even if the straight line to the target grazes a rise
+    if (this.groundProbe) {
+      py = Math.max(py, this.groundProbe(px, pz, py).ground + EYE_HEIGHT);
+    }
+    this.applyPose({
+      p: [px, py, pz],
+      yaw: c.start.yaw + (c.target.yaw - c.start.yaw) * e,
+      pitch: c.start.pitch + (c.target.pitch - c.start.pitch) * e,
+    });
   }
 
   getPose(): CamPose {
@@ -248,6 +330,12 @@ export class FlyCamera {
   }
 
   update(dt: number): void {
+    // a cinematic owns the pose outright — it advances even while input is
+    // disabled (the arrival arms with enabled=false until the landing)
+    if (this.cine) {
+      this.updateCine();
+      return;
+    }
     if (!this.enabled) return;
     if (this.mouse) {
       this.yaw -= steerResponse(this.mouse.nx) * MAX_YAW_RATE * dt;
