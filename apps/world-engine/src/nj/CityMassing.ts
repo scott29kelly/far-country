@@ -63,12 +63,16 @@ import type { NF, NU, NV3 } from '../gpu/TSLTypes';
 import { slotHash } from '../render/VegInstance';
 import {
   CITY_TIERS,
+  FOUNDATION_BAND_OFFSETS,
   FOUNDATION_BANDS,
-  FOUNDATION_BAND_LENGTH,
+  FOUNDATION_COURSE,
+  foundationCourseSpans,
   FOUNDATION_GEMS,
   GATE_OFFSETS,
   GATE_WIDTH,
   GATES,
+  PLINTH_HALF,
+  TIER_GLASS_PROUD,
   type Side,
 } from './cityModel';
 
@@ -548,25 +552,38 @@ function buildGatePortal(
   return g;
 }
 
-/** Twelve jewelled foundation courses (Rev 21:19-20) as faceted gem volumes. */
+/**
+ * Twelve jewelled foundation courses (Rev 21:19-20) as faceted gem volumes,
+ * NOTCHED at the gate openings (cityModel.foundationCourseSpans — the shared
+ * table cityCollide's wall collision reads too). Un-notched, the course
+ * walled off every gate approach at ground level, contradicting
+ * RENDERING-DECISIONS #2's real, walkable gate gaps — the pilaster and
+ * dentil courses already skip gate slots for the same reason.
+ */
 function buildFoundationCourse(outer: number): Group {
   const g = new Group();
-  const bandH = 4.5;
-  const bandThick = 4;
+  const { h: bandH, thick: bandThick, sink, inset } = FOUNDATION_COURSE;
+  const spans = foundationCourseSpans();
   FOUNDATION_BANDS.forEach((band, bi) => {
     const face = SIDE_FACE[band.side];
     // FOUNDATION_GEMS colours are ESV-order stylised hues (ADR 0009 rule 2 —
     // not photoreal mineralogy); ordered access mirrors cityModel's own
     // FOUNDATION_BANDS↔FOUNDATION_GEMS[band.gem] pairing.
     const mat = gemMaterial(FOUNDATION_GEMS[band.gem].color);
-    const geo = facetedBandGeometry(FOUNDATION_BAND_LENGTH - 2, bandH, bandThick, bi + 3);
-    const stone = new Mesh(geo, mat);
-    const radialMid = face.sign * (outer + bandThick / 2 - 0.6);
-    if (face.axis === 'z') stone.position.set(band.offset, bandH / 2 - 0.3, radialMid);
-    else stone.position.set(radialMid, bandH / 2 - 0.3, band.offset);
-    stone.rotation.y = face.axis === 'x' ? Math.PI / 2 : 0;
-    stone.receiveShadow = true;
-    g.add(stone);
+    const bandIdx = FOUNDATION_BAND_OFFSETS.indexOf(band.offset);
+    const radialMid = face.sign * (outer + bandThick / 2 - inset);
+    spans
+      .filter((s) => s.band === bandIdx)
+      .forEach((s, si) => {
+        const geo = facetedBandGeometry(s.u1 - s.u0, bandH, bandThick, bi * 4 + si + 3);
+        const stone = new Mesh(geo, mat);
+        const c = (s.u0 + s.u1) / 2;
+        if (face.axis === 'z') stone.position.set(c, bandH / 2 - sink, radialMid);
+        else stone.position.set(radialMid, bandH / 2 - sink, c);
+        stone.rotation.y = face.axis === 'x' ? Math.PI / 2 : 0;
+        stone.receiveShadow = true;
+        g.add(stone);
+      });
   });
   return g;
 }
@@ -651,7 +668,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       // the gate order), split into a solid inner plinth and an outer wall
       // ring with real gaps at the twelve named gates.
       const jasper = jasperMaterial(gi);
-      const innerHalf = tiers[1].half + 6; // clears tier 1's footprint
+      const innerHalf = PLINTH_HALF; // clears tier 1's footprint (shared with cityCollide)
       const plinthMat = new MeshStandardNodeMaterial();
       plinthMat.color.copy(GOLD);
       plinthMat.metalness = 0.55;
@@ -730,7 +747,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       for (const face of FACES) {
         for (let i = 0; i < t.arches; i++) {
           const u = -W / 2 + bay * (i + 0.5);
-          glassPlaces.push({ u, y: winBot, off: t.half + 0.5, face });
+          glassPlaces.push({ u, y: winBot, off: t.half + TIER_GLASS_PROUD, face });
           framePlaces.push({ u, y: winBot, off: t.half + 0.7, face });
         }
       }
