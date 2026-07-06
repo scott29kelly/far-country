@@ -22,6 +22,9 @@ import { buildTerrainScene } from './debug/TerrainScene';
 import { buildScene, registerScene, type WorldContext } from './debug/Scenes';
 import { buildNewJerusalemScene } from './nj/NewJerusalemScene';
 
+// hoisted so boot().catch can tear the audio graph down on a failed boot
+let ambience: Ambience | null = null;
+
 async function boot(): Promise<void> {
   const hooks = initHooks();
   installGlobalErrorHooks();
@@ -35,14 +38,6 @@ async function boot(): Promise<void> {
   const q = new URLSearchParams(window.location.search);
   const riteOn = q.get('rite') !== '0';
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // procedural arrival audio (New Jerusalem only — wild scenes stay silent).
-  // Constructed before world-gen so the first user gesture during the rite
-  // unlocks the AudioContext and the preparation drone plays under the wait.
-  const ambience =
-    params.scene === 'newjerusalem' && riteOn && q.get('audio') !== '0'
-      ? new Ambience(hooks)
-      : null;
 
   bootUI.set(0.02, 'probing WebGPU');
   const diag = await probeWebGPU();
@@ -60,6 +55,15 @@ async function boot(): Promise<void> {
   }
   // eslint-disable-next-line no-console
   console.log('[laas] webgpu ok\n' + describeDiagnostics(diag).join('\n'));
+
+  // procedural arrival audio (New Jerusalem only — wild scenes stay silent).
+  // Constructed only after the GPU gate passes (a boot that fails the gate
+  // must not leave gesture listeners or an AudioContext behind) but still
+  // before world-gen, so the first user gesture during the rite unlocks the
+  // AudioContext and the preparation drone plays under the wait.
+  if (params.scene === 'newjerusalem' && riteOn && q.get('audio') !== '0') {
+    ambience = new Ambience(hooks);
+  }
 
   bootUI.set(0.08, 'creating renderer');
   const engine = await Engine.create(params, hooks);
@@ -94,14 +98,22 @@ async function boot(): Promise<void> {
   if (hooks.groundProbe) fly.groundProbe = hooks.groundProbe;
   // arrival ease (the cinematic hide's camera movement): only for the default
   // interactive walk spawn — every explicit pose (?cam=, ?walk=0, tooling's
-  // rite=0) keeps exact placement semantics, and reduced motion opts out
+  // rite=0) keeps exact placement semantics, and reduced motion opts out.
+  // Gated to the New Jerusalem arrival narrative, and ?fly=1 hands the camera
+  // to the Bookmarks flythrough — it must not fight the ease for the pose.
   let arrivalTarget: CamPose | null = null;
   if (params.cam !== null) {
     const pose = parseCamString(params.cam);
     if (pose) fly.setPose(pose); // explicit pose ⇒ fly semantics
   } else if (hooks.initialPose) {
     const wantWalk = hooks.initialPoseMode === 'walk' && q.get('walk') !== '0';
-    if (wantWalk && riteOn && !reducedMotion) {
+    const wantArrival =
+      wantWalk &&
+      riteOn &&
+      !reducedMotion &&
+      params.scene === 'newjerusalem' &&
+      q.get('fly') !== '1';
+    if (wantArrival) {
       // start held aloft behind the spawn; the descent runs after hide()
       const t = hooks.initialPose;
       arrivalTarget = t;
@@ -134,22 +146,37 @@ async function boot(): Promise<void> {
   // the arrival: audio resolves into the meadow bed; the camera alights onto
   // the spawn while the boot overlay's staged dissolve reveals the world.
   // Wall-clock pacing (never dt); any input skips straight to the ground.
-  if (ambience) {
-    ambience.arrive();
-    engine.onUpdate(() => ambience.update(engine.camera.position.x, engine.camera.position.z));
+  const amb = ambience;
+  if (amb) {
+    amb.arrive();
+    engine.onUpdate(() => amb.update(engine.camera.position.x, engine.camera.position.z));
   }
   if (arrivalTarget) {
     const target = arrivalTarget;
     const start = fly.getPose();
     const t0 = performance.now();
     const DUR_MS = 5000;
+    // movement INTENT skips the descent — M stays the mute toggle and a click
+    // keeps its rite meaning (audio unlock / mote pulse), neither is "take
+    // control". V counts: asking for fly mode is movement intent.
+    const SKIP_CODES = new Set([
+      'KeyW',
+      'KeyA',
+      'KeyS',
+      'KeyD',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+      'Space',
+      'KeyV',
+    ]);
     let landed = false;
     let skip = false;
-    const onSkip = (): void => {
-      skip = true;
+    const onSkip = (ev: KeyboardEvent): void => {
+      if (SKIP_CODES.has(ev.code)) skip = true;
     };
-    window.addEventListener('keydown', onSkip, { once: true });
-    window.addEventListener('mousedown', onSkip, { once: true });
+    window.addEventListener('keydown', onSkip);
     engine.onUpdate(() => {
       if (landed) return;
       const k = Math.min(1, (performance.now() - t0) / DUR_MS);
@@ -160,15 +187,18 @@ async function boot(): Promise<void> {
         fly.setMode('walk');
         fly.enabled = true;
         window.removeEventListener('keydown', onSkip);
-        window.removeEventListener('mousedown', onSkip);
         return;
       }
+      const px = start.p[0] + (target.p[0] - start.p[0]) * e;
+      let py = start.p[1] + (target.p[1] - start.p[1]) * e;
+      const pz = start.p[2] + (target.p[2] - start.p[2]) * e;
+      // collision is off while the ease drives the camera — never let the
+      // eased path sink into terrain even if the straight line to the spawn
+      // grazes a rise (same eye height as the walk spawn pose)
+      const gp = hooks.groundProbe;
+      if (gp) py = Math.max(py, gp(px, pz, py).ground + 1.7);
       fly.setPose({
-        p: [
-          start.p[0] + (target.p[0] - start.p[0]) * e,
-          start.p[1] + (target.p[1] - start.p[1]) * e,
-          start.p[2] + (target.p[2] - start.p[2]) * e,
-        ],
+        p: [px, py, pz],
         yaw: start.yaw + (target.yaw - start.yaw) * e,
         pitch: start.pitch + (target.pitch - start.pitch) * e,
       });
@@ -186,6 +216,8 @@ async function boot(): Promise<void> {
 }
 
 boot().catch((e: unknown) => {
+  ambience?.dispose();
+  ambience = null;
   const msg = e instanceof Error ? `${e.message}\n\n${e.stack ?? ''}` : String(e);
   failLoud('Boot failed', [msg]);
 });
