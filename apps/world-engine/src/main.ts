@@ -97,6 +97,8 @@ async function boot(): Promise<void> {
 
   // terrain probe first — walk mode + fly soft-collision depend on it
   if (hooks.groundProbe) fly.groundProbe = hooks.groundProbe;
+  // lateral wall/gate collision (NJ city) — null in wild scenes, no blocking
+  if (hooks.moveProbe) fly.moveProbe = hooks.moveProbe;
   // arrival ease (the cinematic hide's camera movement): only for the default
   // interactive walk spawn — every explicit pose (?cam=, ?walk=0, tooling's
   // rite=0) keeps exact placement semantics, and reduced motion opts out.

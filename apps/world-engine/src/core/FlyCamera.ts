@@ -39,6 +39,21 @@ const MOVE = new Vector3();
  */
 export type GroundProbe = (x: number, z: number, y?: number) => { ground: number; water: number };
 
+/**
+ * lateral wall/gate collision — installed by a scene with authored walls (the
+ * NJ city; null everywhere else, so wild scenes never block). Resolves a
+ * proposed horizontal move at body height `y` (the caller picks the height to
+ * collide at: walk passes shin height, fly passes the camera eye) and returns
+ * the allowed position — blocked motion slides along faces, gate gaps pass.
+ */
+export type MoveProbe = (
+  fromX: number,
+  fromZ: number,
+  toX: number,
+  toZ: number,
+  y: number,
+) => { x: number; z: number };
+
 export type CamMode = 'walk' | 'fly';
 
 // ---- walk tuning (grounded-RPG feel) ---------------------------------------
@@ -48,6 +63,7 @@ const SPRINT_MULT = 2.0;
 const GRAVITY = 22; // m/s² — game-feel gravity, not 9.81
 const JUMP_V0 = 7.0; // → ~1.1 m apex
 const STEP_DOWN = 0.55; // downhill ground-stick range (m)
+const WALL_BODY_LIFT = 0.5; // walk collides at shin height — ground lips below this step over
 const GROUND_ACCEL = 10; // exp-damp rate toward wish velocity
 const AIR_ACCEL = 2.5; // reduced air control
 // effects
@@ -111,6 +127,8 @@ export class FlyCamera {
   enabled = true;
   /** terrain probe — walk mode is unavailable until the scene installs it */
   groundProbe: GroundProbe | null = null;
+  /** lateral wall/gate collision — null when the scene has no authored walls */
+  moveProbe: MoveProbe | null = null;
 
   private modeV: CamMode = 'fly';
   private keys = new Set<string>();
@@ -370,7 +388,19 @@ export class FlyCamera {
     }
     const damp = 1 - Math.exp(-dt * 9);
     this.vel.lerp(MOVE.multiplyScalar(target), damp);
+    const prevX = this.camera.position.x;
+    const prevZ = this.camera.position.z;
     this.camera.position.addScaledVector(this.vel, dt);
+
+    // lateral wall/gate collision, consistent with walk: the camera stops at
+    // wall segments and tier masses, threads the gate gaps (swept resolve —
+    // shift-boosted speed cannot tunnel a wall between frames)
+    if (this.moveProbe) {
+      const c = this.camera.position;
+      const m = this.moveProbe(prevX, prevZ, c.x, c.z, c.y);
+      c.x = m.x;
+      c.z = m.z;
+    }
 
     // soft ground collision + underwater guard (no underwater rendering:
     // the refraction texture is garbage from below — hold above the water)
@@ -415,8 +445,25 @@ export class FlyCamera {
     MOVE.multiplyScalar(target);
     this.vel.x += (MOVE.x - this.vel.x) * damp;
     this.vel.z += (MOVE.z - this.vel.z) * damp;
+    const prevX = this.basePos.x;
+    const prevZ = this.basePos.z;
     this.basePos.x += this.vel.x * dt;
     this.basePos.z += this.vel.z * dt;
+
+    // lateral wall/gate collision at shin height: the walker stops at wall
+    // segments and tier masses, passes through the gate gaps; the probe
+    // slides blocked motion along the face (velocity stays — game feel)
+    if (this.moveProbe) {
+      const m = this.moveProbe(
+        prevX,
+        prevZ,
+        this.basePos.x,
+        this.basePos.z,
+        this.basePos.y - EYE_HEIGHT + WALL_BODY_LIFT,
+      );
+      this.basePos.x = m.x;
+      this.basePos.z = m.z;
+    }
 
     // ---- vertical: gravity, jump (held OR buffered tap), ground clamp
     const jumpBuffered = this.jumpAt >= 0 && performance.now() - this.jumpAt < 150;
