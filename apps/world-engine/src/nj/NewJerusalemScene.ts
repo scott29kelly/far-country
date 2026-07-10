@@ -28,6 +28,7 @@ import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
+import { initArrivalAudio } from './ArrivalAudio';
 import { buildDwellings } from './Dwellings';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
@@ -217,6 +218,13 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     ctx.hooks.initialPoseMode = 'walk';
     engine.camera.position.set(...pose.p);
   }
+
+  // The arrival's audio first deliverable: procedural spawn-meadow ambient
+  // bed + the south-approach score cue (ArrivalAudio.ts — synthesized, zero
+  // external assets). Arms on the first user gesture per autoplay policy;
+  // ?audio=0 disables. NJ-only: wild scenes never construct an audio path.
+  const audio = initArrivalAudio(ctx.hooks);
+  if (audio) engine.onUpdate(() => audio.update());
 
   ctx.progress(1, 'newjerusalem ready');
 }

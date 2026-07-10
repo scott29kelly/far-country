@@ -91,6 +91,10 @@ export interface LaasPageOptions {
   preset?: string;
   hud?: boolean;
   freeze?: boolean;
+  /** true = run the full human boot rite (stills carousel + cinematic hide).
+   *  Tooling defaults to the ?rite=0 bypass: no stills, overlay gone <1 s
+   *  after hide() — the contract shoot.ts and the probes rely on. */
+  rite?: boolean;
   width?: number;
   height?: number;
   extra?: Record<string, string>;
@@ -105,6 +109,7 @@ export function laasUrl(opts: LaasPageOptions, base = 'http://localhost:5173/'):
   if (opts.preset) q.set('preset', opts.preset);
   q.set('hud', opts.hud ? '1' : '0');
   if (opts.freeze !== false) q.set('freeze', '1');
+  q.set('rite', opts.rite === true ? '1' : '0');
   for (const [k, v] of Object.entries(opts.extra ?? {})) q.set(k, v);
   return `${base}?${q.toString()}`;
 }
