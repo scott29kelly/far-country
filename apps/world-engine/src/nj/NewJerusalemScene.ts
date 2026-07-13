@@ -28,6 +28,7 @@ import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
+import { wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
@@ -133,6 +134,15 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   if (baseProbe) {
     ctx.hooks.groundProbe = wrapGroundProbeWithRiver(baseProbe, plazaTopY, NJ_SCALE);
   }
+
+  // Wall/gate collision (lateral): the same shared-table discipline as the
+  // river wrap — cityCollide derives its volumes from cityModel's tables
+  // (CITY_TIERS, GATE_*, foundationCourseSpans) and exports the REAL
+  // resolver; tools/probe-wallcollide.ts composes it, no mirrors. A walker
+  // passes through the twelve gate openings (Ezek 48:30-34 order,
+  // RENDERING-DECISIONS #2) and stops at wall segments, the gem foundation
+  // course, and tier masses. Floors stay groundProbe territory.
+  ctx.hooks.moveProbe = wrapMoveWithCityCollision(plazaTopY, NJ_SCALE);
 
   // Trees of life flanking the river's approach reach (Rev 22:2) — real
   // trees from the engine's own pipeline, placed in WORLD space (the ×20

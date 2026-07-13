@@ -60,6 +60,12 @@ export interface LaasHooks {
    *  `y` = querying eye height; wraps guarding STACKED authored water use it
    *  to claim only surfaces near/below the eye (see FlyCamera.GroundProbe) */
   groundProbe: ((x: number, z: number, y?: number) => { ground: number; water: number }) | null;
+  /** lateral wall/gate collision: resolves a proposed horizontal move at body
+   *  height `y` — walk/fly stop at wall segments and tier masses, pass the
+   *  gate gaps. Null when the scene has no authored walls (wild scenes) */
+  moveProbe:
+    | ((fromX: number, fromZ: number, toX: number, toZ: number, y: number) => { x: number; z: number })
+    | null;
   setTimeOfDay: ((t: number) => void) | null;
   /** settle frames (TAA/temporal effects) then resolve — call before screenshots */
   settle: ((frames?: number) => Promise<void>) | null;
@@ -86,6 +92,7 @@ export function initHooks(): LaasHooks {
     initialPose: null,
     initialPoseMode: null,
     groundProbe: null,
+    moveProbe: null,
     setTimeOfDay: null,
     settle: null,
     flyCamEnabled: null,
