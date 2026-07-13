@@ -13,6 +13,31 @@ export interface CamPose {
   fov?: number;
 }
 
+export interface NavigationTarget {
+  /** stable id used by the navigation UI and probes */
+  id: string;
+  name: string;
+  /** short orientation note; factual world claims include a citation below */
+  detail: string;
+  /** Scripture / source pointer displayed with the target when applicable */
+  citation?: string;
+  pose: CamPose;
+  mode: 'walk' | 'fly';
+  /** optional authored light for composed landscape viewpoints */
+  timeOfDay?: number;
+}
+
+export interface NavigationMap {
+  title: string;
+  citation?: string;
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  /** Safe fly height for a click-to-travel destination. */
+  safeFlyY: (x: number, z: number) => number;
+}
+
 export interface EngineStats {
   fps: number;
   frameMs: number;
@@ -71,6 +96,9 @@ export interface LaasHooks {
   settle: ((frames?: number) => Promise<void>) | null;
   /** enable/disable fly-camera input (flythrough takes the wheel) */
   flyCamEnabled: ((on: boolean) => void) | null;
+  /** user-facing quick-travel destinations and click-to-fly map contract */
+  navigationTargets: NavigationTarget[];
+  navigationMap: NavigationMap | null;
 }
 
 declare global {
@@ -96,6 +124,8 @@ export function initHooks(): LaasHooks {
     setTimeOfDay: null,
     settle: null,
     flyCamEnabled: null,
+    navigationTargets: [],
+    navigationMap: null,
   };
   window.__laas = hooks;
   return hooks;

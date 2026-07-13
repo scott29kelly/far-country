@@ -12,6 +12,7 @@ import {
 import { Engine } from './core/Engine';
 import { FlyCamera } from './core/FlyCamera';
 import { initHooks, type CamPose } from './core/Hooks';
+import { NavigationUI } from './core/NavigationUI';
 import { parseCamString, parseParams } from './core/Params';
 import { WorldSeed } from './core/Seed';
 import { Hud } from './debug/HUD';
@@ -130,6 +131,7 @@ async function boot(): Promise<void> {
     }
   }
 
+  new NavigationUI(engine, fly, hooks);
   new Hud(engine, params);
 
   hooks.setPose = (p) => fly.setPose(p);

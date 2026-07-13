@@ -56,10 +56,21 @@ export type MoveProbe = (
 
 export type CamMode = 'walk' | 'fly';
 
+export interface NavigationState {
+  mode: CamMode;
+  cruise: boolean;
+  flySpeed: number;
+  walkScale: number;
+}
+
+export type NavigationListener = (state: NavigationState) => void;
+
 // ---- walk tuning (grounded-RPG feel) ---------------------------------------
 const EYE_HEIGHT = 1.7;
 const WALK_SPEED = 4.6; // m/s
 const SPRINT_MULT = 2.0;
+const WALK_SCALE_STEPS = [1, 2, 4, 8] as const;
+const FLY_SPEED_STEPS = [4, 12, 24, 60, 150, 400, 1000, 2000] as const;
 const GRAVITY = 22; // m/s² — game-feel gravity, not 9.81
 const JUMP_V0 = 7.0; // → ~1.1 m apex
 const STEP_DOWN = 0.55; // downhill ground-stick range (m)
@@ -122,7 +133,7 @@ export class FlyCamera {
   readonly camera: PerspectiveCamera;
   yaw = 0;
   pitch = 0;
-  /** base FLY speed in m/s, scroll-scaled (walk speeds are fixed) */
+  /** base FLY speed in m/s, scroll-scaled; walk pace uses stepped multipliers */
   speed = 24;
   enabled = true;
   /** terrain probe — walk mode is unavailable until the scene installs it */
@@ -131,6 +142,9 @@ export class FlyCamera {
   moveProbe: MoveProbe | null = null;
 
   private modeV: CamMode = 'fly';
+  private walkScaleV = 1;
+  private cruiseV = false;
+  private navigationListeners = new Set<NavigationListener>();
   private keys = new Set<string>();
   private vel = new Vector3(); // fly velocity / walk horizontal velocity
   /** normalized cursor offset from canvas centre, [-1, 1] each axis; null when off-canvas */
@@ -181,6 +195,19 @@ export class FlyCamera {
       if (e.code === 'KeyV' && this.enabled && !this.cine) {
         this.setMode(this.modeV === 'walk' ? 'fly' : 'walk');
       }
+      if (e.code === 'KeyC' && this.enabled && !this.cine && !e.repeat) {
+        this.setCruise(!this.cruiseV);
+      }
+      if (e.code === 'Escape' && this.cruiseV) this.setCruise(false);
+      if (e.code === 'KeyS' && this.cruiseV) this.setCruise(false);
+      if (e.code === 'BracketLeft' && this.enabled && !e.repeat) {
+        e.preventDefault();
+        this.adjustTravelSpeed(-1);
+      }
+      if (e.code === 'BracketRight' && this.enabled && !e.repeat) {
+        e.preventDefault();
+        this.adjustTravelSpeed(1);
+      }
       if (e.code === 'Space' && !e.repeat) this.jumpAt = performance.now();
       this.keys.add(e.code);
     });
@@ -193,6 +220,7 @@ export class FlyCamera {
         if (this.modeV !== 'fly') return;
         this.speed *= Math.pow(1.15, -Math.sign(e.deltaY));
         this.speed = Math.min(2000, Math.max(0.5, this.speed));
+        this.emitNavigation();
       },
       { passive: false },
     );
@@ -200,6 +228,80 @@ export class FlyCamera {
 
   get mode(): CamMode {
     return this.modeV;
+  }
+
+  get cruise(): boolean {
+    return this.cruiseV;
+  }
+
+  get walkScale(): number {
+    return this.walkScaleV;
+  }
+
+  get navigationState(): NavigationState {
+    return {
+      mode: this.modeV,
+      cruise: this.cruiseV,
+      flySpeed: this.speed,
+      walkScale: this.walkScaleV,
+    };
+  }
+
+  subscribeNavigation(listener: NavigationListener): () => void {
+    this.navigationListeners.add(listener);
+    listener(this.navigationState);
+    return () => {
+      this.navigationListeners.delete(listener);
+    };
+  }
+
+  setCruise(on: boolean): void {
+    if (this.cruiseV === on) return;
+    this.cruiseV = on;
+    this.emitNavigation();
+  }
+
+  setFlySpeed(metersPerSecond: number): void {
+    const next = Math.min(2000, Math.max(0.5, metersPerSecond));
+    if (next === this.speed) return;
+    this.speed = next;
+    this.emitNavigation();
+  }
+
+  setWalkScale(scale: number): void {
+    let next: number = WALK_SCALE_STEPS[0];
+    for (const step of WALK_SCALE_STEPS) {
+      if (Math.abs(step - scale) < Math.abs(next - scale)) next = step;
+    }
+    if (next === this.walkScaleV) return;
+    this.walkScaleV = next;
+    this.emitNavigation();
+  }
+
+  adjustTravelSpeed(direction: -1 | 1): void {
+    if (this.modeV === 'walk') {
+      this.setWalkScale(this.stepValue(WALK_SCALE_STEPS, this.walkScaleV, direction));
+    } else {
+      this.setFlySpeed(this.stepValue(FLY_SPEED_STEPS, this.speed, direction));
+    }
+  }
+
+  private stepValue(steps: readonly number[], current: number, direction: -1 | 1): number {
+    let nearest = 0;
+    for (let i = 1; i < steps.length; i++) {
+      const value = steps[i];
+      const best = steps[nearest];
+      if (value !== undefined && best !== undefined && Math.abs(value - current) < Math.abs(best - current)) {
+        nearest = i;
+      }
+    }
+    const index = Math.min(steps.length - 1, Math.max(0, nearest + direction));
+    return steps[index] ?? current;
+  }
+
+  private emitNavigation(): void {
+    const state = this.navigationState;
+    for (const listener of this.navigationListeners) listener(state);
   }
 
   /**
@@ -226,11 +328,13 @@ export class FlyCamera {
       this.camera.position.copy(this.basePos);
       this.resetEffects();
     }
+    this.cruiseV = false;
     this.modeV = mode;
     this.applyRotation(0);
     this.camera.updateMatrixWorld();
     // eslint-disable-next-line no-console
     console.log(`[laas] camera mode: ${mode} (V toggles)`);
+    this.emitNavigation();
   }
 
   /**
@@ -241,7 +345,12 @@ export class FlyCamera {
    */
   setPose(pose: CamPose): void {
     this.cine = null;
+    const navigationChanged = this.cruiseV || this.modeV === 'walk';
+    this.cruiseV = false;
     this.applyPose(pose);
+    // Flythrough/probes can set a pose every frame; notify the UI only when
+    // the navigation state actually changed, not for pure camera motion.
+    if (navigationChanged) this.emitNavigation();
   }
 
   /** setPose body without the cinematic cancel — flyTo writes through this. */
@@ -373,12 +482,14 @@ export class FlyCamera {
     FORWARD.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
     RIGHT.set(1, 0, 0).applyQuaternion(this.camera.quaternion);
     MOVE.set(0, 0, 0);
-    if (this.keys.has('KeyW')) MOVE.add(FORWARD);
+    if (this.cruiseV || this.keys.has('KeyW')) MOVE.add(FORWARD);
     if (this.keys.has('KeyS')) MOVE.sub(FORWARD);
     if (this.keys.has('KeyD')) MOVE.add(RIGHT);
     if (this.keys.has('KeyA')) MOVE.sub(RIGHT);
-    if (this.keys.has('KeyE')) MOVE.y += 1;
-    if (this.keys.has('KeyQ')) MOVE.y -= 1;
+    if (this.keys.has('KeyE') || this.keys.has('Space')) MOVE.y += 1;
+    if (this.keys.has('KeyQ') || this.keys.has('ControlLeft') || this.keys.has('ControlRight')) {
+      MOVE.y -= 1;
+    }
     let target = 0;
     if (MOVE.lengthSq() > 0) {
       MOVE.normalize();
@@ -428,7 +539,7 @@ export class FlyCamera {
     FORWARD.set(-sinY, 0, -cosY);
     RIGHT.set(cosY, 0, -sinY);
     MOVE.set(0, 0, 0);
-    if (this.keys.has('KeyW')) MOVE.add(FORWARD);
+    if (this.cruiseV || this.keys.has('KeyW')) MOVE.add(FORWARD);
     if (this.keys.has('KeyS')) MOVE.sub(FORWARD);
     if (this.keys.has('KeyD')) MOVE.add(RIGHT);
     if (this.keys.has('KeyA')) MOVE.sub(RIGHT);
@@ -437,7 +548,7 @@ export class FlyCamera {
     let target = 0;
     if (MOVE.lengthSq() > 0) {
       MOVE.normalize();
-      target = WALK_SPEED * (sprinting ? SPRINT_MULT : 1);
+      target = WALK_SPEED * this.walkScaleV * (sprinting ? SPRINT_MULT : 1);
       if (this.keys.has('AltLeft')) target *= 0.35;
     }
     const accel = this.grounded ? GROUND_ACCEL : AIR_ACCEL;
@@ -505,14 +616,16 @@ export class FlyCamera {
 
     // ---- camera-motion effects ------------------------------------------------
     const speedH = Math.hypot(this.vel.x, this.vel.z);
-    const speedK = Math.min(speedH / WALK_SPEED, SPRINT_MULT);
+    const scaledWalkSpeed = WALK_SPEED * this.walkScaleV;
+    const speedK = Math.min(speedH / scaledWalkSpeed, SPRINT_MULT);
     // bob amplitude factor: fades in/out, zero while airborne
     const bobTarget = this.grounded ? Math.min(speedK, 1.3) : 0;
     this.bobK += (bobTarget - this.bobK) * (1 - Math.exp(-dt * 8));
     // stride cadence rises SUB-linearly with speed (sprint = longer strides,
     // not double-time steps); frozen while airborne — no steps in the air
     if (this.grounded && speedH > 0.3) {
-      const rate = STRIDE_RATE * WALK_SPEED * (0.55 + 0.45 * Math.min(speedK, 2));
+      const rate = STRIDE_RATE * WALK_SPEED * Math.sqrt(this.walkScaleV) *
+        (0.55 + 0.45 * Math.min(speedK, 2));
       this.stridePhase += rate * dt;
     }
     const ampY = (BOB_Y_WALK + BOB_Y_SPRINT_ADD * Math.max(Math.min(speedK - 1, 1), 0)) * this.bobK;
@@ -523,7 +636,9 @@ export class FlyCamera {
     this.dipV += (-DIP_K * this.dipY - DIP_C * this.dipV) * dt;
     this.dipY += this.dipV * dt;
     // sprint FOV kick
-    const fovTarget = sprinting && this.grounded && speedH > WALK_SPEED * 1.15 ? SPRINT_FOV_ADD : 0;
+    const fovTarget = sprinting && this.grounded && speedH > scaledWalkSpeed * 1.15
+      ? SPRINT_FOV_ADD
+      : 0;
     this.fovKick += (fovTarget - this.fovKick) * (1 - Math.exp(-dt * 6));
     const fov = this.baseFov + this.fovKick;
     if (Math.abs(this.camera.fov - fov) > 1e-3) {

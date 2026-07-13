@@ -28,12 +28,14 @@ import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
+import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
 import { wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
 import { buildTemple } from './Temple';
+import { TEMPLE_SITE } from './templeModel';
 import { buildTreesOfLife } from './TreesOfLife';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
@@ -213,6 +215,95 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     ctx.hooks.initialPoseMode = 'walk';
     engine.camera.position.set(...pose.p);
   }
+
+  // User-facing large-world navigation. Ground destinations resolve through
+  // the FINAL composed probe (terrain + river claim cap + campus far ground),
+  // while city/map flights clear the authored summit rather than spawning
+  // inside a vertically stacked tier. Factual labels carry their citations;
+  // the meadow/overview framing is explicitly identified as art direction.
+  const navigationProbe = ctx.hooks.groundProbe;
+  const groundPose = (x: number, z: number, yaw: number, pitch = 0) => {
+    const fallback = hf?.heightAtCpu(x, z) ?? plazaTopY;
+    const sample = navigationProbe?.(x, z, fallback + 20) ?? {
+      ground: fallback,
+      water: fallback - 2,
+    };
+    return {
+      p: [x, Math.max(sample.ground + 1.7, sample.water + 0.45), z] as [number, number, number],
+      yaw,
+      pitch,
+    };
+  };
+  const summitClearY = plazaTopY + CITY_SUMMIT_Y * NJ_SCALE + 350;
+  const southGateX = GATE_OFFSETS[2] * NJ_SCALE;
+  ctx.hooks.navigationTargets = [
+    {
+      id: 'arrival-meadow',
+      name: 'Arrival meadow',
+      detail: 'Primary south approach; meadow treatment is illustrative',
+      citation: 'Rev 21:2,10 (city)',
+      pose: groundPose(350, 4150, 0, 0.22),
+      mode: 'walk',
+    },
+    {
+      id: 'zebulun-gate',
+      name: 'Zebulun gate approach',
+      detail: 'South wall passage east of the river',
+      citation: 'Ezek 48:33',
+      pose: groundPose(southGateX, (CITY_HALF + 14) * NJ_SCALE, 0, 0.05),
+      mode: 'walk',
+    },
+    {
+      id: 'city-overview',
+      name: 'City overview',
+      detail: 'Illustrative terraced rendering; twelve-gate wall',
+      citation: 'Ezek 48:30-34 (gates)',
+      pose: { p: [2600, plazaTopY + 900, 3000], yaw: 0.714, pitch: -0.22 },
+      mode: 'fly',
+    },
+    {
+      id: 'summit-overlook',
+      name: 'Summit overlook',
+      detail: 'Rainbow halo and sea of glass',
+      citation: 'Rev 4:3,6',
+      pose: { p: [500, summitClearY, 1500], yaw: 0, pitch: -0.22 },
+      mode: 'fly',
+    },
+    {
+      id: 'temple-east',
+      name: 'Temple east approach',
+      detail: 'Measurement-grounded temple complex',
+      citation: 'Ezek 40-43',
+      pose: groundPose(TEMPLE_SITE.x + 380, TEMPLE_SITE.z, Math.PI / 2),
+      mode: 'walk',
+    },
+    {
+      id: 'priests-campus',
+      name: "Priests' dwelling campus",
+      detail: 'Illustrative dwellings within the cited priestly zone',
+      citation: 'Ezek 45:4; 48:10-12',
+      pose: groundPose(375, -5225, Math.PI / 4),
+      mode: 'walk',
+    },
+  ];
+  ctx.hooks.navigationMap = {
+    title: 'New Jerusalem',
+    citation: 'Rev 21:2,10',
+    minX: -7000,
+    maxX: 7000,
+    minZ: -11000,
+    maxZ: 5200,
+    safeFlyY: (x, z) => {
+      const fallback = hf?.heightAtCpu(x, z) ?? plazaTopY;
+      const sample = navigationProbe?.(x, z, summitClearY) ?? {
+        ground: fallback,
+        water: fallback - 2,
+      };
+      const terrainClear = Math.max(sample.ground, sample.water) + 140;
+      const overCity = Math.abs(x) < 2600 && Math.abs(z) < 2600;
+      return overCity ? Math.max(terrainClear, summitClearY) : terrainClear;
+    },
+  };
 
   ctx.progress(1, 'newjerusalem ready');
 }

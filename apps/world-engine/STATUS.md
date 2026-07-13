@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-02)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-13)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,43 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-13) LARGE-WORLD NAVIGATION BUILT — M3.3 mini-map/click-travel gap
+closed.** The existing camera already supported `V`, mouse-wheel fly speed,
+Shift boost, and hidden numbered bookmarks, but users had no visible way to
+discover or combine them. This pass makes large-scale travel a first-class
+surface without introducing a second camera controller:
+
+- `src/core/NavigationUI.ts`: a persistent top-right mode/speed pill and an
+  `N` panel with walk/fly controls, stepped speed, auto-cruise, coordinates +
+  compass heading, an interactive world map, concise controls help, and
+  distance-ranked quick-travel rows. The panel is keyboard-accessible,
+  responsive, reduced-motion-safe, and stays off the render canvas so mouse
+  steering stops naturally while the user operates it.
+- `FlyCamera.ts` remains the one movement owner. Ground travel now steps
+  1x/2x/4x/8x (4.6-36.8 m/s before Shift); flight steps
+  4/12/24/60/150/400/1000/2000 m/s, with the existing wheel fine control and
+  6x Shift boost. `C` toggles auto-cruise, Escape or reverse cancels it,
+  Space/Ctrl provide familiar fly up/down controls alongside E/Q, and `[`/`]`
+  adjust the active mode's speed. Programmatic poses still switch to fly and
+  now cancel cruise, so bookmarks, probes, quick travel, and the arrival
+  cinematic retain exact-placement semantics.
+- Navigation data is scene-owned through `hooks.navigationTargets` and
+  `navigationMap`. Wild terrain exposes its nine composed viewpoints. New
+  Jerusalem overrides them with six authored destinations: arrival meadow,
+  Zebulun gate, city overview, summit, temple east approach, and priests'
+  campus. Factual labels display Scripture citations; illustrative treatment
+  is named as such. Ground targets read the FINAL composed ground probe, and
+  map clicks enter fly mode at a scene-supplied safe height; clicks over the
+  city clear `CITY_SUMMIT_Y` rather than materializing inside a stacked tier.
+- Verification: new CPU-only `tools/probe-navigation.ts` **11/11 PASS**
+  (speed steps/clamps, `V`, cruise/cancel, vertical flight, 8x ground clamp,
+  quick-travel cruise cancellation). Regression matrix: arrival **11/11**,
+  walker/river fling **8/8**, wall/gate collision **19/19**, `tsc --noEmit`
+  clean, production `vite build` clean. Live Chromium/WebGPU pass confirmed
+  the panel, map, cited destinations, walk/fly transition, and 24->60 m/s
+  control; horizontal overflow found in that pass was fixed and rechecked.
+  Engine re-vendored into `apps/web/public/laas`.
 
 **(2026-07-02) M3 CITY MATERIAL/GEOMETRY PASS — CITY-QUALITY-BAR #1/#3/#5/#7.**
 The flat-box city is gone. What landed (branch `claude/m3-city-material-pass`,
