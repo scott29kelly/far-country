@@ -718,8 +718,9 @@ REAL passages (Ezek 48:30-34 order, RENDERING-DECISIONS #2).
   the odd one out). `cityModel.foundationCourseSpans()` now notches the
   course at the gates (GATE_CLEAR_HALF, the dentil-skip clearance) and BOTH
   the geometry (CityMassing.buildFoundationCourse) and the collision read
-  that one table. GPU-visual check of the notched course still owed on
-  Scott's machine (cloud session — CPU probes only).
+  that one table. LIVE-VERIFIED 2026-07-13 on Windows/Intel Xe-LPG: the
+  faceted course terminates visibly on both sides of the west-centre gate,
+  leaving the threshold open.
 - Collision is LATERAL only, and the volume extends ~10 m below the plaza
   top (walkers approach on the meadow 2.8 m below the plaza line). Floors
   stay groundProbe territory: the plaza slab and terrace pavements are NOT
@@ -738,8 +739,13 @@ REAL passages (Ezek 48:30-34 order, RENDERING-DECISIONS #2).
   arrival 11/11, bootrite 13/13, ambience 12/12. probe-walkfling-live's
   expectations were audited against the new collision (A2 reaches z<2000
   through the south-gate corridor before the plinth at z~1760; B2's
-  in-plinth walk uses the escape rule) — live rerun on Scott's machine
-  still owed. Engine re-vendored into apps/web/public/laas.
+  in-plinth walk uses the escape rule). LIVE-VERIFIED 2026-07-13 on the real
+  scene and hardware adapter: `probe-walkfling-live` A+B and C+D all passed;
+  a focused trusted-keyboard walk stopped at x=-2068.73 on the west wall,
+  passed the west-centre gate to the inner plinth at x=-1760.90, and slid
+  along the wall while pinned at x=-2068.62. PR #26 merged as `64509a1`;
+  post-merge CI and Vercel production deployment passed. Engine re-vendored
+  into apps/web/public/laas.
 
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,

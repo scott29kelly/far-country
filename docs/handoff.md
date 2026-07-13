@@ -1,4 +1,4 @@
-# Handoff — Far Country (2026-07-09)
+# Handoff — Far Country (2026-07-13)
 
 A snapshot of live state for whoever picks this up next (handover from Claude
 Code to a Codex / GPT agent). Durable project rules live in `CLAUDE.md` and
@@ -8,8 +8,9 @@ where they disagree.
 
 ## Where the code is
 
-- **`origin/main` (`10f07dc`)** is current and production (Vercel deploys on
-  push). It includes the merged arrival **"Descent" boot rite (PR #25)**.
+- **`origin/main` (`64509a1`)** is current and production (Vercel deploys on
+  push). It includes the merged arrival **"Descent" boot rite (PR #25)** and
+  wall/gate collision with notched foundation courses (**PR #26**).
 - Two coexisting 3D implementations per **ADR 0013**: the retired legacy React
   Three Fiber scene (`apps/web/src/lib/world/`, reachable only via its old
   route) and the vendored **LAAS WebGPU engine at `/world-preview`**
@@ -17,13 +18,20 @@ where they disagree.
 
 ## Open PRs
 
-- **#26 (draft) — wall/gate collision** (`claude/far-country-phase-3-uuyalj`).
-  CI green, mergeable/clean. Walkers stop at the city massing and pass through
-  the twelve gates; volumes are derived from `cityModel.ts` tables (no mirrored
-  constants). Owed before it merges: a **real-hardware check** — walk into a
-  wall, walk through a gate, and eyeball the notched gem foundation course.
-  Design is locked; see the PR body and `STATUS.md`.
-- **#23 (draft)** — Cursor Cloud dev-environment notes (docs only).
+- **#28 (draft) — direction-2 arrival boot stills**
+  (`claude/far-country-boot-stills-direction2`). Competing, unmerged direction;
+  conflict-dirty against `main` by design. Do not merge as-is.
+- **#23 (draft)** — Cursor Cloud dev-environment notes (docs only). Currently
+  conflict-dirty with its pipeline check failing; unrelated to Phase 3 runtime.
+
+## Recently merged
+
+- **#26 — wall/gate collision** (`64509a1`, merged 2026-07-13). Hardware-
+  verified on Windows/Intel Xe-LPG: the walker stops at the wall/foundation
+  face, passes through the west-centre gate to the inner plinth, and slides
+  along the wall on oblique input. The faceted foundation course visibly
+  terminates on both sides of the gate threshold. Post-merge CI and Vercel
+  production deployment are green.
 
 ## Decision waiting on you: the arrival / boot experience
 
@@ -53,8 +61,9 @@ would revert the Descent rite.
   the user, never silently resolved. Pattern to follow:
   `pipeline/src/far_country/measure/temple.py` (ADR 0017/0018 —
   `LONG_CUBIT_M = 0.525`).
-- **Track B — wall/gate collision.** DONE, in PR #26 (pending the real-hardware
-  check above).
+- **Track B — wall/gate collision.** DONE and merged in PR #26; real-hardware
+  walk, slide, gate-passage, foundation-notch, live ground-probe, CI, and
+  production deployment checks all passed on 2026-07-13.
 - **Track C — descriptor/citation HUD + click-picking.** Not started. This is
   the core Phase-3 promise: geometry that footnotes itself. Its data source
   MUST be the **existing canonical dataset exports** the browse UI (`apps/web`)
