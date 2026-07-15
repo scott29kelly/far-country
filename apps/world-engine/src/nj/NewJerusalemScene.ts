@@ -28,10 +28,14 @@ import type { SunSky } from '../sky/SunSky';
 import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
+import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
+import { wrapMoveWithCityCollision } from './cityCollide';
+import { buildDwellings } from './Dwellings';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
-import { riverSurfaceLocalY } from './RiverOfLife';
+import { wrapGroundProbeWithRiver } from './RiverOfLife';
 import { buildTemple } from './Temple';
+import { TEMPLE_SITE } from './templeModel';
 import { buildTreesOfLife } from './TreesOfLife';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
@@ -88,8 +92,10 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     // processional approach: open meadow sightline from the spawn to the
     // south gate (grass still grows here — only trees/rocks stay out)
     [-450, 450, 2380, 3300],
-    // dwelling grid + temple campus (north plain)
-    [-6300, 6300, -10400, -5000],
+    // dwelling campus + temple close (north plain) — sized to the campus
+    // content envelope + margin so wild meadow runs right up to the first
+    // hedgerows (grass still grows here — only trees/rocks stay out)
+    [-6150, 6150, -10400, -4950],
   ];
 
   // The new earth: the engine's complete, detailed procedural landscape.
@@ -115,28 +121,30 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // residual roll (±2 m) + terrain micro-displacement, and reads as a raised
   // street-of-gold platform
   const plazaTopY = coreY + 2.8;
-  const allot = buildHolyAllotment(
-    hf
-      ? (lx, lz) => (hf.heightAtCpu(lx * NJ_SCALE, lz * NJ_SCALE) - plazaTopY) / NJ_SCALE
-      : undefined,
-    { gi, hf, atm: sunSky?.atmosphere ?? null },
-  );
+  const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null });
   allot.scale.setScalar(NJ_SCALE);
   allot.position.set(0, plazaTopY, 0);
   engine.scene.add(allot);
 
   // The hydrology underwater guard can't see the authored river — wrap the
   // terrain groundProbe with the analytic reach table so the walker's eye
-  // stays above the crystal water (same wade clearance as terrain water).
+  // stays above the crystal water. The wrap itself (the claim cap, the wade
+  // margins, the walker-fling story) lives with the reach table in
+  // RiverOfLife.ts and is shared verbatim with tools/probe-walkfling.ts —
+  // no hand-mirrored copy to desync.
   const baseProbe = ctx.hooks.groundProbe;
   if (baseProbe) {
-    ctx.hooks.groundProbe = (x, z) => {
-      const g = baseProbe(x, z);
-      const local = riverSurfaceLocalY(x / NJ_SCALE, z / NJ_SCALE);
-      if (local <= -1e5) return g;
-      return { ground: g.ground, water: Math.max(g.water, local * NJ_SCALE + plazaTopY) };
-    };
+    ctx.hooks.groundProbe = wrapGroundProbeWithRiver(baseProbe, plazaTopY, NJ_SCALE);
   }
+
+  // Wall/gate collision (lateral): the same shared-table discipline as the
+  // river wrap — cityCollide derives its volumes from cityModel's tables
+  // (CITY_TIERS, GATE_*, foundationCourseSpans) and exports the REAL
+  // resolver; tools/probe-wallcollide.ts composes it, no mirrors. A walker
+  // passes through the twelve gate openings (Ezek 48:30-34 order,
+  // RENDERING-DECISIONS #2) and stops at wall segments, the gem foundation
+  // course, and tier masses. Floors stay groundProbe territory.
+  ctx.hooks.moveProbe = wrapMoveWithCityCollision(plazaTopY, NJ_SCALE);
 
   // Trees of life flanking the river's approach reach (Rev 22:2) — real
   // trees from the engine's own pipeline, placed in WORLD space (the ×20
@@ -148,6 +156,32 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // literal-cubit compound built from the cited measurement dataset
   // (ADR 0017/0018; RENDERING-DECISIONS #7) on the priests' campus band.
   engine.scene.add(buildTemple({ hf, gi }));
+
+  // The dwelling campus (Ezek 45:4-5; 48:10-14): human-scale garden-court
+  // blocks in world space — the priests' band flanking the temple inside the
+  // detailed ring, the Levites' podium band marching north across the far
+  // shell (RENDERING-DECISIONS #8; USER-REFS #6; delta #6).
+  const dwellings = await buildDwellings({ hf, gi, renderer: engine.renderer });
+  engine.scene.add(dwellings.group);
+
+  // Beyond the heightfield mirror the terrain groundProbe clamps to the ring
+  // edge while the far shell keeps rolling — wrap it with the campus far-
+  // ground sampler (same idiom as the river-surface wrap above) so walk/fly
+  // grounding stays sane across the Levites' band.
+  const terrainProbe = ctx.hooks.groundProbe;
+  if (terrainProbe) {
+    ctx.hooks.groundProbe = (x, z, y) => {
+      const g = terrainProbe(x, z, y);
+      const far = dwellings.farGroundAt(x, z);
+      if (far === null) return g;
+      // the terrain probe's water term is CLAMPED to the mirror's edge row
+      // out here (a wet/high edge texel would pin the walker's wade floor
+      // above the rolling shell for a whole 4 km column) — there is no
+      // authored water in the band, so keep water at the dry-cell
+      // convention (~2 m below the bed) relative to the shell ground
+      return { ground: far, water: far - 2 };
+    };
+  }
 
   // Waterfalls off the mesa rim (ADR 0016): authored crystal ribbons at the
   // seed's REAL drainage crossings (the hydrology field cannot express
@@ -181,6 +215,95 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     ctx.hooks.initialPoseMode = 'walk';
     engine.camera.position.set(...pose.p);
   }
+
+  // User-facing large-world navigation. Ground destinations resolve through
+  // the FINAL composed probe (terrain + river claim cap + campus far ground),
+  // while city/map flights clear the authored summit rather than spawning
+  // inside a vertically stacked tier. Factual labels carry their citations;
+  // the meadow/overview framing is explicitly identified as art direction.
+  const navigationProbe = ctx.hooks.groundProbe;
+  const groundPose = (x: number, z: number, yaw: number, pitch = 0) => {
+    const fallback = hf?.heightAtCpu(x, z) ?? plazaTopY;
+    const sample = navigationProbe?.(x, z, fallback + 20) ?? {
+      ground: fallback,
+      water: fallback - 2,
+    };
+    return {
+      p: [x, Math.max(sample.ground + 1.7, sample.water + 0.45), z] as [number, number, number],
+      yaw,
+      pitch,
+    };
+  };
+  const summitClearY = plazaTopY + CITY_SUMMIT_Y * NJ_SCALE + 350;
+  const southGateX = GATE_OFFSETS[2] * NJ_SCALE;
+  ctx.hooks.navigationTargets = [
+    {
+      id: 'arrival-meadow',
+      name: 'Arrival meadow',
+      detail: 'Primary south approach; meadow treatment is illustrative',
+      citation: 'Rev 21:2,10 (city)',
+      pose: groundPose(350, 4150, 0, 0.22),
+      mode: 'walk',
+    },
+    {
+      id: 'zebulun-gate',
+      name: 'Zebulun gate approach',
+      detail: 'South wall passage east of the river',
+      citation: 'Ezek 48:33',
+      pose: groundPose(southGateX, (CITY_HALF + 14) * NJ_SCALE, 0, 0.05),
+      mode: 'walk',
+    },
+    {
+      id: 'city-overview',
+      name: 'City overview',
+      detail: 'Illustrative terraced rendering; twelve-gate wall',
+      citation: 'Ezek 48:30-34 (gates)',
+      pose: { p: [2600, plazaTopY + 900, 3000], yaw: 0.714, pitch: -0.22 },
+      mode: 'fly',
+    },
+    {
+      id: 'summit-overlook',
+      name: 'Summit overlook',
+      detail: 'Rainbow halo and sea of glass',
+      citation: 'Rev 4:3,6',
+      pose: { p: [500, summitClearY, 1500], yaw: 0, pitch: -0.22 },
+      mode: 'fly',
+    },
+    {
+      id: 'temple-east',
+      name: 'Temple east approach',
+      detail: 'Measurement-grounded temple complex',
+      citation: 'Ezek 40-43',
+      pose: groundPose(TEMPLE_SITE.x + 380, TEMPLE_SITE.z, Math.PI / 2),
+      mode: 'walk',
+    },
+    {
+      id: 'priests-campus',
+      name: "Priests' dwelling campus",
+      detail: 'Illustrative dwellings within the cited priestly zone',
+      citation: 'Ezek 45:4; 48:10-12',
+      pose: groundPose(375, -5225, Math.PI / 4),
+      mode: 'walk',
+    },
+  ];
+  ctx.hooks.navigationMap = {
+    title: 'New Jerusalem',
+    citation: 'Rev 21:2,10',
+    minX: -7000,
+    maxX: 7000,
+    minZ: -11000,
+    maxZ: 5200,
+    safeFlyY: (x, z) => {
+      const fallback = hf?.heightAtCpu(x, z) ?? plazaTopY;
+      const sample = navigationProbe?.(x, z, summitClearY) ?? {
+        ground: fallback,
+        water: fallback - 2,
+      };
+      const terrainClear = Math.max(sample.ground, sample.water) + 140;
+      const overCity = Math.abs(x) < 2600 && Math.abs(z) < 2600;
+      return overCity ? Math.max(terrainClear, summitClearY) : terrainClear;
+    },
+  };
 
   ctx.progress(1, 'newjerusalem ready');
 }

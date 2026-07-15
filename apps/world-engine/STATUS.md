@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-02)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-13)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,43 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-13) LARGE-WORLD NAVIGATION BUILT — M3.3 mini-map/click-travel gap
+closed.** The existing camera already supported `V`, mouse-wheel fly speed,
+Shift boost, and hidden numbered bookmarks, but users had no visible way to
+discover or combine them. This pass makes large-scale travel a first-class
+surface without introducing a second camera controller:
+
+- `src/core/NavigationUI.ts`: a persistent top-right mode/speed pill and an
+  `N` panel with walk/fly controls, stepped speed, auto-cruise, coordinates +
+  compass heading, an interactive world map, concise controls help, and
+  distance-ranked quick-travel rows. The panel is keyboard-accessible,
+  responsive, reduced-motion-safe, and stays off the render canvas so mouse
+  steering stops naturally while the user operates it.
+- `FlyCamera.ts` remains the one movement owner. Ground travel now steps
+  1x/2x/4x/8x (4.6-36.8 m/s before Shift); flight steps
+  4/12/24/60/150/400/1000/2000 m/s, with the existing wheel fine control and
+  6x Shift boost. `C` toggles auto-cruise, Escape or reverse cancels it,
+  Space/Ctrl provide familiar fly up/down controls alongside E/Q, and `[`/`]`
+  adjust the active mode's speed. Programmatic poses still switch to fly and
+  now cancel cruise, so bookmarks, probes, quick travel, and the arrival
+  cinematic retain exact-placement semantics.
+- Navigation data is scene-owned through `hooks.navigationTargets` and
+  `navigationMap`. Wild terrain exposes its nine composed viewpoints. New
+  Jerusalem overrides them with six authored destinations: arrival meadow,
+  Zebulun gate, city overview, summit, temple east approach, and priests'
+  campus. Factual labels display Scripture citations; illustrative treatment
+  is named as such. Ground targets read the FINAL composed ground probe, and
+  map clicks enter fly mode at a scene-supplied safe height; clicks over the
+  city clear `CITY_SUMMIT_Y` rather than materializing inside a stacked tier.
+- Verification: new CPU-only `tools/probe-navigation.ts` **11/11 PASS**
+  (speed steps/clamps, `V`, cruise/cancel, vertical flight, 8x ground clamp,
+  quick-travel cruise cancellation). Regression matrix: arrival **11/11**,
+  walker/river fling **8/8**, wall/gate collision **19/19**, `tsc --noEmit`
+  clean, production `vite build` clean. Live Chromium/WebGPU pass confirmed
+  the panel, map, cited destinations, walk/fly transition, and 24->60 m/s
+  control; horizontal overflow found in that pass was fixed and rechecked.
+  Engine re-vendored into `apps/web/public/laas`.
 
 **(2026-07-02) M3 CITY MATERIAL/GEOMETRY PASS — CITY-QUALITY-BAR #1/#3/#5/#7.**
 The flat-box city is gone. What landed (branch `claude/m3-city-material-pass`,
@@ -310,6 +347,437 @@ pass:
   the literal-scale temple — queued item 5 (dwelling variation +
   right-scaling) is the direct fix and next in line.
 
+**(2026-07-02, late-4) DWELLING CAMPUS REBUILT — delta #6 (queued item 5).**
+The 82 identical ×20-frame megaboxes (680×440×240 m each — they dwarfed the
+literal-cubit temple) are GONE from `Allotment.ts`. `src/nj/Dwellings.ts`
+builds the campus in WORLD SPACE at human scale (RENDERING-DECISIONS **#8**
+— new entry: cited zone, illustrative content; two named bands honouring
+Ezek 45:4-5 / 48:10-14's structure, all dimensions explicitly art
+direction):
+- **Priests' (Zadok) band**: continuous 108 m garden-court blocks on a
+  150 m pitch (7 rows, z -5021..-6029 — ENTIRELY inside the heightfield CPU
+  mirror so every house snaps exactly to rendered ground) flanking the
+  temple. Attached row-house perimeters (5.5-13 m units, stepped facades +
+  rooflines, 25% two-story), hip-roofed corner houses, gate gaps with stone
+  posts, court wells, timber doors + warm window panes RECESSED inside open
+  trim frames (pillar-A reveal, not a decal; glow 1.05 — bloom contract
+  kept). 3 wall pools (limewash/sandstone/whitewash) × 2 clay roof pools;
+  deterministic per-cell hash; temple close + east processional + a meridian
+  lane on the city→temple axis cleared by construction.
+- **Levites' band**: beyond the detailed ring (rows z -6450..-10050) the
+  only rendered ground is the far shell (analytic macro MINUS 2.5 m on a
+  coarse 160×42 ring — ±2-3 m chord error between vertices). Blocks there
+  are RING-SLAB podium footings (temple-plinth idiom, mitered stone bands
+  whose skirts absorb the approximation) carrying simplified sand-heavy
+  house runs + 2.2 m hedges around REAL shell-meadow courts. Sites come
+  from a one-shot GPU eval of `macroTerrain(p, hf.mp, 'far')` on a 512×192
+  grid (HeightSynthesis idiom + readback) — never `heightAtCpu`, which
+  clamps at ±6144. `ctx.hooks.groundProbe` is wrapped (river-guard idiom)
+  so walk/fly grounding follows the shell across the band.
+- **Engine discipline**: plain InstancedMesh kit (CityMassing idiom),
+  chunked into column groups (~90 meshes) so bounding spheres stay local
+  for main + CSM culling; only priests'-band bodies/roofs cast shadows.
+  nj/-only change (Dwellings.ts new; Allotment.ts megaboxes removed;
+  NewJerusalemScene.ts wiring + campus exclusion rect tightened to
+  [-6150,6150,-10400,-4950]). tsc clean.
+- **Design process**: a 3-lens adversarial panel (scale/engine/doctrine)
+  ran BEFORE implementation and reshaped it — caught the far-shell -2.5 m
+  sink + chord error (would have floated every far-band house), the ~3%
+  built-coverage sparseness of the first layout, single-sphere culling
+  waste, and the missing RENDERING-DECISIONS entry; a solid-frame-box bug
+  (frames occluding every door/window plate) was caught by the court
+  ground-level shot and fixed with a true open-ring frame geometry.
+- **LIVE-VERIFIED** (shots/wip/dw1-*, dw2-*, dw3-*): temple-wide regression
+  framing (0,520,-6050) now shows the temple DOMINANT among human-scale
+  rooftops (the scale inversion this item existed to fix); NE 3/4 aerial
+  (900,700,-6650,2.43,-0.28,55) = dense ordered court grid around the clear
+  temple precinct; east processional eye-level (400,492.5,-5600,1.5708,0,62)
+  = crenellated temple front over village rows; court interior
+  (375,488,-5225,0.7854,0,62) = doors/panes/roof-steps at walking scale;
+  north campus aerial (0,2800,-12500,3.1416,-0.35,55) = two-band ordered
+  march toward temple + city; spawn hero framing unchanged.
+- **Debts**: campus ground keeps the wild meadow's dark scrub/moisture
+  veins (pre-existing splat character — a campus zone-tint through the
+  ZoneField idiom is the queued polish); courts are pure lawn (no court
+  trees — scatter is excluded there; instanced court orchards = polish);
+  Levites'-band walkers ride the analytic shell mean (visual shell can
+  deviate ±2-3 m between ring vertices — off-path, documented);
+  allotment-strip measurements (Ezek 45:1-6; 48:8-22) NOT yet in the
+  canonical store — the band split is explicitly uncited art direction
+  until they are seeded and consumed per ADR 0017 (queued follow-up;
+  entry #8 records the deferral).
+
+**(2026-07-02, late-5) BUG REPORT — walk over the plateau edge flings the
+walker skyward (Scott, deferred: "whenever it makes sense to safely
+address"). FIXED 2026-07-03 — candidate 1 confirmed as the mechanism,
+with a sharper shape than predicted; see the dated 2026-07-03 entry
+below.** Symptom: walking past the plateau edge (beyond the world
+limit?) casts the user violently upward "and all around," eventually
+vacillating up and down HIGH above the city (screenshot: aerial from
+roughly cloud height over the whole allotment; note it shows the
+pre-rebuild megabox bundle, so it predates the late-4 deploy — the
+mechanism is untouched by that work and presumed live). Code-grounded
+candidates, ranked (walk mode has NO spring to explode — the eye is
+hard-snapped to `max(ground + 1.7, water + 0.45)` per frame at
+FlyCamera.ts:339-362, so a violent upward cast means the PROBE returned
+a hugely higher floor):
+1. The river-surface groundProbe wrap (NewJerusalemScene.ts, installed
+   right after the allotment mounts) raises water to authored reach
+   surfaces: `riverSurfaceLocalY(x/20, z/20) * 20 + plazaTopY`. Upper
+   tier-cascade reaches sit at local y ≈ 150 → world ≈ 3.5 km — the
+   reported "high above the city" altitude. If any reach rect's
+   containment misfires for far-outside-the-allotment coordinates (the
+   kind you only reach by walking over the edge), the wade floor
+   teleports the walker there instantly; drifting in/out of the rect
+   while airborne = the up/down vacillation. AUDIT
+   `RiverOfLife.riverSurfaceLocalY` reach bounds first.
+2. Beyond the CPU mirror (|x| or |z| > 6144) outside the campus rect,
+   `heightAtCpu`/`waterYAtCpu` clamp to frozen edge-row texels — a wet
+   or high edge texel pins a whole column's floor (the campus wrap fixed
+   this for the Levites' band only; E/W plateau top and the wild fringe
+   still ride frozen values while the rendered far shell diverges).
+3. E/W/N plateau rims exist only in the far shell (ADR 0016), so the
+   walkable probe never descends them — walking east/west off the
+   plateau floats the walker at plateau height over the shell's 260 m
+   cliff drop (float, not fling — but disorienting and adjacent).
+Repro/probe plan for the fix session: drive the walker programmatically
+over each rim compass direction (probe-mousesteer.ts is the trusted-input
+template; or setPose + WASD key events), logging per frame the walker
+position and BOTH probe components (base terrain vs each wrap's
+contribution) to isolate which wrap injects the spike; then clamp reach
+containment (and consider bounding every groundProbe wrap to its authored
+footprint rect). Must be fixed before the arrival experience ships —
+first-session walk feel is the whole point of that package. Fix belongs
+to whichever next session touches walk physics, the probes, or the rim.
+
+**(2026-07-03) WALKER-FLING BUG FIXED — stacked river reaches claimed at
+any altitude (late-5 candidate 1, confirmed).** Root cause, sharper than
+the "far-outside containment misfire" guess: `riverSurfaceLocalY` is a 2D
+PLAN lookup over reaches that are vertically STACKED up the city tiers
+(ledge pools at local y 16.18/58.18/96.18/130.18, crown basin 156.35 —
+world ≈ 796/1636/2396/3076/3600 m). The lookup has no vertical sense, so a
+walker at plaza level (~473 m) anywhere on the meridian corridor (|x| ≤
+56 m world) inherited whatever reach owned that (x,z) in plan as a hard
+wade floor, and FlyCamera's per-frame snap teleported them to it. NOT
+confined to the city interior: the lowest ledge pool's rect (z local
+85.2..102.6 → world 1704..2052, +0.4 margin) deliberately runs 60 m past
+the wall line to meet the wall cascade — so WADING THE RIVER UP TO THE
+WALL, the normal approach path, crossed into it at world z ≈ 2060 and
+flung the eye 475 → 797 m; drifting between rects while airborne stepped
+across pool heights up to 3.6 km (the reported "up and all around" +
+vacillation). Fix (all four files small, nj-scoped semantics, wild scenes
+behaviour-identical):
+- `FlyCamera.GroundProbe` + `Hooks.groundProbe` gain an optional third
+  param `y` = the querying eye's CURRENT height; FlyCamera passes it at
+  all probe sites (walk, fly soft-collision, walk-entry snap).
+- `riverSurfaceLocalY(lx, lz, maxSurfaceY?)`: a matched reach whose
+  surface exceeds the cap returns −1e6 (unclaimed). Cap omitted =
+  unchanged legacy behaviour.
+- The scene's river wrap converts eye y → local cap with a 6 m
+  wade-tunnel margin (`WATER_CLAIM_M` — covers wade clearance 0.45 m and
+  fast-fall tunnelling ≈ 3.6 m/frame for a full 260 m rim fall at the
+  30 fps dt floor). The campus far-ground wrap passes `y` through. Wrap
+  chain order preserved (river first, campus composing it).
+- VERIFIED via `tools/probe-walkfling.ts` (NEW, CPU-only — no browser/
+  GPU/dev server: shims window/DOM, drives the REAL FlyCamera physics
+  against the REAL reach table + a mirror of the scene wrap): pre-fix it
+  reproduces the fling (walk-entry snap under the crown 471.7 → 3600.25 m;
+  840 m single-frame jump between stacked pools on the approach; fly-mode
+  shove 480 → 797 m); post-fix ALL PASS — approach wade floor 475.25
+  intact, max per-frame |Δy| on the whole corridor 1.2 m (the authored
+  channel→plunge-pool step), under-crown plaza walker stays 471.7,
+  crown-top water STILL claims a walker standing on it (3600.25), fly
+  soft-collision no longer shoved. `tsc --noEmit` clean; `vite build`
+  clean; keep the tool's wrap copy in sync if the scene wrap changes.
+- Session env note: fixed + verified in a cloud session (Linux, no
+  usable GPU — SwiftShader adapter only, full NJ world-gen impractical),
+  hence the CPU-sim verification path instead of a live shoot.ts probe.
+  Interactive walk-feel re-check on real hardware still owed (Scott's
+  pending verdict, plus first-walk feel gates the arrival experience).
+  Candidates 2/3 (frozen edge texels beyond ±6144; E/W/N rim float over
+  the far shell) are UNCHANGED and remain documented debts — they float,
+  not fling, and stay within metres of true ground.
+
+**(2026-07-03, local) FLING FIX LIVE-VERIFIED on real hardware — new
+`tools/probe-walkfling-live.ts`, ALL PASS.** In-browser complement to the
+CPU sim: real GPU terrain, the scene's ACTUAL groundProbe wrap chain (not
+the sim's mirror), real trusted keyboard input via Playwright CDP, one NJ
+boot per scenario group. Fix-sensitive checks (each would FAIL pre-fix):
+pool0-rect walk-entry snap at (0, 1900) landed eye 482.75 m (pre-fix
+~797); corridor-center entry under the crown at (0, 100) landed 482.75 m
+(pre-fix ~3600); the reported repro wade from z 2260 across the pool-rect
+line to z 1927 showed max upward step 1.2 m (the authored channel step),
+max eye 487.5. Canaries: channel wade floor intact (entry 486.30 = the
+live-probed floor exactly); crown basin still claims from above — walker
+stands at 3611.30 = crown surface 3610.85 + wade clearance. NOTE the real
+crown surface is 3610.85, not the CPU sim's 3600.25: real plazaTopY =
+coreY 481.05 + 2.8 = 483.85 vs the sim's mock flat 470 — live floor
+expectations must come from `__laas.groundProbe`, never sim-derived
+constants. All four rim walk-offs clean with real displacement asserted
+(south descends the real rim face 477.8 -> 289.9 over 221 m; E/W float
+per ADR 0016; the north edge is GROUNDED by the campus far-ground grid,
+not floated). Every walk entry asserts the eye snapped DOWN off the fly
+seed onto the live-probed floor, so a dropped V press cannot false-pass;
+the check design was adversarially reviewed (sensitivity/semantics/
+false-pass) before trusting the green run. Environment notes: headless
+Chromium's adapter roulette picked the Intel iGPU (xe-lpg) — the probe's
+fps 12-17 in heavy framings is an iGPU number, not a machine verdict; and
+run the probe FOREGROUND in harness sessions (backgrounded shells die
+~2 min in regardless of requested timeout) with `--only a,b` then
+`--only c,d` to stay under the 600 s command cap. Visual observation for
+the polish list: at plaza level inside pool0's plan rect (meridian z
+1696..2060) the walker now legitimately walks UNDER the elevated pool
+sheet, which reads as an unlit near-black ceiling
+(shots/wip/flingfix-live-a.png) — pool undersides have no lit material;
+cosmetic, queue with the polish debts. Still owed (subjective,
+Scott-only): first-walk FEEL pass, campus visual verdict (hard refresh),
+M1 Max performance verdict.
+
+**(2026-07-06, cloud) ARRIVAL EXPERIENCE BUILT — queued item 6: boot rite
+overhauled as "The Descent", staged cinematic hide, procedural audio
+package.** Direction question (rite background 1 vs 2) could not reach
+Scott from the cloud session, so the scoping's recommended shape was built:
+direction (1) richer 2D cinematic + (4a) cinematic hide() + the audio
+package; direction (2) stills-carousel stays open as a later layer (its
+ADR + regen step were NOT created). All hard invariants held:
+
+- `src/core/BootUI.ts` + `index.html` rewritten: the load IS the descent
+  (Rev 21:2/21:10) — a painterly Canvas2D night (parallax star layers,
+  drifting cloud deck, meadow silhouette) through which a pre-rendered
+  luminous terraced-city sprite (gold gradient tiers, lit windows, three
+  pearl gates, twelve-gem foundation course, river thread, summit glory
+  with god-ray fan) descends from above the frame to seat on the horizon
+  at 100%. Kept: FOUNDATION_GEMS stones row + gemname, ESV
+  short-excerpt+citation verse cycle (Rev 21:2 added), stage lines, lamp
+  motes + click pulses, `#boot` id, `set()/hide()` + `__laas` mirror. All
+  layers pre-rendered offscreen once (per-frame cost is composition only);
+  zero GPU anywhere in the overlay; display pacing unchanged (wall-clock
+  chase, ~3.5%/s + catch-up, never dt).
+- Staged dissolve (4a, DOM-only so fully GPU-safe): text bows out, a
+  glory veil blooms to ~0.94 then settles while the night lifts (the
+  exposure-ramp feel), gone at ~1.85 s. Tooling contract PRESERVED by a
+  `?rite=0` bypass that `tools/launch.ts laasUrl()` now sets by DEFAULT:
+  bypass hides in <350 ms and also skips display pacing, camera ease, and
+  audio, so every probe/shot sees the bare world unless it opts in with
+  extra `{rite:'1'}` (probe-bootui.ts does, and now waits 2.4 s).
+  Reduced motion: static painting, direct set() application, fast hide.
+- Camera arrival ease (main.ts): default interactive walk spawn only —
+  starts held 120 m up / 260 m south of the spawn in fly with input
+  disabled, eases (easeInOutCubic on wall-clock, 5 s) onto the spawn pose
+  after `engine.start()`, then setMode('walk') + re-enable. Any keydown /
+  mousedown skips straight to the ground. Explicit `?cam=`, `?walk=0`,
+  `?rite=0`, and reduced motion all keep exact legacy placement semantics
+  (no ease). FlyCamera itself UNTOUCHED — fling-fix invariants intact.
+- Procedural audio (`src/audio/Ambience.ts`, NJ-only literal branch in
+  main.ts, RENDERING-DECISIONS entry #9, roadmap backlog item updated):
+  zero assets, one AudioContext unlocked by the first gesture. Movement 1
+  boot drone (E2/B2 + beating-octave pair + band-passed shimmer) swells
+  with real gen progress; movement 2 meadow bed on arrive() (two
+  decorrelated gust-LFO wind channels, river hush gained by live distance
+  to the approach corridor |x|<=90 / z 1900..4500, sparse synthesized
+  birdsong); movement 3 gold chord (D lydian, slow attack) — soft voicing
+  at ready, full voicing once on first south-approach crossing
+  (z<2950, |x|<900). `?audio=0` disables construction; `M` mutes.
+- VERIFIED headlessly (cloud has no GPU): new `bootrite-harness.html`
+  (adopts the REAL #boot markup+CSS by fetching /index.html — nothing
+  duplicated to drift) + `tools/probe-bootrite.ts` (plain Chromium, no
+  WebGPU; falls back to /opt/pw-browsers/chromium where the pinned
+  Playwright browser is absent): 8/8 PASS — pacing chases without
+  overshoot, veil blooms mid-dissolve, cinematic hide <2.4 s, hooks
+  mirror pinned, rite=0 unpaced + hidden <600 ms, reduced-motion direct +
+  hidden <600 ms. Descent stages visually reviewed
+  (shots/wip/bootrite-*.png). `tsc --noEmit` clean, `vite build` clean,
+  `probe-walkfling.ts` ALL PASS (walk physics untouched). STILL OWED on
+  real hardware (Scott): `probe-bootui.ts` (now rite=1) over a real gen
+  wait, the arrival ease + audio feel pass, plus the three pending
+  verdicts from 07-03 (walk feel, campus visuals, M1 Max perf).
+
+**(2026-07-06, Scott's Windows machine, worktree) ARRIVAL REFINEMENT P0 —
+the review's confirmed correctness findings fixed, probed, and run against
+the real GPU.** Worked in a git worktree on the PR #25 branch: `main`'s
+working tree holds Scott's UNCOMMITTED direction-2 stills exploration
+(bootStills.ts, boot-stills/, ADR 0019 draft) and was not touched.
+
+- Arrival ease gated to its narrative: arms only for scene=newjerusalem
+  without `?fly=1` (it raced the Bookmarks flythrough for the pose — both
+  wrote it every frame). Skip is movement INTENT only (WASD/arrows/Space/V)
+  — `M` stays mute, click keeps its rite meaning (audio unlock), and the
+  eased y clamps to groundProbe + 1.7 each frame (collision is off during
+  the descent).
+- Ambience lifecycle: constructed only after the WebGPU gate passes;
+  boot().catch now calls dispose() (it existed, uncalled — failed boots
+  leaked gesture listeners + AudioContext). Drone progress swell moved to
+  a 500 ms wall-clock interval reading hooks.progress — engine updateFns
+  never tick during world-gen, so the update()-driven swell had been dead
+  code. River-hush corridor now DERIVED from geometry (RIVER width + curbs,
+  CITY_HALF, NJ_SCALE, exported CHANNEL_END): |x|<=60, z 2080..3700 — the
+  hand-tuned z 4500 overran the authored water by 800 m. CUE_Z 2950 stays
+  an explicit design choice.
+- Rim-band water hole FIXED (pre-existing from the fling fix): adjacent
+  reaches' plan-claim bands overlap 0.2 local (4 m world) at every tier
+  lip, and riverSurfaceLocalY returned -1e6 on the first cap-rejected
+  match — a walker wading the LOWER pool inside a shared band lost the
+  floor and sank under the crystal. Scan now skips capped matches and
+  returns the highest claimable surface. The scene's groundProbe wrap
+  moved into RiverOfLife (`wrapGroundProbeWithRiver(base, plazaTopY,
+  scale)`; scale is a param — importing rimModel would cycle through
+  Allotment and break RIM's module-scope init) and probe-walkfling now
+  composes the REAL wrap: the documented mirror-desync risk is gone.
+- probe-walkfling grew B1-B3 (rim band lz 42.9 / control 43.1 / plaza-eye
+  cap): B1 verified FAILING on pre-fix code (water 468 dry vs 2396.40),
+  8/8 PASS post-fix, all pre-existing expectations byte-identical.
+- probe-bootui made deterministic: after the dissolve it presses KeyW (the
+  designed skip) so bootui-after.png is the landed spawn pose every run —
+  and the probe RAN GREEN here on a real adapter (headless channel:chromium,
+  hardware WebGPU): rite stills reviewed, overlay gone, final frame is the
+  grounded meadow view. probe-bootrite 8/8, tsc clean. Still Scott-only:
+  the subjective feel pass (rite pace, ease duration, audio levels) and the
+  three 07-03 verdicts. Known cosmetic: at p=0.92 the city sprite still
+  floats slightly above the meadow ridge (P1 seat-the-city item, next).
+
+**(2026-07-06, same session, continued) ARRIVAL REFINEMENT P1+P2 — the
+whole refinement list landed and probed; engine re-vendored.**
+
+- City SEATED: horizon drops to 0.725vh (just above the stones row at 74%)
+  and the meadow gains a calm distant back ridge whose crest rides
+  RIDGE_SINK(12) px above it, weaving only a few px — at p=1 the wall base
+  lands in grass, never on sky, gates stay readable at the ridge's rises.
+  probe-bootrite captures bootrite-seated.png as the recurring seat check.
+- Sky stability: star fields / twinklers / cloud banks seed from fixed Rng
+  streams (fractional positions) — resize rebuilds keep every star put;
+  the rebuild debounces 150 ms (canvas resizes immediately). Per-frame
+  hygiene: meadow glow is a pre-rendered sprite (recentred under the
+  seated base), renderMotes hoists its clock, pulse filtering skips when
+  idle; Ambience throttles the river-hush setTargetAtTime to ~5 Hz +
+  0.0015 epsilon and all noise sources share ONE 2 s buffer.
+- Ease moved into FlyCamera.flyTo(pose, ms, onDone): advances inside
+  update() (first in registration order — the one-frame cloud/aerial lag
+  during the descent is gone), owns the movement-intent skip set, clamps
+  the path to groundProbe + eye height, lands exact; programmatic setPose
+  CANCELS it (tooling exact-placement semantics); V can't toggle modes
+  mid-cinematic. easeInOutCubic lives once in core/Easing.ts (rite +
+  camera share the curve). NEW tools/probe-arrival.ts (real FlyCamera,
+  fake clock): 11/11 — monotonic descent, exact landing, walk handoff,
+  KeyW skips / KeyM doesn't, clamp engages 30.4 m over a rise, setPose
+  cancels.
+- Audio heard headlessly: Ambience types against BaseAudioContext with an
+  injectable context factory; NEW tools/ambience-harness.html renders each
+  movement 10 s through an OfflineAudioContext and NEW
+  tools/probe-ambience.ts asserts soundness: 12/12 — drone rms 0.0134,
+  meadow 0.0053, cue 0.0105 (chord audibly over the bed), peaks < 0.07,
+  zero NaNs, south-approach cue one-shot latched.
+- Tooling consolidated: launchAnyChromium shared from tools/launch.ts;
+  bootrite-harness.html lives under tools/; the three arrival probes share
+  tools/check.ts; rite/audio/walk are typed LaasParams fields consumed by
+  main.ts + BootUI (harness passes parseParams().rite — launch.ts's
+  literal rite=0 stays the contract). Vestiges swept: #boot-bar
+  (field/write/markup/CSS), converge (hidden covers it), hideTimers.
+- probe-bootrite also asserts CONTENT now: lit stones always a prefix of
+  the foundation order and all twelve in exact Rev 21:19-20 gem colors at
+  rest; verse block is a short quoted excerpt + book-chapter:verse ESV
+  citation; mid-rite resize leaves the Rng-seeded stars byte-stable.
+  13/13.
+- Verification matrix at HEAD: tsc clean, vite build clean, walkfling 8/8,
+  arrival 11/11, ambience 12/12, bootrite 13/13, and probe-bootui rite=1
+  over a REAL adapter end-to-end (rite stills reviewed, deterministic
+  landed final frame). Engine re-vendored into apps/web/public/laas.
+  NOT done: pool-underside polish (GPU-visual, still queued) and the
+  stills-carousel / Ezek 45-48 items (blocked on Scott by design).
+
+**(2026-07-06, Scott's Windows machine, worktree, later) POOL-UNDERSIDE
+POLISH (P2 item 15) — investigated, diagnosis corrected, holes closed.**
+
+- CI on 802c6fd confirmed green first (all six checks, world-engine job
+  included); baseline re-proved before touching anything: walkfling 8/8,
+  arrival 11/11.
+- The debt's diagnosis was wrong in an instructive way. "Pool undersides
+  have no lit material" — actually the pool undersides were INVISIBLE
+  from below (surface + bed are single-sided top-facing planes,
+  backface-culled), so under a pool you looked straight THROUGH the
+  water to the zenith sky. And under most of a pool's plan rect the
+  walker never sees the bed at all: every tier top carries a
+  full-footprint ivory cornice slab (CityMassing, 2*half+5 square,
+  2.4 thick at yTop) that occludes the bed from below except the ~2 m
+  sliver where the pool lip (half+2.6) outreaches the cornice
+  (half+2.5). The "unlit near-black ceiling" in flingfix-live-a.png was
+  the CORNICE underside + the dark ZENITH SKY through the culled pool
+  lip, under auto-exposure keyed to the bright meadow — not a missing
+  pool material. At T=11 today the whole undercroft reads properly lit
+  pale-ivory in every shot (probe-GI ambient reaches down-faces);
+  the walker-height approach/undercroft matrix shows no black anywhere
+  (shots/wip/poolunder-*.png).
+- Fix that remains real: riverBedMaterial is now DoubleSide, so every
+  pool's gold bed renders from below and the see-through-to-sky slivers
+  at every pool lip are closed (crown basin + all ledge pools + plunge
+  pool inherit it). Verified on-GPU: zenith shot from under the pool0
+  lip (0,700,2051) shows the caustic gold bed strip where sky leaked
+  before (poolunder-a-liptest.png). Beds are tiny planes — the
+  DoubleSide double-pass cost is negligible (CityMassing's FrontSide
+  discipline is about its huge meshes, not these).
+- Mapped pool0's true world rect via a throwaway groundProbe scan
+  (surface y 807.4, x ±50, z 1696..2060 — matches the reach table);
+  scan tool deleted after use, not committed.
+- Verified after: tsc clean, vite build clean, walkfling 8/8 (water
+  materials sit near walk physics — probe is the spec). Engine
+  re-vendored into apps/web/public/laas.
+- If the black-ceiling read ever returns in a live walk, tune exposure
+  or the cornice underside ambient — not the water. The pool undersides
+  are now accounted for.
+
+**(2026-07-06, cloud, post-#25) WALL/GATE COLLISION BUILT — the first "What's
+NOT built" item closed.** Walkers and the fly camera no longer phase through
+the city: lateral collision against the massing, with the twelve gates as
+REAL passages (Ezek 48:30-34 order, RENDERING-DECISIONS #2).
+
+- Shape per the handoff: a new `hooks.moveProbe` alongside groundProbe (a
+  lateral move resolver, `(fromX, fromZ, toX, toZ, y) -> {x, z}`), consumed
+  by FlyCamera in BOTH modes — walk resolves each step at shin height
+  (WALL_BODY_LIFT 0.5 so pavement lips stay steppable), fly resolves at the
+  camera eye before the ground clamp. Null everywhere but the NJ scene, so
+  wild scenes never block (same opt-in idiom as groundProbe); cinematics
+  (flyTo) stay collision-free as established in the arrival P0 pass.
+- `src/nj/cityCollide.ts` derives the volumes from cityModel's OWN tables
+  (CITY_TIERS, PLINTH_HALF, GATE_OFFSETS/GATE_WIDTH, foundationCourseSpans)
+  and exports the REAL resolver the scene installs — shared-table discipline,
+  no mirrors. Volumes are the MASSING: solid plinth, jasper wall ring with
+  open gate gaps, the jewelled foundation course, terrace tiers at the glass
+  plane (TIER_GLASS_PROUD), crown. Relief (pilasters, piers, frames, dentil/
+  arcade courses, jambs, pearl membranes) stays non-colliding filigree.
+  Resolution is axis-separated swept substeps (1 m world): oblique motion
+  SLIDES along faces, boosted fly speed cannot tunnel the wall, and a start
+  inside a solid moves freely — programmatic poses (setPose anywhere) are
+  never trapped, and walk-entry inside the plinth (the live-probe B path)
+  simply walks out.
+- FOUND ALONG THE WAY: the foundation gem course girdled the wall base
+  ACROSS all twelve gate offsets — ~84 m-tall gem volumes walling off every
+  gate approach at ground level, contradicting RENDERING-DECISIONS #2 (the
+  pilaster and dentil courses already skip gate slots; the gem course was
+  the odd one out). `cityModel.foundationCourseSpans()` now notches the
+  course at the gates (GATE_CLEAR_HALF, the dentil-skip clearance) and BOTH
+  the geometry (CityMassing.buildFoundationCourse) and the collision read
+  that one table. GPU-visual check of the notched course still owed on
+  Scott's machine (cloud session — CPU probes only).
+- Collision is LATERAL only, and the volume extends ~10 m below the plaza
+  top (walkers approach on the meadow 2.8 m below the plaza line). Floors
+  stay groundProbe territory: the plaza slab and terrace pavements are NOT
+  yet walk floors (a meadow-level walker still wades chest-deep through the
+  plaza slab's rim, and a gate passage's floor is the plaza he walks under)
+  — that is the next navigation debt, distinct from collision. Dwellings/
+  temple/curb collision also remains open (city-only scope this pass).
+- VERIFIED: new `tools/probe-wallcollide.ts` (walkfling idiom — REAL
+  FlyCamera + REAL resolver + REAL river wrap under Node, mock flat
+  plateau): 19/19 PASS — wall stop at the course face, gate pass to the
+  plinth (walk AND fly), slide, terrace-face fly stop, free sky above the
+  summit, inside-solid escape, no-probe pass-through (the pre-fix
+  behavior, kept as the opt-in guard), plus 11 pure volume-table checks
+  (notches, corners, course top, tier faces, crown). Full matrix at HEAD:
+  tsc clean, vite build clean, walkfling 8/8 (groundProbe chain untouched),
+  arrival 11/11, bootrite 13/13, ambience 12/12. probe-walkfling-live's
+  expectations were audited against the new collision (A2 reaches z<2000
+  through the south-gate corridor before the plinth at z~1760; B2's
+  in-plinth walk uses the escape rule) — live rerun on Scott's machine
+  still owed. Engine re-vendored into apps/web/public/laas.
+
 **Queued program (agreed with Scott 2026-07-02, in order):**
 1. ~~Phase A live tuning panel~~ **BUILT 2026-07-02** (`src/debug/EditPanel.ts`,
    Tweakpane 4 + @tweakpane/core devDeps): `?edit=1` on a dev server only —
@@ -355,11 +823,15 @@ pass:
    above: ADRs 0017/0018, the 88-record verified measurement dataset +
    pipeline surface, RENDERING-DECISIONS #6/#7, and the literal-cubit
    Temple.ts rebuild at (0, -5600)).
-5. Dwelling variation (delta #6) — now urgent: the placeholder 680×440
-   ×240 m dwelling slabs visibly dwarf the literal-scale temple beside
-   them (see the item-4 entry's debts; right-scale the campus while
-   adding roofs/doors/variation).
-6. **Arrival experience (added 2026-07-02, Scott):** MAJOR overhaul of the
+5. ~~Dwelling variation (delta #6)~~ **BUILT 2026-07-02** (dated late-4
+   entry above: world-space two-band garden-court campus in Dwellings.ts,
+   megaboxes gone, RENDERING-DECISIONS #8; follow-ups queued — allotment
+   measurement seeding per ADR 0017, campus zone tint, court orchards).
+6. ~~Arrival experience~~ **BUILT 2026-07-06** (dated entry above: descent
+   rite + staged cinematic hide + camera arrival ease + procedural audio;
+   direction 2 stills-carousel remains an open later layer, pending Scott's
+   verdict on the shipped direction 1). Original scoping kept below for the
+   invariants record. **(added 2026-07-02, Scott):** MAJOR overhaul of the
    boot/loading screen (`src/core/BootUI.ts`, "The Preparation" rite) — the
    current line-art ziggurat + gem diamonds screen is "really bad, clunky,
    outdated" vs the world's new bar; open to a complete rethink of how to
@@ -477,10 +949,11 @@ allotment REAL TERRAIN:
 ADR 0013, and not yet ported — see `RENDERING-DECISIONS.md` entries #1–#4 for
 the decisions these owe):
 
-- Wall/gate collision of any kind — `FlyCamera.ts` only clamps to ground
-  height (`groundProbe`); a player currently walks straight through every
-  pier and tier of the city (gate gaps are now real openings, so this matters
-  less at the gates specifically, but still applies to the tier masses).
+- ~~Wall/gate collision of any kind~~ **BUILT 2026-07-06** (dated entry
+  above: `hooks.moveProbe` + `src/nj/cityCollide.ts`, gates as real
+  passages, foundation course notched at the gates). Still open in the
+  same area: walkable floors (plaza slab + terrace pavements are not
+  groundProbe surfaces) and dwellings/temple collision.
 - Distinct throne (rainbow halo + sea of glass, RENDERING-DECISIONS #4) — only
   a plain emissive sphere.
 - Mini-map / click-to-teleport.

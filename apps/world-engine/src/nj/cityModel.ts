@@ -178,6 +178,55 @@ export function cityTierBottoms(): number[] {
 /** Local Y of the crown top — the summit the glory sits just above. */
 export const CITY_SUMMIT_Y = CITY_TIERS.reduce((a, t) => a + t.h, 0);
 
+/**
+ * Base-tier construction constants shared by CityMassing (geometry) and
+ * cityCollide (the wall/gate collision volumes) — one table, no mirrors.
+ */
+/** Solid inner plinth half-width: clears tier 1's footprint (CityMassing). */
+export const PLINTH_HALF = CITY_TIERS[1].half + 6;
+/** How far each terrace tier's glass skin stands proud of its half-width. */
+export const TIER_GLASS_PROUD = 0.5;
+/** Half-width of the clear threshold kept around each gate opening by the
+ *  relief courses (the dentil-skip discipline: GATE_WIDTH/2 + 1.6). */
+export const GATE_CLEAR_HALF = GATE_WIDTH / 2 + 1.6;
+
+/**
+ * Jewelled foundation course proportions (Rev 21:19-20): band height, radial
+ * thickness, how far the band sinks below the plaza line, and how far its
+ * radial centre sits inset from `outer + thick/2`.
+ */
+export const FOUNDATION_COURSE = { h: 4.5, thick: 4, sink: 0.3, inset: 0.6 } as const;
+
+export type CourseSpan = { band: number; u0: number; u1: number };
+
+/**
+ * Tangent-axis spans of the foundation course on ONE side (identical for all
+ * four by construction): the three gem bands, notched at the gate openings.
+ * The course girdles the wall's outer base ACROSS the gate offsets — un-notched
+ * it walls off every gate approach, contradicting RENDERING-DECISIONS #2's
+ * real, walkable gate gaps (the pilaster and dentil courses already skip gate
+ * slots for exactly this reason). `band` indexes FOUNDATION_BAND_OFFSETS so a
+ * span keeps its parent band's gem.
+ */
+export function foundationCourseSpans(): CourseSpan[] {
+  const spans: CourseSpan[] = [];
+  const half = (FOUNDATION_BAND_LENGTH - 2) / 2; // courses meet with a 2-unit joint
+  const gates = [...GATE_OFFSETS].sort((a, b) => a - b);
+  FOUNDATION_BAND_OFFSETS.forEach((off, band) => {
+    let cursor = off - half;
+    const end = off + half;
+    for (const g of gates) {
+      const n0 = g - GATE_CLEAR_HALF;
+      const n1 = g + GATE_CLEAR_HALF;
+      if (n1 <= cursor || n0 >= end) continue;
+      if (n0 > cursor) spans.push({ band, u0: cursor, u1: n0 });
+      cursor = Math.max(cursor, n1);
+    }
+    if (cursor < end) spans.push({ band, u0: cursor, u1: end });
+  });
+  return spans;
+}
+
 /** River of the Water of Life (Rev 22:1) — a single cascade from the summit. */
 export const RIVER = { width: 5, surfaceY: 0.05 } as const;
 

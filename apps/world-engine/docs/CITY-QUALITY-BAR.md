@@ -277,6 +277,18 @@ USER-REFS says red-sandstone Ezekiel compound), #9 (population), #10
 (wayfinding), plus the logged polish debts (gem facet punch at range,
 shaded-face glass read, fall ribbons at close range).
 
+**Progress, 2026-07-02 (late) — delta #6 closed to first-pass quality.**
+The dwelling grid is no longer "84 identical flat grey boxes": the campus is
+a world-space, human-scale two-band build (`src/nj/Dwellings.ts`, RENDERING-
+DECISIONS #8) — priests'-band garden-court blocks with attached row-house
+perimeters (stepped facades/rooflines, hip corner houses, recessed timber
+doors and warm window panes in open trim frames, gate posts, court wells;
+per-cell deterministic variation, pillar C) and a Levites' band of podium-
+ring blocks with hedged meadow courts beyond the detailed ring. The temple
+now stands as the dominant structure of its precinct (the delta-#8/#6 scale
+inversion is fixed). Remaining polish tracked in `STATUS.md`: campus zone
+tint, court orchards, dwelling-scale door/window detail at sub-5 m range.
+
 **Progress, 2026-07-02 (late) — the allotment zone map landed.** Pillar
 C's "fields show furrow/crop relief, not a flat green plane with box
 hedges" clause is first-pass real: the plateau top is an ordered

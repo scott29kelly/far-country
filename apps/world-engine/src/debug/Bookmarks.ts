@@ -15,6 +15,7 @@ import type { Engine } from '../core/Engine';
 import type { LaasHooks } from '../core/Hooks';
 import type { LaasParams } from '../core/Params';
 import type { Heightfield } from '../world/Heightfield';
+import { WORLD_HALF } from '../world/WorldConst';
 
 export interface Bookmark {
   name: string;
@@ -52,6 +53,27 @@ export function installBookmarks(
   hooks: LaasHooks,
   params: LaasParams,
 ): void {
+  hooks.navigationTargets = BOOKMARKS.map((bookmark, index) => ({
+    id: `landscape-${index + 1}`,
+    name: bookmark.name,
+    detail: `Composed landscape viewpoint ${index + 1}`,
+    pose: {
+      p: [bookmark.x, poseY(hf, bookmark), bookmark.z],
+      yaw: bookmark.yaw,
+      pitch: bookmark.pitch,
+    },
+    mode: 'fly',
+    timeOfDay: bookmark.tod,
+  }));
+  hooks.navigationMap = {
+    title: 'Procedural world',
+    minX: -WORLD_HALF,
+    maxX: WORLD_HALF,
+    minZ: -WORLD_HALF,
+    maxZ: WORLD_HALF,
+    safeFlyY: (x, z) => Math.max(hf.heightAtCpu(x, z), hf.waterYAtCpu(x, z)) + 120,
+  };
+
   const apply = (i: number): void => {
     const b = BOOKMARKS[i];
     if (!b) return;

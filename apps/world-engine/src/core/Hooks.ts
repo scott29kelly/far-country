@@ -13,6 +13,31 @@ export interface CamPose {
   fov?: number;
 }
 
+export interface NavigationTarget {
+  /** stable id used by the navigation UI and probes */
+  id: string;
+  name: string;
+  /** short orientation note; factual world claims include a citation below */
+  detail: string;
+  /** Scripture / source pointer displayed with the target when applicable */
+  citation?: string;
+  pose: CamPose;
+  mode: 'walk' | 'fly';
+  /** optional authored light for composed landscape viewpoints */
+  timeOfDay?: number;
+}
+
+export interface NavigationMap {
+  title: string;
+  citation?: string;
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  /** Safe fly height for a click-to-travel destination. */
+  safeFlyY: (x: number, z: number) => number;
+}
+
 export interface EngineStats {
   fps: number;
   frameMs: number;
@@ -56,13 +81,24 @@ export interface LaasHooks {
   /** 'walk' only for the default interactive spawn (no explicit pose
    *  params) — every explicit/programmatic pose keeps fly semantics */
   initialPoseMode: 'walk' | 'fly' | null;
-  /** terrain/water heights at (x, z) — walk mode + fly soft collision */
-  groundProbe: ((x: number, z: number) => { ground: number; water: number }) | null;
+  /** terrain/water heights at (x, z) — walk mode + fly soft collision.
+   *  `y` = querying eye height; wraps guarding STACKED authored water use it
+   *  to claim only surfaces near/below the eye (see FlyCamera.GroundProbe) */
+  groundProbe: ((x: number, z: number, y?: number) => { ground: number; water: number }) | null;
+  /** lateral wall/gate collision: resolves a proposed horizontal move at body
+   *  height `y` — walk/fly stop at wall segments and tier masses, pass the
+   *  gate gaps. Null when the scene has no authored walls (wild scenes) */
+  moveProbe:
+    | ((fromX: number, fromZ: number, toX: number, toZ: number, y: number) => { x: number; z: number })
+    | null;
   setTimeOfDay: ((t: number) => void) | null;
   /** settle frames (TAA/temporal effects) then resolve — call before screenshots */
   settle: ((frames?: number) => Promise<void>) | null;
   /** enable/disable fly-camera input (flythrough takes the wheel) */
   flyCamEnabled: ((on: boolean) => void) | null;
+  /** user-facing quick-travel destinations and click-to-fly map contract */
+  navigationTargets: NavigationTarget[];
+  navigationMap: NavigationMap | null;
 }
 
 declare global {
@@ -84,9 +120,12 @@ export function initHooks(): LaasHooks {
     initialPose: null,
     initialPoseMode: null,
     groundProbe: null,
+    moveProbe: null,
     setTimeOfDay: null,
     settle: null,
     flyCamEnabled: null,
+    navigationTargets: [],
+    navigationMap: null,
   };
   window.__laas = hooks;
   return hooks;

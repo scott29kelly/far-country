@@ -22,24 +22,59 @@
 
 import type { PerspectiveCamera } from 'three';
 import { Vector3 } from 'three';
+import { easeInOutCubic } from './Easing';
 import type { CamPose } from './Hooks';
 
 const FORWARD = new Vector3();
 const RIGHT = new Vector3();
 const MOVE = new Vector3();
 
-/** terrain/water heights at (x, z) — installed by the world scene */
-export type GroundProbe = (x: number, z: number) => { ground: number; water: number };
+/**
+ * terrain/water heights at (x, z) — installed by the world scene. `y` is the
+ * querying eye's CURRENT height: probe wraps that guard authored water use it
+ * to claim only surfaces at/near/below the eye, never one far overhead (the
+ * NJ river reaches are vertically STACKED up the city tiers — a 2D lookup
+ * alone hands a plaza-level walker the crown basin ~3.1 km up as a wade
+ * floor and the hard ground snap catapults them there: the walker-fling bug).
+ */
+export type GroundProbe = (x: number, z: number, y?: number) => { ground: number; water: number };
+
+/**
+ * lateral wall/gate collision — installed by a scene with authored walls (the
+ * NJ city; null everywhere else, so wild scenes never block). Resolves a
+ * proposed horizontal move at body height `y` (the caller picks the height to
+ * collide at: walk passes shin height, fly passes the camera eye) and returns
+ * the allowed position — blocked motion slides along faces, gate gaps pass.
+ */
+export type MoveProbe = (
+  fromX: number,
+  fromZ: number,
+  toX: number,
+  toZ: number,
+  y: number,
+) => { x: number; z: number };
 
 export type CamMode = 'walk' | 'fly';
+
+export interface NavigationState {
+  mode: CamMode;
+  cruise: boolean;
+  flySpeed: number;
+  walkScale: number;
+}
+
+export type NavigationListener = (state: NavigationState) => void;
 
 // ---- walk tuning (grounded-RPG feel) ---------------------------------------
 const EYE_HEIGHT = 1.7;
 const WALK_SPEED = 4.6; // m/s
 const SPRINT_MULT = 2.0;
+const WALK_SCALE_STEPS = [1, 2, 4, 8] as const;
+const FLY_SPEED_STEPS = [4, 12, 24, 60, 150, 400, 1000, 2000] as const;
 const GRAVITY = 22; // m/s² — game-feel gravity, not 9.81
 const JUMP_V0 = 7.0; // → ~1.1 m apex
 const STEP_DOWN = 0.55; // downhill ground-stick range (m)
+const WALL_BODY_LIFT = 0.5; // walk collides at shin height — ground lips below this step over
 const GROUND_ACCEL = 10; // exp-damp rate toward wish velocity
 const AIR_ACCEL = 2.5; // reduced air control
 // effects
@@ -61,6 +96,31 @@ const MAX_PITCH_RATE = 1.1;
 const STEER_DEAD_ZONE = 0.14; // fraction of half-canvas with no rotation
 const PITCH_CLAMP = 1.3; // ~74° up/down — matches the validated legacy feel
 
+// ---- cinematic ease (flyTo — the arrival descent) ---------------------------
+/** movement INTENT skips a cinematic; M stays the mute toggle and clicks keep
+ *  their rite meaning (audio unlock) — neither is "take control" */
+const CINE_SKIP_CODES = new Set([
+  'KeyW',
+  'KeyA',
+  'KeyS',
+  'KeyD',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'Space',
+  'KeyV',
+]);
+
+interface Cinematic {
+  start: CamPose;
+  target: CamPose;
+  t0: number;
+  ms: number;
+  skip: boolean;
+  onDone: (() => void) | null;
+}
+
 /** Dead-zoned, eased steer response from a normalized cursor offset [-1, 1]. */
 function steerResponse(n: number): number {
   const a = Math.abs(n);
@@ -73,13 +133,18 @@ export class FlyCamera {
   readonly camera: PerspectiveCamera;
   yaw = 0;
   pitch = 0;
-  /** base FLY speed in m/s, scroll-scaled (walk speeds are fixed) */
+  /** base FLY speed in m/s, scroll-scaled; walk pace uses stepped multipliers */
   speed = 24;
   enabled = true;
   /** terrain probe — walk mode is unavailable until the scene installs it */
   groundProbe: GroundProbe | null = null;
+  /** lateral wall/gate collision — null when the scene has no authored walls */
+  moveProbe: MoveProbe | null = null;
 
   private modeV: CamMode = 'fly';
+  private walkScaleV = 1;
+  private cruiseV = false;
+  private navigationListeners = new Set<NavigationListener>();
   private keys = new Set<string>();
   private vel = new Vector3(); // fly velocity / walk horizontal velocity
   /** normalized cursor offset from canvas centre, [-1, 1] each axis; null when off-canvas */
@@ -98,6 +163,8 @@ export class FlyCamera {
   // jump input buffer: keydown-edge timestamp — a tap shorter than a frame
   // still jumps on the next grounded update (≤150 ms grace)
   private jumpAt = -1;
+  /** active cinematic ease (flyTo) — null when the camera is interactive */
+  private cine: Cinematic | null = null;
 
   constructor(camera: PerspectiveCamera, dom: HTMLElement) {
     this.camera = camera;
@@ -124,8 +191,22 @@ export class FlyCamera {
         // eslint-disable-next-line no-console
         console.log(`[pose] cam=${this.toCamString()}`);
       }
-      if (e.code === 'KeyV' && this.enabled) {
+      if (this.cine && CINE_SKIP_CODES.has(e.code)) this.cine.skip = true;
+      if (e.code === 'KeyV' && this.enabled && !this.cine) {
         this.setMode(this.modeV === 'walk' ? 'fly' : 'walk');
+      }
+      if (e.code === 'KeyC' && this.enabled && !this.cine && !e.repeat) {
+        this.setCruise(!this.cruiseV);
+      }
+      if (e.code === 'Escape' && this.cruiseV) this.setCruise(false);
+      if (e.code === 'KeyS' && this.cruiseV) this.setCruise(false);
+      if (e.code === 'BracketLeft' && this.enabled && !e.repeat) {
+        e.preventDefault();
+        this.adjustTravelSpeed(-1);
+      }
+      if (e.code === 'BracketRight' && this.enabled && !e.repeat) {
+        e.preventDefault();
+        this.adjustTravelSpeed(1);
       }
       if (e.code === 'Space' && !e.repeat) this.jumpAt = performance.now();
       this.keys.add(e.code);
@@ -139,6 +220,7 @@ export class FlyCamera {
         if (this.modeV !== 'fly') return;
         this.speed *= Math.pow(1.15, -Math.sign(e.deltaY));
         this.speed = Math.min(2000, Math.max(0.5, this.speed));
+        this.emitNavigation();
       },
       { passive: false },
     );
@@ -146,6 +228,80 @@ export class FlyCamera {
 
   get mode(): CamMode {
     return this.modeV;
+  }
+
+  get cruise(): boolean {
+    return this.cruiseV;
+  }
+
+  get walkScale(): number {
+    return this.walkScaleV;
+  }
+
+  get navigationState(): NavigationState {
+    return {
+      mode: this.modeV,
+      cruise: this.cruiseV,
+      flySpeed: this.speed,
+      walkScale: this.walkScaleV,
+    };
+  }
+
+  subscribeNavigation(listener: NavigationListener): () => void {
+    this.navigationListeners.add(listener);
+    listener(this.navigationState);
+    return () => {
+      this.navigationListeners.delete(listener);
+    };
+  }
+
+  setCruise(on: boolean): void {
+    if (this.cruiseV === on) return;
+    this.cruiseV = on;
+    this.emitNavigation();
+  }
+
+  setFlySpeed(metersPerSecond: number): void {
+    const next = Math.min(2000, Math.max(0.5, metersPerSecond));
+    if (next === this.speed) return;
+    this.speed = next;
+    this.emitNavigation();
+  }
+
+  setWalkScale(scale: number): void {
+    let next: number = WALK_SCALE_STEPS[0];
+    for (const step of WALK_SCALE_STEPS) {
+      if (Math.abs(step - scale) < Math.abs(next - scale)) next = step;
+    }
+    if (next === this.walkScaleV) return;
+    this.walkScaleV = next;
+    this.emitNavigation();
+  }
+
+  adjustTravelSpeed(direction: -1 | 1): void {
+    if (this.modeV === 'walk') {
+      this.setWalkScale(this.stepValue(WALK_SCALE_STEPS, this.walkScaleV, direction));
+    } else {
+      this.setFlySpeed(this.stepValue(FLY_SPEED_STEPS, this.speed, direction));
+    }
+  }
+
+  private stepValue(steps: readonly number[], current: number, direction: -1 | 1): number {
+    let nearest = 0;
+    for (let i = 1; i < steps.length; i++) {
+      const value = steps[i];
+      const best = steps[nearest];
+      if (value !== undefined && best !== undefined && Math.abs(value - current) < Math.abs(best - current)) {
+        nearest = i;
+      }
+    }
+    const index = Math.min(steps.length - 1, Math.max(0, nearest + direction));
+    return steps[index] ?? current;
+  }
+
+  private emitNavigation(): void {
+    const state = this.navigationState;
+    for (const listener of this.navigationListeners) listener(state);
   }
 
   /**
@@ -162,7 +318,7 @@ export class FlyCamera {
         return;
       }
       this.basePos.copy(this.camera.position);
-      const g = this.groundProbe(this.basePos.x, this.basePos.z);
+      const g = this.groundProbe(this.basePos.x, this.basePos.z, this.basePos.y);
       this.basePos.y = Math.max(g.ground + EYE_HEIGHT, g.water + WADE_CLEAR);
       this.velY = 0;
       this.vel.set(0, 0, 0);
@@ -172,19 +328,33 @@ export class FlyCamera {
       this.camera.position.copy(this.basePos);
       this.resetEffects();
     }
+    this.cruiseV = false;
     this.modeV = mode;
     this.applyRotation(0);
     this.camera.updateMatrixWorld();
     // eslint-disable-next-line no-console
     console.log(`[laas] camera mode: ${mode} (V toggles)`);
+    this.emitNavigation();
   }
 
   /**
    * Programmatic poses imply free placement (bookmarks, ?cam=, flythrough,
    * probes) — they always switch to fly so nothing falls out of the sky or
-   * snaps to terrain. Interactive walking resumes via V.
+   * snaps to terrain, and they CANCEL an active cinematic (exact-placement
+   * semantics win). Interactive walking resumes via V.
    */
   setPose(pose: CamPose): void {
+    this.cine = null;
+    const navigationChanged = this.cruiseV || this.modeV === 'walk';
+    this.cruiseV = false;
+    this.applyPose(pose);
+    // Flythrough/probes can set a pose every frame; notify the UI only when
+    // the navigation state actually changed, not for pure camera motion.
+    if (navigationChanged) this.emitNavigation();
+  }
+
+  /** setPose body without the cinematic cancel — flyTo writes through this. */
+  private applyPose(pose: CamPose): void {
     if (this.modeV === 'walk') {
       this.modeV = 'fly';
       this.resetEffects();
@@ -202,6 +372,52 @@ export class FlyCamera {
     // recompose matrixWorld/matrixWorldInverse NOW: subsystems copy camera
     // state in their own updateFns and must never read a stale matrix
     this.camera.updateMatrixWorld();
+  }
+
+  /**
+   * Cinematic wall-clock ease to a pose (the arrival descent). Advances
+   * inside update() — FlyCamera registers first, so every subsystem that
+   * copies camera state in its own updateFn sees the fresh pose the SAME
+   * frame (the update-order contract; the old main.ts closure registered
+   * last and lagged the clouds/aerial one frame). Interactive input is
+   * ignored while active; movement-intent keys skip to the landing; a
+   * programmatic setPose cancels. `onDone` runs once on landing or skip.
+   */
+  flyTo(target: CamPose, ms: number, onDone?: () => void): void {
+    this.cine = {
+      start: this.getPose(),
+      target,
+      t0: performance.now(),
+      ms,
+      skip: false,
+      onDone: onDone ?? null,
+    };
+  }
+
+  private updateCine(): void {
+    const c = this.cine;
+    if (!c) return;
+    const k = Math.min(1, (performance.now() - c.t0) / c.ms);
+    if (k >= 1 || c.skip) {
+      this.cine = null;
+      this.applyPose(c.target);
+      c.onDone?.();
+      return;
+    }
+    const e = easeInOutCubic(k);
+    const px = c.start.p[0] + (c.target.p[0] - c.start.p[0]) * e;
+    let py = c.start.p[1] + (c.target.p[1] - c.start.p[1]) * e;
+    const pz = c.start.p[2] + (c.target.p[2] - c.start.p[2]) * e;
+    // collision is off while the cinematic drives — never let the eased path
+    // sink into terrain even if the straight line to the target grazes a rise
+    if (this.groundProbe) {
+      py = Math.max(py, this.groundProbe(px, pz, py).ground + EYE_HEIGHT);
+    }
+    this.applyPose({
+      p: [px, py, pz],
+      yaw: c.start.yaw + (c.target.yaw - c.start.yaw) * e,
+      pitch: c.start.pitch + (c.target.pitch - c.start.pitch) * e,
+    });
   }
 
   getPose(): CamPose {
@@ -241,6 +457,12 @@ export class FlyCamera {
   }
 
   update(dt: number): void {
+    // a cinematic owns the pose outright — it advances even while input is
+    // disabled (the arrival arms with enabled=false until the landing)
+    if (this.cine) {
+      this.updateCine();
+      return;
+    }
     if (!this.enabled) return;
     if (this.mouse) {
       this.yaw -= steerResponse(this.mouse.nx) * MAX_YAW_RATE * dt;
@@ -260,12 +482,14 @@ export class FlyCamera {
     FORWARD.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
     RIGHT.set(1, 0, 0).applyQuaternion(this.camera.quaternion);
     MOVE.set(0, 0, 0);
-    if (this.keys.has('KeyW')) MOVE.add(FORWARD);
+    if (this.cruiseV || this.keys.has('KeyW')) MOVE.add(FORWARD);
     if (this.keys.has('KeyS')) MOVE.sub(FORWARD);
     if (this.keys.has('KeyD')) MOVE.add(RIGHT);
     if (this.keys.has('KeyA')) MOVE.sub(RIGHT);
-    if (this.keys.has('KeyE')) MOVE.y += 1;
-    if (this.keys.has('KeyQ')) MOVE.y -= 1;
+    if (this.keys.has('KeyE') || this.keys.has('Space')) MOVE.y += 1;
+    if (this.keys.has('KeyQ') || this.keys.has('ControlLeft') || this.keys.has('ControlRight')) {
+      MOVE.y -= 1;
+    }
     let target = 0;
     if (MOVE.lengthSq() > 0) {
       MOVE.normalize();
@@ -275,13 +499,25 @@ export class FlyCamera {
     }
     const damp = 1 - Math.exp(-dt * 9);
     this.vel.lerp(MOVE.multiplyScalar(target), damp);
+    const prevX = this.camera.position.x;
+    const prevZ = this.camera.position.z;
     this.camera.position.addScaledVector(this.vel, dt);
+
+    // lateral wall/gate collision, consistent with walk: the camera stops at
+    // wall segments and tier masses, threads the gate gaps (swept resolve —
+    // shift-boosted speed cannot tunnel a wall between frames)
+    if (this.moveProbe) {
+      const c = this.camera.position;
+      const m = this.moveProbe(prevX, prevZ, c.x, c.z, c.y);
+      c.x = m.x;
+      c.z = m.z;
+    }
 
     // soft ground collision + underwater guard (no underwater rendering:
     // the refraction texture is garbage from below — hold above the water)
     if (this.groundProbe) {
       const c = this.camera.position;
-      const g = this.groundProbe(c.x, c.z);
+      const g = this.groundProbe(c.x, c.z, c.y);
       const floor = Math.max(g.ground + FLY_GROUND_CLEAR, g.water + WADE_CLEAR);
       if (c.y < floor) c.y = floor;
     }
@@ -303,7 +539,7 @@ export class FlyCamera {
     FORWARD.set(-sinY, 0, -cosY);
     RIGHT.set(cosY, 0, -sinY);
     MOVE.set(0, 0, 0);
-    if (this.keys.has('KeyW')) MOVE.add(FORWARD);
+    if (this.cruiseV || this.keys.has('KeyW')) MOVE.add(FORWARD);
     if (this.keys.has('KeyS')) MOVE.sub(FORWARD);
     if (this.keys.has('KeyD')) MOVE.add(RIGHT);
     if (this.keys.has('KeyA')) MOVE.sub(RIGHT);
@@ -312,7 +548,7 @@ export class FlyCamera {
     let target = 0;
     if (MOVE.lengthSq() > 0) {
       MOVE.normalize();
-      target = WALK_SPEED * (sprinting ? SPRINT_MULT : 1);
+      target = WALK_SPEED * this.walkScaleV * (sprinting ? SPRINT_MULT : 1);
       if (this.keys.has('AltLeft')) target *= 0.35;
     }
     const accel = this.grounded ? GROUND_ACCEL : AIR_ACCEL;
@@ -320,8 +556,25 @@ export class FlyCamera {
     MOVE.multiplyScalar(target);
     this.vel.x += (MOVE.x - this.vel.x) * damp;
     this.vel.z += (MOVE.z - this.vel.z) * damp;
+    const prevX = this.basePos.x;
+    const prevZ = this.basePos.z;
     this.basePos.x += this.vel.x * dt;
     this.basePos.z += this.vel.z * dt;
+
+    // lateral wall/gate collision at shin height: the walker stops at wall
+    // segments and tier masses, passes through the gate gaps; the probe
+    // slides blocked motion along the face (velocity stays — game feel)
+    if (this.moveProbe) {
+      const m = this.moveProbe(
+        prevX,
+        prevZ,
+        this.basePos.x,
+        this.basePos.z,
+        this.basePos.y - EYE_HEIGHT + WALL_BODY_LIFT,
+      );
+      this.basePos.x = m.x;
+      this.basePos.z = m.z;
+    }
 
     // ---- vertical: gravity, jump (held OR buffered tap), ground clamp
     const jumpBuffered = this.jumpAt >= 0 && performance.now() - this.jumpAt < 150;
@@ -336,7 +589,7 @@ export class FlyCamera {
     this.basePos.y += (this.velY - GRAVITY * dt * 0.5) * dt;
     this.velY -= GRAVITY * dt;
 
-    const g = probe(this.basePos.x, this.basePos.z);
+    const g = probe(this.basePos.x, this.basePos.z, this.basePos.y);
     const eyeFloor = g.ground + EYE_HEIGHT;
     if (this.basePos.y <= eyeFloor) {
       // landing dip ∝ impact speed (skip the trivial walk-downhill touches)
@@ -363,14 +616,16 @@ export class FlyCamera {
 
     // ---- camera-motion effects ------------------------------------------------
     const speedH = Math.hypot(this.vel.x, this.vel.z);
-    const speedK = Math.min(speedH / WALK_SPEED, SPRINT_MULT);
+    const scaledWalkSpeed = WALK_SPEED * this.walkScaleV;
+    const speedK = Math.min(speedH / scaledWalkSpeed, SPRINT_MULT);
     // bob amplitude factor: fades in/out, zero while airborne
     const bobTarget = this.grounded ? Math.min(speedK, 1.3) : 0;
     this.bobK += (bobTarget - this.bobK) * (1 - Math.exp(-dt * 8));
     // stride cadence rises SUB-linearly with speed (sprint = longer strides,
     // not double-time steps); frozen while airborne — no steps in the air
     if (this.grounded && speedH > 0.3) {
-      const rate = STRIDE_RATE * WALK_SPEED * (0.55 + 0.45 * Math.min(speedK, 2));
+      const rate = STRIDE_RATE * WALK_SPEED * Math.sqrt(this.walkScaleV) *
+        (0.55 + 0.45 * Math.min(speedK, 2));
       this.stridePhase += rate * dt;
     }
     const ampY = (BOB_Y_WALK + BOB_Y_SPRINT_ADD * Math.max(Math.min(speedK - 1, 1), 0)) * this.bobK;
@@ -381,7 +636,9 @@ export class FlyCamera {
     this.dipV += (-DIP_K * this.dipY - DIP_C * this.dipV) * dt;
     this.dipY += this.dipV * dt;
     // sprint FOV kick
-    const fovTarget = sprinting && this.grounded && speedH > WALK_SPEED * 1.15 ? SPRINT_FOV_ADD : 0;
+    const fovTarget = sprinting && this.grounded && speedH > scaledWalkSpeed * 1.15
+      ? SPRINT_FOV_ADD
+      : 0;
     this.fovKick += (fovTarget - this.fovKick) * (1 - Math.exp(-dt * 6));
     const fov = this.baseFov + this.fovKick;
     if (Math.abs(this.camera.fov - fov) > 1e-3) {
