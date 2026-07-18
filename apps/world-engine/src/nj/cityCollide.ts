@@ -18,10 +18,12 @@
  * courses, jambs (they overlap wall-segment extents anyway), and the thin
  * pearl arch membranes.
  *
- * Collision is LATERAL only — pavements/floors stay groundProbe territory
- * (the plaza and terrace tops are not yet walk floors; separate debt). The
- * base-tier volume extends ~10 m below the plaza top because walkers approach
- * on the meadow 2.8 m below the plaza line the city group sits at.
+ * Collision is LATERAL; the WALK FLOORS live at the bottom of this module
+ * (wrapGroundProbeWithCityFloors — plaza slab, plinth top, terrace-top
+ * cornice rings, crown top), composed onto the scene groundProbe with the
+ * river wrap's y-aware claim idiom. The base-tier collision volume extends
+ * ~10 m below the plaza top because walkers approach on the meadow 2.8 m
+ * below the plaza line the city group sits at.
  *
  * Like wrapGroundProbeWithRiver, the wrap takes plazaTopY and scale as
  * PARAMS — importing rimModel here would cycle through the scene modules.
@@ -136,5 +138,65 @@ export function wrapMoveWithCityCollision(plazaTopY: number, scale: number): Mov
       (y - plazaTopY) / scale,
     );
     return { x: r.x * scale, z: r.z * scale };
+  };
+}
+
+// ---- walkable floors (the debt this module's header used to declare) --------
+
+/** Slab margin past the wall line: covers the gate corridors (local units). */
+const SLAB_MARGIN = 4;
+/** A floor claims when its top is at most this far above the feet (world m) —
+ *  the 2.8 m meadow→plaza step is walkable; an 840 m terrace overhang is not. */
+export const FLOOR_STEP_UP_M = 3.5;
+/** eye height above the feet (matches FlyCamera's EYE_HEIGHT) */
+const EYE_M = 1.7;
+
+/**
+ * Highest city floor at (x, z) whose top is <= maxFloorY, both LOCAL units —
+ * -1e6 when none. Floors are the pavements the massing exposes: the plaza
+ * slab (street of gold, gate corridors included), the plinth top, each
+ * terrace-top cornice ring, and the crown top (sea of glass). Same tables as
+ * the geometry and the lateral collision — no mirrors.
+ */
+export function cityFloorLocalY(x: number, z: number, maxFloorY: number): number {
+  const a = Math.max(Math.abs(x), Math.abs(z));
+  if (a > CITY_HALF + SLAB_MARGIN) return -1e6;
+  let best = -1e6;
+  const claim = (floor: number): void => {
+    if (floor <= maxFloorY && floor > best) best = floor;
+  };
+  claim(0); // plaza slab
+  if (a <= PLINTH_HALF && a > CITY_TIERS[1].half) claim(TIER_BOTTOMS[1]); // plinth top
+  for (let i = 1; i < CITY_TIERS.length - 1; i++) {
+    // terrace-top ring of tier i (the ivory cornice pavement)
+    if (a <= CITY_TIERS[i].half && a > CITY_TIERS[i + 1].half) {
+      claim(TIER_BOTTOMS[i] + CITY_TIERS[i].h);
+    }
+  }
+  if (a <= CITY_TIERS[CITY_TIERS.length - 1].half) claim(CITY_SUMMIT_Y); // crown top
+  return best;
+}
+
+/**
+ * Compose a GroundProbe with the city floors — the river-wrap idiom
+ * (y-aware, so the STACKED pavements only claim when the querying eye could
+ * be standing on them; without `y` only the plaza slab claims). Water is
+ * passed through untouched — the river wrap owns it.
+ */
+export function wrapGroundProbeWithCityFloors(
+  base: (x: number, z: number, y?: number) => { ground: number; water: number },
+  plazaTopY: number,
+  scale: number,
+): (x: number, z: number, y?: number) => { ground: number; water: number } {
+  return (x, z, y) => {
+    const g = base(x, z, y);
+    const lx = x / scale;
+    const lz = z / scale;
+    if (Math.max(Math.abs(lx), Math.abs(lz)) > CITY_HALF + SLAB_MARGIN) return g;
+    const maxFloorLocal =
+      y === undefined ? 0.001 : (y - EYE_M + FLOOR_STEP_UP_M - plazaTopY) / scale;
+    const floor = cityFloorLocalY(lx, lz, maxFloorLocal);
+    if (floor === -1e6) return g;
+    return { ground: Math.max(g.ground, plazaTopY + floor * scale), water: g.water };
   };
 }

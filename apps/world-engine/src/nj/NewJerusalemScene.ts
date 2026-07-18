@@ -30,7 +30,7 @@ import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
 import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
-import { wrapMoveWithCityCollision } from './cityCollide';
+import { wrapGroundProbeWithCityFloors, wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
 import { buildEntityPicks, pickEntityAt } from './entityPicks';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
@@ -200,6 +200,20 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     const emergent = findRimFallSites(hf);
     const sites = emergent.length > 0 ? emergent : anchorFallSites(hf);
     engine.scene.add(buildRimFalls(sites, hf, sunSky.atmosphere, gi));
+  }
+
+  // Walkable city floors (the debt cityCollide's header used to declare):
+  // the plaza slab with its gate corridors, the plinth top, the terrace-top
+  // cornice rings and the crown top become real walk floors — a walker steps
+  // up through a gate onto the street of gold instead of wading chest-deep
+  // under the slab. Same tables as geometry + collision; y-aware claims so
+  // an 840 m terrace overhang never grabs a plaza-level walker.
+  if (ctx.hooks.groundProbe) {
+    ctx.hooks.groundProbe = wrapGroundProbeWithCityFloors(
+      ctx.hooks.groundProbe,
+      plazaTopY,
+      NJ_SCALE,
+    );
   }
 
   // Walk physics: the heightfield IS the plateau now — the terrain scene's

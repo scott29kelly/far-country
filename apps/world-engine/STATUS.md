@@ -190,6 +190,42 @@ re-vendored into `apps/web/public/laas`. Durable API gotchas recorded in
 `docs/THREE-NOTES.md`. The `?resizeprobe=` ablations stay in nj/ code,
 documented as probe-only diagnostics (consumed by `--ablate`).
 
+**(2026-07-18, later-2) WALKABLE CITY FLOORS BUILT — the "plaza slab and
+terrace pavements are not walk floors" debt (declared in cityCollide's own
+header since the collision pass) is closed.** A walker now steps up
+through a gate onto the street of gold and walks INSIDE the city; the
+plinth top, every terrace-top cornice ring, and the crown top (sea of
+glass) are real standing surfaces in walk mode.
+
+- `cityCollide.cityFloorLocalY` + `wrapGroundProbeWithCityFloors`: floors
+  derive from the SAME tables as geometry and lateral collision
+  (CITY_TIERS/cityTierBottoms/PLINTH_HALF/CITY_SUMMIT_Y; slab margin
+  covers the gate corridors). Composed onto the scene groundProbe AFTER
+  the river + campus wraps with the river wrap's y-aware claim idiom:
+  a floor claims only when its top is within FLOOR_STEP_UP_M (3.5 m) of
+  the querying feet — the 2.8 m meadow→plaza step is walkable, an 840 m
+  terrace overhang never grabs a plaza-level walker, and legacy no-y
+  callers claim the slab only. Water passes through untouched (the wade
+  channel still crosses the plaza; the crown basin still claims from
+  above).
+- VERIFIED: new `tools/probe-cityfloors.ts` (CPU, real FlyCamera + real
+  river+floors wraps in scene order) 11/11 — meadow holds outside the
+  slab, street-of-gold standing inside, tier-1 cornice walkable, y-cap
+  discipline both directions, crown floor under the basin claim, no-y
+  slab-only, and a 1500-frame gate-corridor walk that steps up exactly
+  2.8 m with no fling. `probe-walkfling-live` rerun on REAL hardware:
+  ALL PASS across A/B/C/D — its live-derived expectations follow the
+  composed probe by design (corridor entries now land ON the street at
+  485.55 m — previously wading under the slab at ~482.8; C1 stands ON
+  the crown at 3611.30). Full battery: walkfling 8/8, wallcollide 19/19,
+  navigation 11/11, arrival 11/11, entitypick 32/32, tsc clean, build
+  clean. Engine re-vendored.
+- Debts: no stairs/ramps between floors (terraces reachable by flight
+  only — step-free ascent is future content); interior plaza/wall
+  dressing at walking range is thin (CITY-QUALITY-BAR pillar A applies
+  inside the wall too — shots/wip/cityfloors-plaza.png shows the flat
+  interior read); dwellings/temple floors and collision remain open.
+
 **(2026-07-18, later) CITATION HUD + CLICK-PICKING BUILT — M3.4's core
 promise ("geometry that footnotes itself") lands on /world-preview.**
 Clicking a rendered structure now surfaces its canonical dataset entity:
@@ -1061,9 +1097,10 @@ the decisions these owe):
 
 - ~~Wall/gate collision of any kind~~ **BUILT 2026-07-06** (dated entry
   above: `hooks.moveProbe` + `src/nj/cityCollide.ts`, gates as real
-  passages, foundation course notched at the gates). Still open in the
-  same area: walkable floors (plaza slab + terrace pavements are not
-  groundProbe surfaces) and dwellings/temple collision.
+  passages, foundation course notched at the gates). ~~Walkable floors~~
+  **BUILT 2026-07-18** (later-2 entry above: plaza slab, plinth top,
+  terrace rings and crown top are groundProbe floors). Still open:
+  dwellings/temple collision and floors.
 - Distinct throne (rainbow halo + sea of glass, RENDERING-DECISIONS #4) — only
   a plain emissive sphere.
 - Mini-map / click-to-teleport.
