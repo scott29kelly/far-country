@@ -40,6 +40,11 @@ import { buildTreesOfLife } from './TreesOfLife';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
+  // ?resizeprobe=allotment — diagnostic ablation used by tools/probe-resize.ts
+  // (--ablate) to bisect render-target-lifetime regressions
+  const resizeProbeAblate = new Set(
+    (new URLSearchParams(window.location.search).get('resizeprobe') ?? '').split(','),
+  );
 
   // Front-light the city. The sun arcs east → south → west across the day, so
   // only in the AFTERNOON does it swing into the south and rake the city's
@@ -121,10 +126,12 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // residual roll (±2 m) + terrain micro-displacement, and reads as a raised
   // street-of-gold platform
   const plazaTopY = coreY + 2.8;
-  const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null });
-  allot.scale.setScalar(NJ_SCALE);
-  allot.position.set(0, plazaTopY, 0);
-  engine.scene.add(allot);
+  if (!resizeProbeAblate.has('allotment')) {
+    const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null });
+    allot.scale.setScalar(NJ_SCALE);
+    allot.position.set(0, plazaTopY, 0);
+    engine.scene.add(allot);
+  }
 
   // The hydrology underwater guard can't see the authored river — wrap the
   // terrain groundProbe with the analytic reach table so the walker's eye

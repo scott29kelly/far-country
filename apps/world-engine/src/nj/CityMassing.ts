@@ -209,7 +209,8 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   m.color.copy(GOLD.clone().lerp(CRYSTAL, f));
   m.metalness = 0;
   m.roughness = 0.07;
-  m.transmission = 0.7; // 0.85 muddied the panes to beige — keep more gold body
+  // 0.85 muddied the panes to beige — keep more gold body
+  m.transmission = transmissionAblated() ? 0 : 0.7;
   m.ior = 1.45;
   m.thickness = 0.9; // local units — ×20 world scale ⇒ ~18 m of gold glass depth
   m.attenuationColor.copy(GOLD);
@@ -275,13 +276,29 @@ function pearlMaterial(): MeshPhysicalNodeMaterial {
   return m;
 }
 
+/**
+ * ?resizeprobe=transmission — diagnostic ablation used by
+ * tools/probe-resize.ts (--ablate) to bisect render-target-lifetime
+ * regressions (transmission triggers the mid-pass backdrop copy); never set
+ * in normal navigation.
+ */
+function transmissionAblated(): boolean {
+  return (
+    new URLSearchParams(window.location.search)
+      .get('resizeprobe')
+      ?.split(',')
+      .includes('transmission') === true
+  );
+}
+
 /** Faceted gem material for one foundation stone (transmission + dispersion). */
 function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
   m.color.set(hex);
   m.metalness = 0;
   m.roughness = 0.08;
-  m.transmission = 0.6; // enough body that per-facet shading survives
+  // 0.6: enough body that per-facet shading survives
+  m.transmission = transmissionAblated() ? 0 : 0.6;
   m.ior = 2.0;
   m.thickness = 1.2;
   m.attenuationColor.copy(m.color);

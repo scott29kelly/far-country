@@ -55,14 +55,20 @@ export function buildHolyAllotment(deps: AllotmentDeps = {}): Group {
   const gi = deps.gi ?? null;
   const allot = new Group();
   allot.name = 'holy-allotment';
+  // ?resizeprobe=city,river — diagnostic ablation used by tools/probe-resize.ts
+  // (--ablate) to bisect render-target-lifetime regressions; never set in
+  // normal navigation
+  const resizeProbeAblate = new Set(
+    (new URLSearchParams(window.location.search).get('resizeprobe') ?? '').split(','),
+  );
 
   // The New Jerusalem at the south-centre, on the flat core (plaza at y = 0).
-  allot.add(buildCityMassing(gi));
+  if (!resizeProbeAblate.has('city')) allot.add(buildCityMassing(gi));
 
   // The river of life cascading the south terraces to the plain (Rev 22:1) —
   // crystal-water pass; shares the city's local frame. Trees of life are
   // world-space pipeline trees (TreesOfLife.ts), not built here.
-  allot.add(buildRiverOfLife(deps));
+  if (!resizeProbeAblate.has('river')) allot.add(buildRiverOfLife(deps));
 
   return allot;
 }
