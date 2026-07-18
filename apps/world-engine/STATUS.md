@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-13)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-18)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,53 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-18, later-5) GAMEPAD NAVIGATION BUILT — browser Gamepad API
+into FlyCamera; Xbox pad primary, Switch pad best-effort.** The camera
+rig now takes a controller (Scott's preference — sticks are friendlier
+than WASD for a non-gamer): new `src/core/GamepadInput.ts` polls
+`navigator.getGamepads()` (the API is poll-only; Chrome exposes a pad
+only after its first button press) and shapes raw state into a per-frame
+snapshot — radial deadzone 0.15, linear move / expo (t²) steer curves,
+analog triggers, rising-edge buttons. FlyCamera stays the ONE movement
+owner: its update() polls the snapshot and feeds the SAME movement/
+steer/mode paths the keyboard and mouse use — no second controller.
+
+- Layout (Chrome "standard" mapping = Xbox/XInput over USB or Bluetooth
+  on Windows 11): left stick move (analog magnitude scales speed, ground
+  and fly), right stick steer at 1.2/0.9 rad/s full deflection —
+  deliberately UNDER the mouse-edge rates, and expo makes small
+  deflections gentler still; RT/LT fly up/down (analog, 0.08 idle
+  threshold); RB/LB the existing ]/[ stepped speeds; Start or Y = the V
+  walk/fly toggle; B = Escape-equivalent (cancels cruise directly, then
+  replays a real Escape keydown/keyup so the EntityHud card and nav
+  panel react without FlyCamera knowing them — replay guarded for Node
+  probes); A = jump. Stick-back cancels cruise (S parity); stick/A/Start
+  count as movement intent and skip a cinematic like the keyboard set.
+  Pads reporting a nonstandard mapping (Switch pads over Bluetooth
+  often do) get the same layout best-effort — sticks on axes 0-3 are
+  near universal — with a one-time console warning; every axis/button
+  read is index-guarded so short arrays can't crash.
+- Exact-placement semantics preserved: the radial deadzone zeroes a pad
+  resting on the desk (setPose/bookmarks/probes hold poses bit-exact
+  with a drifting pad live), and edges are consumed even while input is
+  disabled or a cinematic runs, so a press never fires stale after the
+  arrival hands control back. NavigationState gains a `gamepad` flag;
+  NavigationUI's mode pill shows "… | PAD | N NAV" while a pad is
+  exposed and the N panel help gains a pad legend.
+- VERIFIED: new `tools/probe-gamepad.ts` (CPU, walkfling idiom — REAL
+  FlyCamera + REAL GamepadInput, injected fake Gamepad; probes may
+  inject `flyCamera.gamepad.source`) 22/22 — deadzone placement, expo
+  ratio, analog fly/walk pace ratios, trigger threshold, edge-only
+  speed steps, Start/Y toggle + ground snap, B/stick-back cruise
+  cancel, A jump, disabled stale-edge discipline, cinematic skip,
+  nonstandard fallback, gamepad flag lifecycle. Full battery:
+  navigation 11/11, walkfling 8/8, wallcollide 19/19, cityfloors 11/11,
+  arrival 11/11, tsc clean, vite build clean. Engine re-vendored into
+  apps/web/public/laas. Real-hardware feel pass with the physical Xbox
+  pad still owed (Scott-only; steer rates and curves are the first
+  knobs if it feels off — PAD_YAW_RATE/PAD_PITCH_RATE in FlyCamera,
+  curves in GamepadInput).
 
 **(2026-07-18) VIEWPORT-RESIZE "Destroyed texture" RACE ROOT-CAUSED AND
 FIXED — the uncommitted resizeprobe investigation closed.** Resizing the
