@@ -7,7 +7,12 @@
 import { ACESFilmicToneMapping, PerspectiveCamera, Scene } from 'three';
 import { TimestampQuery, WebGPURenderer } from 'three/webgpu';
 import { buildRequiredLimits } from './Diagnostics';
-import { installMaterialKeyMemo } from '../render/ThreePatches';
+import {
+  installDeferredFramebufferDestroy,
+  installFramebufferBindingRefresh,
+  installMaterialKeyMemo,
+  resizeFramebufferTextures,
+} from '../render/ThreePatches';
 import { installPositionInvariance } from '../render/VegPrepass';
 import { GpuProfiler } from './GpuProfiler';
 import type { EngineStats, LaasHooks } from './Hooks';
@@ -42,6 +47,8 @@ export class Engine {
   private timestampsSupported = false;
   private timestampPending = false;
   private profiler: GpuProfiler | null = null;
+  /** drains deferred framebuffer-texture destroys (ThreePatches) */
+  private deferredDestroyTick: () => void = () => {};
 
   private constructor(renderer: WebGPURenderer, params: LaasParams, hooks: LaasHooks) {
     this.renderer = renderer;
@@ -107,11 +114,20 @@ export class Engine {
     // shadow-pass render objects re-hash their material node graph every
     // frame (see ThreePatches) — memoize per material
     installMaterialKeyMemo(renderer);
+    // resize destroys the transmission backdrop mid-pass (see ThreePatches) —
+    // defer the GPU handle release a few frames
+    engine.deferredDestroyTick = installDeferredFramebufferDestroy(renderer);
+    // stale bind groups survive the backdrop's recreation on shared bindings
+    // (see ThreePatches) — track framebuffer-texture generation per group
+    installFramebufferBindingRefresh(renderer);
 
     window.addEventListener('resize', () => {
       engine.camera.aspect = window.innerWidth / window.innerHeight;
       engine.camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      // recreate viewport framebuffer textures here, between frames — their
+      // mid-pass in-place resize races the encoder (see ThreePatches)
+      resizeFramebufferTextures(renderer);
     });
     return engine;
   }
@@ -132,6 +148,7 @@ export class Engine {
   }
 
   private frame(timeMs: number): void {
+    this.deferredDestroyTick();
     const t = timeMs / 1000;
     const rawDt = this.lastT === null ? 1 / 60 : t - this.lastT;
     this.lastT = t;

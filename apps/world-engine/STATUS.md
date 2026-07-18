@@ -138,6 +138,58 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-18) VIEWPORT-RESIZE "Destroyed texture" RACE ROOT-CAUSED AND
+FIXED — the uncommitted resizeprobe investigation closed.** Resizing the
+browser window with the NJ scene up raised Dawn validation errors
+(`Destroyed texture ... used in a submit`, encoder `renderContext_6`) —
+dropped frames on every user window resize/maximize. The dirty-tree
+`?resizeprobe=` ablation slice (city/river/transmission/allotment) was
+finished into `tools/probe-resize.ts` (parametrized `--ablate`/`--cycles`,
+plus a `--diag` mode that patches createTexture/createBindGroup/submit
+before boot, labels textures by creating stack, and error-scopes every
+submit). The bisect matrix pinned TRANSMISSION as the owner (baseline
+FAIL; river-ablated FAIL; transmission-ablated PASS), and --diag traced
+the full mechanism in the pinned three 0.184:
+
+- `ViewportTextureNode.updateBefore` resizes the transmission backdrop
+  FramebufferTexture IN-PLACE, MID-PASS (inside the scene pass's
+  copyFramebufferToTexture; `Textures.js:208` destroys the old GPU
+  texture) — the scene encoder already references it, so its own submit
+  fails.
+- Worse, the stale references NEVER converge: the backdrop's shared
+  `NodeSampledTexture` binding syncs version/generation at the FIRST
+  group that updates, and `Bindings._update`'s generation check is gated
+  behind `updated` (`Bindings.js:303`) — every other bind group keeps GPU
+  views of the destroyed texture forever.
+- Two rarely-drawn transmissive meshes dodge even that: `_renderObjectDirect`
+  gates binding updates behind `_nodes.needsRefresh` (`Renderer.js:3535`),
+  so NodeMaterialObserver-static objects draw WITHOUT updateForRender —
+  traced live via --diag STALE-DRAW instrumentation (bg64/bg72, epoch 0
+  at draw time).
+- And `createBindings`' (cacheIndex, version-sum) cache can REVIVE purged
+  groups: the sum is non-monotonic when a binding's texture reference
+  swaps objects (`WebGPUBindingUtils.js:155`).
+
+Fix (`src/render/ThreePatches.ts`, installed from `Engine.create`, all
+scoped to `isFramebufferTexture` — RT resizes and normal disposals keep
+exact timing): (1) `resizeFramebufferTextures` — the window-resize
+listener pre-sizes + disposes + version-bumps every live viewport
+framebuffer texture BETWEEN frames and bumps a global resize epoch;
+(2) `installDeferredFramebufferDestroy` — raw GPUTexture.destroy calls
+defer 16 frames, drained from the frame loop; (3)
+`installFramebufferBindingRefresh` — any bind group that has EVER sampled
+a framebuffer texture (tag on the wrapper) is force-rebuilt once per
+epoch, textures re-initialized first and the version cache purged, at
+BOTH seams: `Bindings._update` AND `backend.draw` (the only unconditional
+per-draw hook — catches observer-static objects). VERIFIED: probe-resize
+baseline FAILED pre-fix (1-8 errors/run), now 5 consecutive PASS runs
+including `--cycles 6` (12 resizes); tsc clean; vite build clean;
+navigation 11/11, arrival 11/11, walkfling 8/8, wallcollide 19/19; spawn
+hero framing visually intact (shots/wip/resizefix-spawn.png). Engine
+re-vendored into `apps/web/public/laas`. Durable API gotchas recorded in
+`docs/THREE-NOTES.md`. The `?resizeprobe=` ablations stay in nj/ code,
+documented as probe-only diagnostics (consumed by `--ablate`).
+
 **(2026-07-13) LARGE-WORLD NAVIGATION BUILT — M3.3 mini-map/click-travel gap
 closed.** The existing camera already supported `V`, mouse-wheel fly speed,
 Shift boost, and hidden numbered bookmarks, but users had no visible way to
