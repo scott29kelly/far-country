@@ -33,6 +33,7 @@ import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
 import { wrapGroundProbeWithCityFloors, wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
 import { buildEntityPicks, nearestEntityAt, pickEntityAt } from './entityPicks';
+import { buildPopulation } from './Population';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
@@ -191,6 +192,13 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       return { ground: far, water: far - 2 };
     };
   }
+
+  // The inhabitants (roadmap M3.6): the great multitude on the plaza and
+  // terrace pavements and the angelic hosts ringing the summit — the settled
+  // RENDERING-DECISIONS #3 rendering under ADR 0011/0010. World-space,
+  // human-scale content (the TreesOfLife convention); placements come from
+  // populationModel.ts, standing on the same floors cityFloorLocalY walks.
+  engine.scene.add(buildPopulation({ gi, plazaTopY }));
 
   // Waterfalls off the mesa rim (ADR 0016): authored crystal ribbons at the
   // seed's REAL drainage crossings (the hydrology field cannot express
