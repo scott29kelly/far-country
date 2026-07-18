@@ -190,6 +190,27 @@ re-vendored into `apps/web/public/laas`. Durable API gotchas recorded in
 `docs/THREE-NOTES.md`. The `?resizeprobe=` ablations stay in nj/ code,
 documented as probe-only diagnostics (consumed by `--ablate`).
 
+**(2026-07-18, later-3) GATE INSCRIPTIONS BUILT — the tribe names are
+legible in-scene (Rev 21:12; wayfinding floor, CITY-QUALITY-BAR).** Each
+gate carries its tribe's name in gold serif capitals on the ivory cornice
+fascia directly over the opening — the classical entablature-frieze
+position (the first placement attempt sat the plaque INSIDE the cornice
+slab, y 13.6..16 at half+2.5; an opaque-quad bisect shot exposed the
+burial). The inscription's existence is cited content (Rev 21:12 "on the
+gates the names of the twelve tribes... were inscribed"; side order Ezek
+48:30-34 per RENDERING-DECISIONS #2); the applied-gold serif treatment is
+art direction. Zero assets: one runtime Canvas2D atlas (BootUI
+precedent), one alpha-cutout material, one merged 12-quad mesh — a
+single draw; emissive 0.4 stays far under the 1.5 bloom threshold.
+LIVE-VERIFIED (shots/wip/inscription-close2/-approach/-corner.png):
+ZEBULUN reads on the frieze point-blank and from the ~700 m approach
+without bloom; the SE-corner framing shows south + east faces with
+correctly-oriented (unmirrored) text and the gem courses undisturbed.
+Battery: wallcollide 19/19, entitypick 32/32, cityfloors 11/11,
+walkfling 8/8, tsc clean, build clean. Engine re-vendored. Compass-side
+identification continues to come from the click card ("Zebulun Gate · S")
+and the navigation panel.
+
 **(2026-07-18, later-2) WALKABLE CITY FLOORS BUILT — the "plaza slab and
 terrace pavements are not walk floors" debt (declared in cityCollide's own
 header since the collision pass) is closed.** A walker now steps up

@@ -27,6 +27,7 @@
 import {
   BoxGeometry,
   BufferGeometry,
+  CanvasTexture,
   CircleGeometry,
   Color,
   DoubleSide,
@@ -38,6 +39,7 @@ import {
   PlaneGeometry,
   Quaternion,
   SphereGeometry,
+  SRGBColorSpace,
   TorusGeometry,
   Vector3,
 } from 'three';
@@ -570,6 +572,85 @@ function buildGatePortal(
 }
 
 /**
+ * The inscribed tribe names over the twelve gates (Rev 21:12 — "on the
+ * gates the names of the twelve tribes of the sons of Israel were
+ * inscribed"; side assignment per Ezek 48:30-34, RENDERING-DECISIONS #2).
+ * The inscription's EXISTENCE is cited content; the applied gold-letter
+ * treatment, serif face and size are art direction. Zero assets: one
+ * runtime Canvas2D atlas (the BootUI precedent), one alpha-cutout
+ * material, one merged 12-quad mesh — a single draw. Emissive stays far
+ * under the 1.5 bloom threshold (contract: base tier never blooms).
+ */
+function buildGateInscriptions(outer: number): Mesh {
+  const ROW_H = 170;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 2048;
+  const ctx2d = canvas.getContext('2d');
+  if (ctx2d) {
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    ctx2d.fillStyle = '#ffffff';
+    ctx2d.textAlign = 'center';
+    ctx2d.textBaseline = 'middle';
+    ctx2d.font = '600 118px Georgia, "Times New Roman", serif';
+    GATES.forEach((gate, i) => {
+      ctx2d.fillText(gate.tribe.toUpperCase(), 512, i * ROW_H + ROW_H / 2);
+    });
+  }
+  const atlas = new CanvasTexture(canvas);
+  atlas.colorSpace = SRGBColorSpace;
+  atlas.anisotropy = 8;
+
+  const mat = new MeshStandardNodeMaterial();
+  mat.map = atlas;
+  mat.alphaTest = 0.55;
+  mat.color.copy(GOLD).multiplyScalar(1.15);
+  mat.emissive.copy(GOLD);
+  mat.emissiveIntensity = 0.4; // legible at approach range, never blooms
+  mat.roughness = 0.45;
+  mat.metalness = 0.15;
+  mat.side = FrontSide;
+
+  // On the ivory cornice fascia over each gate — the classical entablature
+  // frieze position: the tier-0 cornice slab spans y 13.6..16 at radial
+  // half+2.5 (built below), so letters sit proud of ITS outer face; the
+  // dentil course (y ~12.9, radial half+2.1) passes underneath. Gold on
+  // ivory matches the arcade-course language.
+  const W = 13;
+  const H = 2.0;
+  const yMid = 14.8;
+  const proud = outer + 2.5 + 0.35;
+
+  const quads = GATES.map((gate, i) => {
+    const geo = new PlaneGeometry(W, H);
+    // row band in the atlas (CanvasTexture flipY: v=1 is canvas top, so
+    // row i spans v in [1-(i+1)*rowV, 1-i*rowV])
+    const rowV = ROW_H / canvas.height;
+    const uv = geo.getAttribute('uv');
+    for (let k = 0; k < uv.count; k++) {
+      uv.setY(k, 1 - (i + 1) * rowV + uv.getY(k) * rowV);
+    }
+    // orient so the plane's normal faces outward and its +x is viewer-right
+    const face = SIDE_FACE[gate.side];
+    if (face.axis === 'z') {
+      if (face.sign < 0) geo.rotateY(Math.PI);
+      geo.translate(gate.offset, yMid, face.sign * proud);
+    } else {
+      geo.rotateY(face.sign > 0 ? Math.PI / 2 : -Math.PI / 2);
+      geo.translate(face.sign * proud, yMid, gate.offset);
+    }
+    return geo;
+  });
+  const merged = mergeGeometries(quads);
+  for (const q of quads) q.dispose();
+  const mesh = new Mesh(merged, mat);
+  mesh.name = 'gate-inscriptions';
+  mesh.castShadow = false;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
+/**
  * Twelve jewelled foundation courses (Rev 21:19-20) as faceted gem volumes,
  * NOTCHED at the gate openings (cityModel.foundationCourseSpans — the shared
  * table cityCollide's wall collision reads too). Un-notched, the course
@@ -707,6 +788,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
           buildGatePortal(SIDE_FACE[gate.side], gate.offset, innerHalf, t.half, H, trimPlain, pearl),
         );
       }
+      city.add(buildGateInscriptions(t.half));
       city.add(buildFoundationCourse(t.half));
 
       // Wall pilasters between the gates (the pier rhythm skips every slot
