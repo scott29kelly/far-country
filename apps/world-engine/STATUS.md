@@ -177,7 +177,13 @@ steer/mode paths the keyboard and mouse use — no second controller.
   ratio, analog fly/walk pace ratios, trigger threshold, edge-only
   speed steps, Start/Y toggle + ground snap, B/stick-back cruise
   cancel, A jump, disabled stale-edge discipline, cinematic skip,
-  nonstandard fallback, gamepad flag lifecycle. Full battery:
+  nonstandard fallback, gamepad flag lifecycle. LIVE-VERIFIED too:
+  `tools/probe-gamepad-live.ts` (real Chromium/WebGPU boot, navigator.
+  getGamepads overridden pre-boot by a page-controlled fake — proves the
+  production seam: default source, rAF loop, PAD pill) 6/6 — pill
+  appears/clears with pad exposure, stick flew 21.4 m/s-worth, steer
+  measured 1.21 rad/s live, RB stepped 24→60; takes `--port` so worktree
+  sessions never probe another checkout's :5173. Full battery:
   navigation 11/11, walkfling 8/8, wallcollide 19/19, cityfloors 11/11,
   arrival 11/11, tsc clean, vite build clean. Engine re-vendored into
   apps/web/public/laas. Real-hardware feel pass with the physical Xbox
