@@ -107,6 +107,36 @@ async function main(): Promise<void> {
       () => document.getElementById('entity-hud')?.hidden === true,
     );
     c.check('B9 empty-world click dismisses the card', hiddenAfterMiss === true);
+
+    // ---- C: walk-mode proximity auto-card ----------------------------------
+    await page.evaluate(async () => {
+      window.__laas.setPose?.({ p: [1000, 490, 2030], yaw: 0, pitch: 0 });
+      if (window.__laas.settle) await window.__laas.settle(2);
+    });
+    await page.waitForTimeout(800);
+    const flyNoCard = await page.evaluate(
+      () => document.getElementById('entity-hud')?.hidden === true,
+    );
+    c.check('C1 fly mode near a gate shows no auto-card', flyNoCard === true);
+
+    await page.keyboard.press('KeyV'); // enter walk in the Zebulun corridor
+    await page.waitForSelector('#entity-hud:not([hidden]) .eh-label', { timeout: 5000 });
+    const nearCard = await page.evaluate(() => {
+      const root = document.getElementById('entity-hud');
+      return {
+        label: root?.querySelector('.eh-label')?.textContent ?? '',
+        pinned: root?.querySelector('.eh-pin') !== null,
+      };
+    });
+    c.check('C2 walk mode auto-surfaces the gate card', nearCard.label === 'Zebulun Gate · S', nearCard.label);
+    c.check('C3 the auto-card is not pinned', nearCard.pinned === false);
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(800);
+    const latched = await page.evaluate(
+      () => document.getElementById('entity-hud')?.hidden === true,
+    );
+    c.check('C4 Escape latches the auto-card off while the target is unchanged', latched === true);
   } finally {
     await browser.close();
   }

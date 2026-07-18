@@ -190,6 +190,29 @@ re-vendored into `apps/web/public/laas`. Durable API gotchas recorded in
 `docs/THREE-NOTES.md`. The `?resizeprobe=` ablations stay in nj/ code,
 documented as probe-only diagnostics (consumed by `--ablate`).
 
+**(2026-07-18, later-4) PROXIMITY AUTO-CARDS BUILT — the legacy HUD's
+nearby-entity behavior lands on the engine, walk-mode only.** Walking
+near a grounded structure now surfaces its descriptor card without a
+click: `entityPicks.nearestEntityAt` (distance flavor of the pick
+registry — smallest distance wins, 5 m priority tie for co-located
+volumes) drives a new `hooks.entityNear`, and EntityHud polls it at
+~3 Hz. Contract: WALK MODE ONLY (programmatic poses always force fly, so
+probes/shots never see an unclicked card, and 2000 m/s flight never
+flickers); a clicked card is PINNED (chip in the header) and proximity
+never replaces it; Escape/✕/miss-click latches the current label off
+until the walker nears something else (labels, not slugs, are the key —
+twelve gates share a slug). The arrival meadow spawn is outside every
+trigger radius, so first-walk stays clean. VERIFIED: probe-entitypick
+now 37/37 (N1-N5 proximity cases — gate-over-street tie, street at eye
+height, tree, meadow null, wading the river); probe-entityhud-live now
+17/17 (C1 no card in fly mode beside a gate, C2 V-into-walk
+auto-surfaces "Zebulun Gate · S", C3 unpinned, C4 Escape latch holds).
+Full battery: navigation 11/11, arrival 11/11, walkfling 8/8,
+wallcollide 19/19, cityfloors 11/11, tsc clean, build clean. Engine
+re-vendored. M3.4's remaining engine-side gap is now only the campus
+pick (blocked on Track A) — the in-scene symbolic visual key (M3.5)
+stays open.
+
 **(2026-07-18, later-3) GATE INSCRIPTIONS BUILT — the tribe names are
 legible in-scene (Rev 21:12; wayfinding floor, CITY-QUALITY-BAR).** Each
 gate carries its tribe's name in gold serif capitals on the ivory cornice

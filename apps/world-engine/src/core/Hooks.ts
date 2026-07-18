@@ -102,6 +102,9 @@ export interface LaasHooks {
   /** resolve a click (NDC -1..1) to a canonical dataset entity — installed by
    *  scenes with cited content (EntityHud consumes; probes may call it) */
   entityPick: ((ndcX: number, ndcY: number) => EntityPickResult | null) | null;
+  /** the most specific entity near a world position (walk-mode proximity
+   *  auto-card) — same registry as entityPick, distance flavor */
+  entityNear: ((x: number, y: number, z: number) => EntityPickResult | null) | null;
 }
 
 /** a picked structure: canonical entity slug + in-world label + hit distance */
@@ -133,6 +136,7 @@ export function initHooks(): LaasHooks {
     navigationTargets: [],
     navigationMap: null,
     entityPick: null,
+    entityNear: null,
   };
   window.__laas = hooks;
   return hooks;

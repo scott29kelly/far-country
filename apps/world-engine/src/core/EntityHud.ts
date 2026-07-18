@@ -88,14 +88,27 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/** proximity poll cadence (walk-mode auto-card) */
+const NEAR_POLL_MS = 300;
+
 export class EntityHud {
   private root: HTMLDivElement;
   private cache = new Map<string, Promise<EntityExport | null>>();
   private activeSlug: string | null = null;
+  /** label of the card being shown (labels are more specific than slugs —
+   *  twelve gates share one slug) */
+  private shownKey: string | null = null;
+  /** a clicked card stays put; proximity never replaces it */
+  private pinned = false;
+  /** Escape/✕/miss-click latch: suppress the proximity card for this label
+   *  until the walker nears something ELSE (or leaves) */
+  private dismissedKey: string | null = null;
+  private mode: 'walk' | 'fly' = 'fly';
 
   constructor(
     private engine: Engine,
     private hooks: LaasHooks,
+    fly?: { subscribeNavigation(l: (s: { mode: 'walk' | 'fly' }) => void): () => void },
   ) {
     this.installStyles();
     this.root = document.createElement('div');
@@ -107,8 +120,33 @@ export class EntityHud {
 
     engine.renderer.domElement.addEventListener('click', this.onClick);
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Escape') this.hide();
+      if (e.code === 'Escape') this.dismiss();
     });
+
+    // Proximity auto-card: walk mode only — programmatic poses always force
+    // fly, so probes/shots never see a card they didn't click for, and fast
+    // flight never flickers cards.
+    fly?.subscribeNavigation((s) => {
+      this.mode = s.mode;
+      if (this.mode !== 'walk' && !this.pinned) this.hide();
+    });
+    window.setInterval(() => this.pollNear(), NEAR_POLL_MS);
+  }
+
+  private pollNear(): void {
+    if (this.mode !== 'walk' || this.pinned) return;
+    const near = this.hooks.entityNear;
+    if (!near) return;
+    const p = this.engine.camera.position;
+    const hit = near(p.x, p.y, p.z);
+    if (!hit) {
+      this.dismissedKey = null; // leaving the area re-arms the auto-card
+      if (this.shownKey !== null) this.hide();
+      return;
+    }
+    if (hit.label === this.dismissedKey) return;
+    this.dismissedKey = null; // neared something else — re-arm
+    if (hit.label !== this.shownKey) this.show(hit.slug, hit.label, false);
   }
 
   private onClick = (e: MouseEvent): void => {
@@ -120,18 +158,20 @@ export class EntityHud {
     const ny = -(((e.clientY - r.top) / r.height) * 2 - 1);
     const hit = pick(nx, ny);
     if (!hit) {
-      this.hide();
+      this.dismiss();
       return;
     }
-    this.show(hit.slug, hit.label);
+    this.show(hit.slug, hit.label, true);
   };
 
-  private show(slug: string, label: string): void {
+  private show(slug: string, label: string, pinned: boolean): void {
     this.activeSlug = slug;
+    this.shownKey = label;
+    this.pinned = pinned;
     this.root.hidden = false;
     this.renderShell(label, `<div class="eh-loading">loading descriptors…</div>`);
     void this.load(slug).then((entity) => {
-      if (this.activeSlug !== slug || this.root.hidden) return;
+      if (this.activeSlug !== slug || this.shownKey !== label || this.root.hidden) return;
       if (!entity) {
         this.renderShell(
           label,
@@ -141,6 +181,13 @@ export class EntityHud {
       }
       this.renderEntity(label, entity);
     });
+  }
+
+  /** user dismissal: latch the current label so proximity doesn't instantly
+   *  re-show it; a click-pin elsewhere or nearing something else re-arms */
+  private dismiss(): void {
+    if (this.shownKey !== null) this.dismissedKey = this.shownKey;
+    this.hide();
   }
 
   private load(slug: string): Promise<EntityExport | null> {
@@ -187,18 +234,22 @@ export class EntityHud {
     const link = slug
       ? `<a class="eh-open" href="/entities/${esc(slug)}" target="_blank" rel="noopener">open ↗</a>`
       : '';
+    const pin = this.pinned ? `<span class="eh-pin">pinned</span>` : '';
     this.root.innerHTML = `
       <div class="eh-head">
         <span class="eh-label">${esc(label)}</span>
+        ${pin}
         ${link}
         <button class="eh-close" title="Dismiss (Esc)" aria-label="Dismiss">✕</button>
       </div>
       ${body}`;
-    this.root.querySelector('.eh-close')?.addEventListener('click', () => this.hide());
+    this.root.querySelector('.eh-close')?.addEventListener('click', () => this.dismiss());
   }
 
   hide(): void {
     this.activeSlug = null;
+    this.shownKey = null;
+    this.pinned = false;
     this.root.hidden = true;
   }
 
@@ -215,6 +266,8 @@ export class EntityHud {
 #entity-hud .eh-head{display:flex;align-items:center;gap:8px;}
 #entity-hud .eh-label{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;
   color:#d4b46e;flex:1;}
+#entity-hud .eh-pin{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;
+  color:#0e0d0a;background:#d4b46e;border-radius:4px;padding:1px 6px;}
 #entity-hud .eh-open{color:#9fc4e8;text-decoration:none;font-size:12px;}
 #entity-hud .eh-open:hover{text-decoration:underline;}
 #entity-hud .eh-close{background:none;border:none;color:#a89f8c;cursor:pointer;
@@ -239,6 +292,10 @@ export class EntityHud {
   }
 }
 
-export function installEntityHud(engine: Engine, hooks: LaasHooks): EntityHud {
-  return new EntityHud(engine, hooks);
+export function installEntityHud(
+  engine: Engine,
+  hooks: LaasHooks,
+  fly?: { subscribeNavigation(l: (s: { mode: 'walk' | 'fly' }) => void): () => void },
+): EntityHud {
+  return new EntityHud(engine, hooks, fly);
 }

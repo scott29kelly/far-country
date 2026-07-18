@@ -135,7 +135,7 @@ async function boot(): Promise<void> {
   new NavigationUI(engine, fly, hooks);
   new Hud(engine, params);
   // citation card for scenes with cited content (no-ops without the hook)
-  if (hooks.entityPick) installEntityHud(engine, hooks);
+  if (hooks.entityPick) installEntityHud(engine, hooks, fly);
 
   hooks.setPose = (p) => fly.setPose(p);
   hooks.getPose = () => fly.getPose();

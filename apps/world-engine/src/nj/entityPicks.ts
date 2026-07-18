@@ -355,6 +355,53 @@ function rayShape(
   return rayCyl(o, d, shape);
 }
 
+function distanceToShape(p: [number, number, number], shape: PickShape): number {
+  if (shape.kind === 'aabb') {
+    const dx = Math.max(shape.min[0] - p[0], 0, p[0] - shape.max[0]);
+    const dy = Math.max(shape.min[1] - p[1], 0, p[1] - shape.max[1]);
+    const dz = Math.max(shape.min[2] - p[2], 0, p[2] - shape.max[2]);
+    return Math.hypot(dx, dy, dz);
+  }
+  if (shape.kind === 'sphere') {
+    return Math.max(
+      0,
+      Math.hypot(p[0] - shape.c[0], p[1] - shape.c[1], p[2] - shape.c[2]) - shape.r,
+    );
+  }
+  const dr = Math.max(0, Math.hypot(p[0] - shape.x, p[2] - shape.z) - shape.r);
+  const dy = Math.max(shape.y0 - p[1], 0, p[1] - shape.y1);
+  return Math.hypot(dr, dy);
+}
+
+/** distances within this resolve by priority (co-located volumes: a gate
+ *  corridor inside the street slab, a tree over the bank) */
+const NEAR_TIE_M = 5;
+
+/**
+ * The most specific entity near a world position — proximity flavor of the
+ * pick (the walk-mode auto-card). Smallest distance wins; ties within
+ * NEAR_TIE_M resolve by priority. Null beyond `maxDist`.
+ */
+export function nearestEntityAt(
+  p: [number, number, number],
+  volumes: EntityPickVolume[],
+  maxDist = 25,
+): EntityPick | null {
+  let best: { vol: EntityPickVolume; d: number } | null = null;
+  for (const vol of volumes) {
+    const d = distanceToShape(p, vol.shape);
+    if (d > maxDist) continue;
+    if (
+      best === null ||
+      d < best.d - NEAR_TIE_M ||
+      (Math.abs(d - best.d) <= NEAR_TIE_M && vol.priority > best.vol.priority)
+    ) {
+      best = { vol, d };
+    }
+  }
+  return best ? { slug: best.vol.slug, label: best.vol.label, t: best.d } : null;
+}
+
 /**
  * Resolve a world-space ray to the picked entity. Nearest entry distance
  * wins; nested/adjacent volumes within TIE_WINDOW resolve by priority.

@@ -32,7 +32,7 @@ import { ALLOT_ZONES } from './allotmentZones';
 import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
 import { wrapGroundProbeWithCityFloors, wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
-import { buildEntityPicks, pickEntityAt } from './entityPicks';
+import { buildEntityPicks, nearestEntityAt, pickEntityAt } from './entityPicks';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
@@ -240,6 +240,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
         terrainAt,
       );
     };
+    ctx.hooks.entityNear = (x, y, z) => nearestEntityAt([x, y, z], pickVolumes);
   }
 
   // Spawn on the meadow south of the city, grounded and free to roam (V

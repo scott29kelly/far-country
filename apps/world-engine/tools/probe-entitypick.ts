@@ -32,7 +32,7 @@ Object.defineProperty(globalThis, 'window', {
   configurable: true,
 });
 
-const { buildEntityPicks, pickEntityAt } = await import('../src/nj/entityPicks');
+const { buildEntityPicks, nearestEntityAt, pickEntityAt } = await import('../src/nj/entityPicks');
 const { FOUNDATION_GEMS, GATES, SIDE_COMPASS, CITY_SUMMIT_Y, foundationCourseSpans } =
   await import('../src/nj/cityModel');
 const { riverReaches } = await import('../src/nj/RiverOfLife');
@@ -154,6 +154,22 @@ c.check('B11 terrain occludes a pick behind a ridge', b11 === null, `got ${b11?.
 
 const b12 = pick([0, PLAZA_Y + 5, 4000], [0, 1, 0]);
 c.check('B12 sky ray picks nothing', b12 === null, `got ${b12?.slug ?? 'null'}`);
+
+// ---- N: proximity resolver (the walk-mode auto-card) -----------------------
+const n1 = nearestEntityAt([1000, PLAZA_Y + 30, 2000], vols);
+c.check('N1 gate corridor: the gate beats street and wall', n1?.label === 'Zebulun Gate · S', `got ${n1?.label ?? 'null'}`);
+
+const n2 = nearestEntityAt([300, PLAZA_Y + 2, 1000], vols); // walker eye height
+c.check('N2 plaza interior: the street of gold', n2?.slug === 'street-of-gold', `got ${n2?.slug ?? 'null'}`);
+
+const n3 = nearestEntityAt([150, GROUND + 2, 2450], vols);
+c.check('N3 tree trunk: the tree of life', n3?.slug === 'tree-of-life', `got ${n3?.slug ?? 'null'}`);
+
+const n4 = nearestEntityAt([300, GROUND + 2, 2300], vols);
+c.check('N4 open meadow: nothing near', n4 === null, `got ${n4?.slug ?? 'null'}`);
+
+const n5 = nearestEntityAt([0, PLAZA_Y + 3, 3000], vols);
+c.check('N5 wading the channel: the river', n5?.slug === 'river-of-the-water-of-life', `got ${n5?.slug ?? 'null'}`);
 
 // ---- C: every registry slug is a real, cited canonical entity --------------
 const slugs = [...new Set(vols.map((v) => v.slug))];
