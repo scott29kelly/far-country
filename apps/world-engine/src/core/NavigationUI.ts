@@ -70,7 +70,7 @@ export class NavigationUI {
       '<section><h2>Travel speed</h2><div class="nav-speed"></div></section>',
       '<section><h2>World map</h2><canvas class="nav-map" width="600" height="360" tabindex="0" aria-label="World map. Click to fly above a location."></canvas><p class="nav-map-note">Click anywhere to fly safely above that location.</p></section>',
       '<section><h2>Quick travel</h2><div class="nav-targets"></div></section>',
-      '<div class="nav-help"><strong>Move</strong> WASD · <strong>Look</strong> point mouse · <strong>Boost</strong> Shift<br><strong>Fly up/down</strong> Space / Ctrl · <strong>Speed</strong> [ / ] or wheel · <strong>Cruise</strong> C · <strong>Walk/Fly</strong> V</div>',
+      '<div class="nav-help"><strong>Move</strong> WASD · <strong>Look</strong> point mouse · <strong>Boost</strong> Shift<br><strong>Fly up/down</strong> Space / Ctrl · <strong>Speed</strong> [ / ] or wheel · <strong>Cruise</strong> C · <strong>Walk/Fly</strong> V<br><strong>Pad</strong> sticks move/look · RT/LT up/down · RB/LB speed · Start walk/fly · B dismiss</div>',
     ].join('');
     document.body.appendChild(this.panel);
     const navContext = this.required<HTMLSpanElement>('.nav-context');
@@ -152,7 +152,9 @@ export class NavigationUI {
     this.speedValue.textContent = speed;
     this.cruiseButton.textContent = state.cruise ? 'Cruise on' : 'Cruise off';
     this.cruiseButton.dataset.active = String(state.cruise);
-    this.toggle.textContent = `${state.mode.toUpperCase()}  ${state.mode === 'walk' ? `${state.walkScale}x` : `${Math.round(state.flySpeed)} m/s`}  |  N NAV`;
+    // PAD appears once Chrome exposes a controller (first button press)
+    const pad = state.gamepad ? 'PAD  |  ' : '';
+    this.toggle.textContent = `${state.mode.toUpperCase()}  ${state.mode === 'walk' ? `${state.walkScale}x` : `${Math.round(state.flySpeed)} m/s`}  |  ${pad}N NAV`;
   }
 
   private renderPosition(): void {
