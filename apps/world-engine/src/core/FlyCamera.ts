@@ -18,11 +18,16 @@
  * zone so it holds still for aiming/clicking. Steering only runs while the
  * cursor is over the canvas, so moving the mouse to browser chrome (or a
  * future HUD overlay) doesn't spin the view.
+ *
+ * Gamepad: update() polls GamepadInput (the Gamepad API is poll-only) and
+ * feeds the same movement/steer/mode paths the keyboard and mouse use —
+ * FlyCamera stays the one movement owner. Layout in GamepadInput's header.
  */
 
 import type { PerspectiveCamera } from 'three';
 import { Vector3 } from 'three';
 import { easeInOutCubic } from './Easing';
+import { GamepadInput, type GamepadFrame } from './GamepadInput';
 import type { CamPose } from './Hooks';
 
 const FORWARD = new Vector3();
@@ -61,6 +66,8 @@ export interface NavigationState {
   cruise: boolean;
   flySpeed: number;
   walkScale: number;
+  /** a gamepad is connected and exposed — NavigationUI shows a PAD hint */
+  gamepad: boolean;
 }
 
 export type NavigationListener = (state: NavigationState) => void;
@@ -95,6 +102,12 @@ const MAX_YAW_RATE = 1.5; // rad/s at the screen edge
 const MAX_PITCH_RATE = 1.1;
 const STEER_DEAD_ZONE = 0.14; // fraction of half-canvas with no rotation
 const PITCH_CLAMP = 1.3; // ~74° up/down — matches the validated legacy feel
+
+// ---- gamepad steer (right stick) -------------------------------------------
+// Gentler than the mouse-edge rates on purpose (non-gamer feel); the stick's
+// expo curve (GamepadInput) makes small deflections turn slower still.
+const PAD_YAW_RATE = 1.2; // rad/s at full deflection
+const PAD_PITCH_RATE = 0.9;
 
 // ---- cinematic ease (flyTo — the arrival descent) ---------------------------
 /** movement INTENT skips a cinematic; M stays the mute toggle and clicks keep
@@ -140,8 +153,11 @@ export class FlyCamera {
   groundProbe: GroundProbe | null = null;
   /** lateral wall/gate collision — null when the scene has no authored walls */
   moveProbe: MoveProbe | null = null;
+  /** browser gamepad — polled inside update(); CPU probes inject `.source` */
+  readonly gamepad = new GamepadInput();
 
   private modeV: CamMode = 'fly';
+  private padActiveV = false;
   private walkScaleV = 1;
   private cruiseV = false;
   private navigationListeners = new Set<NavigationListener>();
@@ -244,6 +260,7 @@ export class FlyCamera {
       cruise: this.cruiseV,
       flySpeed: this.speed,
       walkScale: this.walkScaleV,
+      gamepad: this.padActiveV,
     };
   }
 
@@ -457,26 +474,60 @@ export class FlyCamera {
   }
 
   update(dt: number): void {
+    // gamepad polls every frame (the API is poll-only) — edges are consumed
+    // even when they cannot apply, so a press during a cinematic or while
+    // input is disabled never fires later as a stale edge
+    const pad = this.gamepad.poll();
+    if (pad.active !== this.padActiveV) {
+      this.padActiveV = pad.active;
+      this.emitNavigation();
+    }
     // a cinematic owns the pose outright — it advances even while input is
     // disabled (the arrival arms with enabled=false until the landing)
     if (this.cine) {
+      // stick / A / Start = movement intent — skips like the keyboard set
+      if (pad.moveX !== 0 || pad.moveY !== 0 || pad.jump || pad.toggleMode) this.cine.skip = true;
       this.updateCine();
       return;
     }
     if (!this.enabled) return;
+    // pad edges mirror their key bindings (V, ], [, Escape, Space, S-cancel)
+    if (pad.toggleMode) this.setMode(this.modeV === 'walk' ? 'fly' : 'walk');
+    if (pad.speedUp) this.adjustTravelSpeed(1);
+    if (pad.speedDown) this.adjustTravelSpeed(-1);
+    if (pad.dismiss) this.escapeEquivalent();
+    if (pad.jump) this.jumpAt = performance.now();
+    if (this.cruiseV && pad.moveY < -0.5) this.setCruise(false); // stick back = S
     if (this.mouse) {
       this.yaw -= steerResponse(this.mouse.nx) * MAX_YAW_RATE * dt;
       this.pitch -= steerResponse(this.mouse.ny) * MAX_PITCH_RATE * dt;
-      this.pitch = Math.max(-PITCH_CLAMP, Math.min(PITCH_CLAMP, this.pitch));
     }
+    // right stick composes with mouse-steer — both are per-frame rates
+    this.yaw -= pad.lookX * PAD_YAW_RATE * dt;
+    this.pitch -= pad.lookY * PAD_PITCH_RATE * dt;
+    this.pitch = Math.max(-PITCH_CLAMP, Math.min(PITCH_CLAMP, this.pitch));
     if (this.modeV === 'walk') {
-      this.updateWalk(dt);
+      this.updateWalk(dt, pad);
     } else {
-      this.updateFly(dt);
+      this.updateFly(dt, pad);
     }
   }
 
-  private updateFly(dt: number): void {
+  /**
+   * B button = the Escape key: cancel cruise directly, then replay a real
+   * Escape keydown/keyup so window-level listeners (EntityHud card
+   * dismissal, the navigation panel) react without FlyCamera knowing them.
+   * Guarded — CPU probes run under Node, which has no KeyboardEvent.
+   */
+  private escapeEquivalent(): void {
+    if (this.cruiseV) this.setCruise(false);
+    if (typeof KeyboardEvent === 'function' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }));
+    }
+  }
+
+  private updateFly(dt: number, pad: GamepadFrame): void {
     this.applyRotation(0);
 
     FORWARD.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
@@ -490,10 +541,16 @@ export class FlyCamera {
     if (this.keys.has('KeyQ') || this.keys.has('ControlLeft') || this.keys.has('ControlRight')) {
       MOVE.y -= 1;
     }
+    // left stick + triggers compose with the keys; stick magnitude carries
+    // through as analog speed (keyboard directions stay unit-length, so the
+    // min(1, mag) below reduces to the old normalize() for keys alone)
+    MOVE.addScaledVector(FORWARD, pad.moveY).addScaledVector(RIGHT, pad.moveX);
+    MOVE.y += pad.flyUp - pad.flyDown;
     let target = 0;
-    if (MOVE.lengthSq() > 0) {
-      MOVE.normalize();
-      target = this.speed;
+    const mag = MOVE.length();
+    if (mag > 1e-4) {
+      MOVE.divideScalar(mag);
+      target = this.speed * Math.min(1, mag);
       if (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight')) target *= 6;
       if (this.keys.has('AltLeft')) target *= 0.15;
     }
@@ -526,7 +583,7 @@ export class FlyCamera {
     this.camera.updateMatrixWorld();
   }
 
-  private updateWalk(dt: number): void {
+  private updateWalk(dt: number, pad: GamepadFrame): void {
     const probe = this.groundProbe;
     if (!probe) {
       this.setMode('fly');
@@ -543,12 +600,16 @@ export class FlyCamera {
     if (this.keys.has('KeyS')) MOVE.sub(FORWARD);
     if (this.keys.has('KeyD')) MOVE.add(RIGHT);
     if (this.keys.has('KeyA')) MOVE.sub(RIGHT);
+    // left stick composes with the keys — magnitude walks slower than full
+    // pace (FORWARD/RIGHT are yaw-plane, so MOVE.y stays 0 here)
+    MOVE.addScaledVector(FORWARD, pad.moveY).addScaledVector(RIGHT, pad.moveX);
     const sprinting =
       (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight')) && MOVE.lengthSq() > 0;
     let target = 0;
-    if (MOVE.lengthSq() > 0) {
-      MOVE.normalize();
-      target = WALK_SPEED * this.walkScaleV * (sprinting ? SPRINT_MULT : 1);
+    const mag = MOVE.length();
+    if (mag > 1e-4) {
+      MOVE.divideScalar(mag);
+      target = WALK_SPEED * this.walkScaleV * Math.min(1, mag) * (sprinting ? SPRINT_MULT : 1);
       if (this.keys.has('AltLeft')) target *= 0.35;
     }
     const accel = this.grounded ? GROUND_ACCEL : AIR_ACCEL;
