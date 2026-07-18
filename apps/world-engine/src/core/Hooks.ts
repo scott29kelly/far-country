@@ -99,7 +99,13 @@ export interface LaasHooks {
   /** user-facing quick-travel destinations and click-to-fly map contract */
   navigationTargets: NavigationTarget[];
   navigationMap: NavigationMap | null;
+  /** resolve a click (NDC -1..1) to a canonical dataset entity — installed by
+   *  scenes with cited content (EntityHud consumes; probes may call it) */
+  entityPick: ((ndcX: number, ndcY: number) => EntityPickResult | null) | null;
 }
+
+/** a picked structure: canonical entity slug + in-world label + hit distance */
+export type EntityPickResult = { slug: string; label: string; t: number };
 
 declare global {
   interface Window {
@@ -126,6 +132,7 @@ export function initHooks(): LaasHooks {
     flyCamEnabled: null,
     navigationTargets: [],
     navigationMap: null,
+    entityPick: null,
   };
   window.__laas = hooks;
   return hooks;

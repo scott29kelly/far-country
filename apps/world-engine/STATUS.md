@@ -190,6 +190,64 @@ re-vendored into `apps/web/public/laas`. Durable API gotchas recorded in
 `docs/THREE-NOTES.md`. The `?resizeprobe=` ablations stay in nj/ code,
 documented as probe-only diagnostics (consumed by `--ablate`).
 
+**(2026-07-18, later) CITATION HUD + CLICK-PICKING BUILT — M3.4's core
+promise ("geometry that footnotes itself") lands on /world-preview.**
+Clicking a rendered structure now surfaces its canonical dataset entity:
+descriptor statements, confidence-tier badges (clear/fuzzy/debated/
+symbolic), Scripture/Willis citation chips, and the symbolic referent
+where the tier demands one. Content comes EXCLUSIVELY from the same
+per-entity JSON exports the apps/web browse UI consumes
+(`/data/entities/<slug>.json`, tracked via git add -f like /laas) — zero
+descriptor text authored in engine source.
+
+- `src/nj/entityPicks.ts` (scene-owned, CPU-pure): analytic pick volumes
+  derived from the shared owner tables — GATES (twelve tribe+compass
+  labels, Ezek 48:30-34), `foundationCourseSpans()` (the SAME gate-notched
+  spans geometry/collision consume — the first probe draft used un-notched
+  bands and the contract probe caught the drift), CITY_TIERS/PLINTH_HALF/
+  cityTierBottoms, riverReaches(), the new `treeOfLifeModel.ts` station
+  table (extracted from TreesOfLife so probes import no vegetation), and
+  the measured `ezt-precinct-side` 500-cubit temple square. Resolver:
+  nearest ray entry with a 25 m priority tie window (gate beats wall on
+  the shared face), base-terrain occlusion march. Picks: gates,
+  foundation gems, jasper wall, tiers/plinth, street of gold, river
+  reaches, trees of life, summit throne/glory sphere, sea of glass,
+  temple compound (zone-level, `sanctuary-in-the-midst`).
+  DELIBERATELY UNPICKABLE: the dwelling campus — no canonical Ezek
+  45:4-5 zone entity exists yet and inventing one is forbidden; wire it
+  after Track A seeds the allotment entities. Zone-citation guardrails
+  (RENDERING-DECISIONS #7/#8) hold: nothing anchors to an individual
+  house/hedge/well.
+- `src/core/EntityHud.ts`: the card (NavigationUI DOM idiom, z 1050,
+  bottom-centre, visually subordinate). Canvas click → NDC →
+  `hooks.entityPick` (new, installed by the NJ scene; the tooling surface
+  probes drive). Card: eyebrow label ("Issachar Gate · S"), entity name,
+  per-descriptor tier badge + citation chips (display grammar ported from
+  the legacy DescriptorHud, golden-tested), statement, symbolic referent,
+  "+N more" past 3 cards, open-in-browse link, Escape/✕/empty-click
+  dismissal. Mouse-steer is mousemove-based so clicks never turn the
+  camera (live-verified Δyaw 0.0000).
+- Data path: root-absolute `/data/...` fetch — same-origin in prod (the
+  engine iframe lives under apps/web) and in standalone dev via a NEW
+  dev-only vite `publicDir: ../web/public` (build unaffected:
+  publicDir=false).
+- VERIFIED: `tools/probe-entitypick.ts` (CPU, no GPU/server) 32/32 —
+  table shape (Ezekiel gate order, ESV gem order incl. notches, reach
+  count, measured precinct), 12 authored-ray resolver cases incl.
+  occlusion + sky, EVERY registry slug exists as a cited canonical export
+  (symbolic ⇒ referent), citation-grammar goldens.
+  `tools/probe-entityhud-live.ts` (real adapter) 13/13 — contract picks
+  via setPose exact placement, card DOM (name/tier/citation/statement/
+  link), no-steer, both dismissals; standing capture
+  shots/wip/entityhud-gate.png. Full regression matrix: navigation
+  11/11, arrival 11/11, walkfling 8/8, wallcollide 19/19, tsc clean,
+  vite build clean. Engine re-vendored into apps/web/public/laas.
+- Debts: proximity auto-card (legacy parity) not built — click-only by
+  design this pass; in-scene literal-vs-symbolic visual key (M3.5
+  remainder) still open; the open-link 404s on the standalone dev server
+  (no Next routes there — prod/iframe correct); campus pick pending
+  Track A.
+
 **(2026-07-13) LARGE-WORLD NAVIGATION BUILT — M3.3 mini-map/click-travel gap
 closed.** The existing camera already supported `V`, mouse-wheel fly speed,
 Shift boost, and hidden numbered bookmarks, but users had no visible way to

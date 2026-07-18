@@ -21,6 +21,7 @@
  * engine's full quality bar — illustrative context, not a cited descriptor.
  */
 
+import { Vector3 } from 'three';
 import { buildTerrainScene } from '../debug/TerrainScene';
 import type { WorldContext } from '../debug/Scenes';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
@@ -31,6 +32,7 @@ import { ALLOT_ZONES } from './allotmentZones';
 import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
 import { wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
+import { buildEntityPicks, pickEntityAt } from './entityPicks';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
@@ -202,6 +204,29 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
 
   // Walk physics: the heightfield IS the plateau now — the terrain scene's
   // own groundProbe handles everything (no special-case override).
+
+  // Entity picking (roadmap M3.4): click a rendered structure, get its
+  // canonical dataset entity. Volumes derive from the shared owner tables
+  // (entityPicks.ts); occlusion uses the BASE terrain (the composed probe's
+  // river surfaces would self-occlude the river's own pick volume). The
+  // EntityHud (core) consumes this hook; probes may call __laas.entityPick.
+  if (hf) {
+    const terrainAt = (x: number, z: number): number => hf.heightAtCpu(x, z);
+    const pickVolumes = buildEntityPicks(plazaTopY, terrainAt);
+    const ndcV = new Vector3();
+    ctx.hooks.entityPick = (nx, ny) => {
+      const cam = engine.camera;
+      cam.updateMatrixWorld();
+      ndcV.set(nx, ny, 0.5).unproject(cam);
+      const dir = ndcV.sub(cam.position).normalize();
+      return pickEntityAt(
+        [cam.position.x, cam.position.y, cam.position.z],
+        [dir.x, dir.y, dir.z],
+        pickVolumes,
+        terrainAt,
+      );
+    };
+  }
 
   // Spawn on the meadow south of the city, grounded and free to roam (V
   // toggles fly), looking north up the meridian at the terraced holy

@@ -57,6 +57,9 @@ import { buildTree, type BuiltTree } from '../vegetation/TreeBuilder';
 import type { VegLib } from '../vegetation/VegLibrary';
 import type { SpeciesParams } from '../vegetation/VegTypes';
 import type { Heightfield } from '../world/Heightfield';
+// Placement table shared with the entity pick registry — one owner
+// (treeOfLifeModel.ts); the builder adds seeded ±6/±8 m jitter per tree.
+import { TOL_BANK_X as BANK_X, TOL_Z_STATIONS as Z_STATIONS } from './treeOfLifeModel';
 
 /**
  * Tree-of-life species: a monumental broadleaf derived from BEECH (which
@@ -84,10 +87,6 @@ const TREE_OF_LIFE: SpeciesParams = {
   blossom: { r: 0.9, g: 0.64, b: 0.24, frac: 0.07 },
 };
 
-/** River-bank offset (world m) — just off the 100 m channel, Rev 22:2. */
-const BANK_X = 150;
-/** Six stations along the approach reach (world m, inside the scatter keep-out). */
-const Z_STATIONS = [2450, 2610, 2770, 2930, 3090, 3250];
 /** Hero ↔ lod-1 swap distance (world m). */
 const HERO_DIST = 220;
 
