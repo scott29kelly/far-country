@@ -83,8 +83,8 @@ export const HOST = {
 export const ROBE_EMISSIVE = 0.22;
 export const HEAD_EMISSIVE = 0.08;
 export const PALM_EMISSIVE = 0.25;
-export const HOST_CORE_EMISSIVE = 1.25;
-export const HOST_HALO_EMISSIVE = 0.9;
+export const HOST_CORE_EMISSIVE = 1.4; // lum 1.31 — under the 1.5 line
+export const HOST_HALO_EMISSIVE = 1.0;
 
 /** Clearance kept between an assembly edge and a gate-corridor lane (local). */
 export const ASSEMBLY_GATE_CLEARANCE = 2;

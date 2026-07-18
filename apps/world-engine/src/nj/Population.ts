@@ -125,7 +125,7 @@ function hostMaterial(layer: 'core' | 'halo'): MeshStandardNodeMaterial {
   m.color.set(0x000000);
   m.transparent = true;
   m.depthWrite = false;
-  m.opacity = layer === 'core' ? 0.55 : 0.16;
+  m.opacity = layer === 'core' ? 0.65 : 0.2;
   const k = layer === 'core' ? HOST_CORE_EMISSIVE : HOST_HALO_EMISSIVE;
   m.emissiveNode = vec3(1.0, 0.93, 0.78).mul(k) as unknown as NV3;
   const phase = slotHash(instanceIndex as unknown as NU, 17).mul(Math.PI * 2) as unknown as NF;
