@@ -132,3 +132,33 @@
   (bit-exact on healthy pixels), plain tap-average fallback below it. A
   global additive weight floor is NOT equivalent — it perturbs the blend
   on every partially-weighted pixel (printed a ~1% wash on a hero trunk).
+- **Viewport framebuffer textures resize IN-PLACE, MID-PASS** —
+  `ViewportTextureNode.updateBefore` (transmission backdrop; the shared
+  and depth variants too) compares its FramebufferTexture size against the
+  drawing buffer inside `copyFramebufferToTexture`, and
+  `Textures.updateTexture`'s update branch (`Textures.js:208`) calls
+  `backend.destroyTexture` in place — while the current render context's
+  command encoder already holds references to the old GPU texture. The
+  encoder's own submit then fails with Dawn's "Destroyed texture used in
+  a submit". Our fix: recreate the textures BETWEEN frames from the
+  window-resize listener (`resizeFramebufferTextures`, ThreePatches) and
+  defer raw GPUTexture.destroy calls (`installDeferredFramebufferDestroy`).
+- **The bind-group generation check is gated behind `updated`**
+  (`Bindings.js:303-317`): a shared `NodeSampledTexture` binding's
+  version/generation is synced by the FIRST bind group that updates, so
+  every OTHER group sampling a recreated texture sees `updated === false`
+  and keeps GPU views of the destroyed texture indefinitely.
+- **`_renderObjectDirect` gates binding updates behind
+  `_nodes.needsRefresh`** (`Renderer.js:3535-3546`): an object the
+  NodeMaterialObserver judges static is DRAWN without `updateForRender`
+  ever running — the only unconditional per-draw seam is `backend.draw`.
+  Our `installFramebufferBindingRefresh` (ThreePatches) heals
+  framebuffer-sampling bind groups per resize epoch at BOTH seams.
+- **`createBindings`' version cache can revive stale GPU bind groups**
+  (`WebGPUBindingUtils.js:155`): the guard is a SUM of texture versions,
+  which is non-monotonic when a binding's texture reference swaps between
+  objects — purge `bindingsData.groups/versions` when force-rebuilding.
+- **Playwright `addInitScript` + tsx/esbuild**: esbuild's keep-names
+  `__name` helper does not survive function serialization into the page;
+  shim `globalThis.__name = (fn) => fn` first or the script dies silently
+  partway (tools/probe-resize.ts --diag does this).

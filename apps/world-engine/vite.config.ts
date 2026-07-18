@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig(({ command }) => ({
@@ -5,6 +6,11 @@ export default defineConfig(({ command }) => ({
     target: "esnext",
     chunkSizeWarningLimit: 4096,
   },
+  // dev only: serve apps/web/public so the EntityHud's same-origin
+  // /data/entities/*.json fetches work standalone (prod is served by
+  // apps/web itself, which owns /data). Disabled for build — the bundle
+  // must not ingest apps/web's public tree.
+  publicDir: command === "build" ? false : resolve(__dirname, "../web/public"),
   server: {
     port: 5173,
     strictPort: true,

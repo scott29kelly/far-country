@@ -11,6 +11,7 @@ import {
 } from './core/Diagnostics';
 import { Engine } from './core/Engine';
 import { FlyCamera } from './core/FlyCamera';
+import { installEntityHud } from './core/EntityHud';
 import { initHooks, type CamPose } from './core/Hooks';
 import { NavigationUI } from './core/NavigationUI';
 import { parseCamString, parseParams } from './core/Params';
@@ -133,6 +134,8 @@ async function boot(): Promise<void> {
 
   new NavigationUI(engine, fly, hooks);
   new Hud(engine, params);
+  // citation card for scenes with cited content (no-ops without the hook)
+  if (hooks.entityPick) installEntityHud(engine, hooks, fly);
 
   hooks.setPose = (p) => fly.setPose(p);
   hooks.getPose = () => fly.getPose();

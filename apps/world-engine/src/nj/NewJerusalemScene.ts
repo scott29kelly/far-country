@@ -21,6 +21,7 @@
  * engine's full quality bar — illustrative context, not a cited descriptor.
  */
 
+import { Vector3 } from 'three';
 import { buildTerrainScene } from '../debug/TerrainScene';
 import type { WorldContext } from '../debug/Scenes';
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
@@ -29,8 +30,9 @@ import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
 import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
-import { wrapMoveWithCityCollision } from './cityCollide';
+import { wrapGroundProbeWithCityFloors, wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
+import { buildEntityPicks, nearestEntityAt, pickEntityAt } from './entityPicks';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
@@ -40,6 +42,11 @@ import { buildTreesOfLife } from './TreesOfLife';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
+  // ?resizeprobe=allotment — diagnostic ablation used by tools/probe-resize.ts
+  // (--ablate) to bisect render-target-lifetime regressions
+  const resizeProbeAblate = new Set(
+    (new URLSearchParams(window.location.search).get('resizeprobe') ?? '').split(','),
+  );
 
   // Front-light the city. The sun arcs east → south → west across the day, so
   // only in the AFTERNOON does it swing into the south and rake the city's
@@ -121,10 +128,12 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // residual roll (±2 m) + terrain micro-displacement, and reads as a raised
   // street-of-gold platform
   const plazaTopY = coreY + 2.8;
-  const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null });
-  allot.scale.setScalar(NJ_SCALE);
-  allot.position.set(0, plazaTopY, 0);
-  engine.scene.add(allot);
+  if (!resizeProbeAblate.has('allotment')) {
+    const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null });
+    allot.scale.setScalar(NJ_SCALE);
+    allot.position.set(0, plazaTopY, 0);
+    engine.scene.add(allot);
+  }
 
   // The hydrology underwater guard can't see the authored river — wrap the
   // terrain groundProbe with the analytic reach table so the walker's eye
@@ -193,8 +202,46 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     engine.scene.add(buildRimFalls(sites, hf, sunSky.atmosphere, gi));
   }
 
+  // Walkable city floors (the debt cityCollide's header used to declare):
+  // the plaza slab with its gate corridors, the plinth top, the terrace-top
+  // cornice rings and the crown top become real walk floors — a walker steps
+  // up through a gate onto the street of gold instead of wading chest-deep
+  // under the slab. Same tables as geometry + collision; y-aware claims so
+  // an 840 m terrace overhang never grabs a plaza-level walker.
+  if (ctx.hooks.groundProbe) {
+    ctx.hooks.groundProbe = wrapGroundProbeWithCityFloors(
+      ctx.hooks.groundProbe,
+      plazaTopY,
+      NJ_SCALE,
+    );
+  }
+
   // Walk physics: the heightfield IS the plateau now — the terrain scene's
   // own groundProbe handles everything (no special-case override).
+
+  // Entity picking (roadmap M3.4): click a rendered structure, get its
+  // canonical dataset entity. Volumes derive from the shared owner tables
+  // (entityPicks.ts); occlusion uses the BASE terrain (the composed probe's
+  // river surfaces would self-occlude the river's own pick volume). The
+  // EntityHud (core) consumes this hook; probes may call __laas.entityPick.
+  if (hf) {
+    const terrainAt = (x: number, z: number): number => hf.heightAtCpu(x, z);
+    const pickVolumes = buildEntityPicks(plazaTopY, terrainAt);
+    const ndcV = new Vector3();
+    ctx.hooks.entityPick = (nx, ny) => {
+      const cam = engine.camera;
+      cam.updateMatrixWorld();
+      ndcV.set(nx, ny, 0.5).unproject(cam);
+      const dir = ndcV.sub(cam.position).normalize();
+      return pickEntityAt(
+        [cam.position.x, cam.position.y, cam.position.z],
+        [dir.x, dir.y, dir.z],
+        pickVolumes,
+        terrainAt,
+      );
+    };
+    ctx.hooks.entityNear = (x, y, z) => nearestEntityAt([x, y, z], pickVolumes);
+  }
 
   // Spawn on the meadow south of the city, grounded and free to roam (V
   // toggles fly), looking north up the meridian at the terraced holy

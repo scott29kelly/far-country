@@ -138,6 +138,196 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-18) VIEWPORT-RESIZE "Destroyed texture" RACE ROOT-CAUSED AND
+FIXED — the uncommitted resizeprobe investigation closed.** Resizing the
+browser window with the NJ scene up raised Dawn validation errors
+(`Destroyed texture ... used in a submit`, encoder `renderContext_6`) —
+dropped frames on every user window resize/maximize. The dirty-tree
+`?resizeprobe=` ablation slice (city/river/transmission/allotment) was
+finished into `tools/probe-resize.ts` (parametrized `--ablate`/`--cycles`,
+plus a `--diag` mode that patches createTexture/createBindGroup/submit
+before boot, labels textures by creating stack, and error-scopes every
+submit). The bisect matrix pinned TRANSMISSION as the owner (baseline
+FAIL; river-ablated FAIL; transmission-ablated PASS), and --diag traced
+the full mechanism in the pinned three 0.184:
+
+- `ViewportTextureNode.updateBefore` resizes the transmission backdrop
+  FramebufferTexture IN-PLACE, MID-PASS (inside the scene pass's
+  copyFramebufferToTexture; `Textures.js:208` destroys the old GPU
+  texture) — the scene encoder already references it, so its own submit
+  fails.
+- Worse, the stale references NEVER converge: the backdrop's shared
+  `NodeSampledTexture` binding syncs version/generation at the FIRST
+  group that updates, and `Bindings._update`'s generation check is gated
+  behind `updated` (`Bindings.js:303`) — every other bind group keeps GPU
+  views of the destroyed texture forever.
+- Two rarely-drawn transmissive meshes dodge even that: `_renderObjectDirect`
+  gates binding updates behind `_nodes.needsRefresh` (`Renderer.js:3535`),
+  so NodeMaterialObserver-static objects draw WITHOUT updateForRender —
+  traced live via --diag STALE-DRAW instrumentation (bg64/bg72, epoch 0
+  at draw time).
+- And `createBindings`' (cacheIndex, version-sum) cache can REVIVE purged
+  groups: the sum is non-monotonic when a binding's texture reference
+  swaps objects (`WebGPUBindingUtils.js:155`).
+
+Fix (`src/render/ThreePatches.ts`, installed from `Engine.create`, all
+scoped to `isFramebufferTexture` — RT resizes and normal disposals keep
+exact timing): (1) `resizeFramebufferTextures` — the window-resize
+listener pre-sizes + disposes + version-bumps every live viewport
+framebuffer texture BETWEEN frames and bumps a global resize epoch;
+(2) `installDeferredFramebufferDestroy` — raw GPUTexture.destroy calls
+defer 16 frames, drained from the frame loop; (3)
+`installFramebufferBindingRefresh` — any bind group that has EVER sampled
+a framebuffer texture (tag on the wrapper) is force-rebuilt once per
+epoch, textures re-initialized first and the version cache purged, at
+BOTH seams: `Bindings._update` AND `backend.draw` (the only unconditional
+per-draw hook — catches observer-static objects). VERIFIED: probe-resize
+baseline FAILED pre-fix (1-8 errors/run), now 5 consecutive PASS runs
+including `--cycles 6` (12 resizes); tsc clean; vite build clean;
+navigation 11/11, arrival 11/11, walkfling 8/8, wallcollide 19/19; spawn
+hero framing visually intact (shots/wip/resizefix-spawn.png). Engine
+re-vendored into `apps/web/public/laas`. Durable API gotchas recorded in
+`docs/THREE-NOTES.md`. The `?resizeprobe=` ablations stay in nj/ code,
+documented as probe-only diagnostics (consumed by `--ablate`).
+
+**(2026-07-18, later-4) PROXIMITY AUTO-CARDS BUILT — the legacy HUD's
+nearby-entity behavior lands on the engine, walk-mode only.** Walking
+near a grounded structure now surfaces its descriptor card without a
+click: `entityPicks.nearestEntityAt` (distance flavor of the pick
+registry — smallest distance wins, 5 m priority tie for co-located
+volumes) drives a new `hooks.entityNear`, and EntityHud polls it at
+~3 Hz. Contract: WALK MODE ONLY (programmatic poses always force fly, so
+probes/shots never see an unclicked card, and 2000 m/s flight never
+flickers); a clicked card is PINNED (chip in the header) and proximity
+never replaces it; Escape/✕/miss-click latches the current label off
+until the walker nears something else (labels, not slugs, are the key —
+twelve gates share a slug). The arrival meadow spawn is outside every
+trigger radius, so first-walk stays clean. VERIFIED: probe-entitypick
+now 37/37 (N1-N5 proximity cases — gate-over-street tie, street at eye
+height, tree, meadow null, wading the river); probe-entityhud-live now
+17/17 (C1 no card in fly mode beside a gate, C2 V-into-walk
+auto-surfaces "Zebulun Gate · S", C3 unpinned, C4 Escape latch holds).
+Full battery: navigation 11/11, arrival 11/11, walkfling 8/8,
+wallcollide 19/19, cityfloors 11/11, tsc clean, build clean. Engine
+re-vendored. M3.4's remaining engine-side gap is now only the campus
+pick (blocked on Track A) — the in-scene symbolic visual key (M3.5)
+stays open.
+
+**(2026-07-18, later-3) GATE INSCRIPTIONS BUILT — the tribe names are
+legible in-scene (Rev 21:12; wayfinding floor, CITY-QUALITY-BAR).** Each
+gate carries its tribe's name in gold serif capitals on the ivory cornice
+fascia directly over the opening — the classical entablature-frieze
+position (the first placement attempt sat the plaque INSIDE the cornice
+slab, y 13.6..16 at half+2.5; an opaque-quad bisect shot exposed the
+burial). The inscription's existence is cited content (Rev 21:12 "on the
+gates the names of the twelve tribes... were inscribed"; side order Ezek
+48:30-34 per RENDERING-DECISIONS #2); the applied-gold serif treatment is
+art direction. Zero assets: one runtime Canvas2D atlas (BootUI
+precedent), one alpha-cutout material, one merged 12-quad mesh — a
+single draw; emissive 0.4 stays far under the 1.5 bloom threshold.
+LIVE-VERIFIED (shots/wip/inscription-close2/-approach/-corner.png):
+ZEBULUN reads on the frieze point-blank and from the ~700 m approach
+without bloom; the SE-corner framing shows south + east faces with
+correctly-oriented (unmirrored) text and the gem courses undisturbed.
+Battery: wallcollide 19/19, entitypick 32/32, cityfloors 11/11,
+walkfling 8/8, tsc clean, build clean. Engine re-vendored. Compass-side
+identification continues to come from the click card ("Zebulun Gate · S")
+and the navigation panel.
+
+**(2026-07-18, later-2) WALKABLE CITY FLOORS BUILT — the "plaza slab and
+terrace pavements are not walk floors" debt (declared in cityCollide's own
+header since the collision pass) is closed.** A walker now steps up
+through a gate onto the street of gold and walks INSIDE the city; the
+plinth top, every terrace-top cornice ring, and the crown top (sea of
+glass) are real standing surfaces in walk mode.
+
+- `cityCollide.cityFloorLocalY` + `wrapGroundProbeWithCityFloors`: floors
+  derive from the SAME tables as geometry and lateral collision
+  (CITY_TIERS/cityTierBottoms/PLINTH_HALF/CITY_SUMMIT_Y; slab margin
+  covers the gate corridors). Composed onto the scene groundProbe AFTER
+  the river + campus wraps with the river wrap's y-aware claim idiom:
+  a floor claims only when its top is within FLOOR_STEP_UP_M (3.5 m) of
+  the querying feet — the 2.8 m meadow→plaza step is walkable, an 840 m
+  terrace overhang never grabs a plaza-level walker, and legacy no-y
+  callers claim the slab only. Water passes through untouched (the wade
+  channel still crosses the plaza; the crown basin still claims from
+  above).
+- VERIFIED: new `tools/probe-cityfloors.ts` (CPU, real FlyCamera + real
+  river+floors wraps in scene order) 11/11 — meadow holds outside the
+  slab, street-of-gold standing inside, tier-1 cornice walkable, y-cap
+  discipline both directions, crown floor under the basin claim, no-y
+  slab-only, and a 1500-frame gate-corridor walk that steps up exactly
+  2.8 m with no fling. `probe-walkfling-live` rerun on REAL hardware:
+  ALL PASS across A/B/C/D — its live-derived expectations follow the
+  composed probe by design (corridor entries now land ON the street at
+  485.55 m — previously wading under the slab at ~482.8; C1 stands ON
+  the crown at 3611.30). Full battery: walkfling 8/8, wallcollide 19/19,
+  navigation 11/11, arrival 11/11, entitypick 32/32, tsc clean, build
+  clean. Engine re-vendored.
+- Debts: no stairs/ramps between floors (terraces reachable by flight
+  only — step-free ascent is future content); interior plaza/wall
+  dressing at walking range is thin (CITY-QUALITY-BAR pillar A applies
+  inside the wall too — shots/wip/cityfloors-plaza.png shows the flat
+  interior read); dwellings/temple floors and collision remain open.
+
+**(2026-07-18, later) CITATION HUD + CLICK-PICKING BUILT — M3.4's core
+promise ("geometry that footnotes itself") lands on /world-preview.**
+Clicking a rendered structure now surfaces its canonical dataset entity:
+descriptor statements, confidence-tier badges (clear/fuzzy/debated/
+symbolic), Scripture/Willis citation chips, and the symbolic referent
+where the tier demands one. Content comes EXCLUSIVELY from the same
+per-entity JSON exports the apps/web browse UI consumes
+(`/data/entities/<slug>.json`, tracked via git add -f like /laas) — zero
+descriptor text authored in engine source.
+
+- `src/nj/entityPicks.ts` (scene-owned, CPU-pure): analytic pick volumes
+  derived from the shared owner tables — GATES (twelve tribe+compass
+  labels, Ezek 48:30-34), `foundationCourseSpans()` (the SAME gate-notched
+  spans geometry/collision consume — the first probe draft used un-notched
+  bands and the contract probe caught the drift), CITY_TIERS/PLINTH_HALF/
+  cityTierBottoms, riverReaches(), the new `treeOfLifeModel.ts` station
+  table (extracted from TreesOfLife so probes import no vegetation), and
+  the measured `ezt-precinct-side` 500-cubit temple square. Resolver:
+  nearest ray entry with a 25 m priority tie window (gate beats wall on
+  the shared face), base-terrain occlusion march. Picks: gates,
+  foundation gems, jasper wall, tiers/plinth, street of gold, river
+  reaches, trees of life, summit throne/glory sphere, sea of glass,
+  temple compound (zone-level, `sanctuary-in-the-midst`).
+  DELIBERATELY UNPICKABLE: the dwelling campus — no canonical Ezek
+  45:4-5 zone entity exists yet and inventing one is forbidden; wire it
+  after Track A seeds the allotment entities. Zone-citation guardrails
+  (RENDERING-DECISIONS #7/#8) hold: nothing anchors to an individual
+  house/hedge/well.
+- `src/core/EntityHud.ts`: the card (NavigationUI DOM idiom, z 1050,
+  bottom-centre, visually subordinate). Canvas click → NDC →
+  `hooks.entityPick` (new, installed by the NJ scene; the tooling surface
+  probes drive). Card: eyebrow label ("Issachar Gate · S"), entity name,
+  per-descriptor tier badge + citation chips (display grammar ported from
+  the legacy DescriptorHud, golden-tested), statement, symbolic referent,
+  "+N more" past 3 cards, open-in-browse link, Escape/✕/empty-click
+  dismissal. Mouse-steer is mousemove-based so clicks never turn the
+  camera (live-verified Δyaw 0.0000).
+- Data path: root-absolute `/data/...` fetch — same-origin in prod (the
+  engine iframe lives under apps/web) and in standalone dev via a NEW
+  dev-only vite `publicDir: ../web/public` (build unaffected:
+  publicDir=false).
+- VERIFIED: `tools/probe-entitypick.ts` (CPU, no GPU/server) 32/32 —
+  table shape (Ezekiel gate order, ESV gem order incl. notches, reach
+  count, measured precinct), 12 authored-ray resolver cases incl.
+  occlusion + sky, EVERY registry slug exists as a cited canonical export
+  (symbolic ⇒ referent), citation-grammar goldens.
+  `tools/probe-entityhud-live.ts` (real adapter) 13/13 — contract picks
+  via setPose exact placement, card DOM (name/tier/citation/statement/
+  link), no-steer, both dismissals; standing capture
+  shots/wip/entityhud-gate.png. Full regression matrix: navigation
+  11/11, arrival 11/11, walkfling 8/8, wallcollide 19/19, tsc clean,
+  vite build clean. Engine re-vendored into apps/web/public/laas.
+- Debts: proximity auto-card (legacy parity) not built — click-only by
+  design this pass; in-scene literal-vs-symbolic visual key (M3.5
+  remainder) still open; the open-link 404s on the standalone dev server
+  (no Next routes there — prod/iframe correct); campus pick pending
+  Track A.
+
 **(2026-07-13) LARGE-WORLD NAVIGATION BUILT — M3.3 mini-map/click-travel gap
 closed.** The existing camera already supported `V`, mouse-wheel fly speed,
 Shift boost, and hidden numbered bookmarks, but users had no visible way to
@@ -951,9 +1141,10 @@ the decisions these owe):
 
 - ~~Wall/gate collision of any kind~~ **BUILT 2026-07-06** (dated entry
   above: `hooks.moveProbe` + `src/nj/cityCollide.ts`, gates as real
-  passages, foundation course notched at the gates). Still open in the
-  same area: walkable floors (plaza slab + terrace pavements are not
-  groundProbe surfaces) and dwellings/temple collision.
+  passages, foundation course notched at the gates). ~~Walkable floors~~
+  **BUILT 2026-07-18** (later-2 entry above: plaza slab, plinth top,
+  terrace rings and crown top are groundProbe floors). Still open:
+  dwellings/temple collision and floors.
 - Distinct throne (rainbow halo + sea of glass, RENDERING-DECISIONS #4) — only
   a plain emissive sphere.
 - Mini-map / click-to-teleport.
