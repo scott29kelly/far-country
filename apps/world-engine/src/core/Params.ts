@@ -5,7 +5,9 @@ export type QualityPreset = 'low' | 'high' | 'ultra';
 export interface LaasParams {
   /** world seed — reproduces the entire world */
   seed: number;
-  /** scene to boot: world | sanity | terrain | gallery (registry in debug/Scenes.ts) */
+  /** scene to boot (registry in debug/Scenes.ts): newjerusalem (default —
+   *  the product world /world-preview serves) | world (wild-terrain
+   *  reference/regression scene) | sanity | gallery */
   scene: string;
   /** time of day, hours 0..24 */
   timeOfDay: number;
@@ -44,7 +46,9 @@ export function parseParams(search: string = window.location.search): LaasParams
   const shotN = num(q.get('shot'), 0);
   return {
     seed: Math.floor(num(q.get('seed'), 1)) >>> 0,
-    scene: q.get('scene') ?? 'world',
+    // the bare dev URL boots the PRODUCT scene — the wild-terrain reference
+    // scene stays reachable via ?scene=world (tooling always passes ?scene=)
+    scene: q.get('scene') ?? 'newjerusalem',
     timeOfDay: Math.min(24, Math.max(0, num(q.get('T'), 11))),
     preset,
     // full debug panel hidden by default — F3 toggles it (fps chip always on)

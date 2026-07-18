@@ -128,7 +128,6 @@ const GROUND = 460;
 const flat = (): number => GROUND;
 const vols = buildEntityPicks(PLAZA_Y, flat);
 const S = NJ_SCALE;
-type V3 = [number, number, number];
 
 const mVols = vols.filter((v) => v.slug === 'great-multitude');
 const hVols = vols.filter((v) => v.slug === 'myriads-of-angels');
