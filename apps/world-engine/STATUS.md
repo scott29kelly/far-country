@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-13)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-18)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,56 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-18, later-5) POPULATION FIRST PASS BUILT (M3.6) — the city is
+no longer empty.** The settled RENDERING-DECISIONS #3 rendering lands on
+the engine under ADR 0011 (population policy) and ADR 0010 (aniconic
+divine persons, untouched): 12,712 white-robed faceless figures with
+raised palm branches (Rev 7:9, `great-multitude`) stand in 40 worship
+assemblies — sixteen on the street-of-gold plaza ring, twenty-four on the
+tier 1-3 terrace-top cornice pavements — every figure facing the summit
+light; 48 abstract light-pillar hosts (Rev 5:11, `myriads-of-angels` —
+the entry #3 citation; the handoff's `angels-around-throne` slug is Rev
+7:11, so the Rev 5:11 slug was wired instead) ring the summit in twelve
+clusters, slowly rising and falling. The four living creatures and the
+twenty-four elders stay OMITTED per ADR 0011 rule 4.
+
+- `src/nj/populationModel.ts` (CPU-pure): every placement derives from
+  the cityModel owner tables and stands EXACTLY on a
+  `cityCollide.cityFloorLocalY` floor (probe-asserted for all 12,712);
+  assemblies clear the gate corridors and the river meridian; host
+  clusters are stationed OFF the four cardinal meridians at (i+0.5)·30°
+  so a glory-bound ray down an approach axis never enters a host volume
+  first (probe invariant). Deterministic fixed-seed sunflower spirals —
+  independent of ?seed, so probes and stills are stable.
+- `src/nj/Population.ts`: plain InstancedMesh (the CityMassing static
+  path, NOT the scatter system) — three draws for the whole multitude
+  (robe/head/palm share one transform set; per-instance warm-tone/scale
+  variation via slotHash implies "every nation" without depicting
+  anyone), two for the hosts (core+halo; rise/fall is a shader-time
+  positionNode bob — no CPU per-instance updates). Bloom contract holds:
+  worst population emissive luminance 1.31 < 1.5 (probe-asserted
+  constants); only crown + glory still cross.
+- Picks/HUD: zone-level volumes per assembly (`great-multitude`,
+  priority 2 — beats the street slab underfoot, yields to gates) and per
+  host cluster (`myriads-of-angels`); walking into an assembly
+  auto-surfaces the card; gate-corridor/plaza/glory pick behavior
+  regression-guarded.
+- VERIFIED: new `tools/probe-population.ts` 13/13 (floors, clearances,
+  bloom, pick integration); battery entitypick ALL PASS (now includes the
+  two new slug-citation checks), cityfloors 11/11, walkfling 8/8,
+  wallcollide 19/19, navigation 11/11, arrival 11/11, entityhud-live
+  17/17, tsc clean, vite build clean. Live hook check on the dev server:
+  `__laas.entityPick` resolves `great-multitude` over an assembly and
+  both new entity JSONs fetch 200. Stills (shots/wip/population-*.png):
+  plaza crowd against the south wall, terrace-ring congregation,
+  host-ring approach (luminous pillars flanking the glory, no bloom),
+  summit + spawn regressions clean. Engine re-vendored.
+- Debts: figures are statically posed (no idle sway — motion would need
+  a positionNode idiom that respects the CSM casters; deferred); crowd
+  contrast on the pale terrace pavements is soft in flat light; no
+  multitude on the crown (deliberate — the sea of glass stays clear
+  before the throne); nations/pilgrimage dynamism is M4.4, not this pass.
 
 **(2026-07-18) VIEWPORT-RESIZE "Destroyed texture" RACE ROOT-CAUSED AND
 FIXED — the uncommitted resizeprobe investigation closed.** Resizing the
