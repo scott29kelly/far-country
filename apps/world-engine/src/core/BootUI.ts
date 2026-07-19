@@ -15,8 +15,21 @@
  * (text bows out, a glory veil blooms and settles like eyes adjusting, the
  * night fades) taking ~1.8 s — tooling passes `?rite=0` (launch.ts sets it by
  * default) for the fast path, which is fully invisible within ~350 ms.
- * Everything here is procedural — no font files, no images (engine rule: zero
- * external assets). Honors prefers-reduced-motion (static painting, fast
+ *
+ * CINEMATIC BACKDROP (2026-07-19, user directive): the painted descent is
+ * superseded by a vendored 12 s generated film (Seedance 2.0 via Higgsfield,
+ * /intro/nj-descent.mp4 in apps/web/public — same generate-offline-and-vendor
+ * posture as the planned audio layer). The film fades in over the painting on
+ * `canplay`; the painting keeps running underneath as the standing fallback
+ * (missing file, codec failure, offline dev) and stays the only path for
+ * `?rite=0` (probes must not fetch 18 MB) and prefers-reduced-motion. The
+ * motes/lamp canvas keeps compositing OVER the film — its drifting embers
+ * match the film's own. All overlays (verses, stones, stage lines, dissolve)
+ * are unchanged. No claim about heaven is made by the film beyond what the
+ * painting already claimed: illustrative art for the cited Rev 21:2/21:10
+ * descent.
+ *
+ * Honors prefers-reduced-motion (static painting, fast
  * hide). The first ~8% of boot touches no GPU: this file is DOM + Canvas2D
  * only. World-gen starves rAF (0.5-2 s main-thread stalls), so all pacing is
  * wall-clock, never per-frame dt.
@@ -139,6 +152,9 @@ export class BootUI {
 
   private canvas: HTMLCanvasElement | null;
   private ctx: CanvasRenderingContext2D | null = null;
+  private video: HTMLVideoElement | null = null;
+  /** true once the film is decodable — drawScene then paints only motes/lamp */
+  private videoActive = false;
 
   // pre-rendered layers (built once; star/meadow layers rebuilt on resize)
   private citySprite: HTMLCanvasElement | null = null;
@@ -211,6 +227,7 @@ export class BootUI {
     this.buildStones();
     this.startVerses();
     this.startScene();
+    if (!this.riteOff && !this.reduced) this.installVideo();
 
     window.addEventListener('mousemove', this.onMove);
     window.addEventListener('mousedown', this.onDown);
@@ -294,6 +311,44 @@ export class BootUI {
       el.style.display = 'none';
       this.teardown();
     }, 1850);
+  }
+
+  /** The vendored descent film. Fail-soft by design: until `canplay` the
+   *  painting is what the user sees, and any error simply leaves it there. */
+  private installVideo(): void {
+    const root = this.root;
+    if (!root || !this.canvas) return;
+    const v = document.createElement('video');
+    v.id = 'boot-video';
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.setAttribute('aria-hidden', 'true');
+    v.src = '/intro/nj-descent.mp4';
+    // the immediate play() can race the load ("interrupted by a new load
+    // request") — retry whenever the film becomes decodable and, as the
+    // final guarantee, on the first user gesture (the rite always gets one:
+    // the same click that unlocks the AudioContext)
+    const safePlay = (): void => {
+      if (this.video === v && v.paused) void v.play().catch(() => undefined);
+    };
+    v.addEventListener('canplay', () => {
+      if (this.hidden) return;
+      this.videoActive = true;
+      v.style.opacity = '1';
+      safePlay();
+    });
+    v.addEventListener('error', () => {
+      this.videoActive = false;
+      v.remove();
+      this.video = null;
+    });
+    window.addEventListener('pointerdown', safePlay, { once: true });
+    window.addEventListener('keydown', safePlay, { once: true });
+    root.insertBefore(v, this.canvas); // under the canvas: motes/lamp stay on top
+    this.video = v;
+    safePlay();
   }
 
   // --- pre-rendered painting layers ---------------------------------------------
@@ -820,6 +875,13 @@ export class BootUI {
 
     ctx.clearRect(0, 0, w, h);
 
+    // film backdrop active: the canvas contributes only motes + lamp + pulses;
+    // the dissolve's converge point is the film city's summit beacon
+    if (this.videoActive) {
+      this.renderMotes(dt, now, [w * 0.5, h * 0.3]);
+      return;
+    }
+
     // --- stars (two drifting parallax layers + a few twinklers) ---------------
     if (this.starsFar) {
       const off = (now * 1.1) % w;
@@ -1018,6 +1080,13 @@ export class BootUI {
   private teardown(): void {
     if (this.raf) cancelAnimationFrame(this.raf);
     this.ctx = null;
+    if (this.video) {
+      this.video.pause();
+      this.video.removeAttribute('src');
+      this.video.load(); // release the decoder + network buffers
+      this.video.remove();
+      this.video = null;
+    }
     window.clearTimeout(this.verseTimer);
     window.clearTimeout(this.gemNameTimer);
     window.clearTimeout(this.resizeTimer);
