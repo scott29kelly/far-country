@@ -48,6 +48,9 @@ const CUE_HALF_X = 900;
 
 const MASTER_LEVEL = 0.5;
 
+/** localStorage key for the persisted mute preference ('1' = muted) */
+const MUTE_PREF_KEY = 'laas-muted';
+
 /** D-lydian gold chord (Hz): D3 A3 E4 F#4 C#5 — slow attack, long release */
 const CHORD = [146.83, 220.0, 329.63, 369.99, 554.37];
 
@@ -60,6 +63,8 @@ export class Ambience {
   private meadowBus: GainNode | null = null;
   private riverGain: GainNode | null = null;
   private muted = false;
+  /** UI sync (ControlsUI's sound chip): called on every mute change */
+  onMuteChange: ((muted: boolean) => void) | null = null;
   private arrived = false;
   private cueDone = false;
   private nextBirdAt = 0;
@@ -79,6 +84,13 @@ export class Ambience {
   constructor(hooks: LaasHooks, createContext?: () => BaseAudioContext) {
     this.hooks = hooks;
     this.createContext = createContext ?? ((): BaseAudioContext => new AudioContext());
+    // restore the persisted mute preference (guarded: storage can throw in
+    // some privacy modes, and the probe's offline runs have no window state)
+    try {
+      this.muted = window.localStorage.getItem(MUTE_PREF_KEY) === '1';
+    } catch {
+      /* default unmuted */
+    }
     // arm the autoplay unlock: any click/keypress during (or after) the rite
     window.addEventListener('pointerdown', this.onGesture);
     window.addEventListener('keydown', this.onGesture);
@@ -118,11 +130,21 @@ export class Ambience {
     }
   }
 
+  get isMuted(): boolean {
+    return this.muted;
+  }
+
   setMuted(muted: boolean): void {
     this.muted = muted;
     if (this.ctx && this.master) {
       this.master.gain.setTargetAtTime(muted ? 0 : MASTER_LEVEL, this.ctx.currentTime, 0.15);
     }
+    try {
+      window.localStorage.setItem(MUTE_PREF_KEY, muted ? '1' : '0');
+    } catch {
+      /* preference just won't persist */
+    }
+    this.onMuteChange?.(muted);
   }
 
   /** Looping white-noise source. All sources share ONE 2 s buffer (filled
