@@ -178,7 +178,7 @@ the inhabitants altogether.
 - Rev 7:9; Rev 5:11; ADR 0009 rule 4 (this entry's mandate); ADR 0010 (aniconic
   — divine persons only).
 - Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/components/Inhabitants.tsx`
-- Code (current `/world-preview`): **not yet ported.** No population geometry exists in `apps/world-engine/src/nj/` — this is `docs/roadmap.md` Phase 3 M3.6, not started on either scene as of 2026-07-01.
+- Code (current `/world-preview`, **implemented 2026-07-18** — M3.6 first pass): `apps/world-engine/src/nj/populationModel.ts` (CPU-pure placements: 40 worship assemblies on the plaza ring + tier 1–3 terrace pavements, every figure on a real walk floor; 12 host clusters ringing the summit off the cardinal meridians) and `apps/world-engine/src/nj/Population.ts` (instanced robe/head/palm figures with per-instance warm-tone/scale variation; core+halo light-pillar hosts with a shader-time rise/fall). Pick registry anchors the assemblies to `great-multitude` (Rev 7:9) and the host ring to `myriads-of-angels` (Rev 5:11 — this entry's own citation; the similar `angels-around-throne` entity is Rev 7:11). Verification: `apps/world-engine/STATUS.md` 2026-07-18 later-5 entry.
 
 ---
 

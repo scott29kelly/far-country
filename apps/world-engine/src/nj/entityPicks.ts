@@ -34,6 +34,7 @@ import {
   type Side,
 } from './cityModel';
 import { NJ_SCALE } from './rimModel';
+import { assemblyVolumes, hostClusterVolumes } from './populationModel';
 import { riverReaches } from './RiverOfLife';
 import { LONG_CUBIT_M, TEMPLE_SITE, cu } from './templeModel';
 import { treeOfLifeStations } from './treeOfLifeModel';
@@ -191,6 +192,47 @@ export function buildEntityPicks(
       label: 'Tree of Life',
       priority: 2,
       shape: { kind: 'cyl', x: st.x, z: st.z, y0: g - 2, y1: g + 60, r: 25 },
+    });
+  }
+
+  // The great multitude (Rev 7:9) — one covering cylinder per worship
+  // assembly on the plaza ring and terrace pavements (populationModel's own
+  // spread-derived volumes; the figures inside are the rendered content).
+  // Priority 2: beats the street slab underfoot, yields to a gate in a tie.
+  for (const a of assemblyVolumes()) {
+    vols.push({
+      slug: 'great-multitude',
+      label: 'Great Multitude',
+      priority: 2,
+      shape: {
+        kind: 'cyl',
+        x: a.x * S,
+        z: a.z * S,
+        y0: wy(a.floor - 0.05),
+        y1: wy(a.floor + 0.15),
+        r: a.r * S,
+      },
+    });
+  }
+
+  // The angelic hosts (Rev 5:11) — one cylinder per host cluster ringing the
+  // summit. Clusters are stationed OFF the cardinal meridians
+  // (populationModel invariant) so a glory-bound ray down an approach axis
+  // never enters a host volume; ties near the summit resolve to the throne
+  // (priority 4 > 2).
+  for (const h of hostClusterVolumes()) {
+    vols.push({
+      slug: 'myriads-of-angels',
+      label: 'Angelic Hosts · Around the Throne',
+      priority: 2,
+      shape: {
+        kind: 'cyl',
+        x: h.x * S,
+        z: h.z * S,
+        y0: wy(h.y0),
+        y1: wy(h.y1),
+        r: h.r * S,
+      },
     });
   }
 

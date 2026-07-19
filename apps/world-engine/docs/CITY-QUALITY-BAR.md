@@ -289,6 +289,18 @@ now stands as the dominant structure of its precinct (the delta-#8/#6 scale
 inversion is fixed). Remaining polish tracked in `STATUS.md`: campus zone
 tint, court orchards, dwelling-scale door/window detail at sub-5 m range.
 
+**Progress, 2026-07-18 — delta #9 (population) closed to first-pass
+quality.** The city is no longer empty: the population floor ("a legible
+presence of the great multitude + angelic hosts near the throne and
+gates") is met by ~12,700 instanced white-robed figures in forty worship
+assemblies on the plaza ring and terrace pavements plus twelve clusters
+of light-pillar hosts ringing the summit (RENDERING-DECISIONS #3, ADR
+0011; `src/nj/populationModel.ts` + `Population.ts`). Live-verified:
+plaza crowd against the south wall, terrace congregation, host ring
+flanking the glory (shots/wip/population-*.png); bloom contract intact.
+Remaining population polish: figure idle motion, crowd contrast on the
+pale pavements in flat light, M4.4's moving nations/pilgrims.
+
 **Progress, 2026-07-02 (late) — the allotment zone map landed.** Pillar
 C's "fields show furrow/crop relief, not a flat green plane with box
 hedges" clause is first-pass real: the plateau top is an ordered
