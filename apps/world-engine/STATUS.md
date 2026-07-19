@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-18)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-19)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,39 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-19, later-6) POLISH PASS: z-fight fix, boot film, mute/controls
+UI.** PR #31 (the M3.6 population branch) merged to main. Then, on
+`claude/world-polish-pass`, four user-reported items:
+
+- **City-wide stripe flicker FIXED (z-fighting, not shadows).** User
+  screenshot showed banded stripes crawling on the terrace pavements.
+  An `?ablate=shadows` still proved the shadow stack innocent: every
+  tier-top plane had 2+ coplanar top faces (interior core / plinth /
+  wall segments / gate jambs all ended exactly at yTop = the cornice
+  slab's top). CityMassing now gives every pavement plane ONE owner:
+  structural boxes stop at the cornice underside (CORNICE_T); on the
+  crown the cornice drops 0.15 local so the sea-of-glass crown mesh owns
+  the summit. No cityCollide floor moved; verified by stills (terrace-2,
+  summit, ZEBULUN wall-top). KNOWN DEBT, separate mechanism: cloud-edge
+  speckle in motion is the half-res jittered cloud march showing through
+  TRAA history rejection — a real fix is a dedicated cloud reprojection
+  pass, not attempted here.
+- **Boot rite cinematic.** The painted descent read as amateurish (user);
+  a vendored 12 s Seedance 2.0 film (apps/web/public/intro/nj-descent.mp4,
+  silent 1080p, generate-offline-and-vendor posture) now fades in as the
+  backdrop. Painting stays as fail-soft fallback and the only path for
+  ?rite=0 tooling + reduced motion. Overlays (verses/stones/dissolve) and
+  the motes/lamp canvas unchanged on top.
+- **Mute + controls discoverability.** The M mute existed but was
+  invisible. New `src/core/ControlsUI.ts`: bottom-left chip cluster —
+  SOUND ON/OFF (drives Ambience, preference persisted in localStorage
+  `laas-muted`) and KEYS (or H) opening a compact key card. Ambience
+  gained isMuted/onMuteChange. Nav panel footer updated.
+
+Scott-only follow-ups: judge the film in situ (loop has a hard cut at
+12 s — could crossfade or regenerate longer if it bothers), walk-feel
+passes still owed from later-5.
 
 **(2026-07-18, later-5) POPULATION FIRST PASS BUILT (M3.6) — the city is
 no longer empty.** The settled RENDERING-DECISIONS #3 rendering lands on
