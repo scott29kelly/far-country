@@ -171,6 +171,24 @@ Scott-only follow-ups: judge the film in situ (loop has a hard cut at
 12 s — could crossfade or regenerate longer if it bothers), walk-feel
 passes still owed from later-5.
 
+**OPEN DECISION (2026-07-19 end of session): boot-film art direction.**
+Scott rejected film v2 (too faithful to the unfinished engine render;
+wants stylized/cinematic, no summit orb, city de-emphasized, a real
+"coming down from heaven" event). Nine concept stills were generated
+(Higgsfield `soul_cinematic`, ~0.12 credits each) and composited into
+`shots/wip/intro-directions-3x3.png` (cells: 1 Aperture / 2 Pillar of
+Light / 3 Golden Nebula / 4 Beneath the Deck / 5 Parted Veil / 6 Dawn
+Bride / 7 Low Angle / 8 Engraving / 9 Star-Woven; full stills
+`shots/wip/dir1..dir9-*.png`, all retrievable from Higgsfield history
+via show_generations if the local files vanish). Agent recommendation:
+5 (Parted Veil — keeps the real stepped silhouette, no detail) with 1
+as runner-up, or a three-beat 9 → 1 → 5 sequence (Seedance multi-shot).
+AWAITING Scott's pick; then regenerate the film (Seedance 2.0, ~108
+credits, silent 12-15 s 1080p), swap apps/web/public/intro/
+nj-descent.mp4 in place (no code change), frame-QA via the
+chrome-channel Playwright recipe. The v1/v2 films remain in git
+history (827d211, b906c8a).
+
 **(2026-07-18, later-5) POPULATION FIRST PASS BUILT (M3.6) — the city is
 no longer empty.** The settled RENDERING-DECISIONS #3 rendering lands on
 the engine under ADR 0011 (population policy) and ADR 0010 (aniconic
