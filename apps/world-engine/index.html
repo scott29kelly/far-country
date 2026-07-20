@@ -47,19 +47,9 @@
         transition: opacity 1.05s ease;
         cursor: default;
       }
-      /* the cinematic: vendored descent film (BootUI.installVideo) — sits under
-         the canvas, which keeps painting the motes/lamp over it */
-      #boot-video {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0;
-        transition: opacity 1.4s ease;
-      }
-      /* the painting: sky, clouds, the descending city, meadow, light motes —
-         also the standing fallback whenever the film can't load */
+      /* the scene canvas: layered matte backdrop (vendored stills) with the
+         descending city, plus light motes — falls back to the hand-painted
+         night whenever the stills can't load */
       #boot-scene {
         position: absolute;
         inset: 0;

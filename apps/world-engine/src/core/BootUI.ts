@@ -16,18 +16,21 @@
  * night fades) taking ~1.8 s — tooling passes `?rite=0` (launch.ts sets it by
  * default) for the fast path, which is fully invisible within ~350 ms.
  *
- * CINEMATIC BACKDROP (2026-07-19, user directive): the painted descent is
- * superseded by a vendored 12 s generated film (Seedance 2.0 via Higgsfield,
- * /intro/nj-descent.mp4 in apps/web/public — same generate-offline-and-vendor
- * posture as the planned audio layer). The film fades in over the painting on
- * `canplay`; the painting keeps running underneath as the standing fallback
- * (missing file, codec failure, offline dev) and stays the only path for
- * `?rite=0` (probes must not fetch 18 MB) and prefers-reduced-motion. The
- * motes/lamp canvas keeps compositing OVER the film — its drifting embers
- * match the film's own. All overlays (verses, stones, stage lines, dissolve)
- * are unchanged. No claim about heaven is made by the film beyond what the
- * painting already claimed: illustrative art for the cited Rev 21:2/21:10
- * descent.
+ * LAYERED MATTE BACKDROP (2026-07-20, user directive — supersedes the
+ * 2026-07-19 vendored film, which read as the city growing out of the ground:
+ * video models cannot hold a descent). Three generated stills, vendored as
+ * ~240 KB of WebP in apps/web/public/intro (same generate-offline-and-vendor
+ * posture as the planned audio layer): a pre-dawn sky/meadow plate, the
+ * golden city cut out with alpha, and a luminous cloud band on black that
+ * composites additively. The descent itself is code again — the city image
+ * translates down through the drifting cloud bands as real progress advances,
+ * exactly the old choreography with matte-painting texture instead of flat
+ * rectangles. The hand-painted night scene remains the standing fallback
+ * (missing files, decode failure, offline dev) and the only path for
+ * `?rite=0` (probes fetch no boot assets). The motes/lamp canvas composites
+ * over the layers; verses, stones, stage lines, and dissolve are unchanged.
+ * No claim about heaven beyond what the painting already claimed:
+ * illustrative art for the cited Rev 21:2/21:10 descent.
  *
  * Honors prefers-reduced-motion (static painting, fast
  * hide). The first ~8% of boot touches no GPU: this file is DOM + Canvas2D
@@ -134,6 +137,35 @@ const HORIZON_F = 0.725;
  *  shallow enough that the gates stay readable at its rises */
 const RIDGE_SINK = 12;
 
+// --- layered matte backdrop (vendored stills in /intro) --------------------
+/** alpha bounding box of the city within descent-city.webp, as fractions
+ *  (measured from the cutout; y1 is the underside of the base platform) */
+const L_CITY = { x0: 0.1919, y0: 0.1956, x1: 0.87, y1: 0.6867 };
+/** summit tip x within descent-city.webp */
+const L_CITY_SUMMIT_FX = 0.518;
+/** where the plain meets the sky in descent-sky.webp */
+const L_SKY_HORIZON_F = 0.573;
+/** the city's visible mass at rest, as a viewport-width fraction (capped):
+ *  distant and quiet — the plate's horizon is where it lives */
+const L_CITY_REST_W = 0.34;
+/** drifting luminous cloud bands (descent-cloud.webp, screen-composited):
+ *  fx/fy viewport fractions, speed in viewport-widths/s; the city passes
+ *  behind `front: false` bands and in front of nothing — the front band
+ *  crosses its path and thins as it settles */
+const L_CLOUDS: Array<{
+  fx: number;
+  fy: number;
+  scale: number;
+  speed: number;
+  alpha: number;
+  front: boolean;
+  flip: boolean;
+}> = [
+  { fx: 0.15, fy: 0.3, scale: 1.5, speed: 0.006, alpha: 0.42, front: false, flip: false },
+  { fx: 0.62, fy: 0.42, scale: 2.1, speed: 0.0042, alpha: 0.55, front: false, flip: true },
+  { fx: 0.38, fy: 0.52, scale: 2.6, speed: 0.0078, alpha: 0.75, front: true, flip: false },
+];
+
 export class BootUI {
   private hooks: LaasHooks;
   private root: HTMLElement | null;
@@ -152,9 +184,14 @@ export class BootUI {
 
   private canvas: HTMLCanvasElement | null;
   private ctx: CanvasRenderingContext2D | null = null;
-  private video: HTMLVideoElement | null = null;
-  /** true once the film is decodable — drawScene then paints only motes/lamp */
-  private videoActive = false;
+  // layered matte backdrop; the painting below stays the standing fallback
+  private layerSky: HTMLImageElement | null = null;
+  private layerCity: HTMLImageElement | null = null;
+  private layerCloud: HTMLImageElement | null = null;
+  /** true once all three stills are decoded — drawScene switches backdrops */
+  private layersActive = false;
+  /** performance.now() at activation — the layers ease in over the painting */
+  private layersAt = 0;
 
   // pre-rendered layers (built once; star/meadow layers rebuilt on resize)
   private citySprite: HTMLCanvasElement | null = null;
@@ -227,7 +264,7 @@ export class BootUI {
     this.buildStones();
     this.startVerses();
     this.startScene();
-    if (!this.riteOff && !this.reduced) this.installVideo();
+    if (!this.riteOff) this.installLayers();
 
     window.addEventListener('mousemove', this.onMove);
     window.addEventListener('mousedown', this.onDown);
@@ -313,42 +350,149 @@ export class BootUI {
     }, 1850);
   }
 
-  /** The vendored descent film. Fail-soft by design: until `canplay` the
-   *  painting is what the user sees, and any error simply leaves it there. */
-  private installVideo(): void {
-    const root = this.root;
-    if (!root || !this.canvas) return;
-    const v = document.createElement('video');
-    v.id = 'boot-video';
-    v.muted = true;
-    v.loop = true;
-    v.playsInline = true;
-    v.preload = 'auto';
-    v.setAttribute('aria-hidden', 'true');
-    v.src = '/intro/nj-descent.mp4';
-    // the immediate play() can race the load ("interrupted by a new load
-    // request") — retry whenever the film becomes decodable and, as the
-    // final guarantee, on the first user gesture (the rite always gets one:
-    // the same click that unlocks the AudioContext)
-    const safePlay = (): void => {
-      if (this.video === v && v.paused) void v.play().catch(() => undefined);
+  /** The vendored matte layers. Fail-soft by design: until all three decode
+   *  the painting is what the user sees, and any error simply leaves it there. */
+  private installLayers(): void {
+    const load = (src: string): HTMLImageElement => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = src;
+      return img;
     };
-    v.addEventListener('canplay', () => {
-      if (this.hidden) return;
-      this.videoActive = true;
-      v.style.opacity = '1';
-      safePlay();
-    });
-    v.addEventListener('error', () => {
-      this.videoActive = false;
-      v.remove();
-      this.video = null;
-    });
-    window.addEventListener('pointerdown', safePlay, { once: true });
-    window.addEventListener('keydown', safePlay, { once: true });
-    root.insertBefore(v, this.canvas); // under the canvas: motes/lamp stay on top
-    this.video = v;
-    safePlay();
+    const sky = load('/intro/descent-sky.webp');
+    const city = load('/intro/descent-city.webp');
+    const cloud = load('/intro/descent-cloud.webp');
+    Promise.all([sky.decode(), city.decode(), cloud.decode()])
+      .then(() => {
+        if (this.hidden) return;
+        this.layerSky = sky;
+        this.layerCity = city;
+        this.layerCloud = cloud;
+        this.layersActive = true;
+        this.layersAt = performance.now();
+        if (this.reduced) this.drawScene(0); // no rAF loop — repaint now
+      })
+      .catch(() => undefined);
+  }
+
+  /** Backdrop geometry for the current viewport + descent progress (CSS px). */
+  private layerGeom(): {
+    sky: { x: number; y: number; w: number; h: number };
+    city: { x: number; y: number; w: number; h: number };
+    horizonY: number;
+    summitX: number;
+    summitY: number;
+  } | null {
+    const skyImg = this.layerSky;
+    const cityImg = this.layerCity;
+    if (!skyImg || !cityImg) return null;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const e = easeInOutCubic(this.displayP);
+    // cover-fit the sky plate with a whisper of settle-zoom
+    const s = Math.max(w / skyImg.width, h / skyImg.height) * (1.045 - 0.045 * e);
+    const sw = skyImg.width * s;
+    const sh = skyImg.height * s;
+    const sky = { x: (w - sw) / 2, y: (h - sh) / 2, w: sw, h: sh };
+    const horizonY = sky.y + sh * L_SKY_HORIZON_F;
+    // the city reads distant: size it by its visible mass, not the image
+    const massFrac = L_CITY.x1 - L_CITY.x0;
+    const cw = (Math.min(w * L_CITY_REST_W, 620) / massFrac) * (0.94 + 0.06 * e);
+    const ch = cw * (cityImg.height / cityImg.width);
+    // rest: base platform seated a hair into the plain; start: fully above frame
+    const restY = horizonY + h * 0.004 - L_CITY.y1 * ch;
+    const startY = -L_CITY.y1 * ch - h * 0.06;
+    const city = {
+      x: w / 2 - ((L_CITY.x0 + L_CITY.x1) / 2) * cw,
+      y: startY + (restY - startY) * e,
+      w: cw,
+      h: ch,
+    };
+    return {
+      sky,
+      city,
+      horizonY,
+      summitX: city.x + L_CITY_SUMMIT_FX * cw,
+      summitY: city.y + (L_CITY.y0 + 0.012) * ch,
+    };
+  }
+
+  /** The layered backdrop: sky plate, glory light, cloud bands, the city
+   *  descending, light pooling on the plain. Motes render after (caller). */
+  private drawLayers(now: number, g: NonNullable<ReturnType<BootUI['layerGeom']>>): void {
+    const ctx = this.ctx;
+    const cloudImg = this.layerCloud;
+    if (!ctx || !this.layerSky || !this.layerCity || !cloudImg) return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const desc = easeInOutCubic(this.displayP);
+    // ease the whole backdrop in over the painting (decode lands a beat
+    // after first paint; the night gradient beneath reads as dawn breaking)
+    const fade = this.reduced ? 1 : clamp01((performance.now() - this.layersAt) / 800);
+
+    ctx.globalAlpha = fade;
+    ctx.drawImage(this.layerSky, g.sky.x, g.sky.y, g.sky.w, g.sky.h);
+
+    // glory halo + god rays lead the city down (the painting's own sprites)
+    if (this.haloSprite) {
+      const r = (g.city.w * 0.55 + g.city.w * 0.35 * desc) | 0;
+      ctx.globalAlpha = fade * (0.16 + 0.5 * desc);
+      ctx.drawImage(this.haloSprite, g.summitX - r, g.summitY - r, r * 2, r * 2);
+    }
+    if (this.raySprite) {
+      const r = g.city.w * 0.62;
+      ctx.save();
+      ctx.translate(g.summitX, g.summitY);
+      if (!this.reduced) ctx.rotate(now * 0.022);
+      ctx.globalAlpha = fade * (0.06 + 0.42 * desc);
+      ctx.drawImage(this.raySprite, -r, -r, r * 2, r * 2);
+      ctx.restore();
+    }
+
+    // luminous cloud bands — 'screen' keeps their black plate invisible
+    const band = (front: boolean): void => {
+      ctx.globalCompositeOperation = 'screen';
+      for (const cl of L_CLOUDS) {
+        if (cl.front !== front) continue;
+        const cw = cloudImg.width * cl.scale * (w / 2600);
+        const ch = cloudImg.height * cl.scale * (w / 2600);
+        const cx = ((((cl.fx + now * cl.speed) % 1) + 1) % 1) * (w + cw * 1.6) - cw * 1.3;
+        const cy = cl.fy * h - ch / 2;
+        // the front band thins as the city settles through it
+        ctx.globalAlpha = fade * cl.alpha * (front ? 1 - 0.45 * desc : 1);
+        if (cl.flip) {
+          ctx.save();
+          ctx.translate(cx + cw / 2, 0);
+          ctx.scale(-1, 1);
+          ctx.drawImage(cloudImg, -cw / 2, cy, cw, ch);
+          ctx.restore();
+        } else {
+          ctx.drawImage(cloudImg, cx, cy, cw, ch);
+        }
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    };
+    band(false);
+
+    ctx.globalAlpha = fade * (0.35 + 0.65 * clamp01(this.displayP * 1.6));
+    ctx.drawImage(this.layerCity, g.city.x, g.city.y, g.city.w, g.city.h);
+
+    band(true);
+
+    // the city's light pooling on the plain as it nears (crop the sprite's
+    // upper half so no glow spills back onto the sky)
+    const glowA = fade * 0.15 * desc;
+    if (glowA > 0.005 && this.glowSprite) {
+      const r = w * 0.26;
+      const cy = g.horizonY + h * 0.05;
+      const cut = Math.max(cy - r, g.horizonY - h * 0.005);
+      const sy = ((cut - (cy - r)) / (2 * r)) * 512;
+      ctx.globalAlpha = glowA;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(this.glowSprite, 0, sy, 512, 512 - sy, w / 2 - r, cut, r * 2, cy + r - cut);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.globalAlpha = 1;
   }
 
   // --- pre-rendered painting layers ---------------------------------------------
@@ -875,11 +1019,15 @@ export class BootUI {
 
     ctx.clearRect(0, 0, w, h);
 
-    // film backdrop active: the canvas contributes only motes + lamp + pulses;
-    // the dissolve's converge point is the film city's summit beacon
-    if (this.videoActive) {
-      this.renderMotes(dt, now, [w * 0.5, h * 0.3]);
-      return;
+    // layered matte backdrop active: draw it, then motes/lamp/pulses over it;
+    // the dissolve's converge point is the layered city's summit
+    if (this.layersActive) {
+      const g = this.layerGeom();
+      if (g) {
+        this.drawLayers(now, g);
+        this.renderMotes(dt, now, [g.summitX, g.summitY]);
+        return;
+      }
     }
 
     // --- stars (two drifting parallax layers + a few twinklers) ---------------
@@ -1080,13 +1228,9 @@ export class BootUI {
   private teardown(): void {
     if (this.raf) cancelAnimationFrame(this.raf);
     this.ctx = null;
-    if (this.video) {
-      this.video.pause();
-      this.video.removeAttribute('src');
-      this.video.load(); // release the decoder + network buffers
-      this.video.remove();
-      this.video = null;
-    }
+    this.layerSky = null;
+    this.layerCity = null;
+    this.layerCloud = null;
     window.clearTimeout(this.verseTimer);
     window.clearTimeout(this.gemNameTimer);
     window.clearTimeout(this.resizeTimer);

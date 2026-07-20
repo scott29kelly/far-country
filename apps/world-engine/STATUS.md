@@ -138,6 +138,33 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-20, later-7) BOOT BACKDROP FINAL FORM: layered matte descent —
+the film is GONE.** Scott rejected film v3 too ("a weird mass growing up
+out of itself from the ground") and asked to rethink the loading screen
+altogether. Diagnosis: video models cannot hold a descent — three takes
+failed the same way — while (a) the concept STILLS were consistently
+excellent and (b) the old painted descent's choreography (city translating
+down through clouds, tied to real progress) was correct and only its flat
+Canvas2D rectangles read "8-bit". So the backdrop is now a 2.5D layered
+matte: three generated stills (soul_cinematic, Dawn-Bride palette) vendored
+as ~240 KB of WebP in apps/web/public/intro — `descent-sky.webp` (pre-dawn
+plate with plain + silver river), `descent-city.webp` (golden tiered city,
+Higgsfield image_background_remover cutout with alpha), `descent-cloud.webp`
+(luminous band on black, edges feathered in prep, screen-composited so the
+plate vanishes). BootUI.installLayers() decodes all three then drawScene
+switches from the painting; layerGeom() seats the city's measured alpha-bbox
+base (fraction 0.6867) on the plate's horizon (0.573) and translates it down
+with easeInOutCubic(displayP); glory halo/rays, front cloud band thinning as
+it settles, light pooling on the plain, motes/verses/stones/dissolve all
+unchanged. Painting remains the fail-soft fallback and the only ?rite=0 /
+asset-failure path (probes fetch no boot assets). nj-descent.mp4 deleted
+(9 MB → 240 KB). Tools committed: `tools/intro-assets.ts` (bbox measure +
+WebP encode + edge feather via chrome-channel canvas), `tools/boot-shots.ts`
+(timed screenshots through a real rite boot). Verified: tsc, vite build,
+probe-bootui + probe-bootrite ALL PASS, all 7 standing suites ALL PASS,
+boot-shots stills clean at 2/6/14/25/40 s (first take had hard vertical
+sky seams = cloud sprite edges under 'screen'; fixed by the 10% feather).
+
 **(2026-07-19, later-6) POLISH PASS: z-fight fix, boot film, mute/controls
 UI.** PR #31 (the M3.6 population branch) merged to main. Then, on
 `claude/world-polish-pass`, four user-reported items:
