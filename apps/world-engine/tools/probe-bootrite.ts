@@ -20,7 +20,6 @@
 
 import { mkdirSync } from 'node:fs';
 import type { Page } from 'playwright';
-import { FOUNDATION_GEMS } from '../src/nj/cityModel';
 import { makeChecker } from './check';
 import { launchAnyChromium } from './launch';
 
@@ -94,19 +93,15 @@ async function main(): Promise<void> {
     );
     check('pacing: displayP chases realP without passing it', disp > 0.2 && disp <= 0.951, `displayP=${disp.toFixed(3)}`);
 
-    // stones: whatever is lit mid-rite must be a PREFIX of the foundation
-    // order — no stone ignites before the ones laid before it
-    const litFlags = await page.evaluate(() => {
-      const row = document.getElementById('boot-stones');
-      return row
-        ? Array.from(row.querySelectorAll('.stone')).map((el) => el.classList.contains('lit'))
-        : [];
-    });
-    const firstUnlit = litFlags.indexOf(false);
+    // the baseline: mid-rite the single gold line tracks the paced display
+    // value (the twelve-gem chip row was removed 2026-07-20)
+    const midWidth = await page.evaluate(
+      () => parseInt(document.getElementById('boot-baseline-fill')?.style.width ?? '-1', 10),
+    );
     check(
-      'stones: lit set is a prefix of the foundation order',
-      litFlags.length === 12 && (firstUnlit === -1 || litFlags.slice(firstUnlit).every((v) => !v)),
-      `lit=[${litFlags.map((v) => (v ? '1' : '0')).join('')}]`,
+      'baseline: fill tracks the paced display value',
+      midWidth >= 20 && midWidth <= Math.round(disp * 100),
+      `width=${midWidth}% displayP=${disp.toFixed(3)}`,
     );
 
     // the word: a short quoted excerpt with a book-chapter:verse ESV citation
@@ -152,24 +147,11 @@ async function main(): Promise<void> {
     await page.waitForTimeout(250);
     await page.screenshot({ path: 'shots/wip/bootrite-seated.png' });
 
-    // at rest all twelve stones burn in the exact Rev 21:19-20 gem colors
-    const stoneColors = await page.evaluate(() => {
-      const row = document.getElementById('boot-stones');
-      return row
-        ? Array.from(row.querySelectorAll('.stone')).map((el) => (el as HTMLElement).style.background)
-        : [];
-    });
-    const hexToRgb = (hex: string): string => {
-      const n = parseInt(hex.slice(1), 16);
-      return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
-    };
-    const expected = FOUNDATION_GEMS.map((g) => hexToRgb(g.color));
-    const orderOk = stoneColors.length === 12 && stoneColors.every((c, i) => c === expected[i]);
-    check(
-      'stones: all twelve ignite in Rev 21:19-20 gem order',
-      orderOk,
-      orderOk ? 'exact color match' : `got [${stoneColors.join('; ')}]`,
+    // at rest the baseline reads full
+    const restWidth = await page.evaluate(
+      () => parseInt(document.getElementById('boot-baseline-fill')?.style.width ?? '-1', 10),
     );
+    check('baseline: full at rest', restWidth === 100, `width=${restWidth}%`);
 
     await hide(page);
     await page.waitForTimeout(700); // veil ease-in (0.7 s from t+120 ms) near peak

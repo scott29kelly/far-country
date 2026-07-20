@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-18)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-19)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,115 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-20, later-8) BOOT REFINEMENT + SUMMIT ORB REMOVED FROM THE
+WORLD.** Scott's review of later-7: verse too small and too low, gem
+diamonds pointless, and the AI-still city "a slumped down pile of crap" —
+he wants the REAL city. Changes:
+
+- **The summit glory orb is gone from the 3D world itself** (user
+  directive: no orb in the world or the intro). CityMassing no longer
+  builds the emissive glory sphere; the rainbow ring (Rev 4:3) stays at
+  the old glory height as the aniconic throne marker, and Rev 21:23's
+  "the glory of God gives it light" is carried by the emissive crown +
+  arcade glows. ADR 0010 posture unchanged — abstract light only, now
+  with no body at all. njLive.glory is simply never set (EditPanel
+  guards handle it); entitypick/wallcollide suites unaffected (analytic).
+- **The boot city sprite is now the engine's own city**: a 2048px front
+  still of the live scene (orb-free, rainbow intact, river pouring),
+  Higgsfield-cutout, tail-cropped via intro-assets.ts `cropBottom`
+  (alpha bbox 0.2013/0.2/0.7994/0.8667, seat = platform underside).
+  intro-assets.ts gained edge-feather + bottom-crop params.
+- **Verse enlarged and raised into the sky** (top 11%, clamp 20-30px,
+  citation in deep bronze with a light halo shadow so it survives the
+  white crown rising behind it). **Twelve-gem diamond row REMOVED** —
+  progress is a single thin gold baseline (probe-bootrite stone
+  assertions replaced with baseline-fill checks). Motes damped 0.55x
+  over the bright matte sky; front cloud band grounded at the horizon
+  and thinned harder as the city settles; halo/rays calmed.
+
+Verified: tsc, vite build, bootui/bootrite + all 7 standing suites ALL
+PASS, boot-shots stills clean. Judgment call recorded: the boot backdrop
+keeps the SAME rendering register as the world (Scott: "good enough" —
+approved direction, not final art).
+
+**(2026-07-20, later-7) BOOT BACKDROP FINAL FORM: layered matte descent —
+the film is GONE.** Scott rejected film v3 too ("a weird mass growing up
+out of itself from the ground") and asked to rethink the loading screen
+altogether. Diagnosis: video models cannot hold a descent — three takes
+failed the same way — while (a) the concept STILLS were consistently
+excellent and (b) the old painted descent's choreography (city translating
+down through clouds, tied to real progress) was correct and only its flat
+Canvas2D rectangles read "8-bit". So the backdrop is now a 2.5D layered
+matte: three generated stills (soul_cinematic, Dawn-Bride palette) vendored
+as ~240 KB of WebP in apps/web/public/intro — `descent-sky.webp` (pre-dawn
+plate with plain + silver river), `descent-city.webp` (golden tiered city,
+Higgsfield image_background_remover cutout with alpha), `descent-cloud.webp`
+(luminous band on black, edges feathered in prep, screen-composited so the
+plate vanishes). BootUI.installLayers() decodes all three then drawScene
+switches from the painting; layerGeom() seats the city's measured alpha-bbox
+base (fraction 0.6867) on the plate's horizon (0.573) and translates it down
+with easeInOutCubic(displayP); glory halo/rays, front cloud band thinning as
+it settles, light pooling on the plain, motes/verses/stones/dissolve all
+unchanged. Painting remains the fail-soft fallback and the only ?rite=0 /
+asset-failure path (probes fetch no boot assets). nj-descent.mp4 deleted
+(9 MB → 240 KB). Tools committed: `tools/intro-assets.ts` (bbox measure +
+WebP encode + edge feather via chrome-channel canvas), `tools/boot-shots.ts`
+(timed screenshots through a real rite boot). Verified: tsc, vite build,
+probe-bootui + probe-bootrite ALL PASS, all 7 standing suites ALL PASS,
+boot-shots stills clean at 2/6/14/25/40 s (first take had hard vertical
+sky seams = cloud sprite edges under 'screen'; fixed by the 10% feather).
+
+**(2026-07-19, later-6) POLISH PASS: z-fight fix, boot film, mute/controls
+UI.** PR #31 (the M3.6 population branch) merged to main. Then, on
+`claude/world-polish-pass`, four user-reported items:
+
+- **City-wide stripe flicker FIXED (z-fighting, not shadows).** User
+  screenshot showed banded stripes crawling on the terrace pavements.
+  An `?ablate=shadows` still proved the shadow stack innocent: every
+  tier-top plane had 2+ coplanar top faces (interior core / plinth /
+  wall segments / gate jambs all ended exactly at yTop = the cornice
+  slab's top). CityMassing now gives every pavement plane ONE owner:
+  structural boxes stop at the cornice underside (CORNICE_T); on the
+  crown the cornice drops 0.15 local so the sea-of-glass crown mesh owns
+  the summit. No cityCollide floor moved; verified by stills (terrace-2,
+  summit, ZEBULUN wall-top). KNOWN DEBT, separate mechanism: cloud-edge
+  speckle in motion is the half-res jittered cloud march showing through
+  TRAA history rejection — a real fix is a dedicated cloud reprojection
+  pass, not attempted here.
+- **Boot rite cinematic.** The painted descent read as amateurish (user);
+  a vendored 12 s Seedance 2.0 film (apps/web/public/intro/nj-descent.mp4,
+  silent 1080p, generate-offline-and-vendor posture) now fades in as the
+  backdrop. Painting stays as fail-soft fallback and the only path for
+  ?rite=0 tooling + reduced motion. Overlays (verses/stones/dissolve) and
+  the motes/lamp canvas unchanged on top.
+- **Mute + controls discoverability.** The M mute existed but was
+  invisible. New `src/core/ControlsUI.ts`: bottom-left chip cluster —
+  SOUND ON/OFF (drives Ambience, preference persisted in localStorage
+  `laas-muted`) and KEYS (or H) opening a compact key card. Ambience
+  gained isMuted/onMuteChange. Nav panel footer updated.
+
+Scott-only follow-ups: judge the film in situ (loop has a hard cut at
+12 s — could crossfade or regenerate longer if it bothers), walk-feel
+passes still owed from later-5.
+
+**RESOLVED (2026-07-19 late): boot-film art direction → 6 Dawn Bride.**
+Scott picked direction 6 (Dawn Bride) from the 3x3 board, with 9
+(Star-Woven) as declared fallback. Film v3 regenerated via Seedance
+2.0 (1080p std, 12 s, silent, 16:9) from the direction-6 concept
+still alone and swapped into apps/web/public/intro/nj-descent.mp4 —
+no code change. Learnings: a first 1080p take that included the two
+engine reference stills regressed to the literal engine render
+(summit orb returned, camera pushed in until the city filled the
+frame) — for stylized directions, reference ONLY the concept still.
+Also `quality:"1080p"` is silently ignored by generate_video; the
+correct param is `resolution:"1080p"` (a 54-credit 720p job is the
+tell — 1080p costs 108). Frame-QA'd via the chrome-channel Playwright
+recipe (style holds all 12 s, no orb, veil-of-light descent beats at
+0-6 s); full-rite headless boot verified post-swap (56.6 s, painted
+fallback path). Unused takes (2x Parted Veil, 1x orbed Dawn Bride)
+remain in Higgsfield history. v1/v2 films in git history (827d211,
+b906c8a).
 
 **(2026-07-18, later-5) POPULATION FIRST PASS BUILT (M3.6) — the city is
 no longer empty.** The settled RENDERING-DECISIONS #3 rendering lands on

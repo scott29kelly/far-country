@@ -38,7 +38,6 @@ import {
   Mesh,
   PlaneGeometry,
   Quaternion,
-  SphereGeometry,
   SRGBColorSpace,
   TorusGeometry,
   Vector3,
@@ -482,6 +481,15 @@ function wallSegments(outer: number): Array<[number, number]> {
  * `h`, split into segments so the three gate gaps on this side are genuinely
  * open (no infill mesh across them).
  */
+/**
+ * Ivory cornice slab thickness (local units). Every tier-top pavement plane
+ * must have exactly ONE owner mesh: coplanar top faces (core/plinth/wall/jamb
+ * vs the cornice slab) z-fight into banded stripes that crawl with the camera
+ * (user-reported, city-wide). Structural boxes under a cornice stop at the
+ * cornice's UNDERSIDE; the walkable planes (cityCollide floors) never move.
+ */
+const CORNICE_T = 2.4;
+
 function buildWallSide(
   face: Face,
   inner: number,
@@ -528,11 +536,14 @@ function buildGatePortal(
   const jambW = 1.4;
   const archH = GATE_WIDTH * 0.42; // clearance under the arch stays walkable
 
+  // jambs stop at the cornice underside (top face would z-fight its slab);
+  // the voussoir ring and arch head keep their full-height h positions
+  const jambH = h - CORNICE_T;
   for (const side of [-1, 1] as const) {
     const u = offset + side * (GATE_WIDTH / 2 + jambW / 2);
-    const jamb = new Mesh(new BoxGeometry(jambW, h, radialThick), jambMat);
-    if (face.axis === 'z') jamb.position.set(u, h / 2, radialMid);
-    else jamb.position.set(radialMid, h / 2, u);
+    const jamb = new Mesh(new BoxGeometry(jambW, jambH, radialThick), jambMat);
+    if (face.axis === 'z') jamb.position.set(u, jambH / 2, radialMid);
+    else jamb.position.set(radialMid, jambH / 2, u);
     jamb.castShadow = true;
     jamb.receiveShadow = true;
     g.add(jamb);
@@ -774,14 +785,18 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       plinthMat.emissive.copy(GOLD);
       plinthMat.emissiveIntensity = 0.55;
       patchCityGI(plinthMat, gi);
-      const plinth = new Mesh(new BoxGeometry(2 * innerHalf, H, 2 * innerHalf), plinthMat);
-      plinth.position.y = yc;
+      const plinth = new Mesh(
+        new BoxGeometry(2 * innerHalf, H - CORNICE_T, 2 * innerHalf),
+        plinthMat,
+      );
+      plinth.position.y = yc - CORNICE_T / 2;
       plinth.castShadow = true;
       plinth.receiveShadow = true;
       city.add(plinth);
 
       for (const face of FACES) {
-        for (const seg of buildWallSide(face, innerHalf, t.half, H, jasper)) city.add(seg);
+        for (const seg of buildWallSide(face, innerHalf, t.half, H - CORNICE_T, jasper))
+          city.add(seg);
       }
       for (const gate of GATES) {
         city.add(
@@ -821,11 +836,12 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       // Terrace tier: opaque glowing interior core + translucent gold glass
       // skin in giant arch bays + instanced gold relief frames and piers.
       const coreHalf = t.half - 2;
+      const coreH = H - CORNICE_T; // top abuts the cornice underside, no z-fight
       const core = new Mesh(
-        new BoxGeometry(2 * coreHalf, H, 2 * coreHalf),
-        interiorMaterial(f, H, gi),
+        new BoxGeometry(2 * coreHalf, coreH, 2 * coreHalf),
+        interiorMaterial(f, coreH, gi),
       );
-      core.position.y = yc;
+      core.position.y = yBot + coreH / 2;
       core.castShadow = true;
       core.receiveShadow = true;
       city.add(core);
@@ -877,9 +893,16 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
     }
 
     // IVORY cornice slab at the tier top (the pale band at every setback —
-    // also the terrace pavement of the ledge above).
-    const cornice = new Mesh(new BoxGeometry(2 * t.half + 5, 2.4, 2 * t.half + 5), ivory);
-    cornice.position.y = yTop - 1.2;
+    // also the terrace pavement of the ledge above). On the crown the SUMMIT
+    // floor is the crown mesh itself (sea of glass, cityCollide's claim), so
+    // there the slab drops 0.15 (3 m world, imperceptible at the crown band's
+    // 48 m height) to cede the top plane instead of z-fighting it.
+    const corniceDrop = ti === last ? 0.15 : 0;
+    const cornice = new Mesh(
+      new BoxGeometry(2 * t.half + 5, CORNICE_T, 2 * t.half + 5),
+      ivory,
+    );
+    cornice.position.y = yTop - CORNICE_T / 2 - corniceDrop;
     cornice.castShadow = true;
     cornice.receiveShadow = true;
     city.add(cornice);
@@ -930,20 +953,13 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
   city.add(glows);
   city.add(instancedOnFaces(dentilGeo, trimInst, dentilPlaces));
 
-  // Throne glory: a radiant, self-luminous source at the open-air summit, which
-  // the engine's bloom turns into a beacon. Abstract light only (ADR 0010).
-  const gloryMat = new MeshStandardNodeMaterial();
-  gloryMat.color.setHex(0xfff4d6);
-  gloryMat.emissive.setHex(0xfff1c8);
-  // The summit glory is THE light of the city — pushed well past the 1.5 bloom
-  // threshold so it stays a blinding beacon even through the aerial haze at
-  // citywide distance (Rev 21:23; 22:5). Abstract light only (ADR 0010).
-  gloryMat.emissiveIntensity = 12;
-  gloryMat.roughness = 1;
-  njLive.glory = gloryMat;
-  const glory = new Mesh(new SphereGeometry(11, 32, 24), gloryMat);
-  glory.position.y = yBot + 10;
-  city.add(glory);
+  // Throne glory (2026-07-20, user directive): the discrete glowing sphere is
+  // REMOVED — no orb at the summit, here or in the boot backdrop. Rev 21:23's
+  // "the glory of God gives it light" is carried by the emissive crown and
+  // arcade glows; the rainbow ring below (Rev 4:3) remains the aniconic
+  // throne marker at the old glory height (ADR 0010 posture unchanged:
+  // abstract light only, now with no body at all).
+  const GLORY_Y = yBot + 10;
 
   // Sea of glass before the throne (Rev 4:6, clear tier — rendered as the
   // figure of the vision per ADR 0009 rule 2): a reflective crystalline
@@ -1004,7 +1020,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
     .mul(smoothstep(1.0, 0.88, fSpec) as unknown as NF)
     .mul(0.75) as unknown as typeof rainMat.opacityNode;
   const rainbow = new Mesh(rainGeo, rainMat);
-  rainbow.position.y = glory.position.y;
+  rainbow.position.y = GLORY_Y;
   city.add(rainbow);
 
   return city;

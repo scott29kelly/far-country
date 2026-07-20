@@ -9,6 +9,7 @@ import {
   installGlobalErrorHooks,
   probeWebGPU,
 } from './core/Diagnostics';
+import { ControlsUI } from './core/ControlsUI';
 import { Engine } from './core/Engine';
 import { FlyCamera } from './core/FlyCamera';
 import { installEntityHud } from './core/EntityHud';
@@ -133,6 +134,7 @@ async function boot(): Promise<void> {
   }
 
   new NavigationUI(engine, fly, hooks);
+  new ControlsUI(ambience);
   new Hud(engine, params);
   // citation card for scenes with cited content (no-ops without the hook)
   if (hooks.entityPick) installEntityHud(engine, hooks, fly);
