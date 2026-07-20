@@ -4,11 +4,12 @@
  * The load IS the arrival (Rev 21:2, 10): a painterly night sky in which the
  * luminous terraced city comes down out of heaven as real world-gen progress
  * advances — emerging from a sea of drifting clouds, its glory halo and rays
- * swelling, until at 100% it rests on the meadow horizon. Twelve foundation
- * stones ignite in Rev 21:19-20 order (exact gem hues from cityModel's
- * FOUNDATION_GEMS). Light motes drift through the night and follow the cursor
- * like a lamp; a click sends a soft pulse. Short ESV lines with citations
- * rotate in the lower third.
+ * swelling, until at 100% it rests on the meadow horizon. A single thin gold
+ * baseline fills with progress (the twelve-gem chip row was removed
+ * 2026-07-20, user directive — the gems survive only in the painted
+ * fallback's wall course). Light motes drift and follow the cursor like a
+ * lamp; a click sends a soft pulse. Short ESV lines with citations rotate
+ * high in the sky.
  *
  * Contract: `set(progress, message)` and `hide()`, both mirrored to
  * `window.__laas` for the Playwright tooling. `hide()` runs a staged dissolve
@@ -139,15 +140,18 @@ const RIDGE_SINK = 12;
 
 // --- layered matte backdrop (vendored stills in /intro) --------------------
 /** alpha bounding box of the city within descent-city.webp, as fractions
- *  (measured from the cutout; y1 is the underside of the base platform) */
-const L_CITY = { x0: 0.1919, y0: 0.1956, x1: 0.87, y1: 0.6867 };
-/** summit tip x within descent-city.webp */
-const L_CITY_SUMMIT_FX = 0.518;
+ *  (measured from the cutout; y1 is the underside of the base platform).
+ *  The sprite is the ENGINE's own city — a front still of the live
+ *  newjerusalem scene (orb-free, rainbow ring intact), cut out via the
+ *  Higgsfield remover; regenerate with tools/intro-assets.ts. */
+const L_CITY = { x0: 0.2013, y0: 0.2, x1: 0.7994, y1: 0.8667 };
+/** summit (crown glow) x within descent-city.webp — the shot is centered */
+const L_CITY_SUMMIT_FX = 0.5;
 /** where the plain meets the sky in descent-sky.webp */
 const L_SKY_HORIZON_F = 0.573;
 /** the city's visible mass at rest, as a viewport-width fraction (capped):
- *  distant and quiet — the plate's horizon is where it lives */
-const L_CITY_REST_W = 0.34;
+ *  distant but sovereign — the plate's horizon is where it lives */
+const L_CITY_REST_W = 0.42;
 /** drifting luminous cloud bands (descent-cloud.webp, screen-composited):
  *  fx/fy viewport fractions, speed in viewport-widths/s; the city passes
  *  behind `front: false` bands and in front of nothing — the front band
@@ -163,7 +167,7 @@ const L_CLOUDS: Array<{
 }> = [
   { fx: 0.15, fy: 0.3, scale: 1.5, speed: 0.006, alpha: 0.42, front: false, flip: false },
   { fx: 0.62, fy: 0.42, scale: 2.1, speed: 0.0042, alpha: 0.55, front: false, flip: true },
-  { fx: 0.38, fy: 0.52, scale: 2.6, speed: 0.0078, alpha: 0.75, front: true, flip: false },
+  { fx: 0.38, fy: 0.565, scale: 2.6, speed: 0.0078, alpha: 0.6, front: true, flip: false },
 ];
 
 export class BootUI {
@@ -173,14 +177,9 @@ export class BootUI {
   private stage: HTMLElement | null;
   private baseline: HTMLElement | null;
   private veil: HTMLElement | null;
-  private gemName: HTMLElement | null;
   private verseEl: HTMLElement | null;
   private citeEl: HTMLElement | null;
   private hintEl: HTMLElement | null;
-
-  private stones: HTMLElement[] = [];
-  private litCount = 0;
-  private gemNameTimer = 0;
 
   private canvas: HTMLCanvasElement | null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -252,7 +251,6 @@ export class BootUI {
     this.stage = document.getElementById('boot-stage');
     this.baseline = document.getElementById('boot-baseline-fill');
     this.veil = document.getElementById('boot-veil');
-    this.gemName = document.getElementById('boot-gemname');
     this.verseEl = document.getElementById('boot-verse');
     this.citeEl = document.getElementById('boot-cite');
     this.hintEl = document.getElementById('boot-hint');
@@ -261,7 +259,6 @@ export class BootUI {
     this.riteOff = !riteOn;
 
     this.buildSprites();
-    this.buildStones();
     this.startVerses();
     this.startScene();
     if (!this.riteOff) this.installLayers();
@@ -298,7 +295,6 @@ export class BootUI {
   private applyDisplay(p: number): void {
     this.displayP = p;
     if (this.baseline) this.baseline.style.width = `${Math.round(p * 100)}%`;
-    this.igniteStones();
     if (this.reduced) this.drawScene(0);
   }
 
@@ -436,7 +432,7 @@ export class BootUI {
     // glory halo + god rays lead the city down (the painting's own sprites)
     if (this.haloSprite) {
       const r = (g.city.w * 0.55 + g.city.w * 0.35 * desc) | 0;
-      ctx.globalAlpha = fade * (0.16 + 0.5 * desc);
+      ctx.globalAlpha = fade * (0.1 + 0.32 * desc);
       ctx.drawImage(this.haloSprite, g.summitX - r, g.summitY - r, r * 2, r * 2);
     }
     if (this.raySprite) {
@@ -444,7 +440,7 @@ export class BootUI {
       ctx.save();
       ctx.translate(g.summitX, g.summitY);
       if (!this.reduced) ctx.rotate(now * 0.022);
-      ctx.globalAlpha = fade * (0.06 + 0.42 * desc);
+      ctx.globalAlpha = fade * (0.05 + 0.3 * desc);
       ctx.drawImage(this.raySprite, -r, -r, r * 2, r * 2);
       ctx.restore();
     }
@@ -458,8 +454,8 @@ export class BootUI {
         const ch = cloudImg.height * cl.scale * (w / 2600);
         const cx = ((((cl.fx + now * cl.speed) % 1) + 1) % 1) * (w + cw * 1.6) - cw * 1.3;
         const cy = cl.fy * h - ch / 2;
-        // the front band thins as the city settles through it
-        ctx.globalAlpha = fade * cl.alpha * (front ? 1 - 0.45 * desc : 1);
+        // the front band thins hard as the city settles through it
+        ctx.globalAlpha = fade * cl.alpha * (front ? 1 - 0.72 * desc : 1);
         if (cl.flip) {
           ctx.save();
           ctx.translate(cx + cw / 2, 0);
@@ -474,7 +470,7 @@ export class BootUI {
     };
     band(false);
 
-    ctx.globalAlpha = fade * (0.35 + 0.65 * clamp01(this.displayP * 1.6));
+    ctx.globalAlpha = fade * (0.5 + 0.5 * clamp01(this.displayP * 1.3));
     ctx.drawImage(this.layerCity, g.city.x, g.city.y, g.city.w, g.city.h);
 
     band(true);
@@ -855,43 +851,6 @@ export class BootUI {
     this.meadow = m;
   }
 
-  // --- twelve foundation stones -------------------------------------------------
-
-  private buildStones(): void {
-    const row = document.getElementById('boot-stones');
-    if (!row) return;
-    for (let i = 0; i < FOUNDATION_GEMS.length; i++) {
-      const d = document.createElement('div');
-      d.className = 'stone';
-      row.appendChild(d);
-      this.stones.push(d);
-    }
-  }
-
-  private igniteStones(): void {
-    const gems = FOUNDATION_GEMS;
-    while (this.litCount < gems.length) {
-      const threshold = 0.06 + (this.litCount * (0.9 - 0.06)) / (gems.length - 1);
-      if (this.displayP < threshold) break;
-      const gem = gems[this.litCount];
-      const el = this.stones[this.litCount];
-      if (el && gem) {
-        el.classList.add('lit');
-        el.style.background = gem.color;
-        el.style.boxShadow = `0 0 14px 1px ${gem.color}66`;
-        if (this.gemName) {
-          this.gemName.textContent = gem.name;
-          this.gemName.style.opacity = '1';
-          window.clearTimeout(this.gemNameTimer);
-          this.gemNameTimer = window.setTimeout(() => {
-            if (this.gemName) this.gemName.style.opacity = '0';
-          }, 2000);
-        }
-      }
-      this.litCount++;
-    }
-  }
-
   // --- the word -------------------------------------------------------------------
 
   private startVerses(): void {
@@ -1133,7 +1092,9 @@ export class BootUI {
     if (!ctx || !sp) return;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const bright = 0.55 + 0.45 * this.displayP;
+    // over the bright matte sky the embers read louder than over the night
+    // painting — damp them so they garnish the scene instead of speckling it
+    const bright = (0.55 + 0.45 * this.displayP) * (this.layersActive ? 0.55 : 1);
     const nowMs = performance.now();
 
     ctx.globalCompositeOperation = 'lighter';
@@ -1232,7 +1193,6 @@ export class BootUI {
     this.layerCity = null;
     this.layerCloud = null;
     window.clearTimeout(this.verseTimer);
-    window.clearTimeout(this.gemNameTimer);
     window.clearTimeout(this.resizeTimer);
     window.removeEventListener('mousemove', this.onMove);
     window.removeEventListener('mousedown', this.onDown);

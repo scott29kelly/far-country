@@ -138,6 +138,37 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-20, later-8) BOOT REFINEMENT + SUMMIT ORB REMOVED FROM THE
+WORLD.** Scott's review of later-7: verse too small and too low, gem
+diamonds pointless, and the AI-still city "a slumped down pile of crap" —
+he wants the REAL city. Changes:
+
+- **The summit glory orb is gone from the 3D world itself** (user
+  directive: no orb in the world or the intro). CityMassing no longer
+  builds the emissive glory sphere; the rainbow ring (Rev 4:3) stays at
+  the old glory height as the aniconic throne marker, and Rev 21:23's
+  "the glory of God gives it light" is carried by the emissive crown +
+  arcade glows. ADR 0010 posture unchanged — abstract light only, now
+  with no body at all. njLive.glory is simply never set (EditPanel
+  guards handle it); entitypick/wallcollide suites unaffected (analytic).
+- **The boot city sprite is now the engine's own city**: a 2048px front
+  still of the live scene (orb-free, rainbow intact, river pouring),
+  Higgsfield-cutout, tail-cropped via intro-assets.ts `cropBottom`
+  (alpha bbox 0.2013/0.2/0.7994/0.8667, seat = platform underside).
+  intro-assets.ts gained edge-feather + bottom-crop params.
+- **Verse enlarged and raised into the sky** (top 11%, clamp 20-30px,
+  citation in deep bronze with a light halo shadow so it survives the
+  white crown rising behind it). **Twelve-gem diamond row REMOVED** —
+  progress is a single thin gold baseline (probe-bootrite stone
+  assertions replaced with baseline-fill checks). Motes damped 0.55x
+  over the bright matte sky; front cloud band grounded at the horizon
+  and thinned harder as the city settles; halo/rays calmed.
+
+Verified: tsc, vite build, bootui/bootrite + all 7 standing suites ALL
+PASS, boot-shots stills clean. Judgment call recorded: the boot backdrop
+keeps the SAME rendering register as the world (Scott: "good enough" —
+approved direction, not final art).
+
 **(2026-07-20, later-7) BOOT BACKDROP FINAL FORM: layered matte descent —
 the film is GONE.** Scott rejected film v3 too ("a weird mass growing up
 out of itself from the ground") and asked to rethink the loading screen

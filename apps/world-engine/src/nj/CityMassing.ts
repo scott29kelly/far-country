@@ -38,7 +38,6 @@ import {
   Mesh,
   PlaneGeometry,
   Quaternion,
-  SphereGeometry,
   SRGBColorSpace,
   TorusGeometry,
   Vector3,
@@ -954,20 +953,13 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
   city.add(glows);
   city.add(instancedOnFaces(dentilGeo, trimInst, dentilPlaces));
 
-  // Throne glory: a radiant, self-luminous source at the open-air summit, which
-  // the engine's bloom turns into a beacon. Abstract light only (ADR 0010).
-  const gloryMat = new MeshStandardNodeMaterial();
-  gloryMat.color.setHex(0xfff4d6);
-  gloryMat.emissive.setHex(0xfff1c8);
-  // The summit glory is THE light of the city — pushed well past the 1.5 bloom
-  // threshold so it stays a blinding beacon even through the aerial haze at
-  // citywide distance (Rev 21:23; 22:5). Abstract light only (ADR 0010).
-  gloryMat.emissiveIntensity = 12;
-  gloryMat.roughness = 1;
-  njLive.glory = gloryMat;
-  const glory = new Mesh(new SphereGeometry(11, 32, 24), gloryMat);
-  glory.position.y = yBot + 10;
-  city.add(glory);
+  // Throne glory (2026-07-20, user directive): the discrete glowing sphere is
+  // REMOVED — no orb at the summit, here or in the boot backdrop. Rev 21:23's
+  // "the glory of God gives it light" is carried by the emissive crown and
+  // arcade glows; the rainbow ring below (Rev 4:3) remains the aniconic
+  // throne marker at the old glory height (ADR 0010 posture unchanged:
+  // abstract light only, now with no body at all).
+  const GLORY_Y = yBot + 10;
 
   // Sea of glass before the throne (Rev 4:6, clear tier — rendered as the
   // figure of the vision per ADR 0009 rule 2): a reflective crystalline
@@ -1028,7 +1020,7 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
     .mul(smoothstep(1.0, 0.88, fSpec) as unknown as NF)
     .mul(0.75) as unknown as typeof rainMat.opacityNode;
   const rainbow = new Mesh(rainGeo, rainMat);
-  rainbow.position.y = glory.position.y;
+  rainbow.position.y = GLORY_Y;
   city.add(rainbow);
 
   return city;

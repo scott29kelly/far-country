@@ -20,10 +20,11 @@ async function main() {
     quality: number,
     measure: boolean,
     feather = 0, // fade RGB to black within this edge fraction (screen-blend sprites)
+    cropBottom = 0, // zero alpha below this height fraction (stray tails under a cutout)
   ): Promise<void> => {
     const b64 = fs.readFileSync(file!).toString('base64');
     const res = await page.evaluate(
-      async ({ b64, targetW, quality, measure, feather }) => {
+      async ({ b64, targetW, quality, measure, feather, cropBottom }) => {
         const img = new Image();
         img.src = `data:image/png;base64,${b64}`;
         await img.decode();
@@ -54,6 +55,13 @@ async function main() {
           }
           g.putImageData(im, 0, 0);
         }
+        if (cropBottom > 0) {
+          const y0 = Math.round(h * cropBottom);
+          const im = g.getImageData(0, y0, w, h - y0);
+          const d = im.data;
+          for (let i = 3; i < d.length; i += 4) d[i] = 0;
+          g.putImageData(im, 0, y0);
+        }
         let bbox: number[] | null = null;
         if (measure) {
           const d = g.getImageData(0, 0, w, h).data;
@@ -74,7 +82,7 @@ async function main() {
         const url = c.toDataURL('image/webp', quality);
         return { url, w, h, bbox };
       },
-      { b64, targetW, quality, measure, feather },
+      { b64, targetW, quality, measure, feather, cropBottom },
     );
     const data = Buffer.from(res.url.split(',')[1]!, 'base64');
     fs.writeFileSync(path.join(outDir!, outName), data);
@@ -85,7 +93,7 @@ async function main() {
   };
 
   await process1(sky!, 'descent-sky.webp', 1920, 0.95, false);
-  await process1(city!, 'descent-city.webp', 1600, 0.93, true);
+  await process1(city!, 'descent-city.webp', 1600, 0.93, true, 0, 0.868);
   await process1(cloud!, 'descent-cloud.webp', 1280, 0.88, false, 0.1);
   await browser.close();
 }
