@@ -171,23 +171,23 @@ Scott-only follow-ups: judge the film in situ (loop has a hard cut at
 12 s — could crossfade or regenerate longer if it bothers), walk-feel
 passes still owed from later-5.
 
-**OPEN DECISION (2026-07-19 end of session): boot-film art direction.**
-Scott rejected film v2 (too faithful to the unfinished engine render;
-wants stylized/cinematic, no summit orb, city de-emphasized, a real
-"coming down from heaven" event). Nine concept stills were generated
-(Higgsfield `soul_cinematic`, ~0.12 credits each) and composited into
-`shots/wip/intro-directions-3x3.png` (cells: 1 Aperture / 2 Pillar of
-Light / 3 Golden Nebula / 4 Beneath the Deck / 5 Parted Veil / 6 Dawn
-Bride / 7 Low Angle / 8 Engraving / 9 Star-Woven; full stills
-`shots/wip/dir1..dir9-*.png`, all retrievable from Higgsfield history
-via show_generations if the local files vanish). Agent recommendation:
-5 (Parted Veil — keeps the real stepped silhouette, no detail) with 1
-as runner-up, or a three-beat 9 → 1 → 5 sequence (Seedance multi-shot).
-AWAITING Scott's pick; then regenerate the film (Seedance 2.0, ~108
-credits, silent 12-15 s 1080p), swap apps/web/public/intro/
-nj-descent.mp4 in place (no code change), frame-QA via the
-chrome-channel Playwright recipe. The v1/v2 films remain in git
-history (827d211, b906c8a).
+**RESOLVED (2026-07-19 late): boot-film art direction → 6 Dawn Bride.**
+Scott picked direction 6 (Dawn Bride) from the 3x3 board, with 9
+(Star-Woven) as declared fallback. Film v3 regenerated via Seedance
+2.0 (1080p std, 12 s, silent, 16:9) from the direction-6 concept
+still alone and swapped into apps/web/public/intro/nj-descent.mp4 —
+no code change. Learnings: a first 1080p take that included the two
+engine reference stills regressed to the literal engine render
+(summit orb returned, camera pushed in until the city filled the
+frame) — for stylized directions, reference ONLY the concept still.
+Also `quality:"1080p"` is silently ignored by generate_video; the
+correct param is `resolution:"1080p"` (a 54-credit 720p job is the
+tell — 1080p costs 108). Frame-QA'd via the chrome-channel Playwright
+recipe (style holds all 12 s, no orb, veil-of-light descent beats at
+0-6 s); full-rite headless boot verified post-swap (56.6 s, painted
+fallback path). Unused takes (2x Parted Veil, 1x orbed Dawn Bride)
+remain in Higgsfield history. v1/v2 films in git history (827d211,
+b906c8a).
 
 **(2026-07-18, later-5) POPULATION FIRST PASS BUILT (M3.6) — the city is
 no longer empty.** The settled RENDERING-DECISIONS #3 rendering lands on
