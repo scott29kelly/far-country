@@ -31,6 +31,7 @@ import {
   CircleGeometry,
   Color,
   DoubleSide,
+  Float32BufferAttribute,
   FrontSide,
   Group,
   InstancedMesh,
@@ -62,6 +63,7 @@ import {
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { NF, NU, NV3 } from '../gpu/TSLTypes';
 import { slotHash } from '../render/VegInstance';
+import { ascentRamps, baseCorniceHoles, RAMP_SINK, rampSurfaceY } from './ascentModel';
 import {
   CITY_TIERS,
   FOUNDATION_BAND_OFFSETS,
@@ -74,6 +76,7 @@ import {
   GATES,
   PLINTH_HALF,
   TIER_GLASS_PROUD,
+  WALL_INNER,
   type Side,
 } from './cityModel';
 
@@ -794,13 +797,18 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       plinth.receiveShadow = true;
       city.add(plinth);
 
+      // The wall is a SLAB at the wall line (WALL_INNER..half), not a fill
+      // to the plinth: the band inside it is the covered street-of-gold
+      // gallery where the plaza-ring assemblies stand (populationModel) and
+      // the base ascent climbs (ascentModel) — cityCollide opens the same
+      // band, one shared table, no mirrors.
       for (const face of FACES) {
-        for (const seg of buildWallSide(face, innerHalf, t.half, H - CORNICE_T, jasper))
+        for (const seg of buildWallSide(face, WALL_INNER, t.half, H - CORNICE_T, jasper))
           city.add(seg);
       }
       for (const gate of GATES) {
         city.add(
-          buildGatePortal(SIDE_FACE[gate.side], gate.offset, innerHalf, t.half, H, trimPlain, pearl),
+          buildGatePortal(SIDE_FACE[gate.side], gate.offset, WALL_INNER, t.half, H, trimPlain, pearl),
         );
       }
       city.add(buildGateInscriptions(t.half));
@@ -896,16 +904,37 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
     // also the terrace pavement of the ledge above). On the crown the SUMMIT
     // floor is the crown mesh itself (sea of glass, cityCollide's claim), so
     // there the slab drops 0.15 (3 m world, imperceptible at the crown band's
-    // 48 m height) to cede the top plane instead of z-fighting it.
+    // 48 m height) to cede the top plane instead of z-fighting it. The
+    // tier-0 slab roofs the whole plaza ring, so it opens rectangular
+    // stairwell slots over the base ascent ramps (ascentModel's holes) —
+    // abutting sub-slabs, one owner per pavement region, no coplanar overlap.
     const corniceDrop = ti === last ? 0.15 : 0;
-    const cornice = new Mesh(
-      new BoxGeometry(2 * t.half + 5, CORNICE_T, 2 * t.half + 5),
-      ivory,
-    );
-    cornice.position.y = yTop - CORNICE_T / 2 - corniceDrop;
-    cornice.castShadow = true;
-    cornice.receiveShadow = true;
-    city.add(cornice);
+    const corniceY = yTop - CORNICE_T / 2 - corniceDrop;
+    const slabHalf = t.half + 2.5;
+    const addSlab = (sx0: number, sx1: number, sz0: number, sz1: number): void => {
+      if (sx1 - sx0 < 0.01 || sz1 - sz0 < 0.01) return;
+      const slab = new Mesh(new BoxGeometry(sx1 - sx0, CORNICE_T, sz1 - sz0), ivory);
+      slab.position.set((sx0 + sx1) / 2, corniceY, (sz0 + sz1) / 2);
+      slab.castShadow = true;
+      slab.receiveShadow = true;
+      city.add(slab);
+    };
+    if (ti === 0) {
+      const holes = baseCorniceHoles(); // one per mirrored base climb, same z-band
+      const hz0 = holes[0].z0;
+      const hz1 = holes[0].z1;
+      addSlab(-slabHalf, slabHalf, -slabHalf, hz0);
+      addSlab(-slabHalf, slabHalf, hz1, slabHalf);
+      const cuts = [...holes].sort((h1, h2) => h1.x0 - h2.x0);
+      let xCursor = -slabHalf;
+      for (const h of cuts) {
+        addSlab(xCursor, h.x0, hz0, hz1);
+        xCursor = h.x1;
+      }
+      addSlab(xCursor, slabHalf, hz0, hz1);
+    } else {
+      addSlab(-slabHalf, slabHalf, -slabHalf, slabHalf);
+    }
 
     // Gold dentil course under the cornice lip.
     for (const face of FACES) {
@@ -952,6 +981,68 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
   glows.receiveShadow = false;
   city.add(glows);
   city.add(instancedOnFaces(dentilGeo, trimInst, dentilPlaces));
+
+  // Processional ascent (ascentModel — interpretive architecture within the
+  // RENDERING-DECISIONS #1 step-mountain, entry #10; deliberately UNCITED and
+  // unpickable): one boustrophedon chain of solid ivory wedge ramps per
+  // mirrored side, each standing proud of the cornice-slab lip so the walker
+  // tops out flush with the pavement. Sloped tops are their own single-owner
+  // planes; the base sinks RAMP_SINK into the supporting slab so no coplanar
+  // seam is exposed (the crown-cornice idiom).
+  for (const r of ascentRamps()) {
+    const zL = Math.min(r.zA, r.zB);
+    const zH = Math.max(r.zA, r.zB);
+    const yb = r.y0 - RAMP_SINK;
+    const sL = rampSurfaceY(r, zL);
+    const sH = rampSurfaceY(r, zH);
+    const v = {
+      B00: [r.x0, yb, zL],
+      B10: [r.x1, yb, zL],
+      B01: [r.x0, yb, zH],
+      B11: [r.x1, yb, zH],
+      S00: [r.x0, sL, zL],
+      S10: [r.x1, sL, zL],
+      S01: [r.x0, sH, zH],
+      S11: [r.x1, sH, zH],
+    };
+    const tris: number[] = [];
+    const quad = (a: number[], b: number[], c: number[], d: number[]): void => {
+      tris.push(...a, ...b, ...c, ...a, ...c, ...d);
+    };
+    quad(v.S00, v.S01, v.S11, v.S10); // sloped walking surface (up)
+    quad(v.B00, v.B10, v.B11, v.B01); // underside (down, sunk into the slab)
+    quad(v.B00, v.B01, v.S01, v.S00); // -x flank
+    quad(v.B10, v.S10, v.S11, v.B11); // +x flank
+    quad(v.B00, v.S00, v.S10, v.B10); // low-z end
+    quad(v.B01, v.B11, v.S11, v.S01); // high-z end
+    if (r.pad) {
+      // solid head-pad platform abutting the wedge head: flat top at the
+      // landing pavement, flush with the cornice lip it meets in x
+      const p = {
+        B00: [r.x0, yb, r.pad.z0],
+        B10: [r.x1, yb, r.pad.z0],
+        B01: [r.x0, yb, r.pad.z1],
+        B11: [r.x1, yb, r.pad.z1],
+        T00: [r.x0, r.y1, r.pad.z0],
+        T10: [r.x1, r.y1, r.pad.z0],
+        T01: [r.x0, r.y1, r.pad.z1],
+        T11: [r.x1, r.y1, r.pad.z1],
+      };
+      quad(p.T00, p.T01, p.T11, p.T10); // top
+      quad(p.B00, p.B10, p.B11, p.B01); // underside
+      quad(p.B00, p.B01, p.T01, p.T00); // -x flank
+      quad(p.B10, p.T10, p.T11, p.B11); // +x flank
+      quad(p.B00, p.T00, p.T10, p.B10); // low-z end
+      quad(p.B01, p.B11, p.T11, p.T01); // high-z end
+    }
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new Float32BufferAttribute(tris, 3));
+    geo.computeVertexNormals();
+    const wedge = new Mesh(geo, ivory);
+    wedge.castShadow = true;
+    wedge.receiveShadow = true;
+    city.add(wedge);
+  }
 
   // Throne glory (2026-07-20, user directive): the discrete glowing sphere is
   // REMOVED — no orb at the summit, here or in the boot backdrop. Rev 21:23's

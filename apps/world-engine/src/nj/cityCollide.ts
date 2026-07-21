@@ -30,6 +30,7 @@
  */
 
 import type { MoveProbe } from '../core/FlyCamera';
+import { ascentRamps, rampSurfaceY } from './ascentModel';
 import {
   CITY_HALF,
   CITY_SUMMIT_Y,
@@ -41,6 +42,7 @@ import {
   GATE_WIDTH,
   PLINTH_HALF,
   TIER_GLASS_PROUD,
+  WALL_INNER,
 } from './cityModel';
 
 /** Lateral clearance kept off every face (0.6 m world at NJ_SCALE 20). */
@@ -53,6 +55,15 @@ const SUBSTEP = 0.05;
 
 const TIER_BOTTOMS = cityTierBottoms();
 const COURSE_SPANS = foundationCourseSpans();
+/** processional ascent ramps (ascentModel — shared with CityMassing).
+ *  zMin/zMax span wedge + head pad; the claim overlap (0.3) bridges the
+ *  base-climb head to its slab-top landing with no unclaimed seam. */
+const RAMPS = ascentRamps().map((r) => ({
+  ...r,
+  zMin: Math.min(r.zA, r.zB, r.pad?.z0 ?? Infinity),
+  zMax: Math.max(r.zA, r.zB, r.pad?.z1 ?? -Infinity),
+}));
+const RAMP_CLAIM_OVERLAP = 0.3;
 /** Outer radial face of the foundation course (103.4 local). */
 const COURSE_OUTER = CITY_HALF + FOUNDATION_COURSE.thick - FOUNDATION_COURSE.inset;
 const COURSE_TOP = FOUNDATION_COURSE.h - FOUNDATION_COURSE.sink;
@@ -64,6 +75,22 @@ export function cityBlockedLocal(x: number, z: number, y: number): boolean {
   const az = Math.abs(z);
   const a = Math.max(ax, az); // Chebyshev radius — everything is square rings
   if (a >= COURSE_OUTER + SKIN) return false;
+  // Ascent wedges + head pads: solid from their base pavement up to the
+  // sloped surface (pads sit at the top height throughout). A body ON the
+  // surface (probe y rides ~1.7 m world above it) stays free; a body
+  // entering the flank below the surface is masonry-blocked.
+  for (const r of RAMPS) {
+    if (
+      x > r.x0 - SKIN &&
+      x < r.x1 + SKIN &&
+      z > r.zMin - SKIN &&
+      z < r.zMax + SKIN &&
+      y >= r.y0 - 0.5 &&
+      y < rampSurfaceY(r, z) - 0.25
+    ) {
+      return true;
+    }
+  }
   if (y >= CITY_TIERS[0].h) {
     // terrace/crown masses: solid squares at the glass plane
     for (let i = 1; i < CITY_TIERS.length; i++) {
@@ -77,8 +104,12 @@ export function cityBlockedLocal(x: number, z: number, y: number): boolean {
   // ---- base tier (extends down to Y_MIN — see module doc) ------------------
   if (a < PLINTH_HALF + SKIN) return true; // solid inner plinth
   const u = ax >= az ? z : x; // tangent coordinate on the dominant face
+  // covered street-of-gold gallery between the plinth and the wall slab —
+  // open space (the plaza-ring assemblies stand here; the base ascent climbs
+  // here). Same WALL_INNER table the massing builds the slab from.
+  if (a < WALL_INNER - SKIN) return false;
   if (a < CITY_HALF + SKIN) {
-    // jasper wall ring — open only inside a gate gap (skin narrows it)
+    // jasper wall slab — open only inside a gate gap (skin narrows it)
     return !GATE_OFFSETS.some((o) => Math.abs(u - o) < GATE_WIDTH / 2 - SKIN);
   }
   // jewelled foundation course outside the wall plane, notched at the gates
@@ -166,6 +197,23 @@ export function cityFloorLocalY(x: number, z: number, maxFloorY: number): number
     if (floor <= maxFloorY && floor > best) best = floor;
   };
   claim(0); // plaza slab
+  // Ascent ramps: the sloped surfaces and head pads walk (y-aware like
+  // every stacked pavement), and each top landing claim bridges the head,
+  // the cornice lip outside the ring-claim boundary, and the next climb's
+  // base. The small claim overlap past the span ends rides the clamped
+  // surface, so the base climb meets its slab-top landing seamlessly.
+  for (const r of RAMPS) {
+    if (
+      x >= r.x0 &&
+      x <= r.x1 &&
+      z >= r.zMin - RAMP_CLAIM_OVERLAP &&
+      z <= r.zMax + RAMP_CLAIM_OVERLAP
+    ) {
+      claim(rampSurfaceY(r, z));
+    }
+    const L = r.land;
+    if (x >= L.x0 && x <= L.x1 && z >= L.z0 && z <= L.z1) claim(L.y);
+  }
   if (a <= PLINTH_HALF && a > CITY_TIERS[1].half) claim(TIER_BOTTOMS[1]); // plinth top
   for (let i = 1; i < CITY_TIERS.length - 1; i++) {
     // terrace-top ring of tier i (the ivory cornice pavement)
