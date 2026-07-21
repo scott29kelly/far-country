@@ -77,7 +77,8 @@ export function formatCitation(c: EntityCitation): string {
 }
 
 const MAX_CARDS = 3;
-const TIER_COLOR: Record<string, string> = {
+/** tier badge palette — shared with the reading key (VisualKeyUI) */
+export const TIER_COLOR: Record<string, string> = {
   clear: '#3f9e63',
   fuzzy: '#b8862d',
   debated: '#b0562d',

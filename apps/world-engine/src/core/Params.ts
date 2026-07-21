@@ -30,6 +30,8 @@ export interface LaasParams {
   audio: boolean;
   /** grounded walk spawn on (?walk=0 keeps legacy fly placement semantics) */
   walk: boolean;
+  /** literal-vs-symbolic reading key visible from boot (?key=1; K toggles) */
+  key: boolean;
 }
 
 function num(v: string | null, fallback: number): number {
@@ -60,6 +62,7 @@ export function parseParams(search: string = window.location.search): LaasParams
     rite: q.get('rite') !== '0',
     audio: q.get('audio') !== '0',
     walk: q.get('walk') !== '0',
+    key: q.get('key') === '1',
   };
 }
 

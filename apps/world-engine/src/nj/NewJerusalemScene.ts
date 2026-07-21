@@ -33,6 +33,7 @@ import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
 import { wrapGroundProbeWithCityFloors, wrapMoveWithCityCollision } from './cityCollide';
 import { buildDwellings } from './Dwellings';
 import { buildEntityPicks, nearestEntityAt, pickEntityAt } from './entityPicks';
+import { keyMarkers } from './keyModel';
 import { buildPopulation } from './Population';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
@@ -249,6 +250,9 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       );
     };
     ctx.hooks.entityNear = (x, y, z) => nearestEntityAt([x, y, z], pickVolumes);
+    // reading-key anchors (M3.5): same owner tables, one marker per cited
+    // slug — VisualKeyUI (core) projects them when the key is toggled on
+    ctx.hooks.entityKeyMarkers = keyMarkers(plazaTopY, terrainAt);
   }
 
   // Spawn on the meadow south of the city, grounded and free to roam (V

@@ -105,10 +105,16 @@ export interface LaasHooks {
   /** the most specific entity near a world position (walk-mode proximity
    *  auto-card) — same registry as entityPick, distance flavor */
   entityNear: ((x: number, y: number, z: number) => EntityPickResult | null) | null;
+  /** in-scene reading-key anchors (roadmap M3.5) — installed by scenes with
+   *  cited content (nj/keyModel.ts builds; VisualKeyUI projects; probes read) */
+  entityKeyMarkers: EntityKeyMarker[];
 }
 
 /** a picked structure: canonical entity slug + in-world label + hit distance */
 export type EntityPickResult = { slug: string; label: string; t: number };
+
+/** a reading-key anchor: canonical entity slug + fallback label + world pos */
+export type EntityKeyMarker = { slug: string; label: string; p: [number, number, number] };
 
 declare global {
   interface Window {
@@ -137,6 +143,7 @@ export function initHooks(): LaasHooks {
     navigationMap: null,
     entityPick: null,
     entityNear: null,
+    entityKeyMarkers: [],
   };
   window.__laas = hooks;
   return hooks;
