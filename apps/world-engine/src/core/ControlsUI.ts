@@ -24,6 +24,7 @@ const KEY_ROWS: Array<[string, string]> = [
   ['Cruise forward', 'C   (Esc stops)'],
   ['Travel speed', '[  ]  or mouse wheel'],
   ['Navigation panel + map', 'N'],
+  ['Literal / symbolic key', 'K'],
   ['Mute sound', 'M'],
   ['Show / hide this card', 'H'],
 ];

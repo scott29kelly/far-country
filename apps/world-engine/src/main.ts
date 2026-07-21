@@ -13,6 +13,7 @@ import { ControlsUI } from './core/ControlsUI';
 import { Engine } from './core/Engine';
 import { FlyCamera } from './core/FlyCamera';
 import { installEntityHud } from './core/EntityHud';
+import { VisualKeyUI } from './core/VisualKeyUI';
 import { initHooks, type CamPose } from './core/Hooks';
 import { NavigationUI } from './core/NavigationUI';
 import { parseCamString, parseParams } from './core/Params';
@@ -138,6 +139,8 @@ async function boot(): Promise<void> {
   new Hud(engine, params);
   // citation card for scenes with cited content (no-ops without the hook)
   if (hooks.entityPick) installEntityHud(engine, hooks, fly);
+  // literal-vs-symbolic reading key (M3.5) — off unless ?key=1; K toggles
+  if (hooks.entityKeyMarkers.length > 0) new VisualKeyUI(engine, hooks, params.key);
 
   hooks.setPose = (p) => fly.setPose(p);
   hooks.getPose = () => fly.getPose();

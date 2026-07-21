@@ -138,6 +138,42 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-20, later-9) READING KEY BUILT (M3.5 CLOSED) — the tier
+discipline is visible in-scene without the inspector.** The roadmap's last
+open M3.5 item (an in-scene literal-vs-symbolic visual key independent of
+the descriptor cards) is live, off by default:
+
+- `src/nj/keyModel.ts` (CPU-pure): twelve world-space marker anchors, one
+  per cited entity slug, built from the same owner tables the geometry /
+  collision / picks consume and placed for legibility from the southern
+  approach. Coverage contract probe-asserted: the marker slug set EQUALS
+  the pick registry's slug set — nothing unpickable gets a marker, nothing
+  pickable is missing, so no marker can exist without a canonical cited
+  entity behind it.
+- `src/core/VisualKeyUI.ts` (DOM-only — zero scene-material changes, so
+  the rendering register and the bloom emissive contract are untouched in
+  either state): K, a bottom-left KEY chip, or `?key=1` toggles floating
+  markers — the canonical entity name plus one colored dot per confidence
+  tier present among its descriptors (fetched from the SAME
+  `/data/entities/*.json` exports the cards consume; nothing authored) —
+  plus a fixed bottom-right legend explaining the four tiers. Markers
+  project per frame with distance fade, and an honesty pass reuses
+  `hooks.entityPick`: when the ray toward an anchor hits a DIFFERENT
+  entity well in front (the temple 11 km behind the city, the street /
+  multitude behind the wall from outside), the marker dims to 0.35 and
+  drops back instead of masquerading as foreground.
+- Wiring: `hooks.entityKeyMarkers` (scene-installed, probe-readable),
+  `Params.key`, ControlsUI key-card row, `tools/shoot.ts --key 1`
+  forwards as the URL param for stills.
+
+Verified: tsc, vite build (re-vendored), `probe-visualkey` (CPU, 8) +
+`probe-visualkey-live` (17: default-off, chip, K both ways, ?key=1 boot,
+12 markers with canonical names + tier dots in canonical colors, 4-row
+legend, occlusion dim, gate stays full) ALL PASS; all 7 standing suites +
+bootui/bootrite re-run ALL PASS. Still: `shots/wip/visualkey-approach.png`.
+Scott's subjective pass owed — legend copy and marker styling are first
+drafts.
+
 **(2026-07-20, later-8) BOOT REFINEMENT + SUMMIT ORB REMOVED FROM THE
 WORLD.** Scott's review of later-7: verse too small and too low, gem
 diamonds pointless, and the AI-still city "a slumped down pile of crap" —
