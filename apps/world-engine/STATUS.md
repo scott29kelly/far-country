@@ -138,6 +138,50 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-21, later) TRACK A SEEDED — the Ezek 45/48 allotment measurements
+are canonical; the dwelling-campus pick is unblocked.** The ESV_API_KEY
+blocker cleared, so the allotment-strip records went in via the pipeline on
+the temple-PoC precedent (ADR 0017/0018, `pipeline/src/far_country/measure/`):
+
+- `measure/allotment.py`: 17 hand-authored records — 5 new zone entities
+  (`holy-district`, `priests-portion`, `levites-portion`, `city-portion`,
+  `ezekiel-city`) plus two Ezek 45:2 records (the 500-cubit sanctuary plot +
+  its 50-cubit open space) attached to the existing `ezekiel-temple` entity,
+  corroborating the ESV's 500-cubit reading of the 42:16-20 precinct
+  (`ezt-precinct-side`). Values are text-native long cubits (the Ezek 40:5
+  convention). Nothing invented: the prince's portion, the tribal strips, and
+  the 45:10-12 capacity/weight standards carry no spatial numbers and are
+  deliberately absent (documented in the module docstring).
+- THE CRUX: the holy district's breadth — ESV prints 20,000 (Septuagint)
+  where the Hebrew reads 10,000, at 45:1, 48:9, and 48:13 (footnotes fetched
+  and verified from the ESV API) — is tiered `debated` with both readings
+  preserved; the render follows the ESV as printed. No NEW ambiguity beyond
+  the known 45:1 crux appeared (48:9/48:13 are the same variant — the ESV's
+  own 48:9 footnote reads "Compare 45:1"), so nothing needed Scott's call.
+- Machinery: `seed_temple` refactored onto a generic `_seed_records`
+  (behavior identical; `SeedOutcome.entities_created` is now an int); new
+  `seed_allotment`; engine-module emission split by slug prefix so
+  `templeMeasurements.gen.ts` stays byte-identical (verified: no git diff)
+  and a new generated `src/nj/allotmentMeasurements.gen.ts` exports `EZA`
+  (17 entries, unconsumed so far). CLI: `far-country measure seed-allotment`;
+  `measure export` now writes measurements.json (105 approved rows) + both
+  modules.
+- Verification: adversarial agent pass against the cached ESV text —
+  17/17 values/tiers/note-claims clean; 2 citation-completeness findings
+  fixed (48:13 added to `eza-holy-district-length`; `ezekiel-city` summary
+  range corrected to 48:15-17). Seeded `--review-status approved` with
+  reviewer notes per the temple precedent. New `pipeline/tests/test_measure.py`
+  (6 cases: well-formedness, crux preservation, idempotent reseed, temple
+  regression, prefix-split exports, pending-not-exported); full pipeline
+  suite 157 passed. Engine `tsc --noEmit` + `vite build` clean.
+- UNBLOCKED next slice: the dwelling-campus entity pick (`entityPicks.ts`)
+  can now cite the canonical Ezek 45:4-5 zone entities (`priests-portion`,
+  `levites-portion`). One GAP to solve when wiring its HUD card:
+  `far-country export`'s per-entity JSON only includes entities holding at
+  least one approved DESCRIPTOR, so the new measurement-only entities do not
+  yet appear in `/data/entities/` — either extend that exporter to embed
+  measurements, or extract + review descriptors for the zones first.
+
 **(2026-07-21) PROCESSIONAL ASCENT BUILT + WALL-ENTOMBMENT FIX — the city
 is climbable on foot, and the plaza multitude is finally visible.** Two
 coupled changes (RENDERING-DECISIONS entry #10):
