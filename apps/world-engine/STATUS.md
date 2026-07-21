@@ -138,6 +138,44 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-21) PROCESSIONAL ASCENT BUILT + WALL-ENTOMBMENT FIX — the city
+is climbable on foot, and the plaza multitude is finally visible.** Two
+coupled changes (RENDERING-DECISIONS entry #10):
+
+- **Ascent.** Two mirrored boustrophedon chains of solid ivory wedge ramps
+  (east + west faces), five climbs each: plaza → plinth top → the three
+  terrace rings → the crown's sea of glass. `src/nj/ascentModel.ts` is the
+  shared owner table (authored z-spans dodge the gate corridors and every
+  worship assembly); CityMassing builds the wedges, flat head pads, and the
+  tier-0 cornice's stairwell slots (the slab roofs the plaza ring — the
+  base climb tops out through it); cityCollide claims the sloped surfaces
+  y-aware and blocks the flanks (mounting happens at a ramp's base end,
+  never mid-slope through masonry). Slopes: 1.4 run/rise on the tier
+  climbs, ~46 deg on the short base climb (the only assembly-and-gate-free
+  span of the plaza ring is the corner run). INTERPRETIVE architecture per
+  entry #10: uncited, unpickable, no reading-key marker (the
+  dwelling-campus precedent). Ivory only — bloom contract untouched.
+- **Wall-entombment fix.** populationModel stations the sixteen plaza-ring
+  assemblies at the plaza-ring centre — but the jasper wall was massed
+  (and collided) as a solid 12-local fill from plinth to wall line, so ALL
+  sixteen assemblies (~5,000 figures) stood inside masonry: invisible,
+  unreachable, and the "plaza crowd" utility cam sat inside the solid too.
+  The wall is now a SLAB at the wall line (`cityModel.WALL_INNER`, matching
+  the entity-pick volume), opening the covered street-of-gold GALLERY;
+  the plaza ring recentres into it (aCenter 94 → 92) and cityCollide opens
+  the same band, so walkers reach the plaza crowds on foot for the first
+  time. Gate portals are correspondingly 4 deep instead of 12.
+
+Verified: tsc; `probe-ascent` (26 checks: chain/table, gate + assembly
+clearances, stairwell-slot coverage, a simulated full walk SE gate → sea
+of glass with no gap/drop/block, flank blocking, gallery regression
+guards) ALL PASS; all 7 standing suites + visualkey CPU/live + entityhud
+live + bootui/bootrite re-run ALL PASS. Walk-speed note: the surface
+claims obey the 3.5 m step rule, so extreme boosted ground speeds
+(> ~200 m/s) stall on the steep base climb rather than fall — graceful,
+revisit only if it annoys. Scott-only: judge the wedges in the hero view,
+the gallery's dim interior lighting, and the ~46-deg base climb in situ.
+
 **(2026-07-20, later-9) READING KEY BUILT (M3.5 CLOSED) — the tier
 discipline is visible in-scene without the inspector.** The roadmap's last
 open M3.5 item (an in-scene literal-vs-symbolic visual key independent of
