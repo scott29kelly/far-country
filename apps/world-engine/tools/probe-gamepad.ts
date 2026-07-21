@@ -382,5 +382,40 @@ const step = (cam: InstanceType<typeof FlyCamera>, frames: number): void => {
   );
 }
 
+// ---- O: a standard-mapping pad wins over a generic-HID sibling ------------
+// Multi-platform pads (and bundled 2.4G receivers) can expose a second
+// generic entry in a LOWER slot than the real XInput device; picking by slot
+// order alone would bind the wrong one.
+{
+  const generic = makePad(''); // generic HID sibling, slot 0
+  const xinput = makePad('standard'); // the real XInput device, slot 1
+  const cam = freshCam(null);
+  cam.gamepad.source = () => [generic, xinput] as unknown as (Gamepad | null)[];
+  cam.setPose({ p: [0, 300, 0], yaw: 0, pitch: 0 });
+  // move ONLY the standard pad's stick — if the generic one were chosen the
+  // camera would not move at all
+  xinput.axes[1] = -1;
+  step(cam, 60);
+  const dist = -cam.getPose().p[2];
+  check(
+    'O1 standard-mapping pad is preferred over a lower-slot generic sibling',
+    dist > 10,
+    `${dist.toFixed(1)} m in 1 s driven by the slot-1 standard pad`,
+  );
+  // and a lone nonstandard pad is still used (fallback, not ignored)
+  const cam2 = freshCam(null);
+  const only = makePad('');
+  cam2.gamepad.source = () => [only] as unknown as (Gamepad | null)[];
+  cam2.setPose({ p: [0, 300, 0], yaw: 0, pitch: 0 });
+  only.axes[1] = -1;
+  step(cam2, 60);
+  const soloDist = -cam2.getPose().p[2];
+  check(
+    'O2 a lone nonstandard pad is still driven (fallback, not ignored)',
+    soloDist > 10,
+    `${soloDist.toFixed(1)} m in 1 s`,
+  );
+}
+
 console.log(failures.length === 0 ? '\nALL PASS' : `\n${failures.length} FAILURE(S): ${failures.join(', ')}`);
 process.exit(failures.length === 0 ? 0 : 1);

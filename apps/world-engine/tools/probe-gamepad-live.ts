@@ -57,7 +57,7 @@ const pose = (): Promise<{ p: number[]; yaw: number }> =>
     return h.getPose();
   });
 /** mutate the fake pad in-page; null clears the slot */
-const setPad = (patch: { axes?: number[]; pressed?: number[] } | null): Promise<void> =>
+const setPad = (patch: { axes?: number[]; pressed?: number[]; mapping?: string } | null): Promise<void> =>
   page.evaluate((p) => {
     const w = window as unknown as { __fakePads: unknown[] };
     if (!p) {
@@ -74,7 +74,7 @@ const setPad = (patch: { axes?: number[]; pressed?: number[] } | null): Promise<
         id: 'Fake Xbox 360 Controller (live probe)',
         index: 0,
         connected: true,
-        mapping: 'standard',
+        mapping: p.mapping ?? 'standard',
         axes: p.axes ?? [0, 0, 0, 0],
         buttons,
         timestamp: performance.now(),
@@ -135,6 +135,59 @@ const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms)
   await wait(400);
   const t = await pill();
   check('L6 PAD hint clears on disconnect', !t.includes('PAD'), `pill "${t}"`);
+}
+
+// ---- 7-10: the dev-only ?padtest=1 diagnostic panel ------------------------
+// (dev server ⇒ import.meta.env.DEV is true; the production bundle
+// dead-code-eliminates the panel, same contract as EditPanel)
+{
+  await page.goto(laasUrl({ scene: args.scene, hud: false, extra: { padtest: '1' } }, base), {
+    waitUntil: 'domcontentloaded',
+  });
+  await page.waitForFunction(() => (window as unknown as { __laas: { ready: boolean } }).__laas?.ready, undefined, {
+    timeout: 180_000,
+  });
+  const panel = (sel: string): Promise<string> =>
+    page.evaluate((s) => document.querySelector(s)?.textContent ?? '', sel);
+
+  await setPad({});
+  await wait(400);
+  check('L7 padtest panel mounts', (await panel('#padtest .pt-head')).includes('GAMEPAD'), 'panel head present');
+  const okVerdict = await panel('#padtest .pt-verdict');
+  check(
+    'L8 standard mapping reads as recognised',
+    okVerdict.includes('standard') && okVerdict.includes('apply as-is'),
+    `verdict "${okVerdict.slice(0, 60)}…"`,
+  );
+
+  // guided capture: press A / B / Y and confirm the recorded indices
+  await page.click('#padtest .pt-btn');
+  for (const index of [0, 1, 3]) {
+    await wait(450); // clear the capture debounce
+    await setPad({ pressed: [index] });
+    await wait(220);
+    await setPad({});
+  }
+  await wait(300);
+  const rows = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('#padtest .pt-cap-row')).map((r) => r.textContent ?? ''),
+  );
+  const captured = rows.filter((r) => r.includes('matches standard'));
+  check(
+    'L9 guided capture records A/B/Y on their standard indices',
+    captured.length >= 3,
+    `${captured.length} rows matched standard — ${captured.slice(0, 3).map((r) => r.trim()).join(' | ')}`,
+  );
+
+  // a generic-HID pad must be called out rather than silently mis-bound
+  await setPad({ mapping: '' });
+  await wait(400);
+  const warn = await panel('#padtest .pt-verdict');
+  check(
+    'L10 nonstandard mapping is flagged, not silently accepted',
+    warn.includes('NONSTANDARD'),
+    `verdict "${warn.slice(0, 60)}…"`,
+  );
 }
 
 await browser.close();

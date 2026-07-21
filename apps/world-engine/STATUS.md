@@ -173,7 +173,7 @@ steer/mode paths the keyboard and mouse use — no second controller.
   exposed and the N panel help gains a pad legend.
 - VERIFIED: new `tools/probe-gamepad.ts` (CPU, walkfling idiom — REAL
   FlyCamera + REAL GamepadInput, injected fake Gamepad; probes may
-  inject `flyCamera.gamepad.source`) 22/22 — deadzone placement, expo
+  inject `flyCamera.gamepad.source`) 28/28 — deadzone placement, expo
   ratio, analog fly/walk pace ratios, trigger threshold, edge-only
   speed steps, Start/Y toggle + ground snap, B/stick-back cruise
   cancel, A jump, disabled stale-edge discipline, cinematic skip,
@@ -186,10 +186,47 @@ steer/mode paths the keyboard and mouse use — no second controller.
   sessions never probe another checkout's :5173. Full battery:
   navigation 11/11, walkfling 8/8, wallcollide 19/19, cityfloors 11/11,
   arrival 11/11, tsc clean, vite build clean. Engine re-vendored into
-  apps/web/public/laas. Real-hardware feel pass with the physical Xbox
-  pad still owed (Scott-only; steer rates and curves are the first
-  knobs if it feels off — PAD_YAW_RATE/PAD_PITCH_RATE in FlyCamera,
-  curves in GamepadInput).
+  apps/web/public/laas. Real-hardware feel pass still owed (Scott-only;
+  steer rates and curves are the first knobs if it feels off —
+  PAD_YAW_RATE/PAD_PITCH_RATE in FlyCamera, curves in GamepadInput).
+
+**(2026-07-20) GAMEPAD DIAGNOSTIC `?padtest=1` — hardware is now
+self-identifying instead of guessed.** Scott's pad is a **GameSir Nova 2
+Lite** (not the Xbox pad the build targeted). Physical layout is
+Xbox-style (A bottom / B right / X left / Y top), so the existing
+bindings are right IF Windows exposes it as XInput. The risk is
+transport-dependent, not layout-dependent: GameSir's own Windows doc
+ties the LED colour to the CONNECTION METHOD (blue = Bluetooth,
+green = 2.4G receiver), and an xpadneo report (issue #608) has the Nova
+2 Lite arriving over Bluetooth on international firmware as a plain
+generic HID gamepad — which on Windows means DirectInput, i.e. Chrome
+`mapping: ""` with shuffled indices and triggers possibly on AXES.
+Wired USB-C or the bundled 2.4G receiver is the reliable XInput path.
+
+Rather than hand-write a remap from a model name, `src/debug/PadTest.ts`
+(dev-only, `?padtest=1`, dead-code-eliminated from the public bundle —
+VERIFIED by grepping dist for `padtest`/`GAMEPAD DIAGNOSTIC`/`pt-verdict`,
+same contract as EditPanel) reads the truth off the attached hardware:
+Chrome's id/mapping/axes/buttons live, the SHAPED values GamepadInput
+produces beside them (so a stick the deadzone is eating is
+distinguishable from a dead stick), plus a guided CAPTURE that walks
+A/B/Y/Start/LB/RB/LT/RT, records which index each actually lands on —
+detecting axis-triggers by baseline deviation — and emits a JSON remap
+report. It polls its OWN GamepadInput instance: poll() consumes rising
+edges, so sharing FlyCamera's would eat the camera's presses.
+
+Also hardened `GamepadInput.poll()`: it now prefers a `standard`-mapping
+pad over any other connected device, falling back to the first connected
+one. Multi-platform pads and their receivers can expose a second
+generic-HID entry in a LOWER slot than the real XInput device, and slot
+order is not quality order. VERIFIED: probe-gamepad 28/28 (adds O1/O2 —
+standard pad wins over a lower-slot generic sibling; a lone nonstandard
+pad is still driven), probe-gamepad-live 10/10 (adds L7-L10 — panel
+mounts, standard verdict, guided capture records A/B/Y on b0/b1/b3,
+nonstandard mapping flagged not silently accepted). Full battery green;
+panel capture shots/wip/padtest-panel.png. STILL OWED: Scott's real-pad
+run — if capture shows nonstandard indices, the remap table goes into
+GamepadInput behind a mapping check.
 
 **(2026-07-18) VIEWPORT-RESIZE "Destroyed texture" RACE ROOT-CAUSED AND
 FIXED — the uncommitted resizeprobe investigation closed.** Resizing the

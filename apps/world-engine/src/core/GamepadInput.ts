@@ -119,12 +119,18 @@ export class GamepadInput {
 
   /** one snapshot per frame — edge fields fire exactly once per press */
   poll(): GamepadFrame {
+    // Prefer a standard-mapping pad over any other connected device: some
+    // controllers (and their bundled receivers) expose a second generic-HID
+    // entry alongside the real XInput one, and a lower slot index does not
+    // mean the better device. Falls back to the first connected pad.
     let pad: Gamepad | null = null;
     for (const p of this.source()) {
-      if (p && p.connected) {
+      if (!p || !p.connected) continue;
+      if (p.mapping === 'standard') {
         pad = p;
         break;
       }
+      if (!pad) pad = p;
     }
     if (!pad) {
       // a held button across a disconnect must not suppress (or fake) the

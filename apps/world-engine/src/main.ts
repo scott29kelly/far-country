@@ -178,6 +178,15 @@ async function boot(): Promise<void> {
     const { initEditPanel } = await import('./debug/EditPanel');
     initEditPanel(engine, params, hooks);
   }
+
+  // dev-only gamepad diagnostic (?padtest=1) — same dead-code-elimination
+  // contract as the edit panel. Multi-platform pads report different ids,
+  // mappings and button indices per mode/transport; this reads the truth off
+  // the attached hardware instead of guessing from the model name.
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('padtest') === '1') {
+    const { initPadTest } = await import('./debug/PadTest');
+    initPadTest(engine);
+  }
 }
 
 boot().catch((e: unknown) => {
