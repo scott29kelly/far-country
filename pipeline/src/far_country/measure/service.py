@@ -1,11 +1,14 @@
 """Seed and export the measurement dataset (ADR 0017).
 
-`seed_temple` upserts the hand-authored Ezekiel temple records into the
-canonical store (idempotent by slug id). `export_measurements` writes
-`data/exports/measurements.json` (approved-only, additive — existing export
-consumers untouched). `emit_engine_module` writes the generated,
-citation-annotated TypeScript module the world engine consumes
-(ADR 0017 decision 3); meters happen in the engine's resolver (ADR 0018).
+`seed_temple` / `seed_allotment` upsert the hand-authored Ezekiel
+records into the canonical store (idempotent by slug id).
+`export_measurements` writes `data/exports/measurements.json`
+(approved-only, additive — existing export consumers untouched).
+`emit_engine_module` / `emit_allotment_module` write the generated,
+citation-annotated TypeScript modules the world engine consumes
+(ADR 0017 decision 3), split by slug prefix (`ezt-` temple, `eza-`
+allotment) so each generated file is stable under the other's growth;
+meters happen in the engine's resolver (ADR 0018).
 """
 
 from __future__ import annotations
@@ -20,7 +23,8 @@ from typing import Any, Final
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from far_country.measure.temple import TEMPLE_ENTITY, TEMPLE_MEASUREMENTS
+from far_country.measure.allotment import ALLOTMENT_ENTITIES, ALLOTMENT_MEASUREMENTS
+from far_country.measure.temple import TEMPLE_ENTITY, TEMPLE_MEASUREMENTS, Record
 from far_country.store.models import Entity, Measurement, MeasurementCitation
 
 SCHEMA_VERSION: Final = "0.1.0"
@@ -47,7 +51,7 @@ def _now() -> str:
 class SeedOutcome:
     inserted: int
     updated: int
-    entity_created: bool
+    entities_created: int
 
 
 def seed_temple(
@@ -57,38 +61,84 @@ def seed_temple(
     reviewer_notes: str | None = None,
 ) -> SeedOutcome:
     """Upsert the temple entity + measurement records. Idempotent by slug id."""
-    now = _now()
-    provenance = json.dumps(
-        {
+    return _seed_records(
+        session,
+        entities=[TEMPLE_ENTITY],
+        measurements=[(TEMPLE_ENTITY["id"], rec) for rec in TEMPLE_MEASUREMENTS],
+        provenance={
             "method": "manual",
             "session": "temple-poc-2026-07-02",
             "source_text": "ESV API (Ezekiel 40-42; 43:13-27)",
-        }
+        },
+        review_status=review_status,
+        reviewer_notes=reviewer_notes,
     )
 
-    entity_created = False
-    if session.get(Entity, TEMPLE_ENTITY["id"]) is None:
-        session.add(
-            Entity(
-                id=TEMPLE_ENTITY["id"],
-                name=TEMPLE_ENTITY["name"],
-                entity_type=TEMPLE_ENTITY["entity_type"],
-                summary=TEMPLE_ENTITY["summary"],
-                created_at=now,
-                updated_at=now,
+
+def seed_allotment(
+    session: Session,
+    *,
+    review_status: str = "pending",
+    reviewer_notes: str | None = None,
+) -> SeedOutcome:
+    """Upsert the allotment zone entities + measurement records.
+
+    Idempotent by slug id. The temple entity is included in the upsert
+    set because the Ezek 45:2 sanctuary-plot records attach to it — the
+    allotment can therefore seed into a store where `seed_temple` has
+    not run.
+    """
+    return _seed_records(
+        session,
+        entities=[*ALLOTMENT_ENTITIES, TEMPLE_ENTITY],
+        measurements=ALLOTMENT_MEASUREMENTS,
+        provenance={
+            "method": "manual",
+            "session": "allotment-track-a-2026-07-21",
+            "source_text": "ESV API (Ezekiel 45:1-6; 48:8-22, 30-35)",
+        },
+        review_status=review_status,
+        reviewer_notes=reviewer_notes,
+    )
+
+
+def _seed_records(
+    session: Session,
+    *,
+    entities: list[dict[str, str]],
+    measurements: list[tuple[str, Record]],
+    provenance: dict[str, str],
+    review_status: str,
+    reviewer_notes: str | None,
+) -> SeedOutcome:
+    """Upsert entities (create-if-missing) + measurement records by slug id."""
+    now = _now()
+    provenance_json = json.dumps(provenance)
+
+    entities_created = 0
+    for ent in entities:
+        if session.get(Entity, ent["id"]) is None:
+            session.add(
+                Entity(
+                    id=ent["id"],
+                    name=ent["name"],
+                    entity_type=ent["entity_type"],
+                    summary=ent["summary"],
+                    created_at=now,
+                    updated_at=now,
+                )
             )
-        )
-        entity_created = True
+            entities_created += 1
 
     inserted = 0
     updated = 0
-    for rec in TEMPLE_MEASUREMENTS:
+    for entity_id, rec in measurements:
         mid, subject, dimension, value, unit, tier, cites, basis, notes = rec
         row = session.get(Measurement, mid)
         if row is None:
             row = Measurement(
                 id=mid,
-                entity_id=TEMPLE_ENTITY["id"],
+                entity_id=entity_id,
                 subject=subject,
                 dimension=dimension,
                 value=float(value),
@@ -98,13 +148,14 @@ def seed_temple(
                 notes=notes,
                 review_status=review_status,
                 reviewer_notes=reviewer_notes,
-                provenance=provenance,
+                provenance=provenance_json,
                 created_at=now,
                 updated_at=now,
             )
             session.add(row)
             inserted += 1
         else:
+            row.entity_id = entity_id
             row.subject = subject
             row.dimension = dimension
             row.value = float(value)
@@ -114,7 +165,7 @@ def seed_temple(
             row.notes = notes
             row.review_status = review_status
             row.reviewer_notes = reviewer_notes
-            row.provenance = provenance
+            row.provenance = provenance_json
             row.updated_at = now
             for old in list(row.citations):
                 session.delete(old)
@@ -134,7 +185,7 @@ def seed_temple(
                 )
             )
     session.commit()
-    return SeedOutcome(inserted=inserted, updated=updated, entity_created=entity_created)
+    return SeedOutcome(inserted=inserted, updated=updated, entities_created=entities_created)
 
 
 def _cite_dict(c: MeasurementCitation) -> dict[str, Any]:
@@ -154,13 +205,15 @@ def _ref_str(c: MeasurementCitation) -> str:
     return ref
 
 
-def _approved_measurements(session: Session) -> list[Measurement]:
+def _approved_measurements(session: Session, *, id_prefix: str | None = None) -> list[Measurement]:
     stmt = (
         select(Measurement)
         .options(selectinload(Measurement.citations))
         .where(Measurement.review_status == "approved")
         .order_by(Measurement.entity_id, Measurement.id)
     )
+    if id_prefix is not None:
+        stmt = stmt.where(Measurement.id.startswith(id_prefix))
     return list(session.scalars(stmt).unique())
 
 
@@ -193,25 +246,65 @@ def export_measurements(session: Session, out_dir: Path) -> Path:
 
 
 def emit_engine_module(session: Session, out_path: Path) -> Path:
-    """Write the generated TS module the world engine consumes.
+    """Write the generated temple TS module the world engine consumes.
 
     Each record carries the text-native value/unit, the long-cubit
     realization (`cu`, per Ezek 40:5's reed and the ADR 0018 unit table;
     null for counts), and its reference — so geometry code that reads
     `EZT['ezt-gate-length']` is one hop from Ezekiel 40:15.
     """
-    rows = _approved_measurements(session)
+    return _emit_module(
+        session,
+        out_path,
+        id_prefix="ezt-",
+        interface_name="TempleMeasurement",
+        const_name="EZT",
+        description_lines=[
+            " * The Ezekiel temple measurement dataset (ADR 0017), text-native",
+            " * values with their long-cubit realization. Meters happen in",
+            " * templeModel.ts via LONG_CUBIT_M (ADR 0018). Every entry cites",
+            " * the ESV verse it came from; tiers per docs/data-model.md.",
+        ],
+    )
+
+
+def emit_allotment_module(session: Session, out_path: Path) -> Path:
+    """Write the generated allotment TS module (Ezek 45/48, slug prefix eza-)."""
+    return _emit_module(
+        session,
+        out_path,
+        id_prefix="eza-",
+        interface_name="AllotmentMeasurement",
+        const_name="EZA",
+        description_lines=[
+            " * The Ezekiel 45/48 holy-allotment measurement dataset (ADR 0017,",
+            " * Track A): the holy district, priests'/Levites' portions, city",
+            " * strip, and Ezekiel's city, text-native values with their",
+            " * long-cubit realization. Meters happen at consumption via",
+            " * LONG_CUBIT_M (ADR 0018). Every entry cites the ESV verse it",
+            " * came from; tiers per docs/data-model.md.",
+        ],
+    )
+
+
+def _emit_module(
+    session: Session,
+    out_path: Path,
+    *,
+    id_prefix: str,
+    interface_name: str,
+    const_name: str,
+    description_lines: list[str],
+) -> Path:
+    rows = _approved_measurements(session, id_prefix=id_prefix)
     lines: list[str] = [
         "/**",
         " * GENERATED by `far-country measure export` - DO NOT EDIT.",
         " *",
-        " * The Ezekiel temple measurement dataset (ADR 0017), text-native",
-        " * values with their long-cubit realization. Meters happen in",
-        " * templeModel.ts via LONG_CUBIT_M (ADR 0018). Every entry cites",
-        " * the ESV verse it came from; tiers per docs/data-model.md.",
+        *description_lines,
         " */",
         "",
-        "export interface TempleMeasurement {",
+        f"export interface {interface_name} {{",
         "  /** the number as the text gives it */",
         "  value: number;",
         "  unit: string;",
@@ -222,7 +315,7 @@ def emit_engine_module(session: Session, out_path: Path) -> Path:
         "  tier: string;",
         "}",
         "",
-        "export const EZT: Record<string, TempleMeasurement> = {",
+        f"export const {const_name}: Record<string, {interface_name}> = {{",
     ]
     for m in rows:
         factor = UNIT_TO_LONG_CUBITS.get(m.unit)
