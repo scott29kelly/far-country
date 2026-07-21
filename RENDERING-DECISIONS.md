@@ -451,3 +451,49 @@ Both reasons point the same direction, so the engine's default terrain is used a
 - Code: `apps/world-engine/src/audio/Ambience.ts`,
   `apps/world-engine/src/main.ts` (NJ-only literal branch, arrive/update
   wiring)
+
+## Entry #10 — Processional ascent: interpretive ramps within the step-mountain form
+
+- **Date:** 2026-07-21
+- **Tier:** none — ILLUSTRATIVE architecture inside the entry #1
+  `debated`-tier step-mountain form. Recorded because the ramps add visible
+  massing to the city and must never be mistaken for a cited feature.
+- **Question:** A walker could reach the street-of-gold plaza through the
+  gates (M3.2) but every higher pavement — plinth top, terrace rings, the
+  crown's sea of glass — was reachable only by switching to fly. How does
+  the city become traversable on foot without inventing a cited stair?
+- **Decision:** two mirrored boustrophedon chains of solid ivory wedge
+  ramps (east and west faces), five climbs each, plaza → plinth → terraces
+  → crown (`apps/world-engine/src/nj/ascentModel.ts`). Scripture describes
+  the city's height (Rev 21:16) but no stair or ramp; ziggurat-style
+  processional ramps are the natural circulation of the step-pyramid form
+  entry #1 already adopted from Willis's artwork, so the ascent is carried
+  as part of that same interpretive decision. The ramps are deliberately
+  UNPICKABLE — clicking one cites nothing (the dwelling-campus precedent:
+  no canonical entity may be invented for them) — and the reading key
+  (M3.5) ignores them for the same reason.
+- **Guardrails:** every placement derives from the shared cityModel tables
+  and dodges the gate corridors and every worship assembly
+  (probe-asserted, `tools/probe-ascent.ts`, including a simulated full
+  walk from the southeast gate to the sea of glass); no new emissive
+  material (ivory pavement — the bloom contract is untouched); the sloped
+  tops are single-owner planes under the later-6 z-fight rule.
+- **Correction shipped with this entry:** the jasper wall was previously
+  modelled (and collided) as a solid 12-local-deep fill from the plinth to
+  the wall line, which entombed all sixteen plaza-ring worship assemblies
+  in masonry — invisible and unreachable. The wall is now a slab at the
+  wall line (`WALL_INNER`), opening the covered street-of-gold gallery
+  where those assemblies stand; Rev 21:18 gives the wall's material and
+  Rev 21:17 its height-or-thickness measure (144 cubits, held per entry
+  #6's scale posture), but Scripture does not give the wall's depth
+  profile, so the slab-vs-fill choice is illustrative massing.
+
+### Governing sources
+
+- Entry #1 (step-mountain form, `debated`); entry #8 (uncited-content
+  precedent). Rev 21:16-18 for what IS cited about the structure.
+- Code: `apps/world-engine/src/nj/ascentModel.ts`,
+  `src/nj/CityMassing.ts` (wedges, pads, cornice stairwell slots, wall
+  slab), `src/nj/cityCollide.ts` (surface claims, flank blocks, gallery),
+  `src/nj/populationModel.ts` (plaza ring recentred into the gallery),
+  `tools/probe-ascent.ts`

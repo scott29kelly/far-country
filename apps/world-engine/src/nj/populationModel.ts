@@ -37,13 +37,13 @@
  */
 
 import {
-  CITY_HALF,
   CITY_SUMMIT_Y,
   CITY_TIERS,
   cityTierBottoms,
   GATE_OFFSETS,
   PLINTH_HALF,
   RIVER,
+  WALL_INNER,
   type Side,
 } from './cityModel';
 import { NJ_SCALE } from './rimModel';
@@ -118,8 +118,11 @@ const SIDES: readonly Side[] = ['north', 'east', 'south', 'west'];
 export function multitudeAssemblies(): AssemblyStation[] {
   const bottoms = cityTierBottoms();
   const out: AssemblyStation[] = [];
-  // plaza ring: between the plinth (88) and the wall (100) — centre 94
-  const plazaA = (PLINTH_HALF + CITY_HALF) / 2;
+  // plaza ring: the covered street-of-gold gallery between the plinth (88)
+  // and the wall SLAB's inner face (WALL_INNER) — centre 92. The old centre
+  // (94, mid to the wall LINE) sat inside the wall fill the massing used to
+  // build, entombing all sixteen plaza assemblies in masonry.
+  const plazaA = (PLINTH_HALF + WALL_INNER) / 2;
   for (const side of SIDES) {
     for (const u of [-75, -25, 25, 75]) {
       out.push({ side, u, aCenter: plazaA, r: 2.5, floor: 0, spacing: 0.2 });

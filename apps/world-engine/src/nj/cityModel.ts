@@ -43,6 +43,17 @@ export const GATE_WIDTH = 8;
 export const GATE_HEIGHT = 16;
 export const GATE_OFFSETS = [-50, 0, 50] as const;
 
+/**
+ * Inner face of the jasper wall SLAB. The wall used to be modelled (and
+ * collided) as a solid 12-deep fill from the plinth to the wall line, which
+ * entombed the sixteen plaza-ring worship assemblies populationModel
+ * stations at its centre; the band between the plinth face and this line is
+ * the covered street-of-gold GALLERY — open space under the tier-0 cornice,
+ * where the plaza multitude stands and the base ascent climbs. Matches the
+ * entity pick volume's wall slab (entityPicks' ±4 about the wall line).
+ */
+export const WALL_INNER = 96;
+
 export type Side = 'north' | 'south' | 'east' | 'west';
 
 export const SIDE_COMPASS: Record<Side, string> = {
