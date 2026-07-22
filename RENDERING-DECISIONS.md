@@ -403,6 +403,19 @@ Both reasons point the same direction, so the engine's default terrain is used a
   invented place-names (USER-REFS #6 shows "ZADOKSBURG / LEVITESVILLE") are
   EXCLUDED from this milestone; invented proper names are a materially larger
   posture risk needing their own decision when M3.4 wayfinding lands.
+- **Addendum (2026-07-21):** the "queued follow-up" above is partially
+  discharged. Track A seeded the Ezek 45/48 allotment measurements into the
+  canonical store (`priests-portion`, `levites-portion` among the new zone
+  entities), and the campus now PICKS at zone level: two pick volumes and two
+  reading-key markers derive from the band tables (extracted to
+  `campusModel.ts` so builder, picks, and key share one owner table), and the
+  HUD card renders the zones' cited measurement records. The guardrail holds
+  — the zones are cited, individual buildings still assert nothing. What
+  remains of the follow-up: the builder itself does not yet consume the
+  generated `allotmentMeasurements.gen.ts` (EZA) module, so the band split's
+  proportions are STILL uncited art direction; the resolver-driven proportion
+  pass (Phase B config work) is the point at which this entry gets its
+  successor.
 
 ### Governing sources
 

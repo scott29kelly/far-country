@@ -138,6 +138,54 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-21, later-2) DWELLING-CAMPUS PICK WIRED — M3.4's last gap
+closes; measurement-backed entity cards land.** The Track A follow-on
+slice: the campus bands are now cited, clickable zone entities.
+
+- Pipeline (export schema 0.1.0 → 0.2.0, additive): per-entity JSON now
+  embeds approved `measurements` (with inline citations), and an entity
+  qualifies for export with measurements alone — the six measurement-backed
+  entities (`priests-portion`, `levites-portion`, `holy-district`,
+  `city-portion`, `ezekiel-city`, `ezekiel-temple`) now export to
+  `/data/entities/`. canonical.json stays descriptor-driven (the browse
+  index does not list measurement-only entities yet — a Phase 2 UI call for
+  later). Descriptor-only entity files round-trip byte-identical (no
+  `measurements` key emitted when empty). 5 new exporter tests; suite 162.
+- DATA-TRACKING FIX: the 2026-07-18 claim that `/data/entities/*.json` was
+  "tracked via git add -f like /laas" was NOT true — git carried zero files
+  under `apps/web/public/data/`, so prod HUD/key fetches had nothing to be
+  served from. This slice actually commits the export set (canonical.json,
+  manifest.json, 269 entity files, ~1.3 MB; embeddings.json stays
+  untracked). Verified before committing: zero citation `quote` fields —
+  statements + references only, ADR 0006 clean.
+- Engine: `src/nj/campusModel.ts` extracts the Dwellings band tables into a
+  pure shared owner module (Dwellings.ts imports it; layout numbers
+  unchanged). `entityPicks.ts` adds three zone volumes — the priests' band
+  as TWO strips flanking the cleared meridian lane so a ray down the
+  city→temple axis still reaches the temple compound (probe case B15), the
+  Levites' band as one (its generous vertical span absorbs the heightAtCpu
+  edge-clamp beyond the mirror). `keyModel.ts` adds the two markers (12 →
+  14 anchors). `EntityHud.ts` renders measurement cards — subject,
+  "25,000 long cubits" display grammar, tier badge, citation chips, and
+  the notes surfaced for non-clear tiers so the MT/LXX breadth crux stays
+  legible on the holy-district card. `VisualKeyUI.ts` tier dots span
+  descriptors + measurements.
+- Verification: probes entitypick (+B13/B14/B15/N6, C generalized to
+  descriptor-or-measurement grounding), visualkey (C1 likewise),
+  visualkey-live (14 anchors) updated; NEW standing member
+  `tools/probe-campus-live.ts` (live: both bands pick, meridian lane
+  reaches the temple, and the clicked card renders The Priests' Portion
+  with long-cubit values, clear badges, and Ezek 45:3/48:10 chips). Full
+  battery green: entitypick, visualkey, population, cityfloors, walkfling,
+  wallcollide, ascent (CPU) + visualkey-live, entityhud-live, campus-live,
+  navigation, arrival, bootui, bootrite (live). tsc clean, build clean,
+  engine re-vendored. Still: shots/wip/campus-pick-key.png (key on over
+  the bands — canonical names + clear-tier dots render from the real
+  exports).
+- Scott-owed: reading-key styling pass now covers 14 markers; the campus
+  card copy; whether the browse index should list measurement-only
+  entities.
+
 **(2026-07-21, later) TRACK A SEEDED — the Ezek 45/48 allotment measurements
 are canonical; the dwelling-campus pick is unblocked.** The ESV_API_KEY
 blocker cleared, so the allotment-strip records went in via the pipeline on
