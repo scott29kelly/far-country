@@ -1,0 +1,27 @@
+{
+  "id": "word-of-god",
+  "name": "The Word of God",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "611947f5-e5c4-4490-9065-0bef60b51583",
+      "statement": "Christ is called The Word of God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4475de74-558b-43ac-b9a0-dd9ac821052f",
+          "descriptor_id": "611947f5-e5c4-4490-9065-0bef60b51583",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 13,
+          "verse_end": 13
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

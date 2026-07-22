@@ -1,0 +1,27 @@
+{
+  "id": "lamb-as-shepherd",
+  "name": "The Lamb as Shepherd",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "64c8fd48-5d46-4c1d-b26f-4456befde22d",
+      "statement": "The Lamb in the midst of the throne will be the shepherd of the redeemed.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "3d923c26-ea5f-4099-a26b-64ea2cbffdaf",
+          "descriptor_id": "64c8fd48-5d46-4c1d-b26f-4456befde22d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 17,
+          "verse_end": 17
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

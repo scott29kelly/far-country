@@ -1,0 +1,27 @@
+{
+  "id": "redeemed-kingdom-priests",
+  "name": "Redeemed as Kingdom and Priests",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d3e4a085-ae5e-4b93-87e2-36b064da759e",
+      "statement": "The redeemed are made a kingdom and priests to God and shall reign on the earth.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c8b995bb-610f-4e5e-9d54-7b4e2b9d284a",
+          "descriptor_id": "d3e4a085-ae5e-4b93-87e2-36b064da759e",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

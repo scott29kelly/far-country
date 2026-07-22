@@ -1,0 +1,27 @@
+{
+  "id": "gods-throne",
+  "name": "God's Throne",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "c6b10f32-d8a3-49b8-8573-f474c7cda9d6",
+      "statement": "God's throne is the central location around which angels, elders, living creatures, and the redeemed are gathered.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "eefa2713-da01-4218-ab3b-80a966bfa323",
+          "descriptor_id": "c6b10f32-d8a3-49b8-8573-f474c7cda9d6",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 9,
+          "verse_end": 17
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

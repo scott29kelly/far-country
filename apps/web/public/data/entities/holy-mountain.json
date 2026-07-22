@@ -1,0 +1,27 @@
+{
+  "id": "holy-mountain",
+  "name": "God's Holy Mountain",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "5fc25b86-b18c-4e1a-85c9-6f284aad7d0a",
+      "statement": "The whole territory of God's holy mountain is most holy.",
+      "tier": "symbolic",
+      "symbolic_referent": "The pervasive holiness of God's eternal dwelling, the heavenly Mount Zion",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "849d7553-1865-40d7-8585-16e2df8bcbc7",
+          "descriptor_id": "5fc25b86-b18c-4e1a-85c9-6f284aad7d0a",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "everlasting-joy",
+  "name": "Everlasting Joy of Zion",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d8b5fe0e-5f19-497e-a6a3-59b8365d208a",
+      "statement": "God makes his city majestic forever, a joy from age to age.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "03fddc4e-b01b-4e3d-b6a2-d95b7841555d",
+          "descriptor_id": "d8b5fe0e-5f19-497e-a6a3-59b8365d208a",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

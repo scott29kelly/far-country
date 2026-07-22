@@ -1,0 +1,45 @@
+{
+  "id": "one-on-the-throne",
+  "name": "One Seated on the Throne",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6dae711d-1ba3-4e2e-8035-16af6e4fb52c",
+      "statement": "God who sits on the throne lives forever and ever.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "b21b6d58-0937-457b-b866-c203e1e7517b",
+          "descriptor_id": "6dae711d-1ba3-4e2e-8035-16af6e4fb52c",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 9,
+          "verse_end": 10
+        }
+      ]
+    },
+    {
+      "id": "f0995a09-097e-4937-8cc3-a251b10cd725",
+      "statement": "The one seated on the throne has the appearance of jasper and carnelian.",
+      "tier": "symbolic",
+      "symbolic_referent": "God the Father's radiant glory and majesty",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "633015e6-c9ac-4670-a8c5-070b5bc6418c",
+          "descriptor_id": "f0995a09-097e-4937-8cc3-a251b10cd725",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 3,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

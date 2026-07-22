@@ -1,0 +1,27 @@
+{
+  "id": "angels-in-heaven",
+  "name": "Angels in Heaven",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "2dbd6c7c-1570-4222-ab37-5c1288e098d5",
+      "statement": "Angels dwell in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "be3f7446-3133-44e1-a15d-10b38951dd5d",
+          "descriptor_id": "2dbd6c7c-1570-4222-ab37-5c1288e098d5",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 30,
+          "verse_end": 30
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

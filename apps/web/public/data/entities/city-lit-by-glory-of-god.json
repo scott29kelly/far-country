@@ -1,0 +1,27 @@
+{
+  "id": "city-lit-by-glory-of-god",
+  "name": "City Lit by the Glory of God",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a0495d11-2986-4d85-9146-5cf5f22c5e40",
+      "statement": "The city has no need of sun or moon, for the glory of God gives it light, and its lamp is the Lamb.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "eaf9d7de-ac35-409f-ab21-4beed952014e",
+          "descriptor_id": "a0495d11-2986-4d85-9146-5cf5f22c5e40",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 23,
+          "verse_end": 23
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

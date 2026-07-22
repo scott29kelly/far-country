@@ -1,0 +1,45 @@
+{
+  "id": "shaking-of-heaven-and-earth",
+  "name": "Final Shaking of Heaven and Earth",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "aae1fc9f-ffee-4e10-af33-cd14ea765b70",
+      "statement": "God has promised to shake not only the earth but also the heavens once more.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "10836e0d-efed-41fa-8370-5403123811d1",
+          "descriptor_id": "aae1fc9f-ffee-4e10-af33-cd14ea765b70",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 26,
+          "verse_end": 27
+        }
+      ]
+    },
+    {
+      "id": "0550882b-580a-4f37-b45a-3bf5983a7f3e",
+      "statement": "The final shaking will remove created things that can be shaken so that the unshakable things remain.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "65ff6ac9-b894-43a1-af4a-dc27fbdcf02d",
+          "descriptor_id": "0550882b-580a-4f37-b45a-3bf5983a7f3e",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 27,
+          "verse_end": 27
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

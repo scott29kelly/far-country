@@ -1,0 +1,27 @@
+{
+  "id": "image-of-the-man-of-heaven",
+  "name": "Image of the Man of Heaven",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "be423939-2e85-407e-9564-bec656bfd90d",
+      "statement": "Resurrected believers will bear the image of the man of heaven (Christ).",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "23be11ba-ae7b-4e04-93ef-b01ce986a4de",
+          "descriptor_id": "be423939-2e85-407e-9564-bec656bfd90d",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 49,
+          "verse_end": 49
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

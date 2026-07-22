@@ -1,0 +1,27 @@
+{
+  "id": "lord-as-everlasting-light",
+  "name": "The LORD as Everlasting Light",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d393bcf0-e8e0-4667-b602-7764fa86a424",
+      "statement": "The sun and moon no longer give light, for the LORD himself is the everlasting light of his people.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "4be5186e-3996-46bf-b4e8-d4092848b6f0",
+          "descriptor_id": "d393bcf0-e8e0-4667-b602-7764fa86a424",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 19,
+          "verse_end": 20
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "seeing-the-lord",
+  "name": "Seeing the Lord",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "62055660-a22b-4227-8c45-6e07aeea92b0",
+      "statement": "Holiness is necessary to see the Lord.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "cb6604ad-27e0-4277-8f37-3c8dc294f9da",
+          "descriptor_id": "62055660-a22b-4227-8c45-6e07aeea92b0",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

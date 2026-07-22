@@ -1,0 +1,27 @@
+{
+  "id": "presence-with-christ",
+  "name": "Presence With Christ",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "de7540eb-c4eb-4e3a-9ebe-b48b0d8044cf",
+      "statement": "Believers will be with Jesus in the place where he is.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "e1a4ede9-cf84-47ef-85c0-daa5fdfda23d",
+          "descriptor_id": "de7540eb-c4eb-4e3a-9ebe-b48b0d8044cf",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 3,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

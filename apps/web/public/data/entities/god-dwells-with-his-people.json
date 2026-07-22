@@ -1,0 +1,27 @@
+{
+  "id": "god-dwells-with-his-people",
+  "name": "God Dwelling with His People",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "cf170b78-3a73-4196-99a3-cd11523d260f",
+      "statement": "God dwells in the midst of his people forever.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "7fcb6b79-47c3-44a3-9626-d32b5ce4381d",
+          "descriptor_id": "cf170b78-3a73-4196-99a3-cd11523d260f",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 7,
+          "verse_end": 9
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

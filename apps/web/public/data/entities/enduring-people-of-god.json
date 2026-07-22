@@ -1,0 +1,27 @@
+{
+  "id": "enduring-people-of-god",
+  "name": "Enduring People of God",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4ff07844-9393-4e56-bec4-145b47a3cdb5",
+      "statement": "The offspring and name of the LORD's people will remain enduringly before him, just as the new heavens and new earth remain.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "6bc6cea4-c564-410e-b61c-0b939b13994e",
+          "descriptor_id": "4ff07844-9393-4e56-bec4-145b47a3cdb5",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

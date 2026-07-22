@@ -1,0 +1,27 @@
+{
+  "id": "jesus-the-way",
+  "name": "Jesus the Way to the Father",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4a87ba12-93b8-4d49-a0c4-672390efaebd",
+      "statement": "Jesus is the only way to come to the Father.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "7193f87c-534f-48cd-b487-20e95c433102",
+          "descriptor_id": "4a87ba12-93b8-4d49-a0c4-672390efaebd",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

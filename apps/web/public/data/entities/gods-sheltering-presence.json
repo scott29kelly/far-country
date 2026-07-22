@@ -1,0 +1,27 @@
+{
+  "id": "gods-sheltering-presence",
+  "name": "God's Sheltering Presence",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "cfe15436-c566-4d45-b502-048e6627c999",
+      "statement": "He who sits on the throne shelters the redeemed with his presence.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "3ba86ab3-6bd1-4130-a0ca-99ff2b97302e",
+          "descriptor_id": "cfe15436-c566-4d45-b502-048e6627c999",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 15,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "new-heaven-and-new-earth",
+  "name": "New Heaven and New Earth",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d4b8c19b-0785-468d-8dff-0f3c360665a3",
+      "statement": "There will be a new heaven and a new earth, replacing the first heaven and first earth which will have passed away.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "2a252e10-46ad-4c16-bb6c-7bdcfc53cd5d",
+          "descriptor_id": "d4b8c19b-0785-468d-8dff-0f3c360665a3",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

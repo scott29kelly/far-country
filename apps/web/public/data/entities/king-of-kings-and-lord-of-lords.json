@@ -1,0 +1,27 @@
+{
+  "id": "king-of-kings-and-lord-of-lords",
+  "name": "King of Kings and Lord of Lords",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8fe7de8b-ac86-475b-b484-873b05457f08",
+      "statement": "Christ bears the name 'King of kings and Lord of lords' on his robe and on his thigh.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "098b886d-8c02-4915-a28d-b5ea07716843",
+          "descriptor_id": "8fe7de8b-ac86-475b-b484-873b05457f08",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 16,
+          "verse_end": 16
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

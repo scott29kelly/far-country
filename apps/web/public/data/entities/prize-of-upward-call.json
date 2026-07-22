@@ -1,0 +1,27 @@
+{
+  "id": "prize-of-upward-call",
+  "name": "Prize of the Upward Call",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "276bc910-7831-44b7-b03d-4284960d519c",
+      "statement": "There is a prize of the upward call of God in Christ Jesus for which believers press on.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "94ae2e23-c912-4813-b44b-fd5a96c7dc6a",
+          "descriptor_id": "276bc910-7831-44b7-b03d-4284960d519c",
+          "source_type": "scripture",
+          "book": "Philippians",
+          "chapter": 3,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

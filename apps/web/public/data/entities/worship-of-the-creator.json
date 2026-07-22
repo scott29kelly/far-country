@@ -1,0 +1,27 @@
+{
+  "id": "worship-of-the-creator",
+  "name": "Worship of God as Creator",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6898edf2-5a90-4d6c-a7af-235a7470d553",
+      "statement": "The elders declare that the Lord God is worthy to receive glory, honor, and power because He created all things and by His will they existed and were created.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "a78a63cf-422f-4cb6-9af9-85a84b2a5e8f",
+          "descriptor_id": "6898edf2-5a90-4d6c-a7af-235a7470d553",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

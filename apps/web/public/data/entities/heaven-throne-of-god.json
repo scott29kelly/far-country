@@ -1,0 +1,27 @@
+{
+  "id": "heaven-throne-of-god",
+  "name": "Heaven as God's Throne",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "0b3f851e-3fea-486d-880e-12687e673971",
+      "statement": "Heaven is the throne of God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "20bfe5f9-e153-4246-95d9-7bae35fd006d",
+          "descriptor_id": "0b3f851e-3fea-486d-880e-12687e673971",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 34,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

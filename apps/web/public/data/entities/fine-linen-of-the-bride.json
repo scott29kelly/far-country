@@ -1,0 +1,27 @@
+{
+  "id": "fine-linen-of-the-bride",
+  "name": "Fine Linen of the Bride",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a130464e-d9e3-4bdd-bcda-2b6dca675070",
+      "statement": "The Bride is clothed in fine linen, bright and pure, which represents the righteous deeds of the saints.",
+      "tier": "symbolic",
+      "symbolic_referent": "The righteous deeds of the saints, explicitly identified by the text.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "27e90b51-a044-4718-a909-7049eac1e5b1",
+          "descriptor_id": "a130464e-d9e3-4bdd-bcda-2b6dca675070",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 8,
+          "verse_end": 8
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

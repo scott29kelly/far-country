@@ -1,0 +1,63 @@
+{
+  "id": "new-heavens-and-new-earth",
+  "name": "New Heavens and New Earth",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "889b71cb-3ad0-48df-930b-3cb1b7285d68",
+      "statement": "God creates new heavens and a new earth.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "37984e72-72e4-4b26-9e03-fd932bc02a4b",
+          "descriptor_id": "889b71cb-3ad0-48df-930b-3cb1b7285d68",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "031ab679-43e1-458a-8103-a88c0a7710fa",
+      "statement": "The LORD will make new heavens and a new earth that shall remain before him.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "a8ec9a7d-e8fe-44b5-891a-c2913302e915",
+          "descriptor_id": "031ab679-43e1-458a-8103-a88c0a7710fa",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    },
+    {
+      "id": "c544242c-0e4c-4f35-bedf-265e78a3d01c",
+      "statement": "Believers await new heavens and a new earth, promised by God, in which righteousness dwells.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "42f1afc8-8c8f-40b5-a432-b7e42a89ca74",
+          "descriptor_id": "c544242c-0e4c-4f35-bedf-265e78a3d01c",
+          "source_type": "scripture",
+          "book": "2 Peter",
+          "chapter": 3,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

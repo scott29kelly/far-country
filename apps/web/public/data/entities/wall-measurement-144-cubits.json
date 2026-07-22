@@ -1,0 +1,27 @@
+{
+  "id": "wall-measurement-144-cubits",
+  "name": "Wall of 144 Cubits",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "c8f6232b-b4ff-4c3b-88f9-a9c11e5c5cda",
+      "statement": "The wall of the city measures 144 cubits by human measurement, which is also an angel's measurement.",
+      "tier": "symbolic",
+      "symbolic_referent": "The squared number of the tribes/apostles (12x12), signifying the completeness of God's people.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "58e12037-a6ff-4e4b-9eb6-75bc93796d1e",
+          "descriptor_id": "c8f6232b-b4ff-4c3b-88f9-a9c11e5c5cda",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 17,
+          "verse_end": 17
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

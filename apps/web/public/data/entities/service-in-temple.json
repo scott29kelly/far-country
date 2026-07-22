@@ -1,0 +1,27 @@
+{
+  "id": "service-in-temple",
+  "name": "Service in God's Temple",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d61d8485-a69d-4b04-b573-74683d36709c",
+      "statement": "The redeemed serve God day and night in his temple.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "78bce5c1-b3fb-4372-975e-3b5129ab53ce",
+          "descriptor_id": "d61d8485-a69d-4b04-b573-74683d36709c",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 15,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

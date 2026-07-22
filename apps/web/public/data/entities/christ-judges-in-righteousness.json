@@ -1,0 +1,27 @@
+{
+  "id": "christ-judges-in-righteousness",
+  "name": "Christ Judges in Righteousness",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "2d8b7d40-1c15-4021-a0bb-6407d06015ab",
+      "statement": "Christ judges and makes war in righteousness.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "7f40d7c7-d2a7-4670-9765-47a97bba36cd",
+          "descriptor_id": "2d8b7d40-1c15-4021-a0bb-6407d06015ab",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

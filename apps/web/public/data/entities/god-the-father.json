@@ -1,0 +1,63 @@
+{
+  "id": "god-the-father",
+  "name": "God the Father",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "90d64e2b-0384-41f1-842d-eea6d23da67f",
+      "statement": "God, the judge of all, is present in the heavenly assembly.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "56bb1615-672a-4e0f-ab19-93bca2c1e9a7",
+          "descriptor_id": "90d64e2b-0384-41f1-842d-eea6d23da67f",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 23,
+          "verse_end": 23
+        }
+      ]
+    },
+    {
+      "id": "d5b88c20-7443-438d-bdf3-6e38acd340e8",
+      "statement": "God now warns from heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "8c668a16-53cf-42c1-aeab-63e0e39432b4",
+          "descriptor_id": "d5b88c20-7443-438d-bdf3-6e38acd340e8",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 25,
+          "verse_end": 25
+        }
+      ]
+    },
+    {
+      "id": "fe71df27-eec2-46af-8ac0-c81dd328a55f",
+      "statement": "God is a consuming fire.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "8ac82cc9-7dc8-4722-87b3-418ca7e319b9",
+          "descriptor_id": "fe71df27-eec2-46af-8ac0-c81dd328a55f",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 29,
+          "verse_end": 29
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "holiness-of-gods-name",
+  "name": "Hallowing of God's Name",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3c65ebdc-2785-493c-b7f2-75a868fb96c4",
+      "statement": "God's holy name is no longer defiled in his eternal dwelling.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "fffba0fa-b7d6-44e5-8c2c-5a072f28f852",
+          "descriptor_id": "3c65ebdc-2785-493c-b7f2-75a868fb96c4",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 7,
+          "verse_end": 9
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "sword-from-christs-mouth",
+  "name": "Sword from Christ's Mouth",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ae5e2747-eb23-49d3-9f14-1e7ad79f1678",
+      "statement": "A sharp sword comes from Christ's mouth with which he strikes down the nations.",
+      "tier": "symbolic",
+      "symbolic_referent": "The judicial power of Christ's word by which he conquers and judges his enemies.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "c6f219aa-f36e-4158-9d39-f13171bf8290",
+          "descriptor_id": "ae5e2747-eb23-49d3-9f14-1e7ad79f1678",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 15,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

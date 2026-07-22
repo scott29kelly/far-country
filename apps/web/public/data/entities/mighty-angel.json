@@ -1,0 +1,27 @@
+{
+  "id": "mighty-angel",
+  "name": "Mighty Angel",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "fba020b8-d929-4690-89b2-6b8db769831d",
+      "statement": "A mighty angel proclaims with a loud voice in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "f2d5bfef-7f89-46da-a1d9-cae23047d7dc",
+          "descriptor_id": "fba020b8-d929-4690-89b2-6b8db769831d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

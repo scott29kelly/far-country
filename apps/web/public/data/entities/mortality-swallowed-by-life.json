@@ -1,0 +1,27 @@
+{
+  "id": "mortality-swallowed-by-life",
+  "name": "Mortality Swallowed Up by Life",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "df899df3-64ae-466f-9795-174e6c86bf35",
+      "statement": "What is mortal in the believer will be swallowed up by life.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c88c655f-09af-48fd-98f6-129e93ab4a98",
+          "descriptor_id": "df899df3-64ae-466f-9795-174e6c86bf35",
+          "source_type": "scripture",
+          "book": "2 Corinthians",
+          "chapter": 5,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

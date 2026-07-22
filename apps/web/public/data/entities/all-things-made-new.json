@@ -1,0 +1,27 @@
+{
+  "id": "all-things-made-new",
+  "name": "All Things Made New",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "acae8590-3aff-42be-8fe7-7588343cfff7",
+      "statement": "God, seated on the throne, declares that he is making all things new.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "4715c1fa-b22e-4a90-831e-f5045c9b82d7",
+          "descriptor_id": "acae8590-3aff-42be-8fe7-7588343cfff7",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,45 @@
+{
+  "id": "bride-of-the-lamb",
+  "name": "Bride of the Lamb",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "fe529d16-32d4-485e-903a-ac24f62a00a7",
+      "statement": "The new Jerusalem is called the Bride, the wife of the Lamb.",
+      "tier": "symbolic",
+      "symbolic_referent": "The redeemed people of God (the Church) and/or the city that houses them, in covenant union with Christ.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "ab646ec7-553d-4465-8c99-31fb58322140",
+          "descriptor_id": "fe529d16-32d4-485e-903a-ac24f62a00a7",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 9,
+          "verse_end": 10
+        }
+      ]
+    },
+    {
+      "id": "ebd46324-a664-486e-b880-ea43c432c7f8",
+      "statement": "The Bride of the Lamb has made herself ready for the marriage.",
+      "tier": "symbolic",
+      "symbolic_referent": "The redeemed church prepared for union with Christ.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "077a4ab3-0e43-4e39-9576-418661f76a49",
+          "descriptor_id": "ebd46324-a664-486e-b880-ea43c432c7f8",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 7,
+          "verse_end": 7
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

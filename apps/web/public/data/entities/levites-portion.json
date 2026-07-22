@@ -1,0 +1,70 @@
+{
+  "id": "levites-portion",
+  "name": "The Levites' Portion",
+  "entity_type": "place",
+  "summary": "The Levites' allotment within the holy district (Ezek 45:5; 48:13-14): 25,000 cubits by 10,000 alongside the priests' territory, held by the Levites who minister at the temple; not to be sold, exchanged, or alienated (Ezek 48:14).",
+  "descriptors": [],
+  "relations": [],
+  "measurements": [
+    {
+      "id": "eza-levites-portion-breadth",
+      "subject": "the Levites' allotment, breadth",
+      "dimension": "breadth",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "ESV follows the Septuagint at 45:5 for the holding's use ('as their possession for cities to live in'; Hebrew 'as their possession, twenty chambers' - ESV footnote).",
+      "citations": [
+        {
+          "id": "90ef24d0-5a82-49b8-84b3-6f7fa5922099",
+          "measurement_id": "eza-levites-portion-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 5,
+          "verse_end": null
+        },
+        {
+          "id": "fdf9858b-a37d-465e-b443-08496f64732a",
+          "measurement_id": "eza-levites-portion-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-levites-portion-length",
+      "subject": "the Levites' allotment, length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "id": "f2f15968-829d-4774-981e-6e30b39f6049",
+          "measurement_id": "eza-levites-portion-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 5,
+          "verse_end": null
+        },
+        {
+          "id": "c284dec3-4ceb-4c51-8428-289ba8ef56c2",
+          "measurement_id": "eza-levites-portion-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "spirit-as-guarantee",
+  "name": "Spirit as Guarantee",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8b35c355-1239-425c-99b6-db6b05eb2763",
+      "statement": "God has given the Holy Spirit to believers as a guarantee of their heavenly dwelling.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "2847bb54-d413-4f92-9ffc-762ee0f9ea7f",
+          "descriptor_id": "8b35c355-1239-425c-99b6-db6b05eb2763",
+          "source_type": "scripture",
+          "book": "2 Corinthians",
+          "chapter": 5,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

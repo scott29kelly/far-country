@@ -1,0 +1,27 @@
+{
+  "id": "father-son-indwelling",
+  "name": "The Father and Son Making Their Home",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d418477f-02bc-492b-9ea6-c2f259868798",
+      "statement": "The Father and the Son make their home with those who love Jesus and keep his word.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "e4a1f980-85f4-4983-9558-328c5379cce5",
+          "descriptor_id": "d418477f-02bc-492b-9ea6-c2f259868798",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 23,
+          "verse_end": 23
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

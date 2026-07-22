@@ -1,0 +1,27 @@
+{
+  "id": "priests-from-the-nations",
+  "name": "Priests from the Nations",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "03ddaeec-4d02-4176-bae5-e66bc0f351e0",
+      "statement": "The LORD will take some from the gathered nations to serve as priests and Levites.",
+      "tier": "debated",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "caa1aac1-5c1e-4036-aa89-01d268e83977",
+          "descriptor_id": "03ddaeec-4d02-4176-bae5-e66bc0f351e0",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 21,
+          "verse_end": 21
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

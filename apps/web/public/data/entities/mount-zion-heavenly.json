@@ -1,0 +1,27 @@
+{
+  "id": "mount-zion-heavenly",
+  "name": "Mount Zion (Heavenly)",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a1d4fdce-529e-41b9-9f8d-705cc21615b1",
+      "statement": "The heavenly Jerusalem is identified with Mount Zion and the city of the living God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "0b36deac-abb5-43a1-8aa8-7123c6856fcc",
+          "descriptor_id": "a1d4fdce-529e-41b9-9f8d-705cc21615b1",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

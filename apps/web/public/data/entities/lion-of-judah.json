@@ -1,0 +1,27 @@
+{
+  "id": "lion-of-judah",
+  "name": "Lion of the Tribe of Judah",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4204602c-1002-42d8-902c-8babc0057765",
+      "statement": "Jesus is identified in heaven as the Lion of the tribe of Judah and the Root of David, who has conquered.",
+      "tier": "symbolic",
+      "symbolic_referent": "Jesus Christ as the messianic conqueror from Judah's line and David's lineage",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "ebe335cd-2f29-46ea-b41a-a136c79d76e5",
+          "descriptor_id": "4204602c-1002-42d8-902c-8babc0057765",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 5,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

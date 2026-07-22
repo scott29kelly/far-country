@@ -1,0 +1,112 @@
+{
+  "id": "city-portion",
+  "name": "The Property of the City",
+  "entity_type": "place",
+  "summary": "The city strip alongside the holy district (Ezek 45:6; 48:15-19): 5,000 cubits broad by 25,000 long, for common use - dwellings and open country - belonging to the whole house of Israel, with the city in its midst and food-growing remainders east and west tilled by the city's workers.",
+  "descriptors": [],
+  "relations": [],
+  "measurements": [
+    {
+      "id": "eza-city-portion-breadth",
+      "subject": "the property of the city, breadth",
+      "dimension": "breadth",
+      "value": 5000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "For common use for the city, for dwellings and for open country (48:15); it belongs to the whole house of Israel (45:6).",
+      "citations": [
+        {
+          "id": "b7d004bf-4846-4986-81e1-4be761e38bd3",
+          "measurement_id": "eza-city-portion-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 6,
+          "verse_end": null
+        },
+        {
+          "id": "9c1bbb9f-29a0-4aec-a5da-e03a44f509c0",
+          "measurement_id": "eza-city-portion-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-portion-length",
+      "subject": "the property of the city, length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "id": "69e3927d-3042-47f8-bac7-31301aa3b772",
+          "measurement_id": "eza-city-portion-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 6,
+          "verse_end": null
+        },
+        {
+          "id": "de4c9bd9-f440-48ac-8176-2bdbdeba966d",
+          "measurement_id": "eza-city-portion-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-remainder-east",
+      "subject": "remainder of the city strip alongside the holy portion, to the east",
+      "dimension": "length",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Its produce is food for the workers of the city, who come from all the tribes of Israel (48:18-19).",
+      "citations": [
+        {
+          "id": "346fdce5-5f15-4442-8199-e53d8d73c7b0",
+          "measurement_id": "eza-city-remainder-east",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-remainder-west",
+      "subject": "remainder of the city strip alongside the holy portion, to the west",
+      "dimension": "length",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "See eza-city-remainder-east.",
+      "citations": [
+        {
+          "id": "70d9a86f-f8c3-495a-b3a8-e305829149a0",
+          "measurement_id": "eza-city-remainder-west",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
+}

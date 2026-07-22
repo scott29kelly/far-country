@@ -1,0 +1,27 @@
+{
+  "id": "peace-among-creatures",
+  "name": "Peace Among Creatures",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d94ee537-eb42-4482-9f35-402d8fb1eb2b",
+      "statement": "The wolf and the lamb graze together, and the lion eats straw like the ox.",
+      "tier": "symbolic",
+      "symbolic_referent": "the comprehensive peace and absence of predation/violence in God's renewed creation",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "b9b9b3fb-d4ae-43ed-b7d6-b26545c0af70",
+          "descriptor_id": "d94ee537-eb42-4482-9f35-402d8fb1eb2b",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 25,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

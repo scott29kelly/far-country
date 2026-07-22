@@ -1,0 +1,27 @@
+{
+  "id": "throne-worship",
+  "name": "Worship Before the Throne",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "b47aca40-f530-4934-a657-5f4f1d763571",
+      "statement": "The twenty-four elders and four living creatures fall down and worship God who is seated on the throne.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f7b78339-ab07-40ad-9859-934d30709cc3",
+          "descriptor_id": "b47aca40-f530-4934-a657-5f4f1d763571",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

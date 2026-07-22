@@ -1,0 +1,27 @@
+{
+  "id": "salvation-acclamation",
+  "name": "Salvation Acclamation",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9c337a15-75a3-4834-b9bd-fef4d9bf6fa9",
+      "statement": "The redeemed cry out in worship, 'Salvation belongs to our God who sits on the throne, and to the Lamb!'",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "593860ef-53a2-4080-9a0b-eaf9a637783c",
+          "descriptor_id": "9c337a15-75a3-4834-b9bd-fef4d9bf6fa9",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 10,
+          "verse_end": 10
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

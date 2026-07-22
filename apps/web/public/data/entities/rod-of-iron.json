@@ -1,0 +1,27 @@
+{
+  "id": "rod-of-iron",
+  "name": "Rod of Iron",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "caa9a1d3-d980-46c9-a219-318a37e2b7f8",
+      "statement": "Christ rules the nations with a rod of iron.",
+      "tier": "symbolic",
+      "symbolic_referent": "Christ's unbreakable, sovereign rule over the nations.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "0bf7b339-7b34-4ee7-a2a9-066ed4e98e99",
+          "descriptor_id": "caa9a1d3-d980-46c9-a219-318a37e2b7f8",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 15,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "peace-and-righteousness",
+  "name": "Peace and Righteousness",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9dfc4580-b2ed-408f-8804-60eb5bf9a9ac",
+      "statement": "Peace governs the city and righteousness oversees it.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "a51ec48d-06be-4bdf-b188-68bc1f9e9bd8",
+          "descriptor_id": "9dfc4580-b2ed-408f-8804-60eb5bf9a9ac",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

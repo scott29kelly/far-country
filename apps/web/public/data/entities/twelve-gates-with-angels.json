@@ -1,0 +1,27 @@
+{
+  "id": "twelve-gates-with-angels",
+  "name": "Twelve Gates with Angels",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4d55347f-9421-493e-985b-3643edaaec18",
+      "statement": "The city has a great, high wall with twelve gates, and at the gates twelve angels.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "40f5297a-b278-4cfd-9a74-d6113835f82b",
+          "descriptor_id": "4d55347f-9421-493e-985b-3643edaaec18",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

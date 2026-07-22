@@ -1,0 +1,27 @@
+{
+  "id": "myriads-of-angels",
+  "name": "Innumerable Angels Around the Throne",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "cb14a2cd-9b0b-44f1-a946-00bc41bbb624",
+      "statement": "Around the throne and the living creatures and the elders are many angels numbering myriads of myriads and thousands of thousands.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "da3df4ad-8a0a-4dfe-955a-c8f5b0a7c2ab",
+          "descriptor_id": "cb14a2cd-9b0b-44f1-a946-00bc41bbb624",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 11,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

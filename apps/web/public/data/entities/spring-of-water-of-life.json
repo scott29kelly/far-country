@@ -1,0 +1,27 @@
+{
+  "id": "spring-of-water-of-life",
+  "name": "Spring of the Water of Life",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a934ccbe-6246-4266-84a0-118b8e0f0b3f",
+      "statement": "To the thirsty, God will give from the spring of the water of life without payment.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "cf3d08c8-4419-4f04-80b0-8c9149e3faa5",
+          "descriptor_id": "a934ccbe-6246-4266-84a0-118b8e0f0b3f",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "foursquare-city-dimensions",
+  "name": "Foursquare City of Equal Dimensions",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "e4892634-2a12-44f2-ad56-e2ae4e03913d",
+      "statement": "The city is laid out as a foursquare, with its length, width, and height equal, measuring 12,000 stadia.",
+      "tier": "symbolic",
+      "symbolic_referent": "The perfection and completeness of God's dwelling place, evoking the cubic Holy of Holies; the entire city is a sanctuary.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "a888a5db-d77c-4443-ab6d-9ac4f740ef5d",
+          "descriptor_id": "e4892634-2a12-44f2-ad56-e2ae4e03913d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 16,
+          "verse_end": 16
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

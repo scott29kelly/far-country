@@ -1,0 +1,27 @@
+{
+  "id": "god-as-glory",
+  "name": "God as the Glory of His People",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "11a34b19-f050-431e-929f-8913a353131e",
+      "statement": "God is the glory of his people.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "92d672b4-0dfc-490e-819b-2f5b88ffb03b",
+          "descriptor_id": "11a34b19-f050-431e-929f-8913a353131e",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 19,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

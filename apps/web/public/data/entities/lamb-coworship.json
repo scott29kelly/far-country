@@ -1,0 +1,27 @@
+{
+  "id": "lamb-coworship",
+  "name": "Co-Worship of God and the Lamb",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6fe16c99-543b-4196-b8c4-c4a7a2b79b3d",
+      "statement": "The Lamb is worshiped together with him who sits on the throne, receiving equal praise.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "1e018fce-6c5a-4582-b8dc-2ab59c473b02",
+          "descriptor_id": "6fe16c99-543b-4196-b8c4-c4a7a2b79b3d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 13,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

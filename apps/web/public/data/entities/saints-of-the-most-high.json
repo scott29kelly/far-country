@@ -1,0 +1,63 @@
+{
+  "id": "saints-of-the-most-high",
+  "name": "Saints of the Most High",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "5186083e-b56d-4300-911f-0162dacdc309",
+      "statement": "The saints of the Most High shall receive the kingdom and possess it forever, forever and ever.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "0bb60544-f3fa-477d-b132-061ffbea1b1b",
+          "descriptor_id": "5186083e-b56d-4300-911f-0162dacdc309",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "8c3b987e-42ab-4d97-9229-8d58f6aaf65b",
+      "statement": "Judgment is given for the saints of the Most High, and the time comes when the saints possess the kingdom.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "3ca334dd-8a55-44f8-b215-a2f847d81ee8",
+          "descriptor_id": "8c3b987e-42ab-4d97-9229-8d58f6aaf65b",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 22,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "fd541f4c-6452-48a3-8db3-07787612b025",
+      "statement": "The kingdom and the dominion and the greatness of the kingdoms under the whole heaven shall be given to the people of the saints of the Most High.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "b26743b9-c54a-436e-8541-e20fbc5acb69",
+          "descriptor_id": "fd541f4c-6452-48a3-8db3-07787612b025",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 27,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

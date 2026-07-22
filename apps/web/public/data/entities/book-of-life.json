@@ -1,0 +1,27 @@
+{
+  "id": "book-of-life",
+  "name": "Book of Life",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3144ea94-d676-4a9b-a52d-b9d630fd3dbd",
+      "statement": "The book of life is opened before God's throne and contains the names of those who belong to him.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c3f705b7-3f2a-457a-add0-7491324d4883",
+          "descriptor_id": "3144ea94-d676-4a9b-a52d-b9d630fd3dbd",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 12,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

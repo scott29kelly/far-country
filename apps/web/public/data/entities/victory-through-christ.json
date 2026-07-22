@@ -1,0 +1,27 @@
+{
+  "id": "victory-through-christ",
+  "name": "Victory Through Christ",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "c4f5bdea-88e0-4bfa-a38f-442052b53e49",
+      "statement": "God gives the redeemed victory through our Lord Jesus Christ.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "acbc1c99-c3e9-4d85-a743-c840b07e23e1",
+          "descriptor_id": "c4f5bdea-88e0-4bfa-a38f-442052b53e49",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 57,
+          "verse_end": 57
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

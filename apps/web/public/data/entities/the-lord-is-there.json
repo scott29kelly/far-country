@@ -1,0 +1,27 @@
+{
+  "id": "the-lord-is-there",
+  "name": "The LORD Is There (Yahweh Shammah)",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d7e4e5c9-becc-46dc-a72d-fc6132543bf7",
+      "statement": "The name of the eschatological city is 'The LORD Is There,' signifying God's permanent presence with his people in it.",
+      "tier": "symbolic",
+      "symbolic_referent": "The defining reality of the New Jerusalem: God himself dwells with his people there (cf. Rev 21:3).",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "3c1f8532-a762-4ed0-94a5-5e966dacb93a",
+          "descriptor_id": "d7e4e5c9-becc-46dc-a72d-fc6132543bf7",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 35,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "saints-as-priests",
+  "name": "Saints as Priests of God and Christ",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "60f7efe0-1ffb-447a-83ea-4c4f4d6b7c55",
+      "statement": "Those who belong to Christ serve as priests of God and of Christ.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "a648d7f0-0a8c-4d25-8cfd-7e1c2ef438df",
+          "descriptor_id": "60f7efe0-1ffb-447a-83ea-4c4f4d6b7c55",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

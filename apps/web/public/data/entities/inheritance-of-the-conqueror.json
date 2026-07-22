@@ -1,0 +1,27 @@
+{
+  "id": "inheritance-of-the-conqueror",
+  "name": "Inheritance of the Conqueror",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "b0d4a86b-88d5-4527-85c7-f9d1e9477d17",
+      "statement": "The one who conquers will inherit these things, and God will be his God and he will be God's son.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "5b9204b0-9c52-4d2e-b3d8-1d834669595b",
+          "descriptor_id": "b0d4a86b-88d5-4527-85c7-f9d1e9477d17",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 7,
+          "verse_end": 7
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

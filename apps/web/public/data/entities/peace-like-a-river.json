@@ -1,0 +1,27 @@
+{
+  "id": "peace-like-a-river",
+  "name": "Peace Like a River",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "eef9fbf5-fa0d-4a71-ac18-cccc352433ba",
+      "statement": "Peace will flow to God's people like a river.",
+      "tier": "symbolic",
+      "symbolic_referent": "the abundant, unceasing peace God grants his redeemed people",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "24eb85fd-6584-422f-8c3f-43f7293ee6ae",
+          "descriptor_id": "eef9fbf5-fa0d-4a71-ac18-cccc352433ba",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "strangers-and-exiles",
+  "name": "Strangers and Exiles on Earth",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "64e8886e-fc1b-41b8-9453-a78a86e6b56a",
+      "statement": "Believers on earth are strangers and exiles, their true home lying elsewhere.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "ba65c7f0-0a6a-4dc8-8ea3-bc0d6146aa85",
+          "descriptor_id": "64e8886e-fc1b-41b8-9453-a78a86e6b56a",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 13,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

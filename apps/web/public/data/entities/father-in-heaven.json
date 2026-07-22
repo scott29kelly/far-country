@@ -1,0 +1,45 @@
+{
+  "id": "father-in-heaven",
+  "name": "Father in Heaven",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "82dba997-dc83-4402-ae82-c000619df2fb",
+      "statement": "The Father dwells in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f331852c-16a8-41f8-9841-932f0c3f3e0c",
+          "descriptor_id": "82dba997-dc83-4402-ae82-c000619df2fb",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 16,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "b4d4ed8f-af1d-4aa0-9201-b34fdf05eb78",
+      "statement": "The heavenly Father is perfect.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "6ccd0102-953c-4cae-aa38-cb88f61cea61",
+          "descriptor_id": "b4d4ed8f-af1d-4aa0-9201-b34fdf05eb78",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 48,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

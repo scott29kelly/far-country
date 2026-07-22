@@ -1,0 +1,27 @@
+{
+  "id": "lamb-alone-worthy",
+  "name": "The Lamb's Unique Worthiness",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4d7d9455-ffe6-44ab-aa6e-17d8aa07c454",
+      "statement": "No one in heaven or on earth or under the earth was able to open the scroll or look into it except the Lamb.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "5a8e0899-55db-4810-a4a1-c2cfc136c2c9",
+          "descriptor_id": "4d7d9455-ffe6-44ab-aa6e-17d8aa07c454",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 3,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

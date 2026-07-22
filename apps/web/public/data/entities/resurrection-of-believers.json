@@ -1,0 +1,27 @@
+{
+  "id": "resurrection-of-believers",
+  "name": "Resurrection of Believers",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8aca133f-3504-4e51-b9f8-f387f6d79581",
+      "statement": "All who belong to Christ will be made alive at his coming.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "9b7abdbc-14de-408e-8e89-ebdfb4cc94e2",
+          "descriptor_id": "8aca133f-3504-4e51-b9f8-f387f6d79581",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 22,
+          "verse_end": 23
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

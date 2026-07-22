@@ -1,0 +1,45 @@
+{
+  "id": "wheels-of-the-throne-chariot",
+  "name": "Wheels of the Throne-Chariot",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "bfeeb846-7939-48fa-a71a-87331178c43c",
+      "statement": "Gleaming wheels like beryl, constructed as wheel within wheel, accompany the living creatures, with rims full of eyes all around.",
+      "tier": "symbolic",
+      "symbolic_referent": "The mobility and omniscient vigilance of God's throne, which goes in every direction and sees all things",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "0cfa9ff3-085f-49db-b54d-57b8cf454ef8",
+          "descriptor_id": "bfeeb846-7939-48fa-a71a-87331178c43c",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 15,
+          "verse_end": 18
+        }
+      ]
+    },
+    {
+      "id": "264f3521-9cd4-46d6-92ed-4b19b35af20e",
+      "statement": "The spirit of the living creatures is in the wheels, so that wheels and creatures move and stop in perfect concert.",
+      "tier": "symbolic",
+      "symbolic_referent": "The unified, Spirit-directed motion of God's heavenly throne and its attendants",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "87ef1407-6422-4983-9611-b6229be2caad",
+          "descriptor_id": "264f3521-9cd4-46d6-92ed-4b19b35af20e",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 19,
+          "verse_end": 21
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

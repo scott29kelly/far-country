@@ -1,0 +1,27 @@
+{
+  "id": "earth-and-sky-flee",
+  "name": "Earth and Sky Fleeing God's Presence",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d0bfbef3-8e42-4cfc-98fa-0c17d373fac7",
+      "statement": "From the presence of God on the throne, earth and sky flee away and no place is found for them.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "aa896ea5-1abf-40d6-b195-3e4069aea3b6",
+          "descriptor_id": "d0bfbef3-8e42-4cfc-98fa-0c17d373fac7",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

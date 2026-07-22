@@ -1,0 +1,27 @@
+{
+  "id": "wedding-garment-requirement",
+  "name": "Wedding Garment",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "0e9965bf-96d7-495b-a368-1d5a17b80a53",
+      "statement": "Entry into the wedding feast of the kingdom requires a wedding garment; those without one are cast out into outer darkness.",
+      "tier": "symbolic",
+      "symbolic_referent": "The righteousness required to be received into the kingdom \u2014 the imputed righteousness of Christ clothing the believer.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "cbc83e6e-d840-4c10-b805-5dc1682a8051",
+          "descriptor_id": "0e9965bf-96d7-495b-a368-1d5a17b80a53",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 11,
+          "verse_end": 13
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

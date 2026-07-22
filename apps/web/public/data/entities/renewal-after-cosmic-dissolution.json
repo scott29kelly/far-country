@@ -1,0 +1,27 @@
+{
+  "id": "renewal-after-cosmic-dissolution",
+  "name": "Renewal After Cosmic Dissolution",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1ee5fa1f-2f89-4146-9ac0-032c4a42bc50",
+      "statement": "The new heavens and new earth come after the present heavens and earth are dissolved by fire on the day of the Lord.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "9b24c5c1-5d67-4ab3-946c-70103ac37e41",
+          "descriptor_id": "1ee5fa1f-2f89-4146-9ac0-032c4a42bc50",
+          "source_type": "scripture",
+          "book": "2 Peter",
+          "chapter": 3,
+          "verse_start": 10,
+          "verse_end": 13
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

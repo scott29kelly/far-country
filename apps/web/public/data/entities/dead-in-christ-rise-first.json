@@ -1,0 +1,27 @@
+{
+  "id": "dead-in-christ-rise-first",
+  "name": "Resurrection of the Dead in Christ",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8a205f15-1b35-40cd-b0fd-8d5553cfe4fa",
+      "statement": "The dead in Christ will rise first at the Lord's coming.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "d5dd1105-5c24-48b4-a26e-8078aa1529a8",
+          "descriptor_id": "8a205f15-1b35-40cd-b0fd-8d5553cfe4fa",
+          "source_type": "scripture",
+          "book": "1 Thessalonians",
+          "chapter": 4,
+          "verse_start": 16,
+          "verse_end": 16
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

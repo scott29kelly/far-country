@@ -1,0 +1,27 @@
+{
+  "id": "gods-name-on-foreheads",
+  "name": "God's Name on Foreheads",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a021c35d-f7e7-42ed-bf59-7b3780108dd6",
+      "statement": "God's name will be on the foreheads of his servants.",
+      "tier": "symbolic",
+      "symbolic_referent": "The redeemed belong to God and are identified as his own.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "217e7cd9-a302-44ff-8c47-4c5aabe2c31f",
+          "descriptor_id": "a021c35d-f7e7-42ed-bf59-7b3780108dd6",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

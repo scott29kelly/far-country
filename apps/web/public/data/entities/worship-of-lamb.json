@@ -1,0 +1,27 @@
+{
+  "id": "worship-of-lamb",
+  "name": "Worship of the Lamb",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3a472d67-6cf5-4f6e-b985-0abd4c49e1ae",
+      "statement": "The four living creatures and twenty-four elders fall down before the Lamb in worship.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "3b01aff8-1b39-44da-804e-ed2aa180a9c4",
+          "descriptor_id": "3a472d67-6cf5-4f6e-b985-0abd4c49e1ae",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 8,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

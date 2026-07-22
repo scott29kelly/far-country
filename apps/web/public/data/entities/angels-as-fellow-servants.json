@@ -1,0 +1,27 @@
+{
+  "id": "angels-as-fellow-servants",
+  "name": "Angels as Fellow Servants",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d21755cf-5612-4414-9e7c-ffa0203ec59a",
+      "statement": "Angels identify themselves as fellow servants with believers who hold the testimony of Jesus.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "c8ab5b28-759c-4792-aa15-ffbc8eca33f8",
+          "descriptor_id": "d21755cf-5612-4414-9e7c-ffa0203ec59a",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 10,
+          "verse_end": 10
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

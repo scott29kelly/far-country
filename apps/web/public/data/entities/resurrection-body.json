@@ -1,0 +1,99 @@
+{
+  "id": "resurrection-body",
+  "name": "Resurrection Body",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "074d5da0-5f5b-4dab-9b9d-0151a3566d6d",
+      "statement": "The resurrection body differs from the natural body as a plant differs from the seed sown.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "65cf7638-a4cc-45e3-998b-27b39b12d1c6",
+          "descriptor_id": "074d5da0-5f5b-4dab-9b9d-0151a3566d6d",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 36,
+          "verse_end": 38
+        }
+      ]
+    },
+    {
+      "id": "4f37813a-9e19-4c99-b31e-8772ae3d3794",
+      "statement": "The resurrection body is raised imperishable.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "5d0da977-a250-4b3a-8458-03749f848bd6",
+          "descriptor_id": "4f37813a-9e19-4c99-b31e-8772ae3d3794",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 42,
+          "verse_end": 42
+        }
+      ]
+    },
+    {
+      "id": "dfa9fd6b-91a6-4eb9-955e-6a9959acc6b6",
+      "statement": "The resurrection body is raised in glory.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "8d8b69dd-9e38-4746-8103-e1da5e3e74b7",
+          "descriptor_id": "dfa9fd6b-91a6-4eb9-955e-6a9959acc6b6",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 43,
+          "verse_end": 43
+        }
+      ]
+    },
+    {
+      "id": "9afbea14-03ff-441d-95d6-18349b6935be",
+      "statement": "The resurrection body is raised in power.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c37e1a69-768a-4efa-92bc-1aec3b06662a",
+          "descriptor_id": "9afbea14-03ff-441d-95d6-18349b6935be",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 43,
+          "verse_end": 43
+        }
+      ]
+    },
+    {
+      "id": "56c17eb3-33d1-4a35-9b8b-e9635319c59b",
+      "statement": "The resurrection body is raised a spiritual body.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "40f69a7f-2c4d-4cc7-980e-f290154d9c6f",
+          "descriptor_id": "56c17eb3-33d1-4a35-9b8b-e9635319c59b",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 44,
+          "verse_end": 44
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

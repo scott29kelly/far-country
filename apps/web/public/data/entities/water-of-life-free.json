@@ -1,0 +1,27 @@
+{
+  "id": "water-of-life-free",
+  "name": "Free Water of Life",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "5335205f-1f17-497c-a262-2223429ee34a",
+      "statement": "The water of life is offered without price to the one who is thirsty.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "c92aa47a-8b95-4296-8fc3-4c9721c126cc",
+          "descriptor_id": "5335205f-1f17-497c-a262-2223429ee34a",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 17,
+          "verse_end": 17
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

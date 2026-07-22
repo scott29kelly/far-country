@@ -1,0 +1,135 @@
+{
+  "id": "throne-of-god",
+  "name": "Throne of God",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9b6ef8f6-3c9d-465c-a9f1-a91b96657393",
+      "statement": "A throne stands in heaven with one seated upon it.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "67062f8d-6aa5-48b8-ac0a-6950e5d66bb5",
+          "descriptor_id": "9b6ef8f6-3c9d-465c-a9f1-a91b96657393",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    },
+    {
+      "id": "230b90bb-5d90-4ec4-b484-153926ae5350",
+      "statement": "Flashes of lightning, rumblings, and peals of thunder come from the throne.",
+      "tier": "clear",
+      "symbolic_referent": "God's awesome power and theophanic majesty proceeding from His throne",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "2bccdf4b-9d9f-438a-a0fa-5774bad72b4d",
+          "descriptor_id": "230b90bb-5d90-4ec4-b484-153926ae5350",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    },
+    {
+      "id": "6cba0690-10c6-4cd2-81a0-54a9f2939e04",
+      "statement": "The throne of God is the place at whose right hand Christ is seated.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "46ea7231-42d4-43b5-98f0-c385c2a1e51d",
+          "descriptor_id": "6cba0690-10c6-4cd2-81a0-54a9f2939e04",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "2179d67f-064c-46f8-8a8f-92b1d46948e8",
+      "statement": "Heaven is the throne of the LORD.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "aa6de7cb-61df-4ba9-981c-0f5d8ed337d6",
+          "descriptor_id": "2179d67f-064c-46f8-8a8f-92b1d46948e8",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    },
+    {
+      "id": "e1e20f10-f081-438b-b021-7d5cad229da2",
+      "statement": "God is seated on a throne in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "199168b1-f039-460c-9c79-41a0e31b95b5",
+          "descriptor_id": "e1e20f10-f081-438b-b021-7d5cad229da2",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    },
+    {
+      "id": "b5bf00da-2adf-4531-92a3-8d07be0d2293",
+      "statement": "Above the crystal expanse there is the likeness of a throne in appearance like sapphire.",
+      "tier": "symbolic",
+      "symbolic_referent": "God's sovereign rule, depicted as a sapphire throne above the heavenly expanse",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "dfecb644-6773-44ff-aa3f-4f5de3250241",
+          "descriptor_id": "b5bf00da-2adf-4531-92a3-8d07be0d2293",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 26,
+          "verse_end": 26
+        }
+      ]
+    },
+    {
+      "id": "7054f9bb-fd6a-4002-a60f-7ea58bb9b232",
+      "statement": "The throne of the Ancient of Days is fiery flames, and its wheels are burning fire.",
+      "tier": "symbolic",
+      "symbolic_referent": "The holiness and consuming judgment of God depicted as a fiery throne in apocalyptic vision.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "85006495-b0fc-4424-aef0-20cbc4fe7d18",
+          "descriptor_id": "7054f9bb-fd6a-4002-a60f-7ea58bb9b232",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

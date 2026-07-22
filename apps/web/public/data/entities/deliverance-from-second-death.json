@@ -1,0 +1,27 @@
+{
+  "id": "deliverance-from-second-death",
+  "name": "Deliverance from the Second Death",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "30c0f250-ef51-44df-9177-3ea62d5a249f",
+      "statement": "Those whose names are written in the book of life are spared from the lake of fire.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "4e5ec008-7345-4606-8c3d-6c5a2b389f64",
+          "descriptor_id": "30c0f250-ef51-44df-9177-3ea62d5a249f",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 15,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

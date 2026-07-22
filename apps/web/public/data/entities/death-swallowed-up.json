@@ -1,0 +1,27 @@
+{
+  "id": "death-swallowed-up",
+  "name": "Death Swallowed Up in Victory",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "fd0caf38-0af7-4170-9fab-2aec9a0a4bdf",
+      "statement": "Death will be swallowed up in victory.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "9f5b7530-4603-44f2-8bfb-e05ac978eaa4",
+          "descriptor_id": "fd0caf38-0af7-4170-9fab-2aec9a0a4bdf",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 54,
+          "verse_end": 55
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "beholding-gods-glory",
+  "name": "Beholding God's Glory",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1474b08f-60a0-44bf-b916-30db765c9f07",
+      "statement": "The redeemed will visibly behold the glory of the LORD.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "d98ec2f6-f3f3-4e0a-a017-1cdd2176fb47",
+          "descriptor_id": "1474b08f-60a0-44bf-b916-30db765c9f07",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 18,
+          "verse_end": 18
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "differing-glory-of-resurrected",
+  "name": "Differing Glory of the Resurrected",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "589ed66f-7b67-4569-8095-0c748be10bd9",
+      "statement": "Resurrected believers will differ in glory, as star differs from star in glory.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "86a70bfd-c1b4-453b-b0f5-64e213f2bd2a",
+          "descriptor_id": "589ed66f-7b67-4569-8095-0c748be10bd9",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 41,
+          "verse_end": 42
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "springs-of-living-water",
+  "name": "Springs of Living Water",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "32075186-c0ee-4d49-8a0a-a43e2233b3bf",
+      "statement": "The Lamb will guide the redeemed to springs of living water.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "bb13bb91-f877-4e39-b45a-f6626e8dd619",
+          "descriptor_id": "32075186-c0ee-4d49-8a0a-a43e2233b3bf",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 17,
+          "verse_end": 17
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

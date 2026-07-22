@@ -1,0 +1,27 @@
+{
+  "id": "glorified-body",
+  "name": "Glorified Body of Believers",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9b01bd81-4245-4ec8-821e-a7eab589795a",
+      "statement": "Christ will transform the lowly bodies of believers to be like his glorious body.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "81e88b97-ca0c-462e-b5d0-ab76bf902290",
+          "descriptor_id": "9b01bd81-4245-4ec8-821e-a7eab589795a",
+          "source_type": "scripture",
+          "book": "Philippians",
+          "chapter": 3,
+          "verse_start": 21,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

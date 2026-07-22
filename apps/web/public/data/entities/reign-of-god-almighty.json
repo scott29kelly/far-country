@@ -1,0 +1,27 @@
+{
+  "id": "reign-of-god-almighty",
+  "name": "Reign of God Almighty",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "e4057582-2018-43b1-913a-84e309753e38",
+      "statement": "The Lord God the Almighty reigns, and his reign is proclaimed in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "1c376936-7894-4808-9b80-6f5179f30639",
+          "descriptor_id": "e4057582-2018-43b1-913a-84e309753e38",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

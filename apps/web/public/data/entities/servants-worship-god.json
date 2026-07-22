@@ -1,0 +1,27 @@
+{
+  "id": "servants-worship-god",
+  "name": "Worship by God's Servants",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d0f9fb20-a7ba-4803-ad06-f8de2b50964e",
+      "statement": "God's servants will worship him there.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c3545332-e906-4e50-8e56-c14f5a1615bd",
+          "descriptor_id": "d0f9fb20-a7ba-4803-ad06-f8de2b50964e",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 3,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

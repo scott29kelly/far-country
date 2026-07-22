@@ -1,0 +1,27 @@
+{
+  "id": "robe-dipped-in-blood",
+  "name": "Robe Dipped in Blood",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "bd9b20bd-2d96-4fbf-98bc-1da3e3838cb2",
+      "statement": "Christ is clothed in a robe dipped in blood.",
+      "tier": "symbolic",
+      "symbolic_referent": "Christ as warrior-judge, marked either by his atoning blood or by the blood of his vanquished enemies.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "3a2225ab-4589-4526-91d3-bff8e9812d4e",
+          "descriptor_id": "bd9b20bd-2d96-4fbf-98bc-1da3e3838cb2",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 13,
+          "verse_end": 13
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

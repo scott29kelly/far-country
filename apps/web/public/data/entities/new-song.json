@@ -1,0 +1,27 @@
+{
+  "id": "new-song",
+  "name": "The New Song",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "c8fe27dd-8f36-4e35-8f4e-ea3c7457de54",
+      "statement": "The four living creatures and elders sing a new song declaring the Lamb worthy because he was slain and by his blood ransomed people for God from every tribe, language, people, and nation.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "6f7df1ff-b945-4c31-91fc-72c409e8a602",
+          "descriptor_id": "c8fe27dd-8f36-4e35-8f4e-ea3c7457de54",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

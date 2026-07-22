@@ -1,0 +1,27 @@
+{
+  "id": "wedding-feast-of-the-son",
+  "name": "Wedding Feast of the King's Son",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "7458505c-a652-4760-9f96-a6b6d1136e9b",
+      "statement": "The kingdom of heaven is likened to a wedding feast that a king gives for his son.",
+      "tier": "symbolic",
+      "symbolic_referent": "The consummated joy of the kingdom of heaven, in which God the Father celebrates the union of his Son with his redeemed people.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "28105af8-b167-4af2-8cbe-bb35c8453657",
+          "descriptor_id": "7458505c-a652-4760-9f96-a6b6d1136e9b",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

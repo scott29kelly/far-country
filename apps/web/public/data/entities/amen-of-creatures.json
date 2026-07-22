@@ -1,0 +1,27 @@
+{
+  "id": "amen-of-creatures",
+  "name": "Amen of the Living Creatures",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8cd61212-055c-4c2b-986d-ca81a9bc5b16",
+      "statement": "The four living creatures say 'Amen!' and the elders fall down and worship.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "0224e95b-1e8f-41e8-93fd-db834716558b",
+          "descriptor_id": "8cd61212-055c-4c2b-986d-ca81a9bc5b16",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

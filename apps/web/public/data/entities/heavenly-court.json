@@ -1,0 +1,27 @@
+{
+  "id": "heavenly-court",
+  "name": "Heavenly Court",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "37d341d6-d652-4fdd-8294-4aabfe35dc0f",
+      "statement": "The heavenly court sits in judgment, and the books are opened.",
+      "tier": "symbolic",
+      "symbolic_referent": "The divine judgment scene in which God adjudicates the deeds of nations and persons recorded in his books.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "18680f14-1760-4b27-b349-95d71341d379",
+          "descriptor_id": "37d341d6-d652-4fdd-8294-4aabfe35dc0f",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

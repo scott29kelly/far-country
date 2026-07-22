@@ -1,0 +1,27 @@
+{
+  "id": "throne-of-god-and-lamb",
+  "name": "Throne of God and of the Lamb",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "304bf418-79e8-479a-a2d3-bf793d9991df",
+      "statement": "The throne of God and of the Lamb is in the city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "7ab7ec5c-6d8f-4f07-83a5-08f6334a71a5",
+          "descriptor_id": "304bf418-79e8-479a-a2d3-bf793d9991df",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 1,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

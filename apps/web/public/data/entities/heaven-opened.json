@@ -1,0 +1,27 @@
+{
+  "id": "heaven-opened",
+  "name": "Heaven Opened",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "fd70de18-74d0-4784-a780-64c0d29e206e",
+      "statement": "Heaven opens to reveal Christ riding forth on a white horse.",
+      "tier": "symbolic",
+      "symbolic_referent": "The unveiling of Christ's coming forth in judgment and conquest.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "a832c079-0c76-4e7c-bfa0-96af1657724e",
+          "descriptor_id": "fd70de18-74d0-4784-a780-64c0d29e206e",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

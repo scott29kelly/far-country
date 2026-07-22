@@ -1,0 +1,27 @@
+{
+  "id": "river-of-the-water-of-life",
+  "name": "River of the Water of Life",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "674cf534-edec-4de1-9180-09bb1fbb28df",
+      "statement": "A river of the water of life, bright as crystal, flows from the throne of God and of the Lamb.",
+      "tier": "symbolic",
+      "symbolic_referent": "The life-giving presence and Spirit that proceed from God and the Lamb to sustain the redeemed.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "990ff65e-4288-4926-b7d1-bb288270d135",
+          "descriptor_id": "674cf534-edec-4de1-9180-09bb1fbb28df",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "white-robes",
+  "name": "White Robes",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "67de543c-c9df-4c8d-afc5-9f208480bb9e",
+      "statement": "The redeemed multitude is clothed in white robes and holds palm branches.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "3acf5b41-0257-479d-8092-da73b79b29e4",
+          "descriptor_id": "67de543c-c9df-4c8d-afc5-9f208480bb9e",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 9,
+          "verse_end": 9
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

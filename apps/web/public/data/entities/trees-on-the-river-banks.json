@@ -1,0 +1,45 @@
+{
+  "id": "trees-on-the-river-banks",
+  "name": "Trees on the River Banks",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3a34f005-c63f-4c5b-ab95-8ed714bd4e38",
+      "statement": "Trees bearing fruit every month grow on the banks of the river that flows from God's sanctuary, with leaves for healing.",
+      "tier": "symbolic",
+      "symbolic_referent": "The tree of life imagery fulfilled in Rev 22:2 \u2014 perpetual fruitfulness and healing flowing from God's presence.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "ec80e1a3-ffd8-42d3-81e7-9240840e37f4",
+          "descriptor_id": "3a34f005-c63f-4c5b-ab95-8ed714bd4e38",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 47,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "2a309846-3b00-454f-b0d7-cf8c9fac299e",
+      "statement": "The fruit of the trees on the river banks never fails and their leaves never wither, because the water nourishing them flows from the sanctuary of God.",
+      "tier": "symbolic",
+      "symbolic_referent": "The unfailing sustenance and life that proceeds from God's presence.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "5a669c47-4f11-40ea-a2f0-882dbded1d9a",
+          "descriptor_id": "2a309846-3b00-454f-b0d7-cf8c9fac299e",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 47,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

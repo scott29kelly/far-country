@@ -1,0 +1,27 @@
+{
+  "id": "vindication-of-the-martyrs",
+  "name": "Vindication of the Martyrs",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "5df60b7c-9258-4bd0-bc42-637923ce7132",
+      "statement": "God has avenged the blood of his servants by judging the great prostitute.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4c7b6a14-aeba-4583-9c19-2ac4b87946e1",
+          "descriptor_id": "5df60b7c-9258-4bd0-bc42-637923ce7132",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

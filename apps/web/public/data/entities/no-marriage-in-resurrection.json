@@ -1,0 +1,27 @@
+{
+  "id": "no-marriage-in-resurrection",
+  "name": "Absence of Marriage in the Resurrection",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "80b57692-e4fd-46ec-ba05-42b51d061daf",
+      "statement": "In the resurrection, people neither marry nor are given in marriage.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "9798cec9-19ce-4ac4-a737-32fb37464541",
+          "descriptor_id": "80b57692-e4fd-46ec-ba05-42b51d061daf",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 30,
+          "verse_end": 30
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "gods-throne-place",
+  "name": "Place of God's Throne",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f1ce698b-aee0-4871-bb97-a8383fb29339",
+      "statement": "God's sanctuary is the place of his throne, where he dwells in the midst of his people forever.",
+      "tier": "symbolic",
+      "symbolic_referent": "God's eternal dwelling with his redeemed people",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "1c830d78-c444-4ec5-b56c-860b993e9168",
+          "descriptor_id": "f1ce698b-aee0-4871-bb97-a8383fb29339",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 7,
+          "verse_end": 7
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

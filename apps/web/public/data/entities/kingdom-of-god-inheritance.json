@@ -1,0 +1,27 @@
+{
+  "id": "kingdom-of-god-inheritance",
+  "name": "Kingdom of God Inheritance",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "95893b0e-227f-4068-bde7-397566a420e6",
+      "statement": "Flesh and blood cannot inherit the kingdom of God, nor does the perishable inherit the imperishable.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "64905559-cec2-45b0-808c-f87036535af7",
+          "descriptor_id": "95893b0e-227f-4068-bde7-397566a420e6",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 50,
+          "verse_end": 50
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

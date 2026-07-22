@@ -1,0 +1,27 @@
+{
+  "id": "no-more-weeping",
+  "name": "No More Weeping",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d2d392dc-bd50-4a3e-8ac6-50190f1e1f1b",
+      "statement": "The sound of weeping and the cry of distress shall no more be heard in the new Jerusalem.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "e81f34f3-7247-4a5a-9897-78c93f3ece27",
+          "descriptor_id": "d2d392dc-bd50-4a3e-8ac6-50190f1e1f1b",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 19,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

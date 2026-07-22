@@ -353,3 +353,65 @@ def test_write_manifest_records_counts(session: Session, tmp_path: Path) -> None
     assert payload["counts"]["descriptors"] == 1
     assert payload["counts"]["citations"] == 1
     assert payload["entity_files"] == ["entities/new-jerusalem.json"]
+
+
+def test_entity_exports_include_measurement_only_entities(session: Session) -> None:
+    """A zone entity with cited measurements and zero descriptors exports (0.2.0)."""
+    from far_country.measure import seed_allotment
+
+    seed_allotment(session, review_status="approved")
+    exports = {e.id: e for e in build_entity_exports(session)}
+
+    priests = exports["priests-portion"]
+    assert priests.descriptors == []
+    assert len(priests.measurements) == 2
+    breadth = next(m for m in priests.measurements if m["id"] == "eza-priests-portion-breadth")
+    assert breadth["value"] == 10000.0
+    assert breadth["unit"] == "long-cubit"
+    assert breadth["citations"], "embedded measurements carry their citations"
+    assert breadth["citations"][0]["book"] == "Ezekiel"
+
+    validate_entity(priests.to_dict())
+
+    # a measurement-only entity never emits an empty measurements key
+    assert "measurements" in priests.to_dict()
+
+
+def test_measurement_only_entities_stay_out_of_canonical(session: Session) -> None:
+    """canonical.json remains descriptor-driven — no empty-content entities."""
+    from far_country.measure import seed_allotment
+
+    seed_allotment(session, review_status="approved")
+    canonical = build_canonical_export(session)
+    assert canonical.entities == []
+
+
+def test_pending_measurements_not_exported(session: Session) -> None:
+    from far_country.measure import seed_allotment
+
+    seed_allotment(session, review_status="pending")
+    assert build_entity_exports(session) == []
+
+
+def test_descriptor_only_entity_export_shape_unchanged(session: Session) -> None:
+    """Pre-0.2.0 files round-trip: no measurements key when there are none."""
+    _seed_entity(session)
+    _seed_descriptor(session, descriptor_id="d-1")
+    export = build_entity_exports(session)[0]
+    payload = export.to_dict()
+    assert "measurements" not in payload
+    validate_entity(payload)
+
+
+def test_validate_entity_rejects_contentless_export() -> None:
+    with pytest.raises(SchemaValidationError):
+        validate_entity(
+            {
+                "id": "empty-zone",
+                "name": "Empty Zone",
+                "entity_type": "place",
+                "summary": None,
+                "descriptors": [],
+                "relations": [],
+            }
+        )

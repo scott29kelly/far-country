@@ -1,0 +1,27 @@
+{
+  "id": "leaves-of-tree-of-life",
+  "name": "Leaves of the Tree of Life",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3c1c4b2c-679f-441e-9789-5fadaa1e151f",
+      "statement": "The leaves of the tree of life are for the healing of the nations.",
+      "tier": "symbolic",
+      "symbolic_referent": "The full and ongoing wholeness God provides to the redeemed peoples.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "65b409ac-cf76-4b83-a11d-39ae7857fdfd",
+          "descriptor_id": "3c1c4b2c-679f-441e-9789-5fadaa1e151f",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

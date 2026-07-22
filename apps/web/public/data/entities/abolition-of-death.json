@@ -1,0 +1,27 @@
+{
+  "id": "abolition-of-death",
+  "name": "Abolition of Death and Hades",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f23324ce-378f-41e1-99ca-6b49f418833c",
+      "statement": "Death and Hades are abolished, thrown into the lake of fire, so that death no longer has any place.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "ef0dcbe7-1013-4ba0-a079-cbc8c4db59c0",
+          "descriptor_id": "f23324ce-378f-41e1-99ca-6b49f418833c",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

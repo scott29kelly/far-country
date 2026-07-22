@@ -1,0 +1,27 @@
+{
+  "id": "believers-asleep-in-death",
+  "name": "Believers Asleep in Death",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "324c34ca-c649-47a8-823d-f19deb5e6939",
+      "statement": "Believers who have died are described as asleep, awaiting the Lord's coming.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "3b105168-97cf-49ed-8d07-ff7f524eb1de",
+          "descriptor_id": "324c34ca-c649-47a8-823d-f19deb5e6939",
+          "source_type": "scripture",
+          "book": "1 Thessalonians",
+          "chapter": 4,
+          "verse_start": 13,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

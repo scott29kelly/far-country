@@ -1,0 +1,27 @@
+{
+  "id": "seven-horns-eyes",
+  "name": "Seven Horns and Seven Eyes of the Lamb",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8ac69e53-85bc-4a26-9f51-e0d983802839",
+      "statement": "The Lamb has seven horns and seven eyes, which are the seven spirits of God sent out into all the earth.",
+      "tier": "symbolic",
+      "symbolic_referent": "the Lamb's complete power (horns) and omniscience (eyes), associated with the sevenfold Spirit of God",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "015337d2-559f-4927-83e6-167b90420235",
+          "descriptor_id": "8ac69e53-85bc-4a26-9f51-e0d983802839",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 6,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

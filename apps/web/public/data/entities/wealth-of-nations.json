@@ -1,0 +1,27 @@
+{
+  "id": "wealth-of-nations",
+  "name": "Wealth of the Nations",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d1c9e119-2110-435e-8d14-8e4bc35b8642",
+      "statement": "The wealth of the nations is brought into God's city.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "30c41fb2-166e-4857-9beb-573ea3516cba",
+          "descriptor_id": "d1c9e119-2110-435e-8d14-8e4bc35b8642",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 5,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

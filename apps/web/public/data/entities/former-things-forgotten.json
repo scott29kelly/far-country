@@ -1,0 +1,27 @@
+{
+  "id": "former-things-forgotten",
+  "name": "Former Things Forgotten",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "64e93df0-38a8-45ee-89bf-6788cd188755",
+      "statement": "In the new creation the former things shall not be remembered or come into mind.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "db5f5e59-ff18-47b5-ae3c-3d64384b3a72",
+          "descriptor_id": "64e93df0-38a8-45ee-89bf-6788cd188755",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

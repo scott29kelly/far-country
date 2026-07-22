@@ -1,0 +1,27 @@
+{
+  "id": "ceaseless-worship",
+  "name": "Ceaseless Worship in Heaven",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a995468e-105b-4919-a8a5-c1e3866bdc94",
+      "statement": "The four living creatures ceaselessly proclaim day and night, 'Holy, holy, holy, is the Lord God Almighty, who was and is and is to come.'",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "c5f659fa-5f88-4254-8aa4-89aea5963fb5",
+          "descriptor_id": "a995468e-105b-4919-a8a5-c1e3866bdc94",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 8,
+          "verse_end": 8
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

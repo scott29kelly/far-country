@@ -1,0 +1,27 @@
+{
+  "id": "opened-heavens",
+  "name": "Opened Heavens",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ffa9712d-dbb2-485f-b478-e867a6406dc4",
+      "statement": "The heavens can be opened to grant a human visions of God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "4dabea1b-fdae-4dc7-9d1c-a32003338042",
+          "descriptor_id": "ffa9712d-dbb2-485f-b478-e867a6406dc4",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

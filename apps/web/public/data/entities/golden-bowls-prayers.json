@@ -1,0 +1,27 @@
+{
+  "id": "golden-bowls-prayers",
+  "name": "Golden Bowls of Incense",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "e66310c6-8cca-40d8-bc75-edb936c5267e",
+      "statement": "The twenty-four elders hold harps and golden bowls full of incense, which are the prayers of the saints.",
+      "tier": "symbolic",
+      "symbolic_referent": "the prayers of the saints, explicitly identified in the text",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "3b99f7e5-cf9a-4e2d-8326-34e8e2a065d8",
+          "descriptor_id": "e66310c6-8cca-40d8-bc75-edb936c5267e",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 8,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

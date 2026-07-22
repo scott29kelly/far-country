@@ -1,0 +1,27 @@
+{
+  "id": "twelve-gates-of-the-city",
+  "name": "Twelve Gates of the City",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "2a57ec2d-5507-4eee-8c4d-58575eedb37e",
+      "statement": "The eschatological city has twelve gates named after the twelve tribes of Israel, three on each of its four sides.",
+      "tier": "symbolic",
+      "symbolic_referent": "The gates of the New Jerusalem named for the twelve tribes of Israel, signifying that the people of God in their fullness have access to the city (cf. Rev 21:12-13).",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "222ca330-9527-434e-a75b-7849bb43f356",
+          "descriptor_id": "2a57ec2d-5507-4eee-8c4d-58575eedb37e",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 30,
+          "verse_end": 34
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

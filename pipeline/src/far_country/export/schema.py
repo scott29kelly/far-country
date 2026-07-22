@@ -21,6 +21,27 @@ ENTITY_TYPES: Final = ["person", "place", "thing", "event", "attribute"]
 TIERS: Final = ["clear", "fuzzy", "debated", "symbolic"]
 TEMPORAL_PHASES: Final = ["intermediate", "final", "either", "unspecified"]
 SOURCE_TYPES: Final = ["scripture", "willis", "secondary"]
+DIMENSIONS: Final = [
+    "length",
+    "breadth",
+    "height",
+    "thickness",
+    "depth",
+    "distance",
+    "side",
+    "count",
+]
+UNITS: Final = [
+    "long-cubit",
+    "cubit",
+    "reed",
+    "handbreadth",
+    "span",
+    "stadia",
+    "step",
+    "story",
+    "item",
+]
 
 
 _ENTITY_OBJECT_SCHEMA: dict[str, Any] = {
@@ -160,6 +181,66 @@ _ENTITY_INLINE_DESCRIPTOR_SCHEMA: dict[str, Any] = {
 }
 
 
+_MEASUREMENT_CITATION_OBJECT_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "required": ["id", "measurement_id", "source_type"],
+    "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "measurement_id": {"type": "string", "minLength": 1},
+        "source_type": {"enum": SOURCE_TYPES},
+        "book": {"type": ["string", "null"]},
+        "chapter": {"type": ["integer", "null"]},
+        "verse_start": {"type": ["integer", "null"]},
+        "verse_end": {"type": ["integer", "null"]},
+        "willis_chapter": {"type": ["string", "null"]},
+        "willis_page_start": {"type": ["integer", "null"]},
+        "willis_page_end": {"type": ["integer", "null"]},
+        "secondary_work": {"type": ["string", "null"]},
+        "secondary_locator": {"type": ["string", "null"]},
+        "quote": {"type": ["string", "null"]},
+    },
+    "additionalProperties": False,
+    "allOf": [
+        {
+            "if": {
+                "properties": {"source_type": {"const": "scripture"}},
+                "required": ["source_type"],
+            },
+            "then": {
+                "required": ["book", "chapter", "verse_start"],
+                "properties": {
+                    "book": {"type": "string", "minLength": 1},
+                    "chapter": {"type": "integer", "minimum": 1},
+                    "verse_start": {"type": "integer", "minimum": 1},
+                },
+            },
+        },
+    ],
+}
+
+
+_ENTITY_INLINE_MEASUREMENT_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "required": ["id", "subject", "dimension", "value", "unit", "tier", "citations"],
+    "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "subject": {"type": "string", "minLength": 1},
+        "dimension": {"enum": DIMENSIONS},
+        "value": {"type": "number"},
+        "unit": {"enum": UNITS},
+        "basis": {"type": ["string", "null"]},
+        "tier": {"enum": TIERS},
+        "notes": {"type": ["string", "null"]},
+        "citations": {
+            "type": "array",
+            "items": _MEASUREMENT_CITATION_OBJECT_SCHEMA,
+            "minItems": 1,
+        },
+    },
+    "additionalProperties": False,
+}
+
+
 ENTITY_SCHEMA: Final[dict[str, Any]] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "Far Country entity export",
@@ -172,8 +253,19 @@ ENTITY_SCHEMA: Final[dict[str, Any]] = {
         "summary": {"type": ["string", "null"]},
         "descriptors": {"type": "array", "items": _ENTITY_INLINE_DESCRIPTOR_SCHEMA},
         "relations": {"type": "array", "items": _RELATION_OBJECT_SCHEMA},
+        # 0.2.0: cited measurement records (ADR 0017) — omitted when empty
+        "measurements": {
+            "type": "array",
+            "items": _ENTITY_INLINE_MEASUREMENT_SCHEMA,
+            "minItems": 1,
+        },
     },
     "additionalProperties": False,
+    # an export must ground the entity in SOMETHING approved and cited
+    "anyOf": [
+        {"properties": {"descriptors": {"minItems": 1}}},
+        {"required": ["measurements"]},
+    ],
 }
 
 

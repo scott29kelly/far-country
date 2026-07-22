@@ -1,0 +1,27 @@
+{
+  "id": "spirits-of-the-righteous",
+  "name": "Spirits of the Righteous Made Perfect",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "43947132-505a-4eb5-a0b4-ff9d365f3a39",
+      "statement": "The spirits of the righteous have been made perfect in the heavenly assembly.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "intermediate",
+      "citations": [
+        {
+          "id": "91e2b3b0-b751-4f89-a545-07274cf7e605",
+          "descriptor_id": "43947132-505a-4eb5-a0b4-ff9d365f3a39",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 23,
+          "verse_end": 23
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

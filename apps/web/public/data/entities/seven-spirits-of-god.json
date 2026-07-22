@@ -1,0 +1,27 @@
+{
+  "id": "seven-spirits-of-god",
+  "name": "Seven Spirits of God",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "662c2369-69c7-4f33-a58c-863d4115fd6c",
+      "statement": "Seven torches of fire burn before the throne, which are the seven spirits of God.",
+      "tier": "symbolic",
+      "symbolic_referent": "The Holy Spirit in His fullness/sevenfold perfection",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "42257317-845b-4f28-9cb2-200f95282740",
+          "descriptor_id": "662c2369-69c7-4f33-a58c-863d4115fd6c",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

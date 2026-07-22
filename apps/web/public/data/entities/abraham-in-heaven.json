@@ -1,0 +1,27 @@
+{
+  "id": "abraham-in-heaven",
+  "name": "Abraham",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d9d07497-deb2-41ec-b320-124091195d08",
+      "statement": "Abraham is present and recognizable in heaven, conversing with those there.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "53b27a6f-050d-438e-b696-381b7edf90bf",
+          "descriptor_id": "d9d07497-deb2-41ec-b320-124091195d08",
+          "source_type": "scripture",
+          "book": "Luke",
+          "chapter": 16,
+          "verse_start": 22,
+          "verse_end": 29
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

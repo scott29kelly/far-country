@@ -1,0 +1,45 @@
+{
+  "id": "god-wipes-away-tears",
+  "name": "God Wipes Away Every Tear",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "eaa3d0f7-7c22-403f-9fb9-7e99b2b58105",
+      "statement": "God will wipe away every tear from the eyes of the redeemed.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "002c7990-74b8-4e77-a395-0b8e720f2546",
+          "descriptor_id": "eaa3d0f7-7c22-403f-9fb9-7e99b2b58105",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 17,
+          "verse_end": 17
+        }
+      ]
+    },
+    {
+      "id": "53f5bdb1-00cb-43c4-aada-b454190d4c76",
+      "statement": "God will wipe away every tear from the eyes of his people.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "5be1161f-0364-4855-8307-a13e859b72a8",
+          "descriptor_id": "53f5bdb1-00cb-43c4-aada-b454190d4c76",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

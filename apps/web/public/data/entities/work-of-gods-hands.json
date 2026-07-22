@@ -1,0 +1,27 @@
+{
+  "id": "work-of-gods-hands",
+  "name": "Work of God's Hands",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9e48f1d0-a8d7-42fb-8b1c-1a617873ed3f",
+      "statement": "God's people are the work of his hands, planted by him for his glory.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "9ac72fe7-c9a5-4f79-baee-757b4f2654af",
+          "descriptor_id": "9e48f1d0-a8d7-42fb-8b1c-1a617873ed3f",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 21,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

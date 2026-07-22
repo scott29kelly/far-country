@@ -1,0 +1,27 @@
+{
+  "id": "no-hunger-or-thirst",
+  "name": "No More Hunger or Thirst",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f6b164f9-e442-408a-b4bc-b00dfc147521",
+      "statement": "The redeemed shall hunger no more and thirst no more.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "21bb24fd-f0bd-470c-8952-d9d3eec95c28",
+          "descriptor_id": "f6b164f9-e442-408a-b4bc-b00dfc147521",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 16,
+          "verse_end": 16
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

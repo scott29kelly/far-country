@@ -1,0 +1,27 @@
+{
+  "id": "heavenly-reward",
+  "name": "The Heavenly Reward",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ef39c1d3-4848-4b92-afd8-82782b395f50",
+      "statement": "Moses considered the reproach of Christ greater wealth than the treasures of Egypt because he looked to the heavenly reward.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "8f2e81be-6d74-472f-85b1-28ae90b92302",
+          "descriptor_id": "ef39c1d3-4848-4b92-afd8-82782b395f50",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 26,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

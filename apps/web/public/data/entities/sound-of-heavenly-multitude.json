@@ -1,0 +1,27 @@
+{
+  "id": "sound-of-heavenly-multitude",
+  "name": "Sound of the Heavenly Multitude",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "93c19cdf-6549-447a-b819-6c5a2519ed92",
+      "statement": "The voice of the heavenly multitude sounds like the roar of many waters and like mighty peals of thunder.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4a4dc1f0-3c59-419f-ba9a-938d9d7e4482",
+          "descriptor_id": "93c19cdf-6549-447a-b819-6c5a2519ed92",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "god-alpha-and-omega",
+  "name": "God, the Alpha and Omega",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "0197f7e2-1fa2-46da-8db5-ee472aa471eb",
+      "statement": "God identifies himself as the Alpha and the Omega, the beginning and the end.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "f1e5b1a9-d90b-4306-9923-aee2bae6ee39",
+          "descriptor_id": "0197f7e2-1fa2-46da-8db5-ee472aa471eb",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

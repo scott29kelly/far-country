@@ -1,0 +1,45 @@
+{
+  "id": "glory-of-the-lord",
+  "name": "Glory of the LORD",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ae2274f9-6151-4ff4-a10c-0eea1fdbe5e9",
+      "statement": "The glory of the LORD rises upon and is seen upon his redeemed city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4ba38983-48d4-4759-960f-232fbefd0e43",
+          "descriptor_id": "ae2274f9-6151-4ff4-a10c-0eea1fdbe5e9",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 1,
+          "verse_end": 2
+        }
+      ]
+    },
+    {
+      "id": "c8e4b67f-5ecd-47f3-995e-c0dc9fa9c6ec",
+      "statement": "The vision Ezekiel sees is the appearance of the likeness of the glory of the LORD.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "6a74251e-f860-4706-a6f8-5603b2a5b801",
+          "descriptor_id": "c8e4b67f-5ecd-47f3-995e-c0dc9fa9c6ec",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 28,
+          "verse_end": 28
+        }
+      ]
+    }
+  ],
+  "relations": []
+}
