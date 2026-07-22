@@ -31,6 +31,7 @@ import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
 import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
 import { wrapGroundProbeWithCityFloors, wrapMoveWithCityCollision } from './cityCollide';
+import { LEVITES_RECT, PRIESTS_RECT } from './campusModel';
 import { buildDwellings } from './Dwellings';
 import { buildEntityPicks, nearestEntityAt, pickEntityAt } from './entityPicks';
 import { keyMarkers } from './keyModel';
@@ -101,10 +102,17 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     // processional approach: open meadow sightline from the spawn to the
     // south gate (grass still grows here — only trees/rocks stay out)
     [-450, 450, 2380, 3300],
-    // dwelling campus + temple close (north plain) — sized to the campus
-    // content envelope + margin so wild meadow runs right up to the first
-    // hedgerows (grass still grows here — only trees/rocks stay out)
-    [-6150, 6150, -10400, -4950],
+    // dwelling campus + temple close (north plain) — the envelope of the
+    // CITED band rects (campusModel, entry #11) + margin so wild meadow
+    // runs right up to the first hedgerows; the freed plateau east/west
+    // reads as the prince's unbuilt portion (Ezek 48:21-22, no spatial
+    // numbers). Grass still grows here — only trees/rocks stay out.
+    [
+      Math.min(PRIESTS_RECT.x0, LEVITES_RECT.x0) - 150,
+      Math.max(PRIESTS_RECT.x1, LEVITES_RECT.x1) + 150,
+      LEVITES_RECT.z0 - 150,
+      PRIESTS_RECT.z1 + 150,
+    ],
   ];
 
   // The new earth: the engine's complete, detailed procedural landscape.
