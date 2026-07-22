@@ -41,6 +41,7 @@ const {
   HOST_HALO_EMISSIVE,
   PALM_EMISSIVE,
   ROBE_EMISSIVE,
+  SWAY,
   assemblyVolumes,
   hostClusterVolumes,
   hostPlacements,
@@ -119,6 +120,15 @@ c.check(
     (FIGURE.scaleMin + FIGURE.scaleRange) * (FIGURE.robeH + FIGURE.headR * 2) < 2.5 &&
     HOST.coreLen + HOST.coreR * 2 > 20,
   `figure ~${(FIGURE.robeH + FIGURE.headR * 2).toFixed(2)} m, host core ~${HOST.coreLen + HOST.coreR * 2} m`,
+);
+
+// idle sway stays centimetres: figures never leave their assembly volumes
+// (shader-time only — the amplitude bound is the whole CPU-side contract)
+const swayMax = SWAY.ampMin + SWAY.ampRange + SWAY.palmTip;
+c.check(
+  'A7 figure idle sway is subtle and slow (feet-anchored centimetres)',
+  swayMax < 0.15 && SWAY.speed > 0 && SWAY.speed < 2 && SWAY.palmSpeedFactor >= 1,
+  `max lateral ${swayMax.toFixed(3)} m, speed ${SWAY.speed} rad/s`,
 );
 
 // ---- B: pick-registry integration (probe-entitypick's fixture) --------------
