@@ -190,6 +190,32 @@ steer/mode paths the keyboard and mouse use — no second controller.
   steer rates and curves are the first knobs if it feels off —
   PAD_YAW_RATE/PAD_PITCH_RATE in FlyCamera, curves in GamepadInput).
 
+**(2026-07-22) FIRST REAL-PAD SESSION — GameSir works (X360 mode over
+USB-C after a factory reset); UX triage pass landed.** The controller
+saga's root cause: out of the box the pad talked through its 2.4G
+dongle's keyboard/media endpoints (stick moved the Windows cursor, the
+X360 endpoint enumerated but stayed MUTE — proven by a PowerShell
+XInputGetState listener + a PnP-diff recorder; the dongle composite is
+VID_3537 PID_1098, the wired pad PID_100F/PID_2106 depending on mode).
+A paperclip reset + wired USB-C brought it up as "Xbox 360 Controller
+for Windows (STANDARD GAMEPAD)" — Chrome standard mapping, everything
+binds as designed. Scott's first-session feedback then drove fixes:
+(1) pad input now claims steering for 1.5 s past last use — mouse-steer
+no longer drags the view toward a parked cursor mid-stick (probe P1/P2,
+real mousemove-handler shim); (2) a controller guide overlay auto-shows
+on first pad activation, View button (b8, new `help` edge — probe Q)
+toggles it, Escape/click closes (live L11/L12); (3) ?padtest=1 gains a
+close button; (4) launchWebGPU takes a probeBase so live probes work
+against non-:5173 dev servers. Batteries: probe-gamepad 31/31,
+probe-gamepad-live 12/12, navigation/walkfling/wallcollide/cityfloors/
+arrival all PASS, tsc + build clean, re-vendored. Field notes: his
+laptop iGPU runs the NJ scene ~6 fps — `?preset=low` is the mitigation;
+a wheel-drained fly speed (1 m/s) masqueraded as "buttons do nothing"
+(RB/] recovers); worktree dev servers need apps/web/public/data copied
+in (untracked files — the entity card 404s without them). Remaining
+subjective: steer-rate feel verdict, D-pad still unbound (candidate:
+speed steps or help), overlay copy tuning.
+
 **(2026-07-20) GAMEPAD DIAGNOSTIC `?padtest=1` — hardware is now
 self-identifying instead of guessed.** Scott's pad is a **GameSir Nova 2
 Lite** (not the Xbox pad the build targeted). Physical layout is
