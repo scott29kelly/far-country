@@ -77,6 +77,16 @@ export function initPadTest(engine: Engine): void {
   const head = document.createElement('div');
   head.className = 'pt-head';
   head.innerHTML = '<strong>GAMEPAD DIAGNOSTIC</strong><span class="pt-sub">?padtest=1 · dev only</span>';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'pt-close';
+  close.textContent = '✕';
+  close.title = 'Close (or drop padtest=1 from the URL)';
+  close.setAttribute('aria-label', 'Close diagnostic');
+  close.addEventListener('click', () => {
+    root.remove();
+  });
+  head.appendChild(close);
   root.appendChild(head);
 
   const verdict = document.createElement('div');
@@ -322,8 +332,11 @@ function installStyles(): void {
   background:rgba(8,12,10,.92);backdrop-filter:blur(12px);
   border:1px solid rgba(226,211,161,.38);border-radius:12px;padding:12px;
   color:#eee9d7;font:11px/1.45 ui-monospace,Menlo,monospace;}
+#padtest .pt-head{position:relative;}
 #padtest .pt-head strong{display:block;color:#f4efd9;letter-spacing:.12em;font-size:11px;}
 #padtest .pt-sub{color:#8f948b;font-size:10px;}
+#padtest .pt-close{position:absolute;top:-2px;right:-2px;border:0;background:none;color:#a89f8c;cursor:pointer;font-size:13px;padding:2px 5px;}
+#padtest .pt-close:hover{color:#fff;}
 #padtest .pt-verdict{margin:9px 0;border-radius:7px;padding:7px 8px;font-size:10px;line-height:1.5;}
 #padtest .pt-ok{background:rgba(63,158,99,.16);border:1px solid rgba(63,158,99,.5);color:#bfe6cd;}
 #padtest .pt-warn{background:rgba(184,134,45,.15);border:1px solid rgba(184,134,45,.5);color:#f0dcae;}
