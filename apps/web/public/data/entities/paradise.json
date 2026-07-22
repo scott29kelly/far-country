@@ -1,0 +1,27 @@
+{
+  "id": "paradise",
+  "name": "Paradise",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a18199fe-c525-44f2-a900-3a74f38f9471",
+      "statement": "Heaven is called 'paradise.'",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "eb6352a3-38ae-4b7f-8b6b-32e159fbd9a7",
+          "descriptor_id": "a18199fe-c525-44f2-a900-3a74f38f9471",
+          "source_type": "scripture",
+          "book": "Luke",
+          "chapter": 23,
+          "verse_start": 43,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

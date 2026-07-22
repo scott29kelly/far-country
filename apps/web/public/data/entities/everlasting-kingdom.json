@@ -1,0 +1,27 @@
+{
+  "id": "everlasting-kingdom",
+  "name": "Everlasting Kingdom",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1b6ce96e-37e2-47c5-bc97-c06385225084",
+      "statement": "The kingdom given to the saints is an everlasting kingdom, and all dominions shall serve and obey him.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "b0219a30-8aed-4b96-971a-2bc513bf9daa",
+          "descriptor_id": "1b6ce96e-37e2-47c5-bc97-c06385225084",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 27,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

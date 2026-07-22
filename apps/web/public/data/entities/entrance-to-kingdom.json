@@ -1,0 +1,27 @@
+{
+  "id": "entrance-to-kingdom",
+  "name": "Entrance to the Kingdom of Heaven",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1d74ef89-5606-46cf-aeb8-74d6c50b0f60",
+      "statement": "Only those whose righteousness exceeds that of the scribes and Pharisees enter the kingdom of heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4ffb59f0-ad1d-429d-b3eb-a29355951027",
+          "descriptor_id": "1d74ef89-5606-46cf-aeb8-74d6c50b0f60",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 20,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

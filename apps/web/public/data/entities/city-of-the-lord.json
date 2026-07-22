@@ -1,0 +1,27 @@
+{
+  "id": "city-of-the-lord",
+  "name": "City of the LORD",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ab0ffa90-58ec-486f-bc36-201600ac4b31",
+      "statement": "The city is called the City of the LORD, the Zion of the Holy One of Israel.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "db3ccc0a-61eb-43c5-ae11-f834eedfeeea",
+          "descriptor_id": "ab0ffa90-58ec-486f-bc36-201600ac4b31",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

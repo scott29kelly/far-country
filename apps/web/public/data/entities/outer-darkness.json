@@ -1,0 +1,27 @@
+{
+  "id": "outer-darkness",
+  "name": "Outer Darkness",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "c8e1f031-e863-469c-b51b-8803a054ccdd",
+      "statement": "Those excluded from the kingdom are cast into outer darkness, where there is weeping and gnashing of teeth.",
+      "tier": "symbolic",
+      "symbolic_referent": "the place of final exclusion from God's kingdom, i.e., final judgment/hell, contrasted with the lighted banquet hall",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "a978af10-6ef2-4644-933e-221f157e1db9",
+          "descriptor_id": "c8e1f031-e863-469c-b51b-8803a054ccdd",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 8,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

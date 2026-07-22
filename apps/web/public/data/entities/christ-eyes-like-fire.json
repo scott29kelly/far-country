@@ -1,0 +1,27 @@
+{
+  "id": "christ-eyes-like-fire",
+  "name": "Christ's Eyes Like Fire",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1a557683-4d42-49ae-a761-532d7f7fe621",
+      "statement": "Christ's eyes are like a flame of fire.",
+      "tier": "symbolic",
+      "symbolic_referent": "Christ's penetrating, omniscient judgment that sees and consumes all evil.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "31dbd75e-4d32-4d3a-a9ec-7bbf2bddbea2",
+          "descriptor_id": "1a557683-4d42-49ae-a761-532d7f7fe621",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

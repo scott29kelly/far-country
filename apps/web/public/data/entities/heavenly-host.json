@@ -1,0 +1,27 @@
+{
+  "id": "heavenly-host",
+  "name": "Heavenly Host",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "04496350-3850-42d7-a4a7-9eb65157a400",
+      "statement": "A thousand thousands serve God, and ten thousand times ten thousand stand before him.",
+      "tier": "symbolic",
+      "symbolic_referent": "The innumerable angelic attendants who serve and worship God in his heavenly court.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "99645d72-52c8-4da4-bafb-be562e06f35b",
+          "descriptor_id": "04496350-3850-42d7-a4a7-9eb65157a400",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

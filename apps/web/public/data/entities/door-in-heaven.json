@@ -1,0 +1,27 @@
+{
+  "id": "door-in-heaven",
+  "name": "Open Door in Heaven",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1ca5af58-49f9-47bb-a580-bc1cf7c05fb2",
+      "statement": "There is a door standing open in heaven through which John is invited to ascend.",
+      "tier": "symbolic",
+      "symbolic_referent": "Access granted to John for prophetic vision of the heavenly realm",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "abde43c9-b73f-4f76-95d9-6e3cb3891ccd",
+          "descriptor_id": "1ca5af58-49f9-47bb-a580-bc1cf7c05fb2",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "twelve-jeweled-foundations",
+  "name": "Twelve Jeweled Foundations",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a30b9934-8bf5-4a61-8910-d29e45233e36",
+      "statement": "The foundations of the wall of the city are adorned with twelve kinds of jewels: jasper, sapphire, agate, emerald, onyx, carnelian, chrysolite, beryl, topaz, chrysoprase, jacinth, and amethyst.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "9c64df86-c1d0-44b3-89fa-7d2688edff62",
+          "descriptor_id": "a30b9934-8bf5-4a61-8910-d29e45233e36",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 19,
+          "verse_end": 20
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

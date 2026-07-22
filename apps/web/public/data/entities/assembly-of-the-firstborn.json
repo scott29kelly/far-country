@@ -1,0 +1,27 @@
+{
+  "id": "assembly-of-the-firstborn",
+  "name": "Assembly of the Firstborn",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "b5b466df-764c-4fa6-be68-5a3af5175729",
+      "statement": "The assembly of the firstborn are enrolled in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "39e92d88-680b-41a3-9204-90b3b7c46403",
+          "descriptor_id": "b5b466df-764c-4fa6-be68-5a3af5175729",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 23,
+          "verse_end": 23
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

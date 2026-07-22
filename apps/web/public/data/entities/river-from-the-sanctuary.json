@@ -1,0 +1,63 @@
+{
+  "id": "river-from-the-sanctuary",
+  "name": "River from the Sanctuary",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4dad6000-2ab7-47f9-8310-ee92737968a4",
+      "statement": "A river of life-giving water flows out from the sanctuary of God.",
+      "tier": "symbolic",
+      "symbolic_referent": "The life-giving presence of God flowing out from his throne, fulfilled in the river of the water of life in the New Jerusalem (Rev 22:1-2).",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "eb6c1bdd-d752-47f2-a039-35a9e2d4143d",
+          "descriptor_id": "4dad6000-2ab7-47f9-8310-ee92737968a4",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 47,
+          "verse_start": 1,
+          "verse_end": 2
+        }
+      ]
+    },
+    {
+      "id": "16134776-dc82-4c02-b5d5-59e2c3b55b8c",
+      "statement": "The river flowing from God's sanctuary grows deeper and more powerful the further it goes.",
+      "tier": "symbolic",
+      "symbolic_referent": "The expanding and unstoppable life-giving presence of God going out from his dwelling.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "a4019ef5-446a-4495-b03b-f44f11726360",
+          "descriptor_id": "16134776-dc82-4c02-b5d5-59e2c3b55b8c",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 47,
+          "verse_start": 3,
+          "verse_end": 5
+        }
+      ]
+    },
+    {
+      "id": "b8715b31-83c9-4d83-96ff-4d4a5bbc17c4",
+      "statement": "Wherever the river from God's sanctuary flows, it brings life and healing, making even salt waters fresh.",
+      "tier": "symbolic",
+      "symbolic_referent": "The life-giving and restorative effect of God's presence on creation.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "72c256dc-a64a-47a6-ad8e-4fe419261804",
+          "descriptor_id": "b8715b31-83c9-4d83-96ff-4d4a5bbc17c4",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 47,
+          "verse_start": 8,
+          "verse_end": 9
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "three-gates-on-each-side",
+  "name": "Three Gates on Each Side",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "0b94998d-90be-4418-ace9-b71bc0c89014",
+      "statement": "The city has three gates on each of the four sides: east, north, south, and west.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "765a0b04-c401-40ff-96bc-a61332b90424",
+          "descriptor_id": "0b94998d-90be-4418-ace9-b71bc0c89014",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 13,
+          "verse_end": 13
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

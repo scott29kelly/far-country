@@ -1,0 +1,27 @@
+{
+  "id": "marriage-of-the-lamb",
+  "name": "Marriage of the Lamb",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8b806c0d-8b88-424e-9431-18cd4559cd16",
+      "statement": "The marriage of the Lamb takes place, uniting Christ with his Bride.",
+      "tier": "symbolic",
+      "symbolic_referent": "The consummated union of Christ with his redeemed church.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "215f3d1f-e81f-4d90-a63d-0c005dc3b67a",
+          "descriptor_id": "8b806c0d-8b88-424e-9431-18cd4559cd16",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 7,
+          "verse_end": 7
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

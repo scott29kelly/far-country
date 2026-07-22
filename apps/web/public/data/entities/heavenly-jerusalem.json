@@ -1,0 +1,27 @@
+{
+  "id": "heavenly-jerusalem",
+  "name": "Heavenly Jerusalem",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "25a7dfeb-9064-490f-911d-b7b898fdfcbd",
+      "statement": "Believers have come to Mount Zion, the city of the living God, the heavenly Jerusalem.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "cd6089b8-5e7c-4aef-ab01-980f5beb9087",
+          "descriptor_id": "25a7dfeb-9064-490f-911d-b7b898fdfcbd",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

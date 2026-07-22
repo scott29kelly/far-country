@@ -1,0 +1,27 @@
+{
+  "id": "life-in-christ",
+  "name": "Life Because Christ Lives",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a901219e-49e2-459d-a65f-32f20fc3f09f",
+      "statement": "Because Jesus lives, his disciples also will live.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "a770b76a-c9f0-4396-8cbd-c43ef5a1cbef",
+          "descriptor_id": "a901219e-49e2-459d-a65f-32f20fc3f09f",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 19,
+          "verse_end": 19
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

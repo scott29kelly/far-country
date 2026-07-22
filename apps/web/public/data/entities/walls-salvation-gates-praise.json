@@ -1,0 +1,27 @@
+{
+  "id": "walls-salvation-gates-praise",
+  "name": "Walls of Salvation and Gates of Praise",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "c4956313-6197-4c27-bce6-570a54dd4258",
+      "statement": "The walls of the city are called Salvation and its gates Praise.",
+      "tier": "symbolic",
+      "symbolic_referent": "The protective boundaries of God's people are constituted by his salvation, and access to his presence is constituted by praise.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f421607e-1720-4cb2-a6b4-1a441f61b15f",
+          "descriptor_id": "c4956313-6197-4c27-bce6-570a54dd4258",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

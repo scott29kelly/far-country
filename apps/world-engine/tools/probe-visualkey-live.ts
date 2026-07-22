@@ -38,7 +38,7 @@ async function main(): Promise<void> {
     if (err) throw new Error(`engine error: ${err}`);
 
     const markers = await page.evaluate(() => window.__laas.entityKeyMarkers.length);
-    c.check('A1 scene installs 12 key anchors', markers === 12, `got ${markers}`);
+    c.check('A1 scene installs 14 key anchors', markers === 14, `got ${markers}`);
     const defaultState = await page.evaluate(() => ({
       layerHidden: document.getElementById('visual-key-layer')?.hidden ?? null,
       legendHidden: document.getElementById('visual-key-legend')?.hidden ?? null,
@@ -80,7 +80,7 @@ async function main(): Promise<void> {
       legendRows: document.querySelectorAll('#visual-key-legend .vk-row').length,
     }));
     c.check('B1 ?key=1 boots with the key visible', bootState.layerHidden === false && bootState.legendHidden === false);
-    c.check('B2 one marker element per anchor', bootState.markerCount === 12, `got ${bootState.markerCount}`);
+    c.check('B2 one marker element per anchor', bootState.markerCount === 14, `got ${bootState.markerCount}`);
     c.check('B3 legend lists the four tiers', bootState.legendRows === 4, `got ${bootState.legendRows}`);
 
     // south-approach framing: the wall-line markers should be on screen

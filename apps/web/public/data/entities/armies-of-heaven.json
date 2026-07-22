@@ -1,0 +1,27 @@
+{
+  "id": "armies-of-heaven",
+  "name": "Armies of Heaven",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "26d75e09-b0bf-459a-9cd6-a2171432536a",
+      "statement": "The armies of heaven follow Christ on white horses, arrayed in fine linen, white and pure.",
+      "tier": "symbolic",
+      "symbolic_referent": "The heavenly host (angels and/or glorified saints) accompanying Christ in his triumph.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "19144659-bc10-4fa8-85f2-aa32fd5f9fc8",
+          "descriptor_id": "26d75e09-b0bf-459a-9cd6-a2171432536a",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

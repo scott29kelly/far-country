@@ -1,0 +1,27 @@
+{
+  "id": "christs-hidden-name",
+  "name": "Christ's Hidden Name",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "596e215e-1800-4063-bc8c-c6bc8fd3f266",
+      "statement": "Christ has a name written that no one knows but himself.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "5aeb9117-2420-4112-abc4-75e664f08611",
+          "descriptor_id": "596e215e-1800-4063-bc8c-c6bc8fd3f266",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

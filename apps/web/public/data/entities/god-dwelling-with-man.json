@@ -1,0 +1,27 @@
+{
+  "id": "god-dwelling-with-man",
+  "name": "God Dwelling with Man",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ac205882-9315-4b63-bcbc-466d369d2a2d",
+      "statement": "God's dwelling place will be with man, and he will dwell with them as their God, and they will be his people.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "fb5d40f1-fe1d-4798-b6fc-bd848e9c858b",
+          "descriptor_id": "ac205882-9315-4b63-bcbc-466d369d2a2d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 3,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

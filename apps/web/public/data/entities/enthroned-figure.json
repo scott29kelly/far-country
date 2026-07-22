@@ -1,0 +1,27 @@
+{
+  "id": "enthroned-figure",
+  "name": "Enthroned Human-like Figure",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "36ab8772-474a-41ca-b560-bee431387895",
+      "statement": "Seated above the throne is a figure with a human appearance, whose form is like gleaming metal and fire with brightness all around.",
+      "tier": "symbolic",
+      "symbolic_referent": "The visible appearance of the glory of the LORD, manifested in human-like form upon his throne",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "c7aea810-23f8-4c7d-b651-6e4da32a3131",
+          "descriptor_id": "36ab8772-474a-41ca-b560-bee431387895",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 26,
+          "verse_end": 27
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

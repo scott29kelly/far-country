@@ -1,0 +1,27 @@
+{
+  "id": "god-all-in-all",
+  "name": "God All in All",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "b08730b8-e7f4-4414-b84d-1abc65f7c2a4",
+      "statement": "When all things are subjected to Christ, the Son himself will also be subjected to the Father, that God may be all in all.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c64eb1b5-32b9-47d7-96be-29c0b1941cb1",
+          "descriptor_id": "b08730b8-e7f4-4414-b84d-1abc65f7c2a4",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 28,
+          "verse_end": 28
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

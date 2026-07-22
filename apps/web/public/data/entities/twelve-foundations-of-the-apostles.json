@@ -1,0 +1,27 @@
+{
+  "id": "twelve-foundations-of-the-apostles",
+  "name": "Twelve Foundations of the Apostles",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1d029720-b28b-4e70-9fe7-1bfa60acfe0c",
+      "statement": "The wall of the city has twelve foundations, on which are inscribed the names of the twelve apostles of the Lamb.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "d99921d2-9fa7-4ede-8e6f-766231d4e4a7",
+          "descriptor_id": "1d029720-b28b-4e70-9fe7-1bfa60acfe0c",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "perfected-together",
+  "name": "Saints Perfected Together",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "67917811-c3a0-4e68-8029-26d0b8cd6b89",
+      "statement": "The Old Testament faithful did not receive the promised reward in this life, because God planned that they would be made perfect together with New Covenant believers.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "bf59b977-c2b6-46e6-a56e-1752e0a2d1b3",
+          "descriptor_id": "67917811-c3a0-4e68-8029-26d0b8cd6b89",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 39,
+          "verse_end": 40
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

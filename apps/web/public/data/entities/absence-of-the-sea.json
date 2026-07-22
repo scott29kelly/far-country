@@ -1,0 +1,27 @@
+{
+  "id": "absence-of-the-sea",
+  "name": "Absence of the Sea",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d3eacc15-483b-4653-b494-28233f5f4d83",
+      "statement": "In the new creation, the sea will be no more.",
+      "tier": "debated",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "58a9444e-ce78-47e1-a5dd-cd85b7c3b3ec",
+          "descriptor_id": "d3eacc15-483b-4653-b494-28233f5f4d83",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

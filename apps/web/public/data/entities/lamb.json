@@ -1,0 +1,27 @@
+{
+  "id": "lamb",
+  "name": "The Lamb",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "29d8f35f-a20a-47e5-bf3d-338dfcfb5380",
+      "statement": "The Lamb is present with God on the throne in the eternal city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "384257c6-69d2-4757-bc8b-464d53097b08",
+          "descriptor_id": "29d8f35f-a20a-47e5-bf3d-338dfcfb5380",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 1,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

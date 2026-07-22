@@ -1,0 +1,130 @@
+{
+  "id": "ezekiel-city",
+  "name": "Ezekiel's City",
+  "entity_type": "place",
+  "summary": "The city in the midst of the city strip (Ezek 48:15-17, 30-35): foursquare at 4,500 cubits per side with 250 cubits of open land around it and twelve tribal gates, three per side; its circumference 18,000 cubits and its name from that time on 'The LORD Is There' (Ezek 48:35). Whether this city and John's New Jerusalem are one, nested, or distinct is a debated harmonization the dataset does not resolve (ADR 0017); the render follows Willis's harmonization (RENDERING-DECISIONS entry #1).",
+  "descriptors": [],
+  "relations": [],
+  "measurements": [
+    {
+      "id": "eza-city-circumference",
+      "subject": "the circumference of the city",
+      "dimension": "distance",
+      "value": 18000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Equals the four 4,500-cubit sides (48:16). Recorded under dimension 'distance' - the schema's closest fit for a perimeter.",
+      "citations": [
+        {
+          "id": "f84a0c14-5445-40a3-98d4-dcf9fb305072",
+          "measurement_id": "eza-city-circumference",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 35,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-gates-per-side",
+      "subject": "gates of the city on each side, named after the tribes of Israel",
+      "dimension": "count",
+      "value": 3.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Three per side, twelve in all: Reuben, Judah, Levi (north); Joseph, Benjamin, Dan (east); Simeon, Issachar, Zebulun (south); Gad, Asher, Naphtali (west). 48:34's gate phrasing carries a minor text-critical variant (ESV footnote: one Hebrew manuscript, Syriac; most Hebrew manuscripts 'their gates three') that does not affect the count.",
+      "citations": [
+        {
+          "id": "e8eb11c5-89c3-4a50-afeb-3c2ce1f23bdd",
+          "measurement_id": "eza-city-gates-per-side",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 30,
+          "verse_end": 34
+        }
+      ]
+    },
+    {
+      "id": "eza-city-open-land",
+      "subject": "open land around the city, on each side",
+      "dimension": "breadth",
+      "value": 250.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "id": "66d28c1c-4bc4-45d2-8f97-b36d0decc4cf",
+          "measurement_id": "eza-city-open-land",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-side",
+      "subject": "the city, each of its four sides",
+      "dimension": "side",
+      "value": 4500.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Four equal sides, north, south, east, and west (48:16); repeated per side in the gate roster (48:30-34).",
+      "citations": [
+        {
+          "id": "e906c527-5832-4f67-bf0e-9b3f6238d1c0",
+          "measurement_id": "eza-city-side",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 16,
+          "verse_end": null
+        },
+        {
+          "id": "d4ca3e67-0157-485b-a011-dc1f4bfafabc",
+          "measurement_id": "eza-city-side",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 30,
+          "verse_end": null
+        },
+        {
+          "id": "68c600c8-24ef-41b5-b4a0-5aeec2da50e8",
+          "measurement_id": "eza-city-side",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 32,
+          "verse_end": null
+        },
+        {
+          "id": "74f7fe5c-f9c6-4884-ad81-284c58c5ed2c",
+          "measurement_id": "eza-city-side",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 33,
+          "verse_end": null
+        },
+        {
+          "id": "c176e01c-03a0-42d0-8a47-db761f10047d",
+          "measurement_id": "eza-city-side",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 34,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
+}

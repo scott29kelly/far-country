@@ -1,0 +1,27 @@
+{
+  "id": "rainbow-around-throne",
+  "name": "Emerald Rainbow Around the Throne",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8cbfe888-c7ff-4d07-a47d-a508ebc1f5ce",
+      "statement": "A rainbow with the appearance of an emerald encircles the throne.",
+      "tier": "symbolic",
+      "symbolic_referent": "God's covenant faithfulness surrounding His rule",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f3c30727-f678-476b-9afb-bac8ccfffb47",
+          "descriptor_id": "8cbfe888-c7ff-4d07-a47d-a508ebc1f5ce",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 3,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

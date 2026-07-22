@@ -1,0 +1,27 @@
+{
+  "id": "absence-of-mourning-crying-pain",
+  "name": "Absence of Mourning, Crying, and Pain",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "2df14746-d38e-4811-b1a5-2a071107a035",
+      "statement": "There will be no more mourning, crying, or pain, for the former things will have passed away.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "8fa7169c-33d0-4552-83ea-39fbe994c7e8",
+          "descriptor_id": "2df14746-d38e-4811-b1a5-2a071107a035",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

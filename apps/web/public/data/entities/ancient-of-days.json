@@ -1,0 +1,27 @@
+{
+  "id": "ancient-of-days",
+  "name": "Ancient of Days",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4a85ddd3-b60c-4baa-a012-2195e881051d",
+      "statement": "The clothing of the Ancient of Days is white as snow, and the hair of his head like pure wool.",
+      "tier": "symbolic",
+      "symbolic_referent": "The purity, holiness, and eternal age of God depicted in apocalyptic imagery.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "6e6c7c02-7478-4647-b89d-f272e82e6928",
+          "descriptor_id": "4a85ddd3-b60c-4baa-a012-2195e881051d",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

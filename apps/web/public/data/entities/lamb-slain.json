@@ -1,0 +1,27 @@
+{
+  "id": "lamb-slain",
+  "name": "The Lamb Standing as Slain",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6d0dbfb2-97a9-4ba2-ade3-bcaac9a3caf7",
+      "statement": "Between the throne and the four living creatures and the elders stands a Lamb appearing as though it had been slain.",
+      "tier": "symbolic",
+      "symbolic_referent": "Jesus Christ, the crucified and risen Savior, retaining the marks of his sacrificial death",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "d2572ee0-330a-4fda-9e9b-ded6f365fbc1",
+          "descriptor_id": "6d0dbfb2-97a9-4ba2-ade3-bcaac9a3caf7",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 6,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

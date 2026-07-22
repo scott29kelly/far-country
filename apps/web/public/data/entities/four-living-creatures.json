@@ -1,0 +1,135 @@
+{
+  "id": "four-living-creatures",
+  "name": "Four Living Creatures",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "334bcf6f-3883-41ee-b121-97f32cc15358",
+      "statement": "Four living creatures, full of eyes in front and behind, are positioned around the throne on each side.",
+      "tier": "clear",
+      "symbolic_referent": "Exalted angelic beings (cherubim-like) representing creation worshiping God",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "7ed4f7e6-5369-4419-8b64-05777ea28eab",
+          "descriptor_id": "334bcf6f-3883-41ee-b121-97f32cc15358",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    },
+    {
+      "id": "9334a977-0f8b-416b-8362-13e6ef0727db",
+      "statement": "Four living creatures are present around the throne.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "dfd3d618-789e-497b-99fe-90a1f51fa596",
+          "descriptor_id": "9334a977-0f8b-416b-8362-13e6ef0727db",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    },
+    {
+      "id": "bfaa88e9-6830-4a1a-8add-60286073c4bb",
+      "statement": "The four living creatures resemble respectively a lion, an ox, a man, and an eagle in flight.",
+      "tier": "symbolic",
+      "symbolic_referent": "The fullness of God's created order represented before His throne",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "85101932-3430-49a3-b6f8-66d999e604b9",
+          "descriptor_id": "bfaa88e9-6830-4a1a-8add-60286073c4bb",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 7,
+          "verse_end": 7
+        }
+      ]
+    },
+    {
+      "id": "f0563376-ab5f-42a0-81ae-9fdae5c38c24",
+      "statement": "Each of the four living creatures has six wings and is covered with eyes all around and within.",
+      "tier": "symbolic",
+      "symbolic_referent": "Angelic readiness, comprehensive vigilance, and perception in service to God",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "12a4e824-943e-4dea-a10e-1ae174b08962",
+          "descriptor_id": "f0563376-ab5f-42a0-81ae-9fdae5c38c24",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 8,
+          "verse_end": 8
+        }
+      ]
+    },
+    {
+      "id": "c1b48ad3-085b-41c3-ba15-321252dafea7",
+      "statement": "Four living creatures attend the divine throne, each having four faces (human, lion, ox, eagle) and four wings.",
+      "tier": "symbolic",
+      "symbolic_referent": "Angelic beings (cherubim) who attend and bear the throne of God, representing the fullness of created life serving the Creator",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "e0a14ccf-ca4a-4773-9d58-abd10240d712",
+          "descriptor_id": "c1b48ad3-085b-41c3-ba15-321252dafea7",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 5,
+          "verse_end": 11
+        }
+      ]
+    },
+    {
+      "id": "d28c28be-9bdd-4ca0-ab06-4ff1f68268be",
+      "statement": "The sound of the wings of the living creatures is like the sound of many waters, like the voice of the Almighty, like the tumult of an army.",
+      "tier": "symbolic",
+      "symbolic_referent": "The overwhelming majesty and power associated with the heavenly beings who attend God",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "965c6fa9-d764-4b65-9ea2-557a2104fb3a",
+          "descriptor_id": "d28c28be-9bdd-4ca0-ab06-4ff1f68268be",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 24,
+          "verse_end": 24
+        }
+      ]
+    },
+    {
+      "id": "8a5a658d-76cb-4dc4-aebc-2ec823978fe3",
+      "statement": "Four living creatures are present in heaven before the throne of God.",
+      "tier": "symbolic",
+      "symbolic_referent": "High-ranking angelic beings who attend God's throne and lead heavenly worship.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "5ffb2268-2a99-4264-99a7-3f61cbd58490",
+          "descriptor_id": "8a5a658d-76cb-4dc4-aebc-2ec823978fe3",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

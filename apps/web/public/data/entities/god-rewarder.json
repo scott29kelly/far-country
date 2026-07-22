@@ -1,0 +1,27 @@
+{
+  "id": "god-rewarder",
+  "name": "God the Rewarder",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d40599e0-65a2-4d70-98f6-a6418ada9e95",
+      "statement": "God rewards those who earnestly seek him.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "769088e9-c718-4e78-b5c0-efc94ff3ce86",
+          "descriptor_id": "d40599e0-65a2-4d70-98f6-a6418ada9e95",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 6,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

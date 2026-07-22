@@ -1,0 +1,27 @@
+{
+  "id": "right-to-tree-of-life",
+  "name": "Right to the Tree of Life",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d7cc9f7c-ce86-4786-a2f5-fd77f897662a",
+      "statement": "Those who wash their robes have the right to the tree of life and may enter the city by the gates.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "2c63fe53-5cc9-4017-ba06-9973dd3de717",
+          "descriptor_id": "d7cc9f7c-ce86-4786-a2f5-fd77f897662a",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "no-night",
+  "name": "Absence of Night",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "df3f4e52-62bf-44f8-a388-2651bd0daa81",
+      "statement": "There will be no night there.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "2165b78d-865d-41e4-a32a-634e03bff1d4",
+          "descriptor_id": "df3f4e52-62bf-44f8-a388-2651bd0daa81",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

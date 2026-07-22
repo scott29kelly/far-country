@@ -1,0 +1,27 @@
+{
+  "id": "sevenfold-doxology",
+  "name": "Sevenfold Doxology",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "12c5d2e8-3688-4758-81a8-b9b848deb99a",
+      "statement": "Angels ascribe blessing, glory, wisdom, thanksgiving, honor, power, and might to God forever and ever.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "825380db-bf8e-48ce-a0bc-48e654c170c9",
+          "descriptor_id": "12c5d2e8-3688-4758-81a8-b9b848deb99a",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "everlasting-joy-of-the-redeemed",
+  "name": "Everlasting Joy of the Redeemed",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "eefe0d0e-668f-4bb1-8f7c-337e5456aa12",
+      "statement": "God's people rejoice forever in what he creates.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "dd6ac1c3-dd8b-42a4-8844-8d56f123cc64",
+          "descriptor_id": "eefe0d0e-668f-4bb1-8f7c-337e5456aa12",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

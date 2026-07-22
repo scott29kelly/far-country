@@ -1,0 +1,27 @@
+{
+  "id": "great-multitude",
+  "name": "The Great Multitude",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1da00397-4f83-41a6-b144-1145a6729f65",
+      "statement": "A great multitude that no one could number, from every nation, tribe, people, and language, stands before God's throne and before the Lamb.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "660e7410-7ae1-4869-99d3-90afbd7be468",
+          "descriptor_id": "1da00397-4f83-41a6-b144-1145a6729f65",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 9,
+          "verse_end": 9
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

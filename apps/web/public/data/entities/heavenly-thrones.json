@@ -1,0 +1,27 @@
+{
+  "id": "heavenly-thrones",
+  "name": "Heavenly Thrones",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f1379ca0-58b4-4064-9c56-16d81a693606",
+      "statement": "Thrones are set in place in the heavenly court.",
+      "tier": "symbolic",
+      "symbolic_referent": "The throne room of God where divine judgment is rendered; the seats of authority surrounding God's own throne.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "92449704-8c8b-44b1-8752-85efc936dc98",
+          "descriptor_id": "f1379ca0-58b4-4064-9c56-16d81a693606",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

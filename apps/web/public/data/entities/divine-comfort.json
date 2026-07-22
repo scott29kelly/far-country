@@ -1,0 +1,27 @@
+{
+  "id": "divine-comfort",
+  "name": "Divine Comfort",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "df598747-d48b-421d-8ac2-a5766e9fae96",
+      "statement": "The LORD will comfort his people as a mother comforts her child.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "af12e697-8cc9-4e7c-bc80-570fcc396fb0",
+          "descriptor_id": "df598747-d48b-421d-8ac2-a5766e9fae96",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 13,
+          "verse_end": 13
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

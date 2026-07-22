@@ -1,0 +1,27 @@
+{
+  "id": "savior-from-heaven",
+  "name": "Savior Awaited from Heaven",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "7fa4ec74-e05d-4039-8948-19bf633723f0",
+      "statement": "Believers await the Savior, the Lord Jesus Christ, to come from heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "b041f0a8-f745-4df1-b53b-a90e8e79b136",
+          "descriptor_id": "7fa4ec74-e05d-4039-8948-19bf633723f0",
+          "source_type": "scripture",
+          "book": "Philippians",
+          "chapter": 3,
+          "verse_start": 20,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

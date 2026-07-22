@@ -1,0 +1,27 @@
+{
+  "id": "sealed-scroll",
+  "name": "The Sealed Scroll",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9a3ee23b-309b-419d-8fbe-61e59750fa46",
+      "statement": "He who is seated on the throne holds in his right hand a scroll written within and on the back, sealed with seven seals.",
+      "tier": "symbolic",
+      "symbolic_referent": "God's sovereign plan/decree for redemption and judgment, held in his authoritative right hand",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "ae20120d-0388-45a2-a474-0d0820d614af",
+          "descriptor_id": "9a3ee23b-309b-419d-8fbe-61e59750fa46",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 1,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

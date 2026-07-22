@@ -1,0 +1,27 @@
+{
+  "id": "reward-in-heaven",
+  "name": "Reward in Heaven",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "617d2c5e-c357-4680-bdc3-cc3a34d1209c",
+      "statement": "Those persecuted and reviled on account of Christ have a great reward in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "7655277a-3ecb-454f-8e2b-b205f1c2d038",
+          "descriptor_id": "617d2c5e-c357-4680-bdc3-cc3a34d1209c",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 11,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "christs-reign",
+  "name": "Christ's Reign",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3a6a1ff7-078d-4c11-95a1-811d685af6c8",
+      "statement": "Christ must reign until he has put all his enemies under his feet.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "afc21b34-831d-4436-9519-68e2e40ed0b9",
+          "descriptor_id": "3a6a1ff7-078d-4c11-95a1-811d685af6c8",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 25,
+          "verse_end": 25
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

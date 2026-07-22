@@ -1,0 +1,27 @@
+{
+  "id": "enoch-taken-up",
+  "name": "Enoch's Translation",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d2302501-18e4-4100-b6c9-bb73346836f9",
+      "statement": "Enoch was taken up by God so that he did not see death, having pleased God by faith.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "3281e687-3205-4074-b7d7-8bfb483eb83c",
+          "descriptor_id": "d2302501-18e4-4100-b6c9-bb73346836f9",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 5,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

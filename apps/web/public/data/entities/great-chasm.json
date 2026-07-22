@@ -1,0 +1,27 @@
+{
+  "id": "great-chasm",
+  "name": "Great Chasm",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "0dc21a3c-86ec-41c3-ac38-4dd6bd4bb8e4",
+      "statement": "A great impassable chasm separates the place of the righteous from the place of the wicked dead, so that none may cross between them.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "1a1a7da0-866e-45bf-b713-f72959f66af5",
+          "descriptor_id": "0dc21a3c-86ec-41c3-ac38-4dd6bd4bb8e4",
+          "source_type": "scripture",
+          "book": "Luke",
+          "chapter": 16,
+          "verse_start": 26,
+          "verse_end": 26
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

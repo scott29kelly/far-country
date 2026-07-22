@@ -1,0 +1,27 @@
+{
+  "id": "destruction-of-death",
+  "name": "Destruction of Death",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6eb54025-42a2-4762-8ecd-04df5ecd5b1c",
+      "statement": "The last enemy to be destroyed is death.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "b1e3e819-1e91-492b-ad1f-93365bbca1b6",
+          "descriptor_id": "6eb54025-42a2-4762-8ecd-04df5ecd5b1c",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 26,
+          "verse_end": 26
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "open-gates",
+  "name": "Continually Open Gates",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "753ab6a3-6626-43ca-a074-69089acf4174",
+      "statement": "The gates of the city stand open continually, never shut day or night.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "7a28d65d-4d49-4b1b-97f5-652655dbd603",
+          "descriptor_id": "753ab6a3-6626-43ca-a074-69089acf4174",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 11,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

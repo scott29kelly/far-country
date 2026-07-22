@@ -1,0 +1,63 @@
+{
+  "id": "kingdom-of-heaven",
+  "name": "Kingdom of Heaven",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ed6e372e-4343-437e-b8b9-5a60cb80b367",
+      "statement": "The kingdom of heaven includes Gentiles from east and west, not only ethnic Israelites.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "0a1f6ef9-a468-48ab-b273-9f8ba1703c1e",
+          "descriptor_id": "ed6e372e-4343-437e-b8b9-5a60cb80b367",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 8,
+          "verse_start": 11,
+          "verse_end": 12
+        }
+      ]
+    },
+    {
+      "id": "08b9a006-70be-4b0f-95ce-229b72d510f3",
+      "statement": "The kingdom of heaven belongs to the poor in spirit.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "b0cc0534-0045-41ec-a9b1-b4b725662d65",
+          "descriptor_id": "08b9a006-70be-4b0f-95ce-229b72d510f3",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 3,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "87412967-c15d-4531-b169-4b572b9c8bd3",
+      "statement": "The kingdom of heaven belongs to those persecuted for righteousness' sake.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "0bedf3e3-698b-4dd9-9c42-dd88f1dc9c0c",
+          "descriptor_id": "87412967-c15d-4531-b169-4b572b9c8bd3",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

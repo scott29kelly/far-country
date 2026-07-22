@@ -1,0 +1,27 @@
+{
+  "id": "christs-many-diadems",
+  "name": "Christ's Many Diadems",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "16c404d2-2fac-4375-9080-5f7096b1984e",
+      "statement": "Christ wears many diadems on his head.",
+      "tier": "symbolic",
+      "symbolic_referent": "Christ's comprehensive royal sovereignty over all kingdoms.",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "e2922a25-5e77-4ad4-88b7-37135f08debe",
+          "descriptor_id": "16c404d2-2fac-4375-9080-5f7096b1984e",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 12,
+          "verse_end": 12
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

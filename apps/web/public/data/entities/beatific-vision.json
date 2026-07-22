@@ -1,0 +1,45 @@
+{
+  "id": "beatific-vision",
+  "name": "Seeing God's Face",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "67d397a0-c808-4e19-8073-f281173c4938",
+      "statement": "God's servants will see his face.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "8549042b-7a62-42ca-a2a4-b4a185ee6493",
+          "descriptor_id": "67d397a0-c808-4e19-8073-f281173c4938",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    },
+    {
+      "id": "09ce131a-1c4d-416a-84ff-402d086b9d4f",
+      "statement": "The pure in heart shall see God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "c6b7588e-e330-4c00-9071-1fe359524cda",
+          "descriptor_id": "09ce131a-1c4d-416a-84ff-402d086b9d4f",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 8,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

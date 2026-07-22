@@ -1,0 +1,27 @@
+{
+  "id": "gods-judgments",
+  "name": "God's Judgments",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d630e4a3-7212-4884-b088-aa80746b4401",
+      "statement": "God's judgments are declared in heaven to be true and just.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4cc8005a-70bc-4f91-9d50-095cddab1086",
+          "descriptor_id": "d630e4a3-7212-4884-b088-aa80746b4401",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

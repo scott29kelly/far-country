@@ -1,0 +1,27 @@
+{
+  "id": "sprinkled-blood-of-jesus",
+  "name": "Sprinkled Blood of Jesus",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "587d8bac-adb2-4d60-bc7b-af0275349d3d",
+      "statement": "The sprinkled blood of Jesus speaks a better word than the blood of Abel.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "82d54944-7b45-4f12-b1f2-a80cea80f6b2",
+          "descriptor_id": "587d8bac-adb2-4d60-bc7b-af0275349d3d",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 24,
+          "verse_end": 24
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

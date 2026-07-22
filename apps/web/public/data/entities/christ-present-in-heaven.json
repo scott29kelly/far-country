@@ -1,0 +1,27 @@
+{
+  "id": "christ-present-in-heaven",
+  "name": "Christ Present in Heaven",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "774f2a2f-22f4-4dde-bdd3-0892336a880b",
+      "statement": "Christ himself is present with believers in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "123621d2-c1a5-4c7b-925c-926779f6ddcd",
+          "descriptor_id": "774f2a2f-22f4-4dde-bdd3-0892336a880b",
+          "source_type": "scripture",
+          "book": "Luke",
+          "chapter": 23,
+          "verse_start": 43,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

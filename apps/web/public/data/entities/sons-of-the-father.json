@@ -1,0 +1,27 @@
+{
+  "id": "sons-of-the-father",
+  "name": "Sons of the Father in Heaven",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1778f118-8c67-496b-9403-fb480211d8a0",
+      "statement": "Those who love their enemies show themselves to be sons of their Father in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "6cf2c8c3-dece-4c02-8c7e-50c93247ce08",
+          "descriptor_id": "1778f118-8c67-496b-9403-fb480211d8a0",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 45,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

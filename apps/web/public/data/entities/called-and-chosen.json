@@ -1,0 +1,27 @@
+{
+  "id": "called-and-chosen",
+  "name": "The Called and the Chosen",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "93a2cde3-d833-4ed9-9fd0-3be947bdde37",
+      "statement": "Those gathered into the kingdom feast are called, but only those chosen are finally received.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "c67160b3-10d2-42aa-ac40-d935e5a9601f",
+          "descriptor_id": "93a2cde3-d833-4ed9-9fd0-3be947bdde37",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

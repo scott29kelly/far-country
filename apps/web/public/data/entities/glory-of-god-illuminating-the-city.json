@@ -1,0 +1,27 @@
+{
+  "id": "glory-of-god-illuminating-the-city",
+  "name": "Glory of God in the City",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "7a7ad1cf-981d-4811-887e-b7efb610fc69",
+      "statement": "The holy city Jerusalem has the glory of God, with radiance like a most rare jewel, like jasper, clear as crystal.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "bfb4b15a-4c55-4e25-8dc5-b51c1747b450",
+          "descriptor_id": "7a7ad1cf-981d-4811-887e-b7efb610fc69",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

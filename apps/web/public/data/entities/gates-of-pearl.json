@@ -1,0 +1,27 @@
+{
+  "id": "gates-of-pearl",
+  "name": "Gates of Pearl",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "43022d85-4e36-4a59-936f-af6f9c318e39",
+      "statement": "The twelve gates of the city are twelve pearls, each gate made of a single pearl.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c17840d4-267a-401a-ba72-c8d031024188",
+          "descriptor_id": "43022d85-4e36-4a59-936f-af6f9c318e39",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 21,
+          "verse_end": 21
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

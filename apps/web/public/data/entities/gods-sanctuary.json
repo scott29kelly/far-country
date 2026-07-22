@@ -1,0 +1,27 @@
+{
+  "id": "gods-sanctuary",
+  "name": "God's Sanctuary",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6b2ebe33-9af6-49a0-9cff-1880b05d6db6",
+      "statement": "God beautifies his house and makes the place of his feet glorious.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "6d8ff91b-7d5b-4cdd-baa4-40312c8e28ac",
+          "descriptor_id": "6b2ebe33-9af6-49a0-9cff-1880b05d6db6",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 7,
+          "verse_end": 13
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

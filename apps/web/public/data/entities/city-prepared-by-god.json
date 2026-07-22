@@ -1,0 +1,27 @@
+{
+  "id": "city-prepared-by-god",
+  "name": "The City God Prepared",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "50315cd6-00ec-4f81-8938-ff2003faa463",
+      "statement": "God has prepared a city for those who desire the heavenly country, and he is not ashamed to be called their God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "7d630266-5a24-429c-96fe-adf6b3d0d607",
+          "descriptor_id": "50315cd6-00ec-4f81-8938-ff2003faa463",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 16,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

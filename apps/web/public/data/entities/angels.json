@@ -1,0 +1,45 @@
+{
+  "id": "angels",
+  "name": "Angels",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3fbb345b-14e0-462c-8ed5-4f3e0852e334",
+      "statement": "Innumerable angels are gathered in festal assembly in the heavenly city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4f9da1fb-08a9-4bd7-84eb-7420c6417fe1",
+          "descriptor_id": "3fbb345b-14e0-462c-8ed5-4f3e0852e334",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    },
+    {
+      "id": "93fb813f-b07f-488e-bfbc-2ff1611836c2",
+      "statement": "Angels descend from heaven with authority over the bottomless pit.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "b29e997d-a171-4369-9ffa-f2ab2820dc33",
+          "descriptor_id": "93fb813f-b07f-488e-bfbc-2ff1611836c2",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

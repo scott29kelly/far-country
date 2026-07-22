@@ -1,0 +1,27 @@
+{
+  "id": "god-rejoices-over-his-people",
+  "name": "God Rejoices Over His People",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ca0fb494-5442-4df1-8677-2b2ea193dd14",
+      "statement": "God himself rejoices in Jerusalem and is glad in his people.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "64453f53-29b3-43ea-bf66-726cfc77f520",
+          "descriptor_id": "ca0fb494-5442-4df1-8677-2b2ea193dd14",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 19,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "angels-refuse-worship",
+  "name": "Angels Refuse Worship",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "28f80992-f19b-4a8e-b3c0-1d45cb5f1a8b",
+      "statement": "Angels in heaven refuse worship, directing it instead to God alone.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "5d1ccb25-6489-4fe0-987e-0d7b082b3117",
+          "descriptor_id": "28f80992-f19b-4a8e-b3c0-1d45cb5f1a8b",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 10,
+          "verse_end": 10
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

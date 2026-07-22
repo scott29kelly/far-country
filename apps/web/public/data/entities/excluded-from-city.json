@@ -1,0 +1,27 @@
+{
+  "id": "excluded-from-city",
+  "name": "Those Outside the City",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "40c3edfa-17a6-4142-af4d-ac6e11692eac",
+      "statement": "Outside the city are dogs, sorcerers, the sexually immoral, murderers, idolaters, and everyone who loves and practices falsehood.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c2f59d7c-72ea-4a54-b300-54446b52fb8d",
+          "descriptor_id": "40c3edfa-17a6-4142-af4d-ac6e11692eac",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 15,
+          "verse_end": 15
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

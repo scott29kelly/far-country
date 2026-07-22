@@ -1,0 +1,27 @@
+{
+  "id": "abrahams-side",
+  "name": "Abraham's Side",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "eb090267-03ae-4eda-af53-e29045fbfc9a",
+      "statement": "The righteous dead are gathered to Abraham's side, in the company of the patriarchs.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "ba1b2f06-0ea5-4be8-a801-3ddee8a69ac5",
+          "descriptor_id": "eb090267-03ae-4eda-af53-e29045fbfc9a",
+          "source_type": "scripture",
+          "book": "Luke",
+          "chapter": 16,
+          "verse_start": 22,
+          "verse_end": 23
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

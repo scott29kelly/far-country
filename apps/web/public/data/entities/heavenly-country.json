@@ -1,0 +1,27 @@
+{
+  "id": "heavenly-country",
+  "name": "The Heavenly Country",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d1e5ad6e-cb55-472e-8a37-781da75fd1fa",
+      "statement": "The homeland the faithful seek is a heavenly country, better than any earthly land.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "57538c04-3eb5-4011-b9af-e407d0026bd8",
+          "descriptor_id": "d1e5ad6e-cb55-472e-8a37-781da75fd1fa",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 13,
+          "verse_end": 16
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

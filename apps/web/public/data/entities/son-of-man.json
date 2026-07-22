@@ -1,0 +1,45 @@
+{
+  "id": "son-of-man",
+  "name": "Son of Man",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d5905e76-a038-4794-bab2-3afff21504ad",
+      "statement": "The Son of Man is given dominion, glory, and a kingdom, that all peoples, nations, and languages should serve him.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "75f6e678-4459-4df0-8e78-9c74baf037ee",
+          "descriptor_id": "d5905e76-a038-4794-bab2-3afff21504ad",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "b03735a5-8452-4b7b-834c-0c59417eaa8e",
+      "statement": "One like a son of man comes with the clouds of heaven and is presented before the Ancient of Days.",
+      "tier": "symbolic",
+      "symbolic_referent": "The exaltation of Christ, who ascends to the Father and is enthroned at his right hand.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "62fed96f-396a-4ae3-8b1e-130242c4f01d",
+          "descriptor_id": "b03735a5-8452-4b7b-834c-0c59417eaa8e",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

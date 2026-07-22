@@ -1,0 +1,27 @@
+{
+  "id": "like-angels-in-heaven",
+  "name": "Likeness to Angels",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1a434534-9184-4315-821a-a3113c6194ae",
+      "statement": "Those in the resurrection are like the angels in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "7cae9daf-327c-4f0d-9016-5d4c06f94ba2",
+          "descriptor_id": "1a434534-9184-4315-821a-a3113c6194ae",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 30,
+          "verse_end": 30
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

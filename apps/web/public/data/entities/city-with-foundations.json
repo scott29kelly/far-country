@@ -1,0 +1,27 @@
+{
+  "id": "city-with-foundations",
+  "name": "The City with Foundations",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "cdb35a90-92ab-4eac-a723-ff1940d14733",
+      "statement": "Heaven includes a city with foundations, designed and built by God, which the patriarchs anticipated by faith.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "53ba12b2-5523-4518-be34-498d5aa0f9b8",
+          "descriptor_id": "cdb35a90-92ab-4eac-a723-ff1940d14733",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

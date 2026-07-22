@@ -1,0 +1,27 @@
+{
+  "id": "faithful-and-true",
+  "name": "Faithful and True",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "b3278fb5-45c3-4a92-80b3-a00feab4d7b2",
+      "statement": "Christ, the rider on the white horse, is called Faithful and True.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "6cbba8ba-35a1-47f4-8bd3-f583500cf602",
+          "descriptor_id": "b3278fb5-45c3-4a92-80b3-a00feab4d7b2",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

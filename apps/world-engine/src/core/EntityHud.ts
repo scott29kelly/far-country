@@ -47,10 +47,29 @@ export interface EntityDescriptor {
   citations: EntityCitation[];
 }
 
+/** cited measurement record (ADR 0017) — export schema 0.2.0 additive */
+export interface EntityMeasurement {
+  subject: string;
+  value: number;
+  unit: string;
+  tier: string;
+  notes?: string | null;
+  citations: EntityCitation[];
+}
+
 export interface EntityExport {
   id: string;
   name: string;
   descriptors: EntityDescriptor[];
+  measurements?: EntityMeasurement[];
+}
+
+/** measurement display grammar: "25,000 long cubits", "3" for counts */
+export function formatMeasurement(m: EntityMeasurement): string {
+  const n = m.value.toLocaleString('en-US');
+  if (m.unit === 'item') return n;
+  const unit = m.unit.replace(/-/g, ' ');
+  return `${n} ${unit}${m.value === 1 ? '' : 's'}`;
 }
 
 /** citation display grammar — ported from the legacy DescriptorHud */
@@ -220,13 +239,35 @@ export class EntityHud {
         ${referent}
       </div>`;
     });
+    // Measurement cards (ADR 0017) fill the remaining slots — the zone
+    // entities of the dwelling campus carry cited measurements before any
+    // descriptor is extracted for them. Non-clear tiers surface their notes
+    // (the MT/LXX crux on the holy district's breadth must stay legible).
+    const measurements = entity.measurements ?? [];
+    const mCards = measurements.slice(0, Math.max(0, MAX_CARDS - cards.length)).map((m) => {
+      const tierColor = TIER_COLOR[m.tier] ?? '#666';
+      const cites = m.citations
+        .map((c) => `<span class="eh-cite">${esc(formatCitation(c))}</span>`)
+        .join('');
+      const note =
+        m.tier !== 'clear' && m.notes
+          ? `<div class="eh-referent">${esc(m.notes)}</div>`
+          : '';
+      return `<div class="eh-card">
+        <div class="eh-cardhead"><span class="eh-tier" style="background:${tierColor}">${esc(m.tier)}</span>${cites}</div>
+        <div class="eh-statement">${esc(m.subject)} — ${esc(formatMeasurement(m))}</div>
+        ${note}
+      </div>`;
+    });
+    const total = entity.descriptors.length + measurements.length;
+    const shown = cards.length + mCards.length;
     const more =
-      entity.descriptors.length > MAX_CARDS
-        ? `<div class="eh-more">+${entity.descriptors.length - MAX_CARDS} more on the entity page</div>`
+      total > shown
+        ? `<div class="eh-more">+${total - shown} more on the entity page</div>`
         : '';
     this.renderShell(
       label,
-      `<div class="eh-name">${esc(entity.name)}</div>${cards.join('')}${more}`,
+      `<div class="eh-name">${esc(entity.name)}</div>${cards.join('')}${mCards.join('')}${more}`,
       entity.id,
     );
   }

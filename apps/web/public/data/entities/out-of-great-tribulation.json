@@ -1,0 +1,27 @@
+{
+  "id": "out-of-great-tribulation",
+  "name": "Out of the Great Tribulation",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a82433fb-7d3c-4a8f-96c6-2e192fecd1be",
+      "statement": "The redeemed multitude comes out of the great tribulation.",
+      "tier": "debated",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "04879905-2553-4f3e-9758-76fdfd8a4c61",
+          "descriptor_id": "a82433fb-7d3c-4a8f-96c6-2e192fecd1be",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

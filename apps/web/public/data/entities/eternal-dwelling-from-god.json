@@ -1,0 +1,45 @@
+{
+  "id": "eternal-dwelling-from-god",
+  "name": "Eternal Dwelling from God",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "788961ca-a4a7-4b9f-838a-abe07d70a307",
+      "statement": "Believers have an eternal dwelling from God in the heavens, not made with hands.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "486b5d95-6e1d-40ab-b06b-fd1ea923c319",
+          "descriptor_id": "788961ca-a4a7-4b9f-838a-abe07d70a307",
+          "source_type": "scripture",
+          "book": "2 Corinthians",
+          "chapter": 5,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    },
+    {
+      "id": "9bede116-1ce2-4bc3-beb8-4a93831d0f2d",
+      "statement": "The believer's heavenly dwelling is eternal.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f482bea6-52de-4498-8cbc-3bfbad73b61c",
+          "descriptor_id": "9bede116-1ce2-4bc3-beb8-4a93831d0f2d",
+          "source_type": "scripture",
+          "book": "2 Corinthians",
+          "chapter": 5,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

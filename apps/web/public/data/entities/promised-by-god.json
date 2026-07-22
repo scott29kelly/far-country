@@ -1,0 +1,27 @@
+{
+  "id": "promised-by-god",
+  "name": "Divine Promise of New Creation",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "7ffe2475-4ebd-4d6b-8088-223ee28fd13c",
+      "statement": "The new heavens and new earth are the fulfillment of God's own promise.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "6dfdb042-730e-4199-926e-25951bde807e",
+          "descriptor_id": "7ffe2475-4ebd-4d6b-8088-223ee28fd13c",
+          "source_type": "scripture",
+          "book": "2 Peter",
+          "chapter": 3,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "all-righteous-people",
+  "name": "All-Righteous People of God",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "38830534-1864-4dd2-95cd-009ae3ed6c43",
+      "statement": "All the people of God are righteous and possess the land forever.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "96b0cd5d-732c-4bb1-bd8c-ed4d38b7d9ba",
+          "descriptor_id": "38830534-1864-4dd2-95cd-009ae3ed6c43",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 21,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

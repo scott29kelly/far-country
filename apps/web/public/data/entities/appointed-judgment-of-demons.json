@@ -1,0 +1,27 @@
+{
+  "id": "appointed-judgment-of-demons",
+  "name": "Judgment of Demons",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "468e1c96-f724-4afd-b8c2-80dcd2559a96",
+      "statement": "Demons recognize that there is an appointed time at which they will be tormented.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "5e5bd3e3-ea4c-433f-a340-0d9685a4bbda",
+          "descriptor_id": "468e1c96-f724-4afd-b8c2-80dcd2559a96",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 8,
+          "verse_start": 29,
+          "verse_end": 29
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

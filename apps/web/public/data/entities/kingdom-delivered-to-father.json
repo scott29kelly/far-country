@@ -1,0 +1,27 @@
+{
+  "id": "kingdom-delivered-to-father",
+  "name": "Kingdom Delivered to the Father",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4451cc40-8285-4fbf-b229-969c6d55f714",
+      "statement": "At the end, Christ will deliver the kingdom to God the Father after destroying every rule, authority, and power.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "1f2badcd-21ff-4927-9197-b793a5277131",
+          "descriptor_id": "4451cc40-8285-4fbf-b229-969c6d55f714",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 24,
+          "verse_end": 24
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

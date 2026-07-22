@@ -1,0 +1,27 @@
+{
+  "id": "god-answers-before-they-call",
+  "name": "God's Immediate Hearing",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "adca80e8-0c47-48dc-a2a9-5af648f84632",
+      "statement": "God answers his people before they call and hears while they are yet speaking.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "1a38384b-8a7f-4f18-8788-1b9c13fba0a4",
+          "descriptor_id": "adca80e8-0c47-48dc-a2a9-5af648f84632",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 24,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

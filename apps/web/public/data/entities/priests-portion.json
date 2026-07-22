@@ -1,0 +1,70 @@
+{
+  "id": "priests-portion",
+  "name": "The Priests' Portion",
+  "entity_type": "place",
+  "summary": "The priests' allotment within the holy district (Ezek 45:3-4; 48:10-12): 25,000 cubits by 10,000 for the consecrated sons of Zadok, a place for their houses and a holy place for the sanctuary, with the sanctuary of the LORD in its midst.",
+  "descriptors": [],
+  "relations": [],
+  "measurements": [
+    {
+      "id": "eza-priests-portion-breadth",
+      "subject": "the priests' allotment (the sanctuary section), breadth",
+      "dimension": "breadth",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "10,000 cubits on the western and on the eastern side (48:10). The portion is a place for the priests' houses and a holy place for the sanctuary (45:4).",
+      "citations": [
+        {
+          "id": "bb866677-e031-40ba-adf9-22214b786d61",
+          "measurement_id": "eza-priests-portion-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 3,
+          "verse_end": null
+        },
+        {
+          "id": "3b874017-d31e-4e44-8a3f-b9a5af6982d3",
+          "measurement_id": "eza-priests-portion-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-priests-portion-length",
+      "subject": "the priests' allotment (the sanctuary section), length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Measured on the northern and southern sides (48:10), with the sanctuary of the LORD in its midst.",
+      "citations": [
+        {
+          "id": "b81e5693-e6ae-40ba-b11e-d92b72499b9e",
+          "measurement_id": "eza-priests-portion-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 3,
+          "verse_end": null
+        },
+        {
+          "id": "5f40607d-11b5-492d-9622-91236bbfa6c2",
+          "measurement_id": "eza-priests-portion-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "better-resurrection",
+  "name": "The Better Resurrection",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "15fccecd-60a6-4f42-8841-0f2f93c1881c",
+      "statement": "The faithful endured suffering in hope of resurrection to a better life.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "a1bbebd8-ab2a-457f-a3b1-3283c3620c11",
+          "descriptor_id": "15fccecd-60a6-4f42-8841-0f2f93c1881c",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 11,
+          "verse_start": 35,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

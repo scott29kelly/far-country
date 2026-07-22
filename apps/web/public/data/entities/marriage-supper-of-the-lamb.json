@@ -1,0 +1,27 @@
+{
+  "id": "marriage-supper-of-the-lamb",
+  "name": "Marriage Supper of the Lamb",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6e7c8999-f793-49f2-8fc0-bb6a246fae76",
+      "statement": "Those invited to the marriage supper of the Lamb are blessed.",
+      "tier": "symbolic",
+      "symbolic_referent": "The consummated joyful fellowship between Christ and his redeemed people in the eternal state.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "1dc4a597-d645-475f-9103-67fc0c3a7979",
+          "descriptor_id": "6e7c8999-f793-49f2-8fc0-bb6a246fae76",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 9,
+          "verse_end": 9
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

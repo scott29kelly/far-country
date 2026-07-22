@@ -1,0 +1,27 @@
+{
+  "id": "no-more-curse",
+  "name": "Absence of the Curse",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "18575d37-0c08-4a74-9819-d8cac3ee2b75",
+      "statement": "Nothing accursed will exist there any longer.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "93873d33-4cb1-408f-b483-19bf5de89e37",
+          "descriptor_id": "18575d37-0c08-4a74-9819-d8cac3ee2b75",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 3,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

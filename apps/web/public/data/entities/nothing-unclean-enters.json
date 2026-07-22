@@ -1,0 +1,27 @@
+{
+  "id": "nothing-unclean-enters",
+  "name": "Nothing Unclean Enters",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "80822f92-ec2b-4e4c-849c-e4aac2ba4dee",
+      "statement": "Nothing unclean, and no one who does what is detestable or false, will ever enter the city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "2615e614-dfbe-48b9-b8ae-bd42e546dce8",
+          "descriptor_id": "80822f92-ec2b-4e4c-849c-e4aac2ba4dee",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 27,
+          "verse_end": 27
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

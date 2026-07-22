@@ -1,0 +1,27 @@
+{
+  "id": "nations-walk-by-its-light",
+  "name": "Nations Walking by Its Light",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3fb3d166-2188-4ed4-aca3-f977086fbb6f",
+      "statement": "The nations will walk by the light of the city, and the kings of the earth will bring their glory into it.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "3ebf29d1-49d4-4c4b-bba1-1c655b032685",
+          "descriptor_id": "3fb3d166-2188-4ed4-aca3-f977086fbb6f",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 24,
+          "verse_end": 24
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

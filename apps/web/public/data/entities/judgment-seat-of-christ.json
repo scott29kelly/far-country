@@ -1,0 +1,27 @@
+{
+  "id": "judgment-seat-of-christ",
+  "name": "Judgment Seat of Christ",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "872ed9a4-71d8-4fca-9738-d58f405205b0",
+      "statement": "All believers must appear before the judgment seat of Christ to receive what is due for what was done in the body.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "7daff52c-202c-482f-9e9b-16d8227890bf",
+          "descriptor_id": "872ed9a4-71d8-4fca-9738-d58f405205b0",
+          "source_type": "scripture",
+          "book": "2 Corinthians",
+          "chapter": 5,
+          "verse_start": 10,
+          "verse_end": 10
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

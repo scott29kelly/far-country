@@ -1,0 +1,27 @@
+{
+  "id": "sons-of-god",
+  "name": "Sons of God",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a0abe3c6-8235-43af-9d07-71428649ebd9",
+      "statement": "Peacemakers shall be called sons of God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4ac9ecd5-8d24-459f-882d-974b037f4d31",
+          "descriptor_id": "a0abe3c6-8235-43af-9d07-71428649ebd9",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

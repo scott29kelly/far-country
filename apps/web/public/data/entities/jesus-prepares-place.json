@@ -1,0 +1,27 @@
+{
+  "id": "jesus-prepares-place",
+  "name": "Jesus Preparing a Place",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "67fec3be-5eaa-4dff-9896-2988a4c03907",
+      "statement": "Jesus has gone to prepare a place in the Father's house for his disciples.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f52f4b0c-b2a5-4c9e-933d-037a0418230c",
+          "descriptor_id": "67fec3be-5eaa-4dff-9896-2988a4c03907",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 2,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

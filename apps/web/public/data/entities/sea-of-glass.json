@@ -1,0 +1,27 @@
+{
+  "id": "sea-of-glass",
+  "name": "Sea of Glass",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "43eb6526-4c9c-44a0-9ea6-dba4fdd5aabc",
+      "statement": "Before the throne is what appears to be a sea of glass, like crystal.",
+      "tier": "symbolic",
+      "symbolic_referent": "The transcendent holiness and serene separation of God from creation",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f6852bfc-92af-4c0f-a3b9-29cbcf26ca8e",
+          "descriptor_id": "43eb6526-4c9c-44a0-9ea6-dba4fdd5aabc",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 4,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

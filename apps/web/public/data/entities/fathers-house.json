@@ -1,0 +1,27 @@
+{
+  "id": "fathers-house",
+  "name": "The Father's House",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "7bcc90f4-3bb3-4363-a84a-edf7472ee7e9",
+      "statement": "Heaven is the Father's house.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "211e5173-f25c-4a9a-a8f2-ab9497d0ee41",
+          "descriptor_id": "7bcc90f4-3bb3-4363-a84a-edf7472ee7e9",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

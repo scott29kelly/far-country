@@ -1,0 +1,27 @@
+{
+  "id": "absence-of-violence",
+  "name": "Absence of Violence",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "54443f2b-4d0a-445b-9604-bcfdbf9b47b3",
+      "statement": "Violence, devastation, and destruction are no longer heard within the city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4ad9a6f1-d36e-4b39-874c-b82b41c251c3",
+          "descriptor_id": "54443f2b-4d0a-445b-9604-bcfdbf9b47b3",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

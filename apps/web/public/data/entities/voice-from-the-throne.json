@@ -1,0 +1,27 @@
+{
+  "id": "voice-from-the-throne",
+  "name": "Voice from the Throne",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "16044983-4bb8-49ce-b271-f68ff2ff77bb",
+      "statement": "A voice from the throne summons all God's servants, small and great, to praise him.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "0c1539fc-1cf1-41b3-8985-8d8202bfd80a",
+          "descriptor_id": "16044983-4bb8-49ce-b271-f68ff2ff77bb",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

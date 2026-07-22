@@ -1,0 +1,45 @@
+{
+  "id": "jesus-christ",
+  "name": "Jesus Christ",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9f32bdff-ae52-45cb-b393-2439e245c145",
+      "statement": "Jesus is seated at the right hand of the throne of God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "8aba600a-e793-4d06-8c2d-4db66543288b",
+          "descriptor_id": "9f32bdff-ae52-45cb-b393-2439e245c145",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "e4e5fe3e-1b5d-4068-a293-6ca816d96456",
+      "statement": "Jesus is the mediator of a new covenant in the heavenly assembly.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "6a6dc354-7c38-4ee8-8440-25862d887c51",
+          "descriptor_id": "e4e5fe3e-1b5d-4068-a293-6ca816d96456",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 24,
+          "verse_end": 24
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

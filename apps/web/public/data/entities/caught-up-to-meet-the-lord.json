@@ -1,0 +1,27 @@
+{
+  "id": "caught-up-to-meet-the-lord",
+  "name": "Caught Up to Meet the Lord",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "aca60c1e-d44a-407a-801f-337af0d3a959",
+      "statement": "Living believers will be caught up together with the resurrected dead in the clouds to meet the Lord in the air.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "47cfd382-a865-42bb-91cf-b2ff6db2c77d",
+          "descriptor_id": "aca60c1e-d44a-407a-801f-337af0d3a959",
+          "source_type": "scripture",
+          "book": "1 Thessalonians",
+          "chapter": 4,
+          "verse_start": 17,
+          "verse_end": 17
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

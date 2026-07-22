@@ -1,0 +1,27 @@
+{
+  "id": "god-of-the-living",
+  "name": "God of the Living",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ee8c4d8a-617b-4938-b95f-0a57acf2e560",
+      "statement": "God is the God of the living, not of the dead; Abraham, Isaac, and Jacob are alive to him.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "eca2c021-b621-4016-9cf4-3f88dab215da",
+          "descriptor_id": "ee8c4d8a-617b-4938-b95f-0a57acf2e560",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 31,
+          "verse_end": 32
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

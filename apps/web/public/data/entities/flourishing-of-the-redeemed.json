@@ -1,0 +1,27 @@
+{
+  "id": "flourishing-of-the-redeemed",
+  "name": "Flourishing of the Redeemed",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8a779e10-29ba-43e4-96a0-5a3df6a9d961",
+      "statement": "The hearts of God's servants will rejoice and their bones will flourish like grass.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "907c7c4d-3af8-4b27-a424-5ab1c3d70d97",
+          "descriptor_id": "8a779e10-29ba-43e4-96a0-5a3df6a9d961",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 66,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

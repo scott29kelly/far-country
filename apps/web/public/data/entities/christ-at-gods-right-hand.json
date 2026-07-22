@@ -1,0 +1,27 @@
+{
+  "id": "christ-at-gods-right-hand",
+  "name": "Christ Seated at God's Right Hand",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "820375a3-91e1-42f6-a75c-44d3b1e98d2f",
+      "statement": "The Christ, David's Lord, is seated at the right hand of God until his enemies are made his footstool.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "14f2d337-b2cf-4e02-82e3-f41c790da89f",
+          "descriptor_id": "820375a3-91e1-42f6-a75c-44d3b1e98d2f",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 22,
+          "verse_start": 44,
+          "verse_end": 44
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

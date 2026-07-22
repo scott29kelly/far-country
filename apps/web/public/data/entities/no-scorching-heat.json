@@ -1,0 +1,27 @@
+{
+  "id": "no-scorching-heat",
+  "name": "No Scorching Heat",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "d00e50f3-dda7-4d3e-b05e-63c105b53bd4",
+      "statement": "The sun shall not strike the redeemed, nor any scorching heat.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "26164229-98c8-4b75-afb0-71810a920f6a",
+          "descriptor_id": "d00e50f3-dda7-4d3e-b05e-63c105b53bd4",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 16,
+          "verse_end": 16
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

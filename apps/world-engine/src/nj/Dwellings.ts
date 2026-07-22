@@ -60,31 +60,24 @@ import type { Heightfield } from '../world/Heightfield';
 import { WORLD_HALF } from '../world/WorldConst';
 import { PLATEAU_Y } from './rimModel';
 import { TEMPLE_SITE } from './templeModel';
-
-// ---------------------------------------------------------------------------
 // Layout constants (interpretive art direction — RENDERING-DECISIONS #8)
-// ---------------------------------------------------------------------------
-
-/** priests' band block grid: 108 m garden-court blocks on a 150 m pitch */
-const BLOCK = 108;
-const PITCH = 150;
-/** meridian lane on x = 0 (city -> temple axis): col centers at ±(PITCH/2 + k·PITCH) */
-const COLS_PER_SIDE = 40; // 80 cols, outermost block edge at ±5979
-const NEAR_ROWS = [-5075, -5225, -5375, -5525, -5675, -5825, -5975] as const;
-/** temple close: blocks whose rect intersects the plinth + this margin are cleared */
-const TEMPLE_MARGIN = 40;
-/** east processional: cleared cells east of the temple gate on the gate-axis rows */
-const PROCESSIONAL_X1 = 1030;
-const PROCESSIONAL_ZHALF = 160; // clears the two rows straddling z = -5600
-
-/** Levites' band: podium blocks beyond the detailed ring */
-const FAR_BLOCK = 190;
-const FAR_PITCH = 300;
-const FAR_COLS_PER_SIDE = 20; // 40 cols, outermost edge ±5945
-const FAR_ROW0 = -6450; // 300 m meadow break past the tile/shell seam at -6144
-const FAR_ROWS = 13; // to -10050 (podium edge -10145)
-/** far shell renders macroTerrain('far') minus this sink (TerrainTiles farH) */
-const FAR_SHELL_SINK = 2.5;
+// live in campusModel.ts, the shared owner table the pick registry and
+// reading key also derive from.
+import {
+  BLOCK,
+  COLS_PER_SIDE,
+  FAR_BLOCK,
+  FAR_COLS_PER_SIDE,
+  FAR_PITCH,
+  FAR_ROW0,
+  FAR_ROWS,
+  FAR_SHELL_SINK,
+  NEAR_ROWS,
+  PITCH,
+  PROCESSIONAL_X1,
+  PROCESSIONAL_ZHALF,
+  TEMPLE_MARGIN,
+} from './campusModel';
 
 /** far-macro sample grid over the Levites' band (GPU eval + CPU bilinear) */
 const FARGRID_X0 = -6150;

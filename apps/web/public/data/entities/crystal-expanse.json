@@ -1,0 +1,27 @@
+{
+  "id": "crystal-expanse",
+  "name": "Crystal Expanse Above the Living Creatures",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "a49a0b75-8e6d-4091-85ea-f6d7795a7011",
+      "statement": "Above the heads of the living creatures is an expanse shining like awe-inspiring crystal.",
+      "tier": "symbolic",
+      "symbolic_referent": "The platform or firmament that separates God's throne above from the created order below, signifying his transcendence",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "3412484b-615c-49c3-9e7d-b758a7bf3bd1",
+          "descriptor_id": "a49a0b75-8e6d-4091-85ea-f6d7795a7011",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

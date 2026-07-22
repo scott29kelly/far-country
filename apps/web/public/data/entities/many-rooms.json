@@ -1,0 +1,27 @@
+{
+  "id": "many-rooms",
+  "name": "Many Rooms",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f1d8768e-d952-4a2f-b1ec-149271e18a62",
+      "statement": "The Father's house contains many rooms.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "518ef929-13af-4adf-8302-bf89bff34328",
+          "descriptor_id": "f1d8768e-d952-4a2f-b1ec-149271e18a62",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

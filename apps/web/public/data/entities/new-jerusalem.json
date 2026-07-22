@@ -1,0 +1,27 @@
+{
+  "id": "new-jerusalem",
+  "name": "New Jerusalem",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ba1c3830-c945-46f8-a3fe-128ba3ea9781",
+      "statement": "The holy city, the new Jerusalem, will come down out of heaven from God, prepared as a bride adorned for her husband.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "ee7a67e9-9344-409c-bccc-8872cc50dea1",
+          "descriptor_id": "ba1c3830-c945-46f8-a3fe-128ba3ea9781",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

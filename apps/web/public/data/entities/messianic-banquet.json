@@ -1,0 +1,27 @@
+{
+  "id": "messianic-banquet",
+  "name": "Messianic Banquet",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "64ce7b69-8378-4f2a-aaa3-81c2950bebf2",
+      "statement": "Many will come from east and west to recline at table with Abraham, Isaac, and Jacob in the kingdom of heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "0fffe2fa-39ee-425d-b3b3-bf4b04c3dd96",
+          "descriptor_id": "64ce7b69-8378-4f2a-aaa3-81c2950bebf2",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 8,
+          "verse_start": 11,
+          "verse_end": 11
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "rainbow-around-the-throne",
+  "name": "Rainbow Around the Throne",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "e168d092-8664-462d-a5bd-a90897f3ca79",
+      "statement": "The brightness surrounding the enthroned figure is like the appearance of the rainbow in a cloud on a rainy day.",
+      "tier": "symbolic",
+      "symbolic_referent": "The covenant glory and beauty surrounding God's throne, recalling the Noahic covenant sign",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "b921ece8-70b8-44cb-a304-68b183971a90",
+          "descriptor_id": "e168d092-8664-462d-a5bd-a90897f3ca79",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse_start": 28,
+          "verse_end": 28
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

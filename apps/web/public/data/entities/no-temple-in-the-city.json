@@ -1,0 +1,27 @@
+{
+  "id": "no-temple-in-the-city",
+  "name": "No Temple in the City",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "b3a2a39b-8a7f-4c81-82eb-d6a6898b9481",
+      "statement": "There is no temple in the city, for its temple is the Lord God the Almighty and the Lamb.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "2b2f8b8c-329d-4efe-a5ff-1d5bbe66bc10",
+          "descriptor_id": "b3a2a39b-8a7f-4c81-82eb-d6a6898b9481",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

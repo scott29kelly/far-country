@@ -1,0 +1,27 @@
+{
+  "id": "fire-from-heaven",
+  "name": "Fire from Heaven",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "04d08c66-e4b4-4ebe-81a0-7ffe7391fc93",
+      "statement": "Fire comes down from heaven to consume the enemies of the saints.",
+      "tier": "symbolic",
+      "symbolic_referent": "God's decisive judgment from his heavenly throne against the final assault on his people.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "5333d2c2-3351-4c37-b01c-d545a8ab0d07",
+          "descriptor_id": "04d08c66-e4b4-4ebe-81a0-7ffe7391fc93",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 9,
+          "verse_end": 9
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

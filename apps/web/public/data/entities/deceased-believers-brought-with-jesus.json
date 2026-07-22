@@ -1,0 +1,27 @@
+{
+  "id": "deceased-believers-brought-with-jesus",
+  "name": "Deceased Believers Brought with Jesus",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "7cae3141-5546-49cc-9d66-61ff99ff66ba",
+      "statement": "Believers who have died will be brought with Jesus at his coming.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "b1fb680e-a61d-4088-a69e-d6c48f7da848",
+          "descriptor_id": "7cae3141-5546-49cc-9d66-61ff99ff66ba",
+          "source_type": "scripture",
+          "book": "1 Thessalonians",
+          "chapter": 4,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "glory-and-honor-of-nations-brought-in",
+  "name": "Glory and Honor of the Nations",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "1e42b0f4-627b-47e3-ad39-e27c0cae0d9d",
+      "statement": "The glory and honor of the nations will be brought into the city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "77e5dbd0-8eb0-4c16-abb3-196ceb31a13c",
+          "descriptor_id": "1e42b0f4-627b-47e3-ad39-e27c0cae0d9d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 26,
+          "verse_end": 26
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

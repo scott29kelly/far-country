@@ -1,0 +1,27 @@
+{
+  "id": "tree-of-life",
+  "name": "Tree of Life",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "be58ef6b-05f2-4ee9-9e67-dc9c6b98f684",
+      "statement": "The tree of life grows on either side of the river, bearing twelve kinds of fruit and yielding its fruit each month.",
+      "tier": "symbolic",
+      "symbolic_referent": "The restored access to eternal life granted to the redeemed in God's presence.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "e25da52d-72f5-4c37-832b-7531cacf0c11",
+          "descriptor_id": "be58ef6b-05f2-4ee9-9e67-dc9c6b98f684",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

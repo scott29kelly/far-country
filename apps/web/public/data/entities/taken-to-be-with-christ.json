@@ -1,0 +1,27 @@
+{
+  "id": "taken-to-be-with-christ",
+  "name": "Taken to Be With Christ",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "919233a6-8f2c-4020-8796-e39d31a6766f",
+      "statement": "Jesus will return and take his disciples to himself so that they may be where he is.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "ac91b79e-c3f7-4f69-a672-cf0c3970472a",
+          "descriptor_id": "919233a6-8f2c-4020-8796-e39d31a6766f",
+          "source_type": "scripture",
+          "book": "John",
+          "chapter": 14,
+          "verse_start": 3,
+          "verse_end": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

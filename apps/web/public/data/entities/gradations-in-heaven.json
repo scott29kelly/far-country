@@ -1,0 +1,27 @@
+{
+  "id": "gradations-in-heaven",
+  "name": "Gradations in the Kingdom",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "14b2286e-4f45-4392-98e4-7d18794e2e7b",
+      "statement": "In the kingdom of heaven there are gradations: some will be called least and some great, according to their relation to God's commandments.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "3f26847e-5a35-4a01-83d7-3b64a70bc8b8",
+          "descriptor_id": "14b2286e-4f45-4392-98e4-7d18794e2e7b",
+          "source_type": "scripture",
+          "book": "Matthew",
+          "chapter": 5,
+          "verse_start": 19,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

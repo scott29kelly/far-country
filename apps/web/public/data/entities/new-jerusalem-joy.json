@@ -1,0 +1,27 @@
+{
+  "id": "new-jerusalem-joy",
+  "name": "Jerusalem as Joy",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3801b62b-69ba-4bd9-8372-77589e314f7a",
+      "statement": "God creates Jerusalem to be a joy and her people to be a gladness.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "ba9a2017-8136-47d8-8de8-886518172363",
+          "descriptor_id": "3801b62b-69ba-4bd9-8372-77589e314f7a",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "street-of-the-city",
+  "name": "Street of the City",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f4e6229e-1241-4184-ab67-1cd8edbf7862",
+      "statement": "The river flows through the middle of the street of the city.",
+      "tier": "symbolic",
+      "symbolic_referent": "The civic life of the New Jerusalem, ordered around God's life-giving presence.",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "4d54bcc7-52a3-4327-84dc-c72d69365d50",
+          "descriptor_id": "f4e6229e-1241-4184-ab67-1cd8edbf7862",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

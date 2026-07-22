@@ -1,0 +1,27 @@
+{
+  "id": "earth-shines-with-gods-glory",
+  "name": "Radiance of God's Glory",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "c7b2b53c-64a6-48eb-8e84-cb2e303752f8",
+      "statement": "The earth shines with the glory of God when he comes.",
+      "tier": "symbolic",
+      "symbolic_referent": "The illumination of the renewed creation by God's manifest presence",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "b81f6a32-b888-4225-88d7-e60d2b03b0b5",
+          "descriptor_id": "c7b2b53c-64a6-48eb-8e84-cb2e303752f8",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 2,
+          "verse_end": 2
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

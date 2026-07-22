@@ -1,0 +1,27 @@
+{
+  "id": "redeemed-reign-forever",
+  "name": "Eternal Reign of the Redeemed",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "3711c527-759d-48b3-b691-ddff2488578c",
+      "statement": "The redeemed will reign forever and ever.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "ed163958-3c59-4011-9f4c-1aa81b911469",
+          "descriptor_id": "3711c527-759d-48b3-b691-ddff2488578c",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

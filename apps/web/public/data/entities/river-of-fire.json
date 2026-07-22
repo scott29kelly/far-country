@@ -1,0 +1,27 @@
+{
+  "id": "river-of-fire",
+  "name": "Stream of Fire",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "46ad9951-caf1-4dec-b4a4-980092a3a80a",
+      "statement": "A stream of fire issues and comes out from before the Ancient of Days.",
+      "tier": "symbolic",
+      "symbolic_referent": "The outflowing judgment and holiness of God proceeding from his presence.",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "e52b2a1f-c6a0-4a5b-a2d7-753682b39741",
+          "descriptor_id": "46ad9951-caf1-4dec-b4a4-980092a3a80a",
+          "source_type": "scripture",
+          "book": "Daniel",
+          "chapter": 7,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

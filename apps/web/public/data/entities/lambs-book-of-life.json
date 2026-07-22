@@ -1,0 +1,27 @@
+{
+  "id": "lambs-book-of-life",
+  "name": "Lamb's Book of Life",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f8e2e733-6e84-4ef9-8bd0-06db455233d5",
+      "statement": "Only those whose names are written in the Lamb's book of life will enter the city.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "3fd216ef-14e2-4fa3-8b99-97bf4b29ae63",
+          "descriptor_id": "f8e2e733-6e84-4ef9-8bd0-06db455233d5",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 27,
+          "verse_end": 27
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

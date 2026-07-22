@@ -1,0 +1,27 @@
+{
+  "id": "sevenfold-praise-lamb",
+  "name": "Angelic Sevenfold Praise of the Lamb",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "40c20bd3-19ce-4516-a958-627ad483bf0d",
+      "statement": "The angels declare with a loud voice that the Lamb who was slain is worthy to receive power, wealth, wisdom, might, honor, glory, and blessing.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "b36cf865-c23e-46d7-be7d-3d62ca6616be",
+          "descriptor_id": "40c20bd3-19ce-4516-a958-627ad483bf0d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

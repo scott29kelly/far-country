@@ -1,0 +1,27 @@
+{
+  "id": "citizenship-in-heaven",
+  "name": "Citizenship in Heaven",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "0c6f5804-74b7-4cd3-ae78-2cf289d633da",
+      "statement": "The citizenship of believers is in heaven.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "7feff71f-76d3-420d-8053-fc9b338c8016",
+          "descriptor_id": "0c6f5804-74b7-4cd3-ae78-2cf289d633da",
+          "source_type": "scripture",
+          "book": "Philippians",
+          "chapter": 3,
+          "verse_start": 20,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

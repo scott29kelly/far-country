@@ -1,0 +1,27 @@
+{
+  "id": "always-with-the-lord",
+  "name": "Always with the Lord",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "e07b549c-e320-4846-8709-aec9f688b09b",
+      "statement": "Believers will always be with the Lord.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "86942ce8-e56b-4f9a-a46f-fc030e96514d",
+          "descriptor_id": "e07b549c-e320-4846-8709-aec9f688b09b",
+          "source_type": "scripture",
+          "book": "1 Thessalonians",
+          "chapter": 4,
+          "verse_start": 17,
+          "verse_end": 17
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

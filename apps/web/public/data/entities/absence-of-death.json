@@ -1,0 +1,27 @@
+{
+  "id": "absence-of-death",
+  "name": "Absence of Death",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9764b423-546d-4bde-990f-2f4f4e39596d",
+      "statement": "Death will be no more in the new creation.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "7e450c1a-e92d-4030-9673-bc45cb3d70aa",
+          "descriptor_id": "9764b423-546d-4bde-990f-2f4f4e39596d",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 4,
+          "verse_end": 4
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

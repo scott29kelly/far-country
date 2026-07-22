@@ -1,0 +1,27 @@
+{
+  "id": "jasper-wall-and-gold-city",
+  "name": "Jasper Wall and Gold City",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6128ee7d-83c8-4bfe-89cf-c37525e89a9f",
+      "statement": "The wall of the city is built of jasper, while the city itself is pure gold, like clear glass.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "ecd3bd54-9ac0-46b0-b1aa-d33ff83f8be0",
+          "descriptor_id": "6128ee7d-83c8-4bfe-89cf-c37525e89a9f",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 18,
+          "verse_end": 18
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

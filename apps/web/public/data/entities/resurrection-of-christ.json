@@ -1,0 +1,27 @@
+{
+  "id": "resurrection-of-christ",
+  "name": "Resurrection of Christ",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8269c314-2d60-4f91-96af-597b0b0ba088",
+      "statement": "Christ has been raised from the dead as the firstfruits of those who have fallen asleep.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "c46fcf20-926d-49b1-9a73-adaf4cefbe66",
+          "descriptor_id": "8269c314-2d60-4f91-96af-597b0b0ba088",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 20,
+          "verse_end": 20
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

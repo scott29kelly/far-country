@@ -1,0 +1,45 @@
+{
+  "id": "at-home-with-the-lord",
+  "name": "At Home with the Lord",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "8cf6aa94-097c-48b6-8365-9ddcaeed8a3d",
+      "statement": "While at home in the body, the believer is away from the Lord.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "a23322d6-9c17-42b8-bf63-2341075b1a8a",
+          "descriptor_id": "8cf6aa94-097c-48b6-8365-9ddcaeed8a3d",
+          "source_type": "scripture",
+          "book": "2 Corinthians",
+          "chapter": 5,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    },
+    {
+      "id": "93f04355-5d73-434b-b403-bf00f0c92cbb",
+      "statement": "To be away from the body is to be at home with the Lord.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "4045472b-df5e-41f7-87b2-fcf9a763e993",
+          "descriptor_id": "93f04355-5d73-434b-b403-bf00f0c92cbb",
+          "source_type": "scripture",
+          "book": "2 Corinthians",
+          "chapter": 5,
+          "verse_start": 8,
+          "verse_end": 8
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "god-is-the-light",
+  "name": "God as the Light",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "32121b07-7336-4b8b-bf86-8459b3520fa7",
+      "statement": "The redeemed will need no light of lamp or sun, for the Lord God will be their light.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "5c563950-e29e-4d25-ae5f-fc49ba1f00ea",
+          "descriptor_id": "32121b07-7336-4b8b-bf86-8459b3520fa7",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 22,
+          "verse_start": 5,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "immortality-of-the-redeemed",
+  "name": "Immortality of the Redeemed",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4b0ccaff-a5e9-420c-b752-1be125b29d33",
+      "statement": "The mortal body will put on immortality.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "76d21b6c-28d3-4153-9399-1aa68aa90b3d",
+          "descriptor_id": "4b0ccaff-a5e9-420c-b752-1be125b29d33",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 53,
+          "verse_end": 54
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

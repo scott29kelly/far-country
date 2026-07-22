@@ -1,0 +1,27 @@
+{
+  "id": "robes-washed-in-blood",
+  "name": "Robes Washed in the Blood of the Lamb",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "9b522e98-358d-43a8-a0d5-614498d05b99",
+      "statement": "The redeemed have washed their robes and made them white in the blood of the Lamb.",
+      "tier": "symbolic",
+      "symbolic_referent": "Cleansing from sin and justification through Christ's atoning sacrifice",
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "f237e354-b43a-4423-96e2-63cf58268a0d",
+          "descriptor_id": "9b522e98-358d-43a8-a0d5-614498d05b99",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 7,
+          "verse_start": 14,
+          "verse_end": 14
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

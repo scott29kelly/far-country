@@ -1,0 +1,27 @@
+{
+  "id": "lamb-takes-scroll",
+  "name": "The Lamb Receives the Scroll",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "4bf7156b-3a4f-4c72-b5b9-36ad3abfc325",
+      "statement": "The Lamb takes the scroll from the right hand of him who is seated on the throne.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "62bdbd43-ef41-4cb0-9911-be2d843f43d6",
+          "descriptor_id": "4bf7156b-3a4f-4c72-b5b9-36ad3abfc325",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 7,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

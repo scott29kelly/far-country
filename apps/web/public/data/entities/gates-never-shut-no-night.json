@@ -1,0 +1,27 @@
+{
+  "id": "gates-never-shut-no-night",
+  "name": "Gates Never Shut, No Night",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "66bc516d-6ffc-4d60-8aef-503292cbd3e8",
+      "statement": "The gates of the city will never be shut by day, and there will be no night there.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "5cf153a6-5505-443e-a074-1aa7d0c0eaaa",
+          "descriptor_id": "66bc516d-6ffc-4d60-8aef-503292cbd3e8",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 25,
+          "verse_end": 25
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "angelic-escort-at-death",
+  "name": "Angelic Escort at Death",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "39dc53cb-4573-4bb7-b59f-47afbdda0d18",
+      "statement": "Angels carry believers at death to their place of blessing.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "dfb5d455-101c-49d9-abed-6279a9d5acac",
+          "descriptor_id": "39dc53cb-4573-4bb7-b59f-47afbdda0d18",
+          "source_type": "scripture",
+          "book": "Luke",
+          "chapter": 16,
+          "verse_start": 22,
+          "verse_end": 22
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

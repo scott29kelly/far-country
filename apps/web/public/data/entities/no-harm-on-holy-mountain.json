@@ -1,0 +1,27 @@
+{
+  "id": "no-harm-on-holy-mountain",
+  "name": "No Harm on the Holy Mountain",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "ed4a0586-11c8-4349-af59-ccb472199779",
+      "statement": "None shall hurt or destroy on God's holy mountain.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "018315ee-ecc3-46e7-8767-8938cec068ea",
+          "descriptor_id": "ed4a0586-11c8-4349-af59-ccb472199779",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 65,
+          "verse_start": 25,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

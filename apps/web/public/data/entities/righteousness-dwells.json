@@ -1,0 +1,27 @@
+{
+  "id": "righteousness-dwells",
+  "name": "Righteousness Dwelling",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f118153f-655e-49a6-88c0-38261dbbf76b",
+      "statement": "Righteousness dwells in the new heavens and new earth.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "75f7005d-5fcc-4a23-9d6d-9cbeacd22111",
+          "descriptor_id": "f118153f-655e-49a6-88c0-38261dbbf76b",
+          "source_type": "scripture",
+          "book": "2 Peter",
+          "chapter": 3,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

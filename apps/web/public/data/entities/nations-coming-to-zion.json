@@ -1,0 +1,27 @@
+{
+  "id": "nations-coming-to-zion",
+  "name": "Nations Coming to Zion",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "49d60412-cfa6-4339-81c9-26cfae74a4af",
+      "statement": "Nations and kings come to the light of God's people.",
+      "tier": "fuzzy",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "602e01b4-37d6-4ebe-b187-76c0ddb83d2f",
+          "descriptor_id": "49d60412-cfa6-4339-81c9-26cfae74a4af",
+          "source_type": "scripture",
+          "book": "Isaiah",
+          "chapter": 60,
+          "verse_start": 3,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

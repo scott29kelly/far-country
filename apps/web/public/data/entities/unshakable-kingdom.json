@@ -1,0 +1,27 @@
+{
+  "id": "unshakable-kingdom",
+  "name": "Unshakable Kingdom",
+  "entity_type": "thing",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "92306114-d4e3-4f12-b897-3c537b13d185",
+      "statement": "Believers receive a kingdom that cannot be shaken.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "0e1a2512-2bee-4004-bfb3-6ad81cd7fd29",
+          "descriptor_id": "92306114-d4e3-4f12-b897-3c537b13d185",
+          "source_type": "scripture",
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse_start": 28,
+          "verse_end": 28
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

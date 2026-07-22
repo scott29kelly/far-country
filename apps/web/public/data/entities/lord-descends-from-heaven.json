@@ -1,0 +1,27 @@
+{
+  "id": "lord-descends-from-heaven",
+  "name": "The Lord's Descent from Heaven",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "81348e5e-f629-42de-ae5d-71baa25f9142",
+      "statement": "The Lord himself will descend from heaven with a cry of command, the voice of an archangel, and the trumpet of God.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "3f786a4d-4528-4d62-8ec4-3af466bb0fcb",
+          "descriptor_id": "81348e5e-f629-42de-ae5d-71baa25f9142",
+          "source_type": "scripture",
+          "book": "1 Thessalonians",
+          "chapter": 4,
+          "verse_start": 16,
+          "verse_end": 16
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

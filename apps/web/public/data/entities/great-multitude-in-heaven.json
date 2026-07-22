@@ -1,0 +1,27 @@
+{
+  "id": "great-multitude-in-heaven",
+  "name": "Great Multitude in Heaven",
+  "entity_type": "person",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "5bc3b59a-9036-42b8-a293-999a634b9da6",
+      "statement": "A great multitude in heaven cries out praise to God, saying 'Hallelujah! Salvation and glory and power belong to our God.'",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "d71863cf-a232-4453-909c-3c9ab2d8a616",
+          "descriptor_id": "5bc3b59a-9036-42b8-a293-999a634b9da6",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 19,
+          "verse_start": 1,
+          "verse_end": 1
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

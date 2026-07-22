@@ -1,0 +1,27 @@
+{
+  "id": "universal-doxology",
+  "name": "Universal Doxology",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "145eb590-cfe6-433f-8445-7e76da44da70",
+      "statement": "Every creature in heaven and on earth and under the earth and in the sea ascribes blessing, honor, glory, and might to him who sits on the throne and to the Lamb forever and ever.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "9926d4aa-51d3-4c91-88be-37f1ef08f309",
+          "descriptor_id": "145eb590-cfe6-433f-8445-7e76da44da70",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 5,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

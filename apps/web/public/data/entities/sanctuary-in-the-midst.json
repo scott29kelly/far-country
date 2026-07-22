@@ -1,0 +1,36 @@
+{
+  "id": "sanctuary-in-the-midst",
+  "name": "Sanctuary in the Midst",
+  "entity_type": "place",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "42c2601e-02a3-41c9-b625-ffac3630aee1",
+      "statement": "The sanctuary of the LORD stands in the midst of the holy portion of the land.",
+      "tier": "symbolic",
+      "symbolic_referent": "God's dwelling at the center of his people's life in the eschaton; ultimately fulfilled in God and the Lamb as the temple of the New Jerusalem (cf. Rev 21:22).",
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "c572fe60-60fa-45ae-9e28-eda671cc48c9",
+          "descriptor_id": "42c2601e-02a3-41c9-b625-ffac3630aee1",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 8,
+          "verse_end": 10
+        },
+        {
+          "id": "d4e8b871-6a80-41eb-a8c3-a4c64c965aec",
+          "descriptor_id": "42c2601e-02a3-41c9-b625-ffac3630aee1",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 21,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

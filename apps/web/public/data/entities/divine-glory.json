@@ -1,0 +1,27 @@
+{
+  "id": "divine-glory",
+  "name": "Glory of God",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "66f14308-3637-4ccf-979c-6aabc90c6b34",
+      "statement": "The glory of God dwells in his sanctuary, filling it with his presence.",
+      "tier": "symbolic",
+      "symbolic_referent": "The manifest presence of God filling his eternal dwelling place with his people",
+      "temporal_phase": "unspecified",
+      "citations": [
+        {
+          "id": "044b7699-f959-4588-887d-822a1ad5fd93",
+          "descriptor_id": "66f14308-3637-4ccf-979c-6aabc90c6b34",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 2,
+          "verse_end": 5
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "christ-subjects-all-things",
+  "name": "Christ's Power to Subject All Things",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "6a96f7d1-634c-4641-99f2-62613a5f2ef1",
+      "statement": "Christ has the power to subject all things to himself, by which he will transform believers' bodies.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "2fc8d4a7-aad0-4602-88f5-d083b7e2cc2e",
+          "descriptor_id": "6a96f7d1-634c-4641-99f2-62613a5f2ef1",
+          "source_type": "scripture",
+          "book": "Philippians",
+          "chapter": 3,
+          "verse_start": 21,
+          "verse_end": null
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

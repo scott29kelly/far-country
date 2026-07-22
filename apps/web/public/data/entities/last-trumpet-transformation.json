@@ -1,0 +1,27 @@
+{
+  "id": "last-trumpet-transformation",
+  "name": "Transformation at the Last Trumpet",
+  "entity_type": "event",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "f59d04bb-07c3-400d-887c-1b1d2b103cb2",
+      "statement": "At the last trumpet, in a moment, in the twinkling of an eye, the dead will be raised imperishable and the living will be changed.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "final",
+      "citations": [
+        {
+          "id": "d1e38690-ad0d-41ed-96ca-a8f1d575c8e6",
+          "descriptor_id": "f59d04bb-07c3-400d-887c-1b1d2b103cb2",
+          "source_type": "scripture",
+          "book": "1 Corinthians",
+          "chapter": 15,
+          "verse_start": 51,
+          "verse_end": 52
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

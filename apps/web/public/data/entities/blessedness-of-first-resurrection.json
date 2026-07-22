@@ -1,0 +1,27 @@
+{
+  "id": "blessedness-of-first-resurrection",
+  "name": "Blessedness of the First Resurrection",
+  "entity_type": "attribute",
+  "summary": null,
+  "descriptors": [
+    {
+      "id": "e348a109-a062-41f0-a59f-b9ff09d4d9c4",
+      "statement": "Those who share in the first resurrection are blessed and holy, and the second death has no power over them.",
+      "tier": "clear",
+      "symbolic_referent": null,
+      "temporal_phase": "either",
+      "citations": [
+        {
+          "id": "ec31063a-d0a1-4d40-a0a7-4fb35ba8f587",
+          "descriptor_id": "e348a109-a062-41f0-a59f-b9ff09d4d9c4",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 20,
+          "verse_start": 6,
+          "verse_end": 6
+        }
+      ]
+    }
+  ],
+  "relations": []
+}
