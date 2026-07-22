@@ -10,6 +10,7 @@ Currently exposes:
     far-country extract entity <slug> --passage <book:chapter> [...]
     far-country extract willis <chapter>
     far-country verify run <run-id>
+    far-country measure seed-temple | seed-allotment | export
     far-country export
 
 `extract` subcommands persist into the canonical SQLite store at
@@ -87,6 +88,7 @@ app.add_typer(measure_app, name="measure")
 
 DEFAULT_EXPORT_DIR = Path("data/exports")
 DEFAULT_ENGINE_MODULE = Path("apps/world-engine/src/nj/templeMeasurements.gen.ts")
+DEFAULT_ALLOTMENT_MODULE = Path("apps/world-engine/src/nj/allotmentMeasurements.gen.ts")
 
 
 # ---------------------------------------------------------------- ingest
@@ -491,7 +493,39 @@ def measure_seed_temple(
     typer.echo(
         f"Seeded temple measurements to {db_path}: "
         f"inserted={outcome.inserted} updated={outcome.updated} "
-        f"entity_created={outcome.entity_created} review_status={review_status}"
+        f"entities_created={outcome.entities_created} review_status={review_status}"
+    )
+
+
+@measure_app.command("seed-allotment")
+def measure_seed_allotment(
+    db_path: Annotated[Path, typer.Option("--db-path")] = DEFAULT_DB_PATH,
+    review_status: Annotated[
+        str,
+        typer.Option(
+            "--review-status",
+            help="Status to write ('pending' default; 'approved' only after verification).",
+        ),
+    ] = "pending",
+    reviewer_notes: Annotated[
+        str | None,
+        typer.Option("--reviewer-notes", help="Notes recorded on every seeded row."),
+    ] = None,
+) -> None:
+    """Upsert the authored Ezek 45/48 allotment measurements (idempotent by slug)."""
+    from far_country.measure import seed_allotment
+
+    engine = create_engine_for_path(db_path)
+    init_db(engine)
+    session_factory = create_session_factory(engine)
+    with session_factory() as session:
+        outcome = seed_allotment(
+            session, review_status=review_status, reviewer_notes=reviewer_notes
+        )
+    typer.echo(
+        f"Seeded allotment measurements to {db_path}: "
+        f"inserted={outcome.inserted} updated={outcome.updated} "
+        f"entities_created={outcome.entities_created} review_status={review_status}"
     )
 
 
@@ -503,12 +537,23 @@ def measure_export(
         Path,
         typer.Option(
             "--engine-module",
-            help="Path of the generated TS module the world engine consumes.",
+            help="Path of the generated temple TS module the world engine consumes.",
         ),
     ] = DEFAULT_ENGINE_MODULE,
+    allotment_module: Annotated[
+        Path,
+        typer.Option(
+            "--allotment-module",
+            help="Path of the generated allotment TS module the world engine consumes.",
+        ),
+    ] = DEFAULT_ALLOTMENT_MODULE,
 ) -> None:
-    """Write measurements.json + the generated engine module (approved only)."""
-    from far_country.measure import emit_engine_module, export_measurements
+    """Write measurements.json + the generated engine modules (approved only)."""
+    from far_country.measure import (
+        emit_allotment_module,
+        emit_engine_module,
+        export_measurements,
+    )
 
     engine = create_engine_for_path(db_path)
     init_db(engine)
@@ -516,8 +561,10 @@ def measure_export(
     with session_factory() as session:
         json_path = export_measurements(session, out_dir)
         ts_path = emit_engine_module(session, engine_module)
+        allotment_path = emit_allotment_module(session, allotment_module)
     typer.echo(f"Wrote {json_path}")
     typer.echo(f"Wrote {ts_path}")
+    typer.echo(f"Wrote {allotment_path}")
 
 
 # ---------------------------------------------------------------- export
