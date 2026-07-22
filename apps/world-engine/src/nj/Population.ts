@@ -56,9 +56,27 @@ import {
   HOST_HALO_EMISSIVE,
   PALM_EMISSIVE,
   ROBE_EMISSIVE,
+  SWAY,
   hostPlacements,
   multitudePlacements,
 } from './populationModel';
+
+/**
+ * Figure idle sway (M3.6 remainder) — the host-bob idiom at human scale:
+ * shader-time lateral offset with per-instance hash phase/amplitude, no CPU
+ * per-instance updates. Anchored at the feet; `heightFactor` (0..1 in local
+ * geometry space) keeps soles planted while the crown breathes. Robes,
+ * heads and palms share instance ordering, so the same hash slots yield the
+ * SAME phase/amplitude per figure across all three meshes — the head rides
+ * its robe's crown instead of detaching.
+ */
+function figureSway(): NF {
+  const phase = slotHash(instanceIndex as unknown as NU, 41).mul(Math.PI * 2) as unknown as NF;
+  const amp = slotHash(instanceIndex as unknown as NU, 43)
+    .mul(SWAY.ampRange)
+    .add(SWAY.ampMin) as unknown as NF;
+  return time.mul(SWAY.speed).add(phase).sin().mul(amp) as unknown as NF;
+}
 
 /** Probe-GI opt-in — the CityMassing fragment-stage idiom. */
 function patchGI(mat: MeshStandardNodeMaterial, gi: ProbeGI | null): void {
@@ -80,6 +98,11 @@ function robeMaterial(gi: ProbeGI | null): MeshStandardNodeMaterial {
     warm.mul(-0.16).add(1.0),
   ) as unknown as NV3;
   m.emissiveNode = vec3(1.0, 0.953, 0.886).mul(ROBE_EMISSIVE) as unknown as NV3;
+  // idle sway, feet planted: offset scales with height up the robe
+  const heightFactor = positionLocal.y.div(FIGURE.robeH).clamp(0, 1) as unknown as NF;
+  m.positionNode = positionLocal.add(
+    vec3(figureSway().mul(heightFactor), 0, 0),
+  ) as unknown as NV3;
   patchGI(m, gi);
   return m;
 }
@@ -97,6 +120,8 @@ function headMaterial(gi: ProbeGI | null): MeshStandardNodeMaterial {
   m.colorNode = col;
   // tiny self-light so distant heads never pepper black (Pillar B)
   m.emissiveNode = col.mul(HEAD_EMISSIVE) as unknown as NV3;
+  // the head rides the robe crown: full sway, same per-instance phase/amp
+  m.positionNode = positionLocal.add(vec3(figureSway(), 0, 0)) as unknown as NV3;
   patchGI(m, gi);
   return m;
 }
@@ -109,6 +134,18 @@ function palmMaterial(gi: ProbeGI | null): MeshStandardNodeMaterial {
   const jit = slotHash(instanceIndex as unknown as NU, 13).mul(0.25).add(0.85) as unknown as NF;
   m.colorNode = vec3(0.31, 0.604, 0.235).mul(jit) as unknown as NV3;
   m.emissiveNode = vec3(0.165, 0.29, 0.118).mul(PALM_EMISSIVE) as unknown as NV3;
+  // the hand carries the body sway at grip height; the frond adds its own
+  // gentle flex toward the tip (local y spans ±palmH/2 → tip factor 0..1)
+  const handSway = figureSway().mul(0.62) as unknown as NF;
+  const tipFactor = positionLocal.y.div(FIGURE.palmH).add(0.5).clamp(0, 1) as unknown as NF;
+  const flexPhase = slotHash(instanceIndex as unknown as NU, 47).mul(Math.PI * 2) as unknown as NF;
+  const flex = time
+    .mul(SWAY.speed * SWAY.palmSpeedFactor)
+    .add(flexPhase)
+    .sin()
+    .mul(SWAY.palmTip)
+    .mul(tipFactor) as unknown as NF;
+  m.positionNode = positionLocal.add(vec3(handSway.add(flex), 0, 0)) as unknown as NV3;
   patchGI(m, gi);
   return m;
 }

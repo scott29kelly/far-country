@@ -138,6 +138,35 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-21, later-3) FIGURE IDLE MOTION BUILT — the multitude
+breathes.** The M3.6 "figure idle motion" remainder lands exactly on the
+prescribed idiom: shader-time only (the Population.ts host-bob
+positionNode pattern), zero CPU per-instance updates.
+
+- `populationModel.ts` gains the probe-asserted `SWAY` table: speed 0.9
+  rad/s (≈7 s breath cycle), robe-crown amplitude 2–4.5 cm per-instance
+  (hash slot 43), palm-tip flex +3.5 cm at 1.7× speed. `Population.ts`:
+  a shared `figureSway()` node (hash-phase slot 41) feeds all three
+  figure materials — robes sway scaled by local height (feet stay
+  planted), heads apply the FULL sway so they ride their robe's crown
+  (identical instance ordering across the three InstancedMeshes makes
+  the per-instance phase/amp match exactly), palms carry the body sway
+  at grip height (0.62) plus their own tip-weighted frond flex (slot
+  47). Hosts' rise/fall untouched.
+- probe-population A7 asserts the contract CPU-side: total lateral
+  amplitude < 0.15 m (figures never leave their assembly/pick volumes)
+  and a slow speed band. Placements, counts, emissives unchanged.
+- LIVE-VERIFIED with a one-boot A/B pair (`tools/shot-sway-pair.ts`, a
+  verification aid, not a standing probe): same pose, 1.75 s apart —
+  11,482 pixels changed >10 grey levels in the crowd crop vs ZERO in the
+  static-sky control; the zoom side-by-side
+  (shots/wip/sway-pair-zoom.png) shows fronds and robe crowns shifted
+  with heads still seated. Full battery green (all CPU + live probes),
+  tsc clean, build clean, engine re-vendored.
+- Still open in M3.6: M4.4's nations/pilgrimage dynamism (Phase 4) and
+  Scott's subjective pass — the sway amplitude/speed numbers are tuned
+  for reverence at reading distance and are his to adjust.
+
 **(2026-07-21, later-2) DWELLING-CAMPUS PICK WIRED — M3.4's last gap
 closes; measurement-backed entity cards land.** The Track A follow-on
 slice: the campus bands are now cited, clickable zone entities.

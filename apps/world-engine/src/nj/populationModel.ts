@@ -60,6 +60,25 @@ export const FIGURE = {
   scaleRange: 0.3,
 } as const;
 
+/**
+ * Figure idle motion (shader-time only — the HOST bob idiom at human scale;
+ * no CPU per-instance updates). A slow reverent sway anchored at the feet:
+ * lateral offset scales with height up the robe, the head rides the robe
+ * crown, the palm adds a gentle frond flex at its tip. Amplitudes are
+ * centimetres — figures never leave their assembly volumes (probe-asserted).
+ */
+export const SWAY = {
+  /** angular speed, rad/s — one breath cycle ≈ 7 s */
+  speed: 0.9,
+  /** lateral amplitude at the robe crown, world m: amp = min + hash*range */
+  ampMin: 0.02,
+  ampRange: 0.025,
+  /** extra frond-flex amplitude at the palm tip, world m */
+  palmTip: 0.035,
+  /** frond flex runs slightly faster than the body sway */
+  palmSpeedFactor: 1.7,
+} as const;
+
 /** Host (light-pillar) dimensions, WORLD metres — abstract, non-figural. */
 export const HOST = {
   coreR: 2.6,
