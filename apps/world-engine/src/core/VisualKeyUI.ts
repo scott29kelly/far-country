@@ -37,7 +37,12 @@ const FADE0 = 9000;
 const FADE1 = 15000;
 
 /** minimal slice of the entity export consumed here (see EntityHud's mirror) */
-type EntityJson = { name?: string; descriptors?: { tier?: string }[] };
+type EntityJson = {
+  name?: string;
+  descriptors?: { tier?: string }[];
+  /** cited measurement records (ADR 0017) — export schema 0.2.0 additive */
+  measurements?: { tier?: string }[];
+};
 
 export class VisualKeyUI {
   private on = false;
@@ -138,9 +143,10 @@ export class VisualKeyUI {
         if (!entity) return; // authored fallback label stays, no dots
         const name = el.querySelector('.vk-name') as HTMLSpanElement;
         if (entity.name) name.textContent = entity.name;
-        const present = TIER_ORDER.filter((t) =>
-          (entity.descriptors ?? []).some((d) => d.tier === t),
-        );
+        // tier dots span descriptors AND cited measurements — the campus
+        // zone entities carry only measurements so far (ADR 0017)
+        const claims = [...(entity.descriptors ?? []), ...(entity.measurements ?? [])];
+        const present = TIER_ORDER.filter((t) => claims.some((d) => d.tier === t));
         (el.querySelector('.vk-dots') as HTMLSpanElement).innerHTML = present
           .map((t) => `<i class="vk-dot" style="background:${TIER_COLOR[t]}" title="${t}"></i>`)
           .join('');

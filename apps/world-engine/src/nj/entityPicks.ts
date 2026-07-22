@@ -8,11 +8,13 @@
  * templeModel, TreesOfLife stations) — never hand-mirrored constants.
  *
  * Zone-level citation discipline (RENDERING-DECISIONS #7/#8): the temple
- * compound picks as ONE zone (`sanctuary-in-the-midst`); no volume anchors
- * a citation to an invented individual house, hedge, well or court — the
- * dwelling campus is deliberately UNPICKABLE until the Ezek 45:4-5 zone
- * entities are seeded (Track A), because no canonical entity exists for it
- * yet and inventing one is forbidden.
+ * compound picks as ONE zone (`sanctuary-in-the-midst`), and the dwelling
+ * campus picks as its two Track A zone entities — the priests' band
+ * (`priests-portion`, Ezek 45:3-4; 48:10-12) and the Levites' band
+ * (`levites-portion`, Ezek 45:5; 48:13-14) — each a measurement-backed
+ * canonical entity. No volume anchors a citation to an invented individual
+ * house, hedge, well or court: the zones are cited, their contents stay
+ * interpretive art direction (entry #8).
  *
  * Pure module: no three.js, no DOM — CPU-probe testable
  * (tools/probe-entitypick.ts).
@@ -34,6 +36,7 @@ import {
   type Side,
 } from './cityModel';
 import { NJ_SCALE } from './rimModel';
+import { levitesBandRect, priestsBandRect, type ZoneRect } from './campusModel';
 import { assemblyVolumes, hostClusterVolumes } from './populationModel';
 import { riverReaches } from './RiverOfLife';
 import { LONG_CUBIT_M, TEMPLE_SITE, cu } from './templeModel';
@@ -297,6 +300,44 @@ export function buildEntityPicks(
       min: [TEMPLE_SITE.x - precinctHalf, tg - 2, TEMPLE_SITE.z - precinctHalf],
       max: [TEMPLE_SITE.x + precinctHalf, tg + 35, TEMPLE_SITE.z + precinctHalf],
     },
+  });
+
+  // The dwelling campus — Track A zone entities (Ezek 45:4-5; 48:10-14),
+  // volumes from the SAME campusModel tables Dwellings.ts builds from.
+  // The priests' band is two strips flanking the cleared meridian lane so a
+  // ray down the city -> temple axis reaches the temple, not a campus face;
+  // vertical spans sample the base terrain across each rect (the Levites'
+  // band lies beyond the heightAtCpu mirror, whose edge-clamped samples the
+  // generous span absorbs).
+  const zoneBox = (rect: ZoneRect, up: number, down: number): PickShape => {
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const x of [rect.x0, (rect.x0 + rect.x1) / 2, rect.x1]) {
+      for (const z of [rect.z0, (rect.z0 + rect.z1) / 2, rect.z1]) {
+        const g = groundAt(x, z);
+        lo = Math.min(lo, g);
+        hi = Math.max(hi, g);
+      }
+    }
+    return {
+      kind: 'aabb',
+      min: [rect.x0, lo - down, rect.z0],
+      max: [rect.x1, hi + up, rect.z1],
+    };
+  };
+  for (const side of ['west', 'east'] as const) {
+    vols.push({
+      slug: 'priests-portion',
+      label: 'Dwelling Campus · Priests’ Portion',
+      priority: 1,
+      shape: zoneBox(priestsBandRect(side), 25, 2),
+    });
+  }
+  vols.push({
+    slug: 'levites-portion',
+    label: 'Dwelling Campus · Levites’ Portion',
+    priority: 1,
+    shape: zoneBox(levitesBandRect(), 40, 60),
   });
 
   return vols;

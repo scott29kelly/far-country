@@ -23,6 +23,7 @@ import {
   cityTierBottoms,
 } from './cityModel';
 import { NJ_SCALE } from './rimModel';
+import { levitesBandRect, priestsBandRect } from './campusModel';
 import { assemblyVolumes, hostClusterVolumes } from './populationModel';
 import { riverReaches } from './RiverOfLife';
 import { TEMPLE_SITE } from './templeModel';
@@ -156,6 +157,27 @@ export function keyMarkers(
     slug: 'sanctuary-in-the-midst',
     label: 'Temple Compound',
     p: [TEMPLE_SITE.x, groundAt(TEMPLE_SITE.x, TEMPLE_SITE.z) + 45, TEMPLE_SITE.z],
+  });
+
+  // Dwelling campus (Track A zones, Ezek 45:4-5; 48:10-14) — the priests'
+  // marker floats over the east band's inner blocks by the processional,
+  // the Levites' over the meridian at the far band's near rows; anchors
+  // derive from the campusModel rects Dwellings.ts builds from.
+  const priests = priestsBandRect('east');
+  const px = priests.x0 + (priests.x1 - priests.x0) * 0.1;
+  const pz = priests.z1 - 80;
+  out.push({
+    slug: 'priests-portion',
+    label: 'Priests’ Portion',
+    p: [px, groundAt(px, pz) + 30, pz],
+  });
+
+  const levites = levitesBandRect();
+  const lz = levites.z1 - 150;
+  out.push({
+    slug: 'levites-portion',
+    label: 'Levites’ Portion',
+    p: [0, groundAt(0, lz) + 40, lz],
   });
 
   return out;
