@@ -155,6 +155,29 @@ c.check('B11 terrain occludes a pick behind a ridge', b11 === null, `got ${b11?.
 const b12 = pick([0, PLAZA_Y + 5, 4000], [0, 1, 0]);
 c.check('B12 sky ray picks nothing', b12 === null, `got ${b12?.slug ?? 'null'}`);
 
+const b13 = pick([1200, GROUND + 800, -5300], [0, -1, 0]);
+c.check(
+  'B13 east dwelling band picks the priests’ portion',
+  b13?.slug === 'priests-portion',
+  `got ${b13?.slug ?? 'null'}`,
+);
+
+const b14 = pick([0, GROUND + 800, -7000], [0, -1, 0]);
+c.check(
+  'B14 far dwelling band picks the Levites’ portion',
+  b14?.slug === 'levites-portion',
+  `got ${b14?.slug ?? 'null'}`,
+);
+
+// the meridian lane is clear of campus volumes: a walker-height ray down the
+// city -> temple axis reaches the temple compound, not a campus face
+const b15 = pick([0, GROUND + 8, -4600], north);
+c.check(
+  'B15 meridian lane ray reaches the temple through the campus',
+  b15?.slug === 'sanctuary-in-the-midst',
+  `got ${b15?.slug ?? 'null'}`,
+);
+
 // ---- N: proximity resolver (the walk-mode auto-card) -----------------------
 const n1 = nearestEntityAt([1000, PLAZA_Y + 30, 2000], vols);
 c.check('N1 gate corridor: the gate beats street and wall', n1?.label === 'Zebulun Gate · S', `got ${n1?.label ?? 'null'}`);
@@ -171,7 +194,16 @@ c.check('N4 open meadow: nothing near', n4 === null, `got ${n4?.slug ?? 'null'}`
 const n5 = nearestEntityAt([0, PLAZA_Y + 3, 3000], vols);
 c.check('N5 wading the channel: the river', n5?.slug === 'river-of-the-water-of-life', `got ${n5?.slug ?? 'null'}`);
 
+const n6 = nearestEntityAt([800, GROUND + 2, -5500], vols);
+c.check(
+  'N6 walking the east band: the priests’ portion',
+  n6?.slug === 'priests-portion',
+  `got ${n6?.slug ?? 'null'}`,
+);
+
 // ---- C: every registry slug is a real, cited canonical entity --------------
+// Grounding = at least one cited DESCRIPTOR or one cited MEASUREMENT (ADR
+// 0017: the campus zone entities carry measurements before any descriptor).
 const slugs = [...new Set(vols.map((v) => v.slug))];
 const dataDir = join(import.meta.dirname, '..', '..', 'web', 'public', 'data', 'entities');
 const TIERS = new Set(['clear', 'fuzzy', 'debated', 'symbolic']);
@@ -188,22 +220,25 @@ for (const slug of slugs) {
         symbolic_referent?: string | null;
         citations: unknown[];
       }[];
+      measurements?: { tier: string; subject: string; citations: unknown[] }[];
     };
     const ds = entity.descriptors;
+    const ms = entity.measurements ?? [];
     ok =
       entity.id === slug &&
-      ds.length >= 1 &&
+      ds.length + ms.length >= 1 &&
       ds.every(
         (d) =>
           d.citations.length >= 1 &&
           TIERS.has(d.tier) &&
           (d.tier !== 'symbolic' || Boolean(d.symbolic_referent)),
-      );
-    detail = `${entity.name}: ${ds.length} descriptor(s)`;
+      ) &&
+      ms.every((m) => m.citations.length >= 1 && TIERS.has(m.tier));
+    detail = `${entity.name}: ${ds.length} descriptor(s), ${ms.length} measurement(s)`;
   } catch (e) {
     detail = String(e);
   }
-  c.check(`C  ${slug} exists with cited descriptors`, ok, detail);
+  c.check(`C  ${slug} exists with cited claims`, ok, detail);
 }
 
 // ---- D: citation display grammar (legacy DescriptorHud parity) -------------

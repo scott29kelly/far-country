@@ -130,11 +130,14 @@ for (const slug of markerSlugs) {
     const entity = JSON.parse(readFileSync(join(dataDir, `${slug}.json`), 'utf8')) as {
       name?: string;
       descriptors?: { tier?: string }[];
+      measurements?: { tier?: string }[];
     };
-    const ds = entity.descriptors ?? [];
-    if (!entity.name || ds.length === 0 || ds.some((d) => !VALID_TIERS.has(d.tier ?? ''))) {
+    // grounding = descriptors OR cited measurements (ADR 0017 — the campus
+    // zone entities carry measurements before any descriptor)
+    const claims = [...(entity.descriptors ?? []), ...(entity.measurements ?? [])];
+    if (!entity.name || claims.length === 0 || claims.some((d) => !VALID_TIERS.has(d.tier ?? ''))) {
       dataOk = false;
-      dataMsg = `${slug}: name/descriptors/tiers invalid`;
+      dataMsg = `${slug}: name/claims/tiers invalid`;
       break;
     }
   } catch {
@@ -143,6 +146,6 @@ for (const slug of markerSlugs) {
     break;
   }
 }
-c.check('C1 every marked slug has a named export with valid-tier descriptors', dataOk, dataMsg);
+c.check('C1 every marked slug has a named export with valid-tier claims', dataOk, dataMsg);
 
 c.finish();
