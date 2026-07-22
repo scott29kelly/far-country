@@ -93,6 +93,11 @@ const BOB_ROLL = 0.0032; // rad
 const SPRINT_FOV_ADD = 6; // deg
 const DIP_K = 150; // landing-dip spring stiffness
 const DIP_C = 18; // landing-dip spring damping
+/** the dip spring integrates at this fixed internal substep: one naive Euler
+ *  step per frame is UNSTABLE below ~15 fps (at the engine's 0.1 s dt cap the
+ *  step eigenvalue is −1.75 → sign-flipping divergence — the camera
+ *  "vacillates underground" after a jump landing on slow machines) */
+const DIP_SUBSTEP = 1 / 120;
 // fly-mode soft collision (legacy contract from TerrainScene)
 const FLY_GROUND_CLEAR = 1.4;
 const WADE_CLEAR = 0.45; // eye stays above water (no underwater rendering)
@@ -517,6 +522,11 @@ export class FlyCamera {
     if (pad.help && typeof CustomEvent === 'function' && typeof window.dispatchEvent === 'function') {
       window.dispatchEvent(new CustomEvent('laas-pad-help'));
     }
+    // D-pad: the legible bindings — up=fly, down=walk, right/left=speed
+    if (pad.flyMode) this.setMode('fly');
+    if (pad.walkMode) this.setMode('walk');
+    if (pad.speedUp2) this.adjustTravelSpeed(1);
+    if (pad.speedDown2) this.adjustTravelSpeed(-1);
     if (this.cruiseV && pad.moveY < -0.5) this.setCruise(false); // stick back = S
     // last-active-input-wins: any pad motion claims steering and holds it
     // briefly, so a cursor parked off-centre can't drag the view mid-stick
@@ -725,9 +735,15 @@ export class FlyCamera {
     const bobY = Math.sin(this.stridePhase * 2) * ampY;
     const bobX = Math.sin(this.stridePhase) * ampY * BOB_LATERAL;
     const roll = Math.sin(this.stridePhase) * BOB_ROLL * this.bobK;
-    // landing-dip spring (semi-implicit Euler — stable at the engine dt cap)
-    this.dipV += (-DIP_K * this.dipY - DIP_C * this.dipV) * dt;
-    this.dipY += this.dipV * dt;
+    // landing-dip spring — fixed-substep semi-implicit Euler (see DIP_SUBSTEP:
+    // a single full-dt step diverges at low fps)
+    let dipRem = dt;
+    while (dipRem > 1e-6) {
+      const h = Math.min(DIP_SUBSTEP, dipRem);
+      this.dipV += (-DIP_K * this.dipY - DIP_C * this.dipV) * h;
+      this.dipY += this.dipV * h;
+      dipRem -= h;
+    }
     // sprint FOV kick
     const fovTarget = sprinting && this.grounded && speedH > scaledWalkSpeed * 1.15
       ? SPRINT_FOV_ADD

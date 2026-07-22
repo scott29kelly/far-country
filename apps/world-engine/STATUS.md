@@ -222,9 +222,22 @@ without a pad the classic parked-cursor ease is untouched. Probes:
 P1-P4 (pad-active suppression / parked-never-steers / moving-mouse
 reclaims / no-pad classic intact) — probe-gamepad 33/33; live 12/12;
 probe-mousesteer (real browser, no pad) ALL PASS incl. the bottom-edge
-pitch case, now takes --port like the other live probes. Remaining
-subjective: steer-rate feel verdict, D-pad still unbound (candidate:
-speed steps or help), overlay copy tuning.
+pitch case, now takes --port like the other live probes. Round 2 (same
+night, Scott's design): D-pad is now the legible control — UP=fly,
+DOWN=walk, RIGHT/LEFT=speed steps (edges; probes R1-R4 + live L13/L14);
+the controls overlay STAYS until dismissed (auto-hide was too short to
+learn from) with rewritten copy putting the D-pad first. And the
+underground-jitter bug he hit pressing A: ROOT-CAUSED as the
+landing-dip camera spring — one Euler step per frame has eigenvalue
+-1.75 at the engine's 0.1 s dt cap (sign-flipping divergence at low
+fps; his iGPU runs 6-12 fps). The spring now integrates at a fixed
+1/120 s substep — probe S1/S2 jump at dt=0.1: composed camera dips
+6 cm (the designed thump) and settles, pre-fix it dove metres under.
+probe-gamepad 39/39; live 14/14 (L3 threshold loosened with a comment:
+fly distance integrates SIM time under the dt cap, so GPU contention
+shrinks wall-clock distance — it is a does-it-move check, not a speed
+benchmark). Remaining subjective: steer-rate feel verdict, overlay
+copy tuning.
 
 **(2026-07-20) GAMEPAD DIAGNOSTIC `?padtest=1` — hardware is now
 self-identifying instead of guessed.** Scott's pad is a **GameSir Nova 2

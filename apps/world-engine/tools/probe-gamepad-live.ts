@@ -105,7 +105,11 @@ const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms)
   await setPad({});
   const after = await pose();
   const moved = Math.hypot(after.p[0] - before.p[0], after.p[2] - before.p[2]);
-  check('L3 left stick moves the camera (fly, speed 24)', moved > 8, `${moved.toFixed(1)} m in ~1 s`);
+  // threshold is deliberately loose: fly movement integrates SIM time and the
+  // engine caps dt at 0.1 s, so under GPU contention (another session flying
+  // the NJ scene on the same iGPU) a 1 s wall window can hold ~0.25 s of sim —
+  // ~5 m. The check is "the stick moves the camera", not a speed benchmark.
+  check('L3 left stick moves the camera (fly, speed 24)', moved > 3, `${moved.toFixed(1)} m in ~1 s wall`);
 }
 
 // ---- 4: right stick steers at the gentle rate ------------------------------
@@ -127,6 +131,22 @@ const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms)
   await wait(200);
   const t = await pill();
   check('L5 RB steps fly speed 24 → 60', t.includes('60 m/s'), `pill "${t}"`);
+}
+
+// ---- 5b/5c: D-pad right/left step the speed (Scott's legible bindings) -----
+{
+  await setPad({ pressed: [15] }); // D-pad right
+  await wait(200);
+  await setPad({});
+  await wait(200);
+  const t = await pill();
+  check('L13 D-pad right steps fly speed 60 → 150', t.includes('150 m/s'), `pill "${t}"`);
+  await setPad({ pressed: [14] }); // D-pad left
+  await wait(200);
+  await setPad({});
+  await wait(200);
+  const t2 = await pill();
+  check('L14 D-pad left steps back 150 → 60', t2.includes('60 m/s'), `pill "${t2}"`);
 }
 
 // ---- 6: pad removal clears the PAD hint ------------------------------------

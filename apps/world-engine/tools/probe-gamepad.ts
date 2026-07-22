@@ -480,6 +480,71 @@ const step = (cam: InstanceType<typeof FlyCamera>, frames: number): void => {
   );
 }
 
+// ---- R: D-pad — up=fly, down=walk, right/left=speed (edges) ---------------
+{
+  const pad = makePad();
+  const cam = freshCam(pad);
+  cam.setPose({ p: [0, 260, 0], yaw: 0, pitch: 0 });
+  press(pad, 13); // D-pad down
+  step(cam, 30); // held — must fire ONCE
+  check('R1 D-pad down enters walk (edge, no repeat)', cam.mode === 'walk', `mode ${cam.mode}`);
+  release(pad, 13);
+  step(cam, 1);
+  press(pad, 12); // D-pad up
+  step(cam, 1);
+  check('R2 D-pad up enters fly', cam.mode === 'fly', `mode ${cam.mode}`);
+  release(pad, 12);
+  step(cam, 1);
+  press(pad, 15); // D-pad right
+  step(cam, 1);
+  check('R3 D-pad right steps fly speed 24 → 60', cam.navigationState.flySpeed === 60, `speed ${cam.navigationState.flySpeed}`);
+  release(pad, 15);
+  step(cam, 1);
+  press(pad, 14); // D-pad left
+  step(cam, 1);
+  check('R4 D-pad left steps back 60 → 24', cam.navigationState.flySpeed === 24, `speed ${cam.navigationState.flySpeed}`);
+  release(pad, 14);
+}
+
+// ---- S: jump landing is stable at LOW framerate ----------------------------
+// The landing-dip camera spring integrated once per frame diverges at the
+// engine's 0.1 s dt cap (step eigenvalue −1.75): after a jump landing on a
+// slow machine the composed camera oscillated metres underground
+// (user-reported on a ~10 fps iGPU). The spring now substeps.
+{
+  const DT10 = 0.1; // the engine dt cap — worst legal frame time
+  const pad = makePad();
+  const cam = freshCam(pad);
+  cam.setPose({ p: [0, 260, 0], yaw: 0, pitch: 0 });
+  cam.setMode('walk');
+  for (let i = 0; i < 5; i++) cam.update(DT10);
+  const eyeFloor = GROUND_Y + 1.7;
+  press(pad, A); // jump — the user action that surfaced the bug
+  cam.update(DT10);
+  release(pad, A);
+  let minCamY = Infinity;
+  for (let i = 0; i < 80; i++) {
+    cam.update(DT10);
+    const y = cam.camera.position.y; // COMPOSED camera — includes the dip offset
+    if (!Number.isFinite(y)) {
+      minCamY = -Infinity;
+      break;
+    }
+    if (y < minCamY) minCamY = y;
+  }
+  const settledY = cam.camera.position.y;
+  check(
+    'S1 low-fps jump landing never drives the camera underground',
+    minCamY > eyeFloor - 0.45,
+    `min composed camera y ${minCamY.toFixed(2)} vs floor ${eyeFloor.toFixed(2)} (pre-fix the dip spring diverges metres below)`,
+  );
+  check(
+    'S2 dip spring settles after landing at dt = 0.1',
+    Math.abs(settledY - eyeFloor) < 0.05,
+    `settled camera y ${settledY.toFixed(3)} vs eye floor ${eyeFloor.toFixed(2)}`,
+  );
+}
+
 // ---- O: a standard-mapping pad wins over a generic-HID sibling ------------
 // Multi-platform pads (and bundled 2.4G receivers) can expose a second
 // generic entry in a LOWER slot than the real XInput device; picking by slot

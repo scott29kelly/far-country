@@ -48,7 +48,6 @@ export class NavigationUI {
    *  pad's View button (or Escape/click) toggles it after that */
   private padHelp: HTMLDivElement | null = null;
   private padHelpShown = false;
-  private padHelpTimer = 0;
 
   constructor(engine: Engine, fly: FlyCamera, hooks: LaasHooks) {
     this.engine = engine;
@@ -75,7 +74,7 @@ export class NavigationUI {
       '<section><h2>Travel speed</h2><div class="nav-speed"></div></section>',
       '<section><h2>World map</h2><canvas class="nav-map" width="600" height="360" tabindex="0" aria-label="World map. Click to fly above a location."></canvas><p class="nav-map-note">Click anywhere to fly safely above that location.</p></section>',
       '<section><h2>Quick travel</h2><div class="nav-targets"></div></section>',
-      '<div class="nav-help"><strong>Move</strong> WASD · <strong>Look</strong> point mouse · <strong>Boost</strong> Shift<br><strong>Fly up/down</strong> Space / Ctrl · <strong>Speed</strong> [ / ] or wheel · <strong>Cruise</strong> C · <strong>Walk/Fly</strong> V<br><strong>Pad</strong> sticks move/look · RT/LT up/down · RB/LB speed · Start walk/fly · B dismiss · View guide</div>',
+      '<div class="nav-help"><strong>Move</strong> WASD · <strong>Look</strong> point mouse · <strong>Boost</strong> Shift<br><strong>Fly up/down</strong> Space / Ctrl · <strong>Speed</strong> [ / ] or wheel · <strong>Cruise</strong> C · <strong>Walk/Fly</strong> V<br><strong>Pad</strong> sticks move/look · D-pad &#9650; fly &#9660; walk &#9654;&#9664; speed · RT/LT rise/descend · B dismiss · View guide</div>',
     ].join('');
     document.body.appendChild(this.panel);
     const navContext = this.required<HTMLSpanElement>('.nav-context');
@@ -156,10 +155,6 @@ export class NavigationUI {
 
   /** show/hide the pad controls overlay (lazy-built) */
   private setPadHelp(show: boolean): void {
-    if (this.padHelpTimer !== 0) {
-      window.clearTimeout(this.padHelpTimer);
-      this.padHelpTimer = 0;
-    }
     if (!show) {
       if (this.padHelp) this.padHelp.hidden = true;
       return;
@@ -172,16 +167,18 @@ export class NavigationUI {
       el.innerHTML = [
         '<strong>CONTROLLER</strong>',
         '<div class="ph-grid">',
-        '  <span>Left stick</span><em>walk / fly around</em>',
+        '  <span>Left stick</span><em>move</em>',
         '  <span>Right stick</span><em>look around</em>',
-        '  <span>Start or Y</span><em>switch walk &harr; fly</em>',
-        '  <span>RT / LT</span><em>fly up / down</em>',
-        '  <span>RB / LB</span><em>faster / slower</em>',
+        '  <span>D-pad &#9650;</span><em><b>FLY</b></em>',
+        '  <span>D-pad &#9660;</span><em><b>WALK</b></em>',
+        '  <span>D-pad &#9654; / &#9664;</span><em>faster / slower</em>',
+        '  <span>RT / LT</span><em>rise / descend (flying)</em>',
         '  <span>A</span><em>jump (walking)</em>',
-        '  <span>B</span><em>dismiss card</em>',
+        '  <span>B</span><em>dismiss info card</em>',
+        '  <span>Y or Start</span><em>also switches walk/fly</em>',
         '  <span>View</span><em>show / hide this guide</em>',
         '</div>',
-        '<small>click or press View to close</small>',
+        '<small>stays open until you close it — click, or press View</small>',
       ].join('');
       el.addEventListener('click', () => this.setPadHelp(false));
       document.body.appendChild(el);
@@ -193,11 +190,12 @@ export class NavigationUI {
   private renderState(state: NavigationState): void {
     this.walkButton.dataset.active = String(state.mode === 'walk');
     this.flyButton.dataset.active = String(state.mode === 'fly');
-    // first pad activation: surface the controls guide once, self-dismissing
+    // first pad activation: surface the controls guide — it stays until the
+    // user closes it (View/click/Escape); an auto-hide proved too short to
+    // actually learn the bindings from
     if (state.gamepad && !this.padHelpShown) {
       this.padHelpShown = true;
       this.setPadHelp(true);
-      this.padHelpTimer = window.setTimeout(() => this.setPadHelp(false), 14000);
     }
     const speed = state.mode === 'walk'
       ? `${state.walkScale}x  ${(WALK_METERS_PER_SECOND * state.walkScale).toFixed(1)} m/s`
@@ -374,6 +372,7 @@ export class NavigationUI {
       #pad-help .ph-grid { display:grid; grid-template-columns:auto 1fr; gap:5px 14px; }
       #pad-help .ph-grid span { color:#dbc987; font:700 11px/1.5 ui-monospace,Menlo,monospace; white-space:nowrap; }
       #pad-help .ph-grid em { font-style:normal; color:#ddd9c8; }
+      #pad-help .ph-grid em b { color:#fff8dd; }
       #pad-help small { display:block; margin-top:11px; color:#8f948b; font-size:10px; }
       @media (max-width:600px) { #nav-panel { top:5px; right:5px; width:calc(100vw - 10px); max-height:calc(100vh - 10px); } .nav-toggle { top:7px; right:7px; } }
       @media (prefers-reduced-motion:reduce) { .nav-toggle, #nav-panel, #pad-help { backdrop-filter:none; } }

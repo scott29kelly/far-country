@@ -11,11 +11,14 @@
  *
  *   left stick    move (ground/fly; analog magnitude scales speed)
  *   right stick   steer — mouse-steer-equivalent yaw/pitch rates
+ *   D-pad         up = fly mode, down = walk mode, right/left = speed step
+ *                 (the legible non-gamer bindings — Scott's design)
  *   RT / LT       fly up / down (analog)
  *   RB / LB       travel speed step up / down (the ] / [ keys)
  *   Start or Y    walk/fly toggle (the V key)
  *   B             Escape-equivalent (dismiss entity card, cancel cruise)
  *   A             jump (walk mode)
+ *   View          toggle the controls guide overlay
  *
  * Pads reporting a nonstandard mapping (Switch pads over Bluetooth often
  * do) get the same layout best-effort: sticks on axes 0-3 are near
@@ -46,6 +49,10 @@ const BTN_LT = 6;
 const BTN_RT = 7;
 const BTN_VIEW = 8;
 const BTN_START = 9;
+const BTN_DPAD_UP = 12;
+const BTN_DPAD_DOWN = 13;
+const BTN_DPAD_LEFT = 14;
+const BTN_DPAD_RIGHT = 15;
 
 export interface GamepadFrame {
   /** a pad is connected and exposed (Chrome hides pads until a button press) */
@@ -66,6 +73,11 @@ export interface GamepadFrame {
   dismiss: boolean; // B
   jump: boolean; // A
   help: boolean; // View — toggle the pad controls overlay
+  /** D-pad rising edges — up enters fly, down enters walk, right/left step speed */
+  flyMode: boolean; // D-pad up
+  walkMode: boolean; // D-pad down
+  speedUp2: boolean; // D-pad right (mirrors RB)
+  speedDown2: boolean; // D-pad left (mirrors LB)
 }
 
 const IDLE_FRAME: GamepadFrame = {
@@ -82,6 +94,10 @@ const IDLE_FRAME: GamepadFrame = {
   dismiss: false,
   jump: false,
   help: false,
+  flyMode: false,
+  walkMode: false,
+  speedUp2: false,
+  speedDown2: false,
 };
 
 /** injectable pad source — CPU probes hand in fake Gamepad objects (the
@@ -119,6 +135,10 @@ export class GamepadInput {
   private prevDismiss = false;
   private prevJump = false;
   private prevHelp = false;
+  private prevDpadUp = false;
+  private prevDpadDown = false;
+  private prevDpadLeft = false;
+  private prevDpadRight = false;
   private warnedIds = new Set<string>();
 
   /** one snapshot per frame — edge fields fire exactly once per press */
@@ -141,6 +161,7 @@ export class GamepadInput {
       // edge on reconnect — forget everything
       this.prevSpeedUp = this.prevSpeedDown = this.prevToggle = false;
       this.prevDismiss = this.prevJump = this.prevHelp = false;
+      this.prevDpadUp = this.prevDpadDown = this.prevDpadLeft = this.prevDpadRight = false;
       return IDLE_FRAME;
     }
     if (pad.mapping !== 'standard' && !this.warnedIds.has(pad.id)) {
@@ -168,6 +189,10 @@ export class GamepadInput {
     const dismissNow = pressed(BTN_B);
     const jumpNow = pressed(BTN_A);
     const helpNow = pressed(BTN_VIEW);
+    const dpadUpNow = pressed(BTN_DPAD_UP);
+    const dpadDownNow = pressed(BTN_DPAD_DOWN);
+    const dpadLeftNow = pressed(BTN_DPAD_LEFT);
+    const dpadRightNow = pressed(BTN_DPAD_RIGHT);
     const frame: GamepadFrame = {
       active: true,
       moveX: move.x,
@@ -182,6 +207,10 @@ export class GamepadInput {
       dismiss: dismissNow && !this.prevDismiss,
       jump: jumpNow && !this.prevJump,
       help: helpNow && !this.prevHelp,
+      flyMode: dpadUpNow && !this.prevDpadUp,
+      walkMode: dpadDownNow && !this.prevDpadDown,
+      speedUp2: dpadRightNow && !this.prevDpadRight,
+      speedDown2: dpadLeftNow && !this.prevDpadLeft,
     };
     this.prevSpeedUp = speedUpNow;
     this.prevSpeedDown = speedDownNow;
@@ -189,6 +218,10 @@ export class GamepadInput {
     this.prevDismiss = dismissNow;
     this.prevJump = jumpNow;
     this.prevHelp = helpNow;
+    this.prevDpadUp = dpadUpNow;
+    this.prevDpadDown = dpadDownNow;
+    this.prevDpadLeft = dpadLeftNow;
+    this.prevDpadRight = dpadRightNow;
     return frame;
   }
 }
