@@ -415,13 +415,48 @@ const step = (cam: InstanceType<typeof FlyCamera>, frames: number): void => {
     `yaw ${heldYaw.toFixed(4)} after 1 s with cursor parked at the edge (unsuppressed would be ≈ -1.5)`,
   );
   pad.axes[1] = 0; // release the stick…
-  await new Promise((r) => setTimeout(r, 1600)); // …outlast the 1.5 s hold
+  await new Promise((r) => setTimeout(r, 1600)); // …outlast the 1.5 s pad hold
   step(cam, 60);
-  const resumedYaw = cam.getPose().yaw;
+  const parkedYaw = cam.getPose().yaw;
   check(
-    'P2 mouse-steer resumes after the pad goes idle',
-    resumedYaw < -1.2,
-    `yaw ${resumedYaw.toFixed(3)} after 1 s of parked cursor post-hold (expect ≈ -1.5)`,
+    'P2 a PARKED cursor never steers while a pad is connected',
+    Math.abs(parkedYaw) < 1e-6,
+    `yaw ${parkedYaw.toFixed(4)} with pad idle + cursor parked (the drag-to-ground bug)`,
+  );
+  // fresh mouse MOTION reclaims steering immediately
+  for (const h of mmHandlers) h({ clientX: 800, clientY: 225 });
+  step(cam, 60);
+  const movedYaw = cam.getPose().yaw;
+  check(
+    'P3 a MOVING mouse still steers with a pad connected',
+    movedYaw < -1.2,
+    `Δyaw ${movedYaw.toFixed(3)} within the motion window (expect ≈ -1.5)`,
+  );
+  // regression guard: mouse-only sessions keep presence-based steer — a
+  // parked cursor is the designed "look where your mouse is" input there
+  const mmHandlers2: MouseHandler[] = [];
+  const steerDom2 = {
+    addEventListener(type: string, h: MouseHandler): void {
+      if (type === 'mousemove') mmHandlers2.push(h);
+    },
+    getBoundingClientRect(): { left: number; top: number; width: number; height: number } {
+      return { left: 0, top: 0, width: 800, height: 450 };
+    },
+  } as unknown as HTMLElement;
+  keydownHandlers.length = 0;
+  keyupHandlers.length = 0;
+  const solo = new FlyCamera(new PerspectiveCamera(60, 16 / 9, 0.1, 30000), steerDom2);
+  solo.groundProbe = probe;
+  solo.gamepad.source = () => [];
+  solo.setPose({ p: [0, 300, 0], yaw: 0, pitch: 0 });
+  for (const h of mmHandlers2) h({ clientX: 800, clientY: 225 });
+  await new Promise((r) => setTimeout(r, 700)); // stale by pad standards
+  step(solo, 60);
+  const soloYaw = solo.getPose().yaw;
+  check(
+    'P4 without a pad, a parked cursor still steers (classic feel intact)',
+    soloYaw < -1.2,
+    `yaw ${soloYaw.toFixed(3)} parked, no pad (expect ≈ -1.5)`,
   );
 }
 

@@ -212,7 +212,17 @@ arrival all PASS, tsc + build clean, re-vendored. Field notes: his
 laptop iGPU runs the NJ scene ~6 fps — `?preset=low` is the mitigation;
 a wheel-drained fly speed (1 m/s) masqueraded as "buttons do nothing"
 (RB/] recovers); worktree dev servers need apps/web/public/data copied
-in (untracked files — the entity card 404s without them). Remaining
+in (untracked files — the entity card 404s without them). Follow-up
+(same day, Scott-reported + self-diagnosed): with the cursor parked at
+the BOTTOM of the canvas, fly-mode pitch kept dragging to the ground —
+presence-based mouse-steer is the designed mouse-only feel but is
+hostile with a pad in hand. Rule now: with a pad CONNECTED the mouse
+steers only while MOVING (500 ms motion window, MOUSE_ACTIVE_HOLD_MS);
+without a pad the classic parked-cursor ease is untouched. Probes:
+P1-P4 (pad-active suppression / parked-never-steers / moving-mouse
+reclaims / no-pad classic intact) — probe-gamepad 33/33; live 12/12;
+probe-mousesteer (real browser, no pad) ALL PASS incl. the bottom-edge
+pitch case, now takes --port like the other live probes. Remaining
 subjective: steer-rate feel verdict, D-pad still unbound (candidate:
 speed steps or help), overlay copy tuning.
 

@@ -112,6 +112,13 @@ const PAD_PITCH_RATE = 0.9;
  *  otherwise a cursor parked off-centre keeps turning the view and the stick
  *  fights it (last-active-input-wins, the standard hybrid-input rule) */
 const PAD_INPUT_HOLD_MS = 1500;
+/** with a pad CONNECTED, the mouse steers only while it is actually moving
+ *  (events within this window). Presence-based steer ("ease toward wherever
+ *  the cursor points") is the designed mouse-only feel, but with a pad in
+ *  hand an abandoned cursor below centre drags the view into the ground the
+ *  moment the stick goes idle — user-reported. Mouse-only sessions keep the
+ *  classic behaviour untouched. */
+const MOUSE_ACTIVE_HOLD_MS = 500;
 
 // ---- cinematic ease (flyTo — the arrival descent) ---------------------------
 /** movement INTENT skips a cinematic; M stays the mute toggle and clicks keep
@@ -164,6 +171,9 @@ export class FlyCamera {
   private padActiveV = false;
   /** wall-clock until which pad input owns steering (mouse-steer suppressed) */
   private padHoldUntil = 0;
+  /** wall-clock of the last real mousemove — with a pad connected, only a
+   *  moving mouse steers (a parked cursor has no authority) */
+  private lastMouseAt = 0;
   private walkScaleV = 1;
   private cruiseV = false;
   private navigationListeners = new Set<NavigationListener>();
@@ -204,6 +214,7 @@ export class FlyCamera {
       const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
       const ny = ((e.clientY - r.top) / r.height) * 2 - 1;
       this.mouse = { nx: Math.max(-1, Math.min(1, nx)), ny: Math.max(-1, Math.min(1, ny)) };
+      this.lastMouseAt = performance.now();
     });
     dom.addEventListener('mouseleave', () => {
       this.mouse = null;
@@ -515,7 +526,11 @@ export class FlyCamera {
     ) {
       this.padHoldUntil = performance.now() + PAD_INPUT_HOLD_MS;
     }
-    if (this.mouse && performance.now() >= this.padHoldUntil) {
+    // with a pad connected the mouse must be MOVING to steer; without one,
+    // presence over the canvas suffices (the classic mouse-only feel)
+    const now = performance.now();
+    const mouseFresh = !this.padActiveV || now - this.lastMouseAt < MOUSE_ACTIVE_HOLD_MS;
+    if (this.mouse && mouseFresh && now >= this.padHoldUntil) {
       this.yaw -= steerResponse(this.mouse.nx) * MAX_YAW_RATE * dt;
       this.pitch -= steerResponse(this.mouse.ny) * MAX_PITCH_RATE * dt;
     }

@@ -22,13 +22,16 @@ const H = 800;
 const HOLD_MS = 1800;
 
 async function main(): Promise<void> {
-  const { browser } = await launchWebGPU();
+  // --port targets a non-default dev server (worktree sessions)
+  const portArg = process.argv.indexOf('--port');
+  const base = portArg >= 0 ? `http://localhost:${process.argv[portArg + 1]}/` : 'http://localhost:5173/';
+  const { browser } = await launchWebGPU(base.replace(/\/$/, ''));
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   page.on('console', (msg) => {
     if (msg.type() === 'error') console.log(`[page:error] ${msg.text()}`);
   });
 
-  const url = laasUrl({ scene: 'newjerusalem', width: W, height: H, hud: false, freeze: false });
+  const url = laasUrl({ scene: 'newjerusalem', width: W, height: H, hud: false, freeze: false }, base);
   console.log(`[probe] ${url}`);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(
