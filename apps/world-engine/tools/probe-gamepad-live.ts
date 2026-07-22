@@ -33,7 +33,7 @@ const check = (name: string, ok: boolean, detail: string): void => {
   if (!ok) failures.push(name);
 };
 
-const { browser } = await launchWebGPU();
+const { browser } = await launchWebGPU(`http://localhost:${args.port}`);
 const page = await browser.newPage();
 // install the controllable fake BEFORE any engine code runs — GamepadInput's
 // default source closes over navigator.getGamepads at call time, so this
@@ -159,6 +159,19 @@ const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms)
     okVerdict.includes('standard') && okVerdict.includes('apply as-is'),
     `verdict "${okVerdict.slice(0, 60)}…"`,
   );
+
+  // pad controls overlay: auto-shown on first activation, View (b8) toggles
+  const helpVisible = (): Promise<boolean> =>
+    page.evaluate(() => {
+      const el = document.getElementById('pad-help');
+      return !!el && !el.hidden;
+    });
+  check('L11 controls overlay auto-shows on first pad activation', await helpVisible(), 'pad-help visible');
+  await setPad({ pressed: [8] });
+  await wait(200);
+  await setPad({});
+  await wait(200);
+  check('L12 View button hides the overlay', !(await helpVisible()), 'pad-help hidden after View');
 
   // guided capture: press A / B / Y and confirm the recorded indices
   await page.click('#padtest .pt-btn');

@@ -108,6 +108,10 @@ const PITCH_CLAMP = 1.3; // ~74° up/down — matches the validated legacy feel
 // expo curve (GamepadInput) makes small deflections turn slower still.
 const PAD_YAW_RATE = 1.2; // rad/s at full deflection
 const PAD_PITCH_RATE = 0.9;
+/** while the pad is in use (and briefly after), mouse-steer is suppressed —
+ *  otherwise a cursor parked off-centre keeps turning the view and the stick
+ *  fights it (last-active-input-wins, the standard hybrid-input rule) */
+const PAD_INPUT_HOLD_MS = 1500;
 
 // ---- cinematic ease (flyTo — the arrival descent) ---------------------------
 /** movement INTENT skips a cinematic; M stays the mute toggle and clicks keep
@@ -158,6 +162,8 @@ export class FlyCamera {
 
   private modeV: CamMode = 'fly';
   private padActiveV = false;
+  /** wall-clock until which pad input owns steering (mouse-steer suppressed) */
+  private padHoldUntil = 0;
   private walkScaleV = 1;
   private cruiseV = false;
   private navigationListeners = new Set<NavigationListener>();
@@ -497,8 +503,19 @@ export class FlyCamera {
     if (pad.speedDown) this.adjustTravelSpeed(-1);
     if (pad.dismiss) this.escapeEquivalent();
     if (pad.jump) this.jumpAt = performance.now();
+    if (pad.help && typeof CustomEvent === 'function' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('laas-pad-help'));
+    }
     if (this.cruiseV && pad.moveY < -0.5) this.setCruise(false); // stick back = S
-    if (this.mouse) {
+    // last-active-input-wins: any pad motion claims steering and holds it
+    // briefly, so a cursor parked off-centre can't drag the view mid-stick
+    if (
+      pad.moveX !== 0 || pad.moveY !== 0 || pad.lookX !== 0 || pad.lookY !== 0 ||
+      pad.flyUp > 0 || pad.flyDown > 0
+    ) {
+      this.padHoldUntil = performance.now() + PAD_INPUT_HOLD_MS;
+    }
+    if (this.mouse && performance.now() >= this.padHoldUntil) {
       this.yaw -= steerResponse(this.mouse.nx) * MAX_YAW_RATE * dt;
       this.pitch -= steerResponse(this.mouse.ny) * MAX_PITCH_RATE * dt;
     }

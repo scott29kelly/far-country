@@ -32,6 +32,7 @@ Object.defineProperty(globalThis, 'window', { value: windowShim, configurable: t
 
 const { PerspectiveCamera } = await import('three');
 const { FlyCamera } = await import('../src/core/FlyCamera');
+const { GamepadInput } = await import('../src/core/GamepadInput');
 
 // ---- fake pad (Chrome standard-mapping shape) ------------------------------
 type FakeButton = { pressed: boolean; touched: boolean; value: number };
@@ -379,6 +380,68 @@ const step = (cam: InstanceType<typeof FlyCamera>, frames: number): void => {
     'N  gamepad flag: false → true on exposure → false on disconnect',
     !before && during && !after,
     `before ${before}, connected ${during}, after ${after}`,
+  );
+}
+
+// ---- P: pad input suppresses mouse-steer (last-active-input-wins) ----------
+// A cursor parked off-centre used to keep turning the view while the stick
+// was in use — the two inputs fought (user-reported, GameSir session).
+{
+  type MouseHandler = (e: { clientX: number; clientY: number }) => void;
+  const mmHandlers: MouseHandler[] = [];
+  const steerDom = {
+    addEventListener(type: string, h: MouseHandler): void {
+      if (type === 'mousemove') mmHandlers.push(h);
+    },
+    getBoundingClientRect(): { left: number; top: number; width: number; height: number } {
+      return { left: 0, top: 0, width: 800, height: 450 };
+    },
+  } as unknown as HTMLElement;
+  const pad = makePad();
+  keydownHandlers.length = 0;
+  keyupHandlers.length = 0;
+  const cam = new FlyCamera(new PerspectiveCamera(60, 16 / 9, 0.1, 30000), steerDom);
+  cam.groundProbe = probe;
+  cam.gamepad.source = () => [pad as unknown as Gamepad | null];
+  cam.setPose({ p: [0, 300, 0], yaw: 0, pitch: 0 });
+  // park the cursor at the right edge: full-rate mouse steer while unsuppressed
+  for (const h of mmHandlers) h({ clientX: 800, clientY: 225 });
+  pad.axes[1] = -1; // stick held forward = pad active
+  step(cam, 60);
+  const heldYaw = cam.getPose().yaw;
+  check(
+    'P1 mouse-steer is suppressed while the pad is active',
+    Math.abs(heldYaw) < 1e-6,
+    `yaw ${heldYaw.toFixed(4)} after 1 s with cursor parked at the edge (unsuppressed would be ≈ -1.5)`,
+  );
+  pad.axes[1] = 0; // release the stick…
+  await new Promise((r) => setTimeout(r, 1600)); // …outlast the 1.5 s hold
+  step(cam, 60);
+  const resumedYaw = cam.getPose().yaw;
+  check(
+    'P2 mouse-steer resumes after the pad goes idle',
+    resumedYaw < -1.2,
+    `yaw ${resumedYaw.toFixed(3)} after 1 s of parked cursor post-hold (expect ≈ -1.5)`,
+  );
+}
+
+// ---- Q: View button emits a single help rising edge ------------------------
+{
+  const pad = makePad();
+  const input = new GamepadInput();
+  input.source = () => [pad as unknown as Gamepad | null];
+  input.poll();
+  press(pad, 8); // View
+  const first = input.poll().help;
+  const held = input.poll().help;
+  release(pad, 8);
+  input.poll();
+  press(pad, 8);
+  const again = input.poll().help;
+  check(
+    'Q  View: help edge fires once per press',
+    first && !held && again,
+    `first ${first}, held ${held}, re-press ${again}`,
   );
 }
 

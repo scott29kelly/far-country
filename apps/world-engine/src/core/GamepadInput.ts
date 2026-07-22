@@ -44,6 +44,7 @@ const BTN_LB = 4;
 const BTN_RB = 5;
 const BTN_LT = 6;
 const BTN_RT = 7;
+const BTN_VIEW = 8;
 const BTN_START = 9;
 
 export interface GamepadFrame {
@@ -64,6 +65,7 @@ export interface GamepadFrame {
   toggleMode: boolean; // Start or Y
   dismiss: boolean; // B
   jump: boolean; // A
+  help: boolean; // View — toggle the pad controls overlay
 }
 
 const IDLE_FRAME: GamepadFrame = {
@@ -79,6 +81,7 @@ const IDLE_FRAME: GamepadFrame = {
   toggleMode: false,
   dismiss: false,
   jump: false,
+  help: false,
 };
 
 /** injectable pad source — CPU probes hand in fake Gamepad objects (the
@@ -115,6 +118,7 @@ export class GamepadInput {
   private prevToggle = false;
   private prevDismiss = false;
   private prevJump = false;
+  private prevHelp = false;
   private warnedIds = new Set<string>();
 
   /** one snapshot per frame — edge fields fire exactly once per press */
@@ -136,7 +140,7 @@ export class GamepadInput {
       // a held button across a disconnect must not suppress (or fake) the
       // edge on reconnect — forget everything
       this.prevSpeedUp = this.prevSpeedDown = this.prevToggle = false;
-      this.prevDismiss = this.prevJump = false;
+      this.prevDismiss = this.prevJump = this.prevHelp = false;
       return IDLE_FRAME;
     }
     if (pad.mapping !== 'standard' && !this.warnedIds.has(pad.id)) {
@@ -163,6 +167,7 @@ export class GamepadInput {
     const toggleNow = pressed(BTN_START) || pressed(BTN_Y);
     const dismissNow = pressed(BTN_B);
     const jumpNow = pressed(BTN_A);
+    const helpNow = pressed(BTN_VIEW);
     const frame: GamepadFrame = {
       active: true,
       moveX: move.x,
@@ -176,12 +181,14 @@ export class GamepadInput {
       toggleMode: toggleNow && !this.prevToggle,
       dismiss: dismissNow && !this.prevDismiss,
       jump: jumpNow && !this.prevJump,
+      help: helpNow && !this.prevHelp,
     };
     this.prevSpeedUp = speedUpNow;
     this.prevSpeedDown = speedDownNow;
     this.prevToggle = toggleNow;
     this.prevDismiss = dismissNow;
     this.prevJump = jumpNow;
+    this.prevHelp = helpNow;
     return frame;
   }
 }
