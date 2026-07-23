@@ -10,11 +10,14 @@ from sqlalchemy.orm import Session
 from far_country.measure import (
     ALLOTMENT_ENTITIES,
     ALLOTMENT_MEASUREMENTS,
+    CITY_MEASUREMENTS,
     TEMPLE_MEASUREMENTS,
     emit_allotment_module,
+    emit_city_module,
     emit_engine_module,
     export_measurements,
     seed_allotment,
+    seed_city,
     seed_temple,
 )
 from far_country.store.models import Measurement, MeasurementCitation
@@ -109,3 +112,63 @@ def test_pending_records_not_exported(session: Session, tmp_path: Path) -> None:
     seed_allotment(session, review_status="pending")
     eza = emit_allotment_module(session, tmp_path / "allotment.gen.ts").read_text(encoding="utf-8")
     assert "eza-" not in eza
+
+
+def test_city_records_are_well_formed() -> None:
+    ids = [rec[0] for _, rec in CITY_MEASUREMENTS]
+    assert len(ids) == len(set(ids)), "slug ids must be unique"
+    assert all(i.startswith("rev-") for i in ids), "city slugs use the rev- prefix"
+    assert {entity_id for entity_id, _ in CITY_MEASUREMENTS} == {"new-jerusalem"}
+
+    for _, rec in CITY_MEASUREMENTS:
+        mid, subject, dimension, value, unit, tier, cites, basis, notes = rec
+        assert value > 0, mid
+        assert tier in {"clear", "fuzzy", "debated", "symbolic"}, mid
+        assert cites, f"{mid} must carry at least one citation"
+        for chapter, v0, v1 in cites:
+            assert chapter == 21, mid
+            assert v0 >= 1, mid
+            assert v1 is None or v1 > v0, mid
+
+
+def test_city_wall_referent_underdetermined() -> None:
+    """Rev 21:17's 144 cubits names no dimension — the record must stay fuzzy
+    with the thickness reading preserved in its notes."""
+    by_id = {rec[0]: rec for _, rec in CITY_MEASUREMENTS}
+    wall = by_id["rev-city-wall"]
+    assert wall[3] == 144
+    assert wall[4] == "cubit"
+    assert wall[5] == "fuzzy"
+    assert "thickness" in (wall[8] or ""), "the thickness reading must be preserved"
+
+
+def test_seed_city_attaches_to_new_jerusalem(session: Session) -> None:
+    first = seed_city(session, review_status="pending")
+    assert first.inserted == len(CITY_MEASUREMENTS)
+    assert first.entities_created == 1  # fresh store: the fallback entity row
+
+    again = seed_city(session, review_status="approved")
+    assert again.inserted == 0
+    assert again.updated == len(CITY_MEASUREMENTS)
+    assert again.entities_created == 0
+
+    rows = session.scalars(select(Measurement)).all()
+    assert all(r.entity_id == "new-jerusalem" for r in rows)
+    cites = session.scalars(select(MeasurementCitation)).all()
+    assert all(c.book == "Revelation" for c in cites)
+
+
+def test_city_module_is_text_native(session: Session, tmp_path: Path) -> None:
+    seed_city(session, review_status="approved")
+    seed_allotment(session, review_status="approved")
+
+    rev_path = emit_city_module(session, tmp_path / "city.gen.ts")
+    rev = rev_path.read_text(encoding="utf-8")
+    assert "export const REV" in rev and "'eza-" not in rev
+    # Revelation has no internal unit standard: no long-cubit field at all
+    assert "cu:" not in rev
+    assert "'rev-city-side': { value: 12000.0, unit: 'stadia', ref: 'Revelation 21:16'" in rev
+
+    # the eza module is unaffected by the city records
+    eza = emit_allotment_module(session, tmp_path / "allotment.gen.ts").read_text(encoding="utf-8")
+    assert "'rev-" not in eza

@@ -14,9 +14,12 @@
  */
 
 import { ALLOT_X, ALLOT_Z_NORTH, ALLOT_Z_SOUTH } from './Allotment';
+import { NJ_SCALE } from './config';
 
-/** Citywide scale (ADR 0014): local city units × NJ_SCALE = world metres. */
-export const NJ_SCALE = 20;
+/** Citywide scale (ADR 0014): local city units × NJ_SCALE = world metres.
+ *  Defined in config.ts (Phase B consolidation); re-exported here so the
+ *  many existing importers keep their path. */
+export { NJ_SCALE };
 
 /** Nominal plateau-top elevation (m, absolute — ADR 0015). */
 export const PLATEAU_Y = 470;

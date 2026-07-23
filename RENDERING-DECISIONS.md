@@ -581,3 +581,64 @@ Both reasons point the same direction, so the engine's default terrain is used a
   resolver), `src/nj/campusModel.ts` (cited rects, fitted grids),
   `src/nj/Dwellings.ts` (consumer), `src/nj/NewJerusalemScene.ts` (scatter
   envelope), `tools/probe-entitypick.ts` / `probe-campus-live.ts`
+
+## Entry #12 — City footprint: the cited 12,000 stadia through a declared resolver
+
+- **Date:** 2026-07-22
+- **Tier:** mixed — the city SIDE is grounded (`rev-city-side`, tier
+  `clear`); the compression factor, the interior massing, and the wall's
+  dimensions remain interpretive. Companion to entry #11: the same
+  resolver pattern, city side.
+- **Question:** Rev 21:15-17 is the one place John's vision gives numbers
+  (the measuring-rod passage). How does the rendered city consume them so
+  its footprint stops being an uncited placeholder (ADR 0017 decision 3)?
+- **Decision:** seed the two Revelation records (`rev-city-side` 12,000
+  stadia, Rev 21:16; `rev-city-wall` 144 cubits, Rev 21:17 — slug prefix
+  `rev-`, book Revelation, generated `cityMeasurements.gen.ts`, const
+  `REV`) and add a declared `compressed-city` mode to `NewJerusalemConfig`:
+  literal meters from the ESV's own footnote glosses (a stadion ~607 ft →
+  185 m; a cubit ~18 in → 0.457 m), divided by ONE whole-city compression
+  factor, 555. `cityModel.CITY_HALF` now derives from `rev-city-side`
+  through that resolver — landing exactly on ADR 0014's declared
+  experiential footprint (4000 m side, walls ±2000 world).
+
+### What is grounded vs. a rendering choice
+
+- **Grounded (via REV at the declared scale):** the city's foursquare
+  footprint consumes the cited side — 12,000 stadia, "its length and width
+  and height are equal" (Rev 21:16) — and the walker-facing HUD card for
+  `new-jerusalem` now shows both records with their citations and tiers.
+- **Rendering choice (documented interpretation):** the factor 555 itself —
+  back-derived from ADR 0014's ~2.5-mile experiential footprint, exactly as
+  entry #11's 0.1 m/cubit was back-derived from the heightfield-mirror
+  constraint; a literal 12,000-stadia city is a future resolver mode, not a
+  different dataset. The Revelation records carry NO long-cubit realization:
+  Revelation declares no internal unit standard (there is no Ezek 40:5 in
+  John's vision), so the generated module is purely text-native and the unit
+  glosses live in the resolver.
+- **Deliberately NOT consumed:** (1) `rev-city-wall` (144 cubits) — the
+  text does not say whether height or thickness is measured (tier `fuzzy`;
+  21:12's "great, high wall" suggests height, many interpreters read
+  thickness); the rendered wall keeps its proportional-art height and
+  asserts nothing. (2) The equal HEIGHT of 21:16 — the engine's terraced
+  ziggurat massing is a documented harmonization (entry #2, Willis), not a
+  12,000-stadia cube; the record preserves the equality in its subject line
+  so the dataset says what the render does not. (3) The 12,000-stadia
+  height/width equality against the interior tier table — tiers stay
+  proportional art keyed to the footprint.
+- **Guardrails:** no records for the gates or foundations (Rev 21:12-21
+  names and orders them but the rod numbers only the city and its wall);
+  the minority perimeter reading of 12,000 stadia (3,000 per side) is
+  preserved in `rev-city-side`'s notes, not silently dropped.
+
+### Governing sources
+
+- Rev 21:15-17 (via the seeded REV measurement records — ESV text not
+  stored, ADR 0006)
+- [ADR 0017](docs/adr/0017-scripture-as-grounding-data.md) decisions 2-4,
+  [ADR 0018](docs/adr/0018-units-and-scale-resolution.md) (resolver
+  pattern; ESV-footnote unit glosses), [ADR 0014](docs/adr/0014-citywide-scale-rendering.md)
+  (the declared footprint the compression preserves)
+- Code: `apps/world-engine/src/nj/config.ts` (city mode + `cityMeters`),
+  `src/nj/cityModel.ts` (derived `CITY_HALF`), `src/nj/cityMeasurements.gen.ts`
+  (generated), `pipeline/src/far_country/measure/city.py` (authored records)

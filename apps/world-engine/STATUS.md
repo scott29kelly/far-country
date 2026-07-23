@@ -138,6 +138,38 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-22, later) CITY-SIDE REV 21 RESOLVER — the city footprint
+consumes its cited 12,000 stadia.** Phase B slice 2 (RENDERING-DECISIONS
+entry #12, companion to #11): the last named remainder of the
+Scripture-as-data reframe (plan §3) is in.
+
+- Pipeline: `measure/city.py` authors the two Rev 21:15-17 records —
+  `rev-city-side` (12,000 stadia, tier `clear`; the minority perimeter
+  reading preserved in notes) and `rev-city-wall` (144 cubits, tier
+  `fuzzy` — height vs thickness underdetermined; recorded as height
+  after 21:12's "great, high wall" with the thickness reading in notes).
+  `seed_city` (citations carry book "Revelation" — `_seed_records` grew
+  a `book` param), `emit_city_module` → `cityMeasurements.gen.ts`
+  (const `REV`, slug prefix `rev-`), CLI `measure seed-city` +
+  `--city-module` on export. The REV module is purely text-native — NO
+  `cu` field (Revelation declares no internal unit standard; no Ezek
+  40:5 governs John's vision). 4 new tests (166 total).
+- Engine: `config.ts` gains the `city` section — declared
+  `compressed-city` mode: ESV-footnote unit glosses (stadion 185 m,
+  cubit 0.457 m) over ONE whole-city compression factor 555,
+  back-derived from ADR 0014's 4000 m experiential footprint exactly as
+  entry #11's 0.1 was from the mirror constraint. `cityModel.CITY_HALF`
+  now DERIVES from `rev-city-side` via `cityMeters()` (lands exactly on
+  100 local — zero visual change); `NJ_SCALE` moved into config.ts
+  (rimModel re-exports, importers untouched). `rev-city-wall` is
+  deliberately NOT consumed (wall keeps art height, asserts nothing).
+- HUD: the `new-jerusalem` entity export (schema 0.2.0) now embeds both
+  records — the city card shows "12,000 stadia — Revelation 21:16" /
+  "144 cubits — Revelation 21:17" with tier badges; `formatMeasurement`
+  fixed for the invariant plural ("stadia", not "stadias").
+- Remaining Phase B (unchanged): tier table/palette/glory/river config
+  sections, `rebuildNewJerusalem(config)` live-rebuild.
+
 **(2026-07-22) PHASE B CONFIG STARTED — the campus consumes EZA; band
 proportions are now the text's own.** First slice of the plan-§1 Phase B
 `NewJerusalemConfig` (RENDERING-DECISIONS entry #11, the successor entry
