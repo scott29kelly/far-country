@@ -23,5 +23,49 @@
       ]
     }
   ],
-  "relations": []
+  "relations": [],
+  "measurements": [
+    {
+      "id": "rev-city-side",
+      "subject": "the city, each dimension (its length, width, and height are equal)",
+      "dimension": "side",
+      "value": 12000.0,
+      "unit": "stadia",
+      "basis": null,
+      "tier": "clear",
+      "notes": "The city lies foursquare; he measured it with the rod at 12,000 stadia, and 'its length and width and height are equal' (21:16). Recorded per dimension, the plain reading of the equality clause; a minority reading takes 12,000 as the total perimeter (3,000 per side). ESV footnote: 'About 1,380 miles; a stadion was about 607 feet.' Whether the equal height makes a cube or a pyramid the text does not say \u2014 a form question for the render, not this record (the engine's terraced massing is a documented decision, RENDERING-DECISIONS entry #2).",
+      "citations": [
+        {
+          "id": "49cd36d2-b433-491a-87e6-558ad3238030",
+          "measurement_id": "rev-city-side",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 16,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "rev-city-wall",
+      "subject": "the wall of the city, measured by the angel",
+      "dimension": "height",
+      "value": 144.0,
+      "unit": "cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "'He also measured its wall, 144 cubits by human measurement, which is also an angel's measurement' (21:17). The text does not say WHICH dimension: recorded as height after 21:12's 'a great, high wall', but many interpreters read thickness (a wall-section measure) \u2014 hence tier `fuzzy`; the referent is underdetermined, the number is not. ESV footnote: 'About 216 feet; a cubit was about 18 inches' \u2014 the common cubit, not Ezekiel's long cubit (Ezek 40:5 does not govern John's vision).",
+      "citations": [
+        {
+          "id": "21e92e1a-d5b1-4e48-b203-af3bbc60eb44",
+          "measurement_id": "rev-city-wall",
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
 }
