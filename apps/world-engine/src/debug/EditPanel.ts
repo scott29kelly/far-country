@@ -5,13 +5,15 @@
  * `vite build` dead-code-eliminates both the import and this whole module —
  * verified by grepping dist for 'tweakpane').
  *
- * Phase A binds only handles that are already live-mutable (no refactor):
+ * Binds only handles that are already live-mutable (no refactor):
  * time of day (through hooks.setTimeOfDay — the ONE entry point that re-bakes
  * sky LUT + IBL + cloud shadow + probe GI + grade together; calling
  * sunSky.setTimeOfDay directly desyncs those, see TerrainScene), the aerial
- * fog/clarity uniforms, the summit glory intensity (njLive registry), the
- * exposure lock, pose bookmarks, and a copy-values-to-clipboard round trip
- * (paste back into source — the Phase B NewJerusalemConfig supersedes this).
+ * fog/clarity uniforms, the exposure lock, and pose bookmarks. The round
+ * trip: "copy config (JSON)" emits the NJ_CONFIG.look shape — paste tuned
+ * values into config.ts (Phase B). The old glory-intensity binding is gone
+ * with the glory orb itself (removed 2026-07-20 by user directive; the crown
+ * emissives that replaced it are material art, not a single live handle).
  */
 
 import { Pane } from 'tweakpane';
@@ -20,7 +22,7 @@ import type { CamPose, LaasHooks } from '../core/Hooks';
 import type { LaasParams } from '../core/Params';
 import type { PostStack } from '../render/PostStack';
 import type { SunSky } from '../sky/SunSky';
-import { njLive } from '../nj/CityMassing';
+import { NJ_CONFIG } from '../nj/config';
 
 /** The session's established judging framings (world coords, NJ scene). */
 const FRAMINGS: Array<{ title: string; pose: CamPose }> = [
@@ -42,9 +44,8 @@ export function initEditPanel(engine: Engine, params: LaasParams, hooks: LaasHoo
 
   const state = {
     timeOfDay: sunSky ? sunSky.timeOfDay : params.timeOfDay,
-    aerialFogK: sunSky ? sunSky.atmosphere.aerialFogK.value : 0.22,
-    aerialClarity: sunSky ? sunSky.atmosphere.aerialClarity.value : 0,
-    gloryIntensity: njLive.glory?.emissiveIntensity ?? 12,
+    aerialFogK: sunSky ? sunSky.atmosphere.aerialFogK.value : NJ_CONFIG.look.aerialFogK,
+    aerialClarity: sunSky ? sunSky.atmosphere.aerialClarity.value : NJ_CONFIG.look.aerialClarity,
     lockExposure: new URLSearchParams(window.location.search).get('lockexp') === '1',
     pose: '',
   };
@@ -92,16 +93,6 @@ export function initEditPanel(engine: Engine, params: LaasParams, hooks: LaasHoo
     });
   }
 
-  // --- city ------------------------------------------------------------------
-  if (njLive.glory) {
-    const cityF = pane.addFolder({ title: 'city' });
-    cityF
-      .addBinding(state, 'gloryIntensity', { min: 0, max: 30, step: 0.25, label: 'glory' })
-      .on('change', (ev) => {
-        if (njLive.glory) njLive.glory.emissiveIntensity = ev.value;
-      });
-  }
-
   // --- camera ----------------------------------------------------------------
   const camF = pane.addFolder({ title: 'camera' });
   const poseBinding = camF.addBinding(state, 'pose', { readonly: true, label: 'pose' });
@@ -125,15 +116,18 @@ export function initEditPanel(engine: Engine, params: LaasParams, hooks: LaasHoo
   }
 
   // --- round trip --------------------------------------------------------------
-  const copyBtn = pane.addButton({ title: 'copy values (JSON)' });
+  // emits the NJ_CONFIG.look shape so a tuned session pastes straight into
+  // config.ts; cam/lockExposure ride along as session context (not config)
+  const copyBtn = pane.addButton({ title: 'copy config (JSON)' });
   copyBtn.on('click', () => {
     const p = hooks.getPose?.();
     const json = JSON.stringify(
       {
-        timeOfDay: state.timeOfDay,
-        aerialFogK: state.aerialFogK,
-        aerialClarity: state.aerialClarity,
-        gloryIntensity: state.gloryIntensity,
+        look: {
+          timeOfDay: state.timeOfDay,
+          aerialFogK: state.aerialFogK,
+          aerialClarity: state.aerialClarity,
+        },
         lockExposure: state.lockExposure,
         cam: p ? camString(p) : null,
       },
@@ -145,7 +139,7 @@ export function initEditPanel(engine: Engine, params: LaasParams, hooks: LaasHoo
       .then(() => {
         copyBtn.title = 'copied';
         window.setTimeout(() => {
-          copyBtn.title = 'copy values (JSON)';
+          copyBtn.title = 'copy config (JSON)';
         }, 1200);
       })
       .catch(() => undefined);

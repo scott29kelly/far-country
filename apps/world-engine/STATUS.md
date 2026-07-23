@@ -138,6 +138,28 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-22, later-2) PHASE B CLOSED — tier rows + look defaults in
+config; the structural live-rebuild recorded overtaken-by-events.**
+
+- `config.ts` gains `cityTiers` (base {h, arches} + the four upper
+  terrace rows; the BASE half stays the resolver-derived CITY_HALF —
+  cityModel composes the one CITY_TIERS table every consumer keeps
+  reading) and `look` (timeOfDay 17, aerialFogK 0.12, aerialClarity
+  0.35) consumed by NewJerusalemScene — the tuned-look values now have
+  one home.
+- EditPanel: "copy config (JSON)" emits the `NJ_CONFIG.look` shape
+  (paste tuned values straight into config.ts); the dead
+  glory-intensity binding and the never-assigned `njLive` registry are
+  REMOVED (leftovers of the glory orb's 2026-07-20 removal — the
+  binding's `if (njLive.glory)` gate never fired).
+- `rebuildNewJerusalem(config)` recorded OVERTAKEN BY EVENTS in the
+  plan doc: CITY_TIERS now feeds five probe-verified analytic
+  subsystems (~76 uses / 7 modules); a visual-only rebuild would
+  desync them, a full-fidelity one threads the table everywhere for a
+  dev-only convenience. Phase B closes; next in plan sequence is
+  Phase C (staged assembly — partly done: arches/piers/dentils
+  instanced) when called.
+
 **(2026-07-22, later) CITY-SIDE REV 21 RESOLVER — the city footprint
 consumes its cited 12,000 stadia.** Phase B slice 2 (RENDERING-DECISIONS
 entry #12, companion to #11): the last named remainder of the

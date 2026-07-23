@@ -30,6 +30,7 @@ import type { Heightfield } from '../world/Heightfield';
 import { buildHolyAllotment } from './Allotment';
 import { ALLOT_ZONES } from './allotmentZones';
 import { CITY_HALF, CITY_SUMMIT_Y, GATE_OFFSETS } from './cityModel';
+import { NJ_CONFIG } from './config';
 import { wrapGroundProbeWithCityFloors, wrapMoveWithCityCollision } from './cityCollide';
 import { LEVITES_RECT, PRIESTS_RECT } from './campusModel';
 import { buildDwellings } from './Dwellings';
@@ -54,12 +55,13 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // Front-light the city. The sun arcs east → south → west across the day, so
   // only in the AFTERNOON does it swing into the south and rake the city's
   // south face — which is the face the primary spawn/establishing view looks
-  // at (the walker spawns south of the city, looking north). T=17 keeps the
-  // bright "high-key daytime" mood (Willis's establishing note) while lighting
-  // the gold faces and arches so the city reads as glowing. A user ?T= wins.
-  // Set BEFORE buildTerrainScene so probes, sky LUTs, and sun bake at this sun.
+  // at (the walker spawns south of the city, looking north). The tuned hour
+  // keeps the bright "high-key daytime" mood (Willis's establishing note)
+  // while lighting the gold faces and arches so the city reads as glowing.
+  // A user ?T= wins. Set BEFORE buildTerrainScene so probes, sky LUTs, and
+  // sun bake at this sun. Value: NJ_CONFIG.look (the ?edit=1 round trip).
   if (!new URLSearchParams(window.location.search).has('T')) {
-    params.timeOfDay = 17.0;
+    params.timeOfDay = NJ_CONFIG.look.timeOfDay;
   }
 
   // --- the Holy Allotment as authored geography (ADR 0015 + 0016) -------------
@@ -121,11 +123,11 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // De-haze the city MODERATELY. With a real landscape restored, keep more
   // of the atmosphere's depth layering than the old box-plateau tuning did
   // (0.08/0.55 flattened the world); the city's raised emissives still read
-  // through. See ADR 0014/0015.
+  // through. See ADR 0014/0015. Values: NJ_CONFIG.look (the ?edit=1 round trip).
   const sunSky = (engine as unknown as { sunSky?: SunSky }).sunSky;
   if (sunSky) {
-    sunSky.atmosphere.aerialFogK.value = 0.12;
-    sunSky.atmosphere.aerialClarity.value = 0.35;
+    sunSky.atmosphere.aerialFogK.value = NJ_CONFIG.look.aerialFogK;
+    sunSky.atmosphere.aerialClarity.value = NJ_CONFIG.look.aerialClarity;
   }
 
   // Place the built content ON the terrain plateau. The flat core makes the
