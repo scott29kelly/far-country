@@ -99,7 +99,15 @@ public world. Bind to handles we *already* mutate live (no refactor needed):
 
 Kills most of the rebuild→screenshot loop. **Effort: low. ROI: highest.**
 
-### Phase B — Data-driven city schema (idea #2)
+### Phase B — Data-driven city schema (idea #2) — STARTED 2026-07-22
+
+> First slice shipped: `apps/world-engine/src/nj/config.ts`
+> (`NewJerusalemConfig`) opens with the §3 bridge — the declared
+> `compressed-district` resolver through which `campusModel.ts` /
+> `Dwellings.ts` consume the Ezek 45/48 measurement records
+> (RENDERING-DECISIONS entry #11). Tier table / palette / curve sections
+> and `rebuildNewJerusalem(config)` remain.
+
 Lift scattered constants into one typed source of truth:
 **`apps/world-engine/src/nj/config.ts` → `NewJerusalemConfig`** (scale, tier
 table, palette, emissive curves, glory, river, allotment dims, atmosphere

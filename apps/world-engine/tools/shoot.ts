@@ -72,14 +72,18 @@ async function main(): Promise<void> {
   // forward any flag not consumed above as a raw ?key=value page param
   const consumed = new Set([
     'w', 'h', 'scene', 'out', 'settle', 'timeout', 'seed', 'T', 'cam',
-    'preset', 'hud', 'nofreeze', 'stats',
+    'preset', 'hud', 'nofreeze', 'stats', 'base',
   ]);
   const extra: Record<string, string> = {};
   for (const [k, v] of Object.entries(args)) {
     if (!consumed.has(k)) extra[k] = v === true ? '1' : String(v);
   }
   if (Object.keys(extra).length > 0) urlOpts.extra = extra;
-  const url = laasUrl(urlOpts);
+  // --base: target a different origin (e.g. the deployed engine at
+  // https://far-country.vercel.app/laas/). The local dev server must still
+  // run on :5173 for launchWebGPU's adapter probe.
+  const base = str(args['base']);
+  const url = base ? laasUrl(urlOpts, base) : laasUrl(urlOpts);
   console.log(`[shoot] ${url} → ${out}`);
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });

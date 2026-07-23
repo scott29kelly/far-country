@@ -14,7 +14,7 @@ async function main(): Promise<void> {
   const { browser } = await launchWebGPU();
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   try {
-    await page.goto(laasUrl({ scene: 'newjerusalem', hud: '0' }), {
+    await page.goto(laasUrl({ scene: 'newjerusalem', hud: false }), {
       waitUntil: 'domcontentloaded',
     });
     await page.waitForFunction(

@@ -3,15 +3,19 @@
  * WORLD SPACE at ordinary human scale (USER-REFS directive #6; CITY-QUALITY-BAR
  * delta #6), replacing the ×20-frame placeholder megabox grid.
  *
- * Grounding posture (RENDERING-DECISIONS entry #8): Scripture grounds the
- * ZONE — a portion of the holy district is "a place for their houses" for the
- * ministering Zadokite priests (Ezek 45:4; 48:10-11), with the Levites' equal
- * portion alongside (Ezek 45:5; 48:13-14) and the sanctuary in the priests'
- * midst (Ezek 48:10). Every dimension, count, and form below (block sizes,
- * house plans, hedges, wells, roofs, palettes) is interpretive art direction
- * from the approved reference set (gemini-render-1 garden-court blocks;
- * USER-REFS #3 hedgerows / #6 villages), NOT a textual claim — same posture
- * as the temple's fortress dressing (entry #7 point 4). House counts are a
+ * Grounding posture (RENDERING-DECISIONS entries #8 -> #11): Scripture
+ * grounds the ZONES — "a place for their houses" for the ministering
+ * Zadokite priests (Ezek 45:4; 48:10-11), the Levites' equal portion
+ * alongside (Ezek 45:5; 48:13-14), the sanctuary in the priests' midst
+ * (Ezek 48:10) — and, since entry #11, the band PROPORTIONS as well: the
+ * extents this builder fills come from campusModel's cited rects, resolved
+ * from the Ezek 45/48 measurement records (allotmentMeasurements.gen.ts)
+ * at the declared district scale (config.ts, ADR 0018). Every dimension,
+ * count, and form below that (block sizes, house plans, hedges, wells,
+ * roofs, palettes) is interpretive art direction from the approved
+ * reference set (gemini-render-1 garden-court blocks; USER-REFS #3
+ * hedgerows / #6 villages), NOT a textual claim — same posture as the
+ * temple's fortress dressing (entry #7 point 4). House counts are a
  * legibility stand-in, not a census (entry #3 precedent).
  *
  * Two bands, two regimes:
@@ -60,9 +64,9 @@ import type { Heightfield } from '../world/Heightfield';
 import { WORLD_HALF } from '../world/WorldConst';
 import { PLATEAU_Y } from './rimModel';
 import { TEMPLE_SITE } from './templeModel';
-// Layout constants (interpretive art direction — RENDERING-DECISIONS #8)
-// live in campusModel.ts, the shared owner table the pick registry and
-// reading key also derive from.
+// Layout tables (cited band extents + interpretive grid fit — RENDERING-
+// DECISIONS #11) live in campusModel.ts, the shared owner table the pick
+// registry and reading key also derive from.
 import {
   BLOCK,
   COLS_PER_SIDE,

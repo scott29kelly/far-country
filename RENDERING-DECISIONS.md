@@ -415,7 +415,9 @@ Both reasons point the same direction, so the engine's default terrain is used a
   generated `allotmentMeasurements.gen.ts` (EZA) module, so the band split's
   proportions are STILL uncited art direction; the resolver-driven proportion
   pass (Phase B config work) is the point at which this entry gets its
-  successor.
+  successor. **Discharged 2026-07-22: entry #11 is that successor** — the
+  band extents are now resolver-driven from EZA; this entry's content-level
+  postures (kit, counts, guardrails) remain in force.
 
 ### Governing sources
 
@@ -510,3 +512,72 @@ Both reasons point the same direction, so the engine's default terrain is used a
   slab), `src/nj/cityCollide.ts` (surface claims, flank blocks, gallery),
   `src/nj/populationModel.ts` (plaza ring recentred into the gallery),
   `tools/probe-ascent.ts`
+
+---
+
+## Entry #11 — Campus proportions: resolver-driven from the Ezek 45/48 measurements
+
+- **Date:** 2026-07-22
+- **Tier:** mixed — the band EXTENTS are now grounded (`clear` measurement
+  records); the district-scale factor and everything built inside the bands
+  remain interpretive. This entry is the successor entry #8 promised for its
+  "knowingly not honoured yet" clause.
+- **Question:** How do the dwelling bands consume the seeded Ezek 45/48
+  allotment measurements (`allotmentMeasurements.gen.ts`, EZA) so their
+  proportions stop being uncited art direction (ADR 0017 decision 3)?
+- **Decision:** a declared district-scale resolver mode,
+  `compressed-district` at `0.1 m per long cubit`, in the new Phase B
+  `NewJerusalemConfig` (`apps/world-engine/src/nj/config.ts`); the campus
+  owner table (`campusModel.ts`) now derives its band rects from EZA through
+  it, and the block grids are FITTED inside those cited rects instead of
+  defining them.
+
+### What is grounded vs. a rendering choice
+
+- **Grounded (via EZA at the declared scale):** the priests' portion is
+  25,000 × 10,000 long cubits (`eza-priests-portion-length/-breadth`, Ezek
+  45:3; 48:10) → 2500 × 1000 m; the Levites' portion is its EQUAL alongside
+  (`eza-levites-portion-length/-breadth`, Ezek 45:5; 48:13) → the bands now
+  render at the text's own proportions — equal breadths (previously the
+  Levites' band was 3.76× the priests', contradicting the text), the shared
+  2.5:1 length, adjacency (Ezek 48:13), and the sanctuary centered in the
+  priests' breadth ("in their midst," Ezek 48:10; the band straddles
+  `TEMPLE_SITE.z` symmetrically).
+- **Rendering choice (documented interpretation):** the factor 0.1 itself —
+  derived from the engine constraint that priests'-band houses must ground
+  on the detailed-terrain heightfield mirror (|z| ≤ 6144): centering 10,000
+  cubits of breadth on the temple's z = -5600 against that edge gives
+  ~1000 m, i.e. a 5.25× compression of the literal cubit (ADR 0018
+  decision 4 mode; ADR 0009 rule 6 placeholder geography; the ADR 0014
+  precedent). Also interpretive, unchanged from entry #8: the block kit and
+  pitches, the grid fit inside the rects, the meridian lane and east
+  processional clearings, and the Levites' 350 m meadow break past the
+  tile/far-shell seam (the ZONE starts at the cited boundary; the podium
+  regime needs the far shell).
+- **Deliberate consequences:** (1) the campus shrinks — the freed plateau
+  east and west of the district square reads as the prince's portion, which
+  Scripture places "on both sides of the holy district and the property of
+  the city" but never measures spatially (Ezek 48:21-22) — deliberately
+  unbuilt, no records invented; wild scatter reclaims it (the exclusion
+  envelope now derives from the cited rects). (2) The 45:2 sanctuary-plot
+  records (500 cubits + 50 open) are NOT consumed at district scale: the
+  temple compound renders literal-cubit (entry #7, ADR 0018 decision 2) and
+  overflows the 60 m district-scale plot — the two-regime honesty, same
+  posture as the literal temple beside the interpreted-scale city.
+- **Guardrails:** entry #8's hold — zones cited, individual buildings
+  assert nothing; no entity invented for the prince's portion or tribal
+  strips (no spatial numbers exist to seed). Pick volumes and reading-key
+  anchors keep deriving from the same owner table (`campusModel.ts`), so
+  HUD citations and rendered extents cannot desync.
+
+### Governing sources
+
+- Ezek 45:1-6; 48:8-22 (via the seeded EZA measurement records — ESV text
+  not stored, ADR 0006)
+- [ADR 0017](docs/adr/0017-scripture-as-grounding-data.md) decisions 2-4,
+  [ADR 0018](docs/adr/0018-units-and-scale-resolution.md) decision 4,
+  [ADR 0009](docs/adr/0009-symbolic-vs-literal-rendering.md) rules 4/6
+- Code: `apps/world-engine/src/nj/config.ts` (NewJerusalemConfig + district
+  resolver), `src/nj/campusModel.ts` (cited rects, fitted grids),
+  `src/nj/Dwellings.ts` (consumer), `src/nj/NewJerusalemScene.ts` (scatter
+  envelope), `tools/probe-entitypick.ts` / `probe-campus-live.ts`

@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-19)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-22)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,37 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-07-22) PHASE B CONFIG STARTED — the campus consumes EZA; band
+proportions are now the text's own.** First slice of the plan-§1 Phase B
+`NewJerusalemConfig` (RENDERING-DECISIONS entry #11, the successor entry
+#8 promised).
+
+- New `src/nj/config.ts`: `NewJerusalemConfig` + the declared
+  `compressed-district` resolver mode (0.1 m per long cubit — derivation
+  in the module doc: 10,000 cubits of priests'-band breadth centered on
+  TEMPLE_SITE.z against the heightfield-mirror edge |z| ≤ 6144).
+  `districtCu()/districtMeters()` read `allotmentMeasurements.gen.ts`
+  (EZA) — the campus counterpart of templeModel's `cu()/meters()`.
+- `campusModel.ts` INVERTED: cited `PRIESTS_RECT`/`LEVITES_RECT` come
+  first (25,000 × 10,000 cubits each at district scale → 2500 × 1000 m,
+  equal, adjacent, sanctuary-centered), and the block grids are FITTED
+  inside them (COLS_PER_SIDE/NEAR_ROWS/FAR_COLS_PER_SIDE/FAR_ROWS are
+  now derived, not hand-typed). Visible change: priests' band 6 rows ×
+  16 cols (was 7 × 80), Levites' 2 rows × 8 cols (was 13 × 40) — the
+  bands now render EQUAL breadths (the text's explicit equality; the old
+  Levites' band was 3.76× the priests') at the shared 2.5:1 proportion.
+  The freed plateau reads as the prince's unbuilt portion (Ezek
+  48:21-22, no spatial numbers — nothing invented). Scene scatter
+  exclusion now derives from the cited rects.
+- Tooling: `shoot.ts` gains `--base` (target the deployed engine);
+  `shot-sway-pair.ts` pre-existing tsc error fixed (`hud: false`).
+- Verified: tsc clean, vite build clean, all 7 CPU probes green
+  (entitypick B13-B15/N6 and the campus zone volumes hold — pick/key
+  derive from the same owner table), live probes + stills per this
+  entry's PR. Remaining Phase B: migrate tier table/palette/glory/river
+  sections into config.ts, `rebuildNewJerusalem(config)` live-rebuild,
+  city-side Rev 21 resolver mode (ADR 0018 consequence 3).
 
 **(2026-07-21, later-3) FIGURE IDLE MOTION BUILT — the multitude
 breathes.** The M3.6 "figure idle motion" remainder lands exactly on the
