@@ -64,10 +64,12 @@ export interface EntityExport {
   measurements?: EntityMeasurement[];
 }
 
-/** measurement display grammar: "25,000 long cubits", "3" for counts */
+/** measurement display grammar: "25,000 long cubits", "12,000 stadia",
+ *  "3" for counts */
 export function formatMeasurement(m: EntityMeasurement): string {
   const n = m.value.toLocaleString('en-US');
   if (m.unit === 'item') return n;
+  if (m.unit === 'stadia') return `${n} stadia`; // already plural (sing. stadion)
   const unit = m.unit.replace(/-/g, ' ');
   return `${n} ${unit}${m.value === 1 ? '' : 's'}`;
 }

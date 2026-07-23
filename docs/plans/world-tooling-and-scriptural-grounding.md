@@ -105,8 +105,10 @@ Kills most of the rebuild→screenshot loop. **Effort: low. ROI: highest.**
 > (`NewJerusalemConfig`) opens with the §3 bridge — the declared
 > `compressed-district` resolver through which `campusModel.ts` /
 > `Dwellings.ts` consume the Ezek 45/48 measurement records
-> (RENDERING-DECISIONS entry #11). Tier table / palette / curve sections
-> and `rebuildNewJerusalem(config)` remain.
+> (RENDERING-DECISIONS entry #11). Second slice: the city-side Rev 21
+> resolver (`compressed-city` mode; `cityModel.CITY_HALF` consumes
+> `rev-city-side`; entry #12) — §3's last named remainder. Tier table /
+> palette / curve sections and `rebuildNewJerusalem(config)` remain.
 
 Lift scattered constants into one typed source of truth:
 **`apps/world-engine/src/nj/config.ts` → `NewJerusalemConfig`** (scale, tier

@@ -13,8 +13,17 @@
  * placeholder (ADR 0009 rule 6); true 12,000-stadia scale stays deferred.
  */
 
-/** Half-width of the placeholder city (base footprint), in metres. */
-export const CITY_HALF = 100;
+import { NJ_SCALE, cityMeters } from './config';
+
+/**
+ * Half-width of the city base footprint, LOCAL units (× NJ_SCALE = world m).
+ * Derived from the cited side — 12,000 stadia (Rev 21:16, rev-city-side) —
+ * through the declared `compressed-city` resolver (config.ts), which lands
+ * exactly on ADR 0014's 100-local placeholder; the interior massing below
+ * (tiers, gates, wall lines) stays proportional art keyed to this footprint
+ * (RENDERING-DECISIONS entries #2 and #12).
+ */
+export const CITY_HALF = cityMeters('rev-city-side') / NJ_SCALE / 2;
 
 /**
  * Willis step-pyramid (terraced ziggurat) parameters.
