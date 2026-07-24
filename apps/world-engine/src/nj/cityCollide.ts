@@ -49,8 +49,10 @@ import {
 const SKIN = 0.03;
 /** Base-tier volume floor below the plaza top (10 m world — the meadow). */
 const Y_MIN = -0.5;
-/** Swept-resolve substep (1 m world) — fast fly motion cannot tunnel the
- *  240 m wall or skip a 160 m gate opening between frames. */
+/** Swept-resolve substep (1 m world) — with the INCREMENTAL sweep below,
+ *  no move (however long a dt-spike frame makes it) can tunnel the wall
+ *  or skip a 160 m gate opening: an axis only ever advances one substep
+ *  from where it actually stands, so a solid band always interposes. */
 const SUBSTEP = 0.05;
 
 const TIER_BOTTOMS = cityTierBottoms();
@@ -143,12 +145,19 @@ export function resolveCityMoveLocal(
   if (cityBlockedLocal(fx, fz, y)) return { x: tx, z: tz };
   if (dist === 0) return { x: tx, z: tz };
   const steps = Math.max(1, Math.ceil(dist / SUBSTEP));
+  // Incremental sweep: each candidate advances ONE substep from the current
+  // resolved position, never to the absolute interpolant. The old absolute
+  // form let a single move long enough to span a whole solid band (a 100+ m
+  // dt-spike frame at fly speed) land free beyond it and tunnel; a blocked
+  // axis now simply stops at the face while the other keeps sliding.
+  const stepX = (tx - fx) / steps;
+  const stepZ = (tz - fz) / steps;
   let cx = fx;
   let cz = fz;
   for (let i = 1; i <= steps; i++) {
-    const nx = fx + ((tx - fx) * i) / steps;
-    const nz = fz + ((tz - fz) * i) / steps;
+    const nx = cx + stepX;
     if (!cityBlockedLocal(nx, cz, y)) cx = nx;
+    const nz = cz + stepZ;
     if (!cityBlockedLocal(cx, nz, y)) cz = nz;
   }
   return { x: cx, z: cz };

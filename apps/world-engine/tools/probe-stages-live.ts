@@ -24,11 +24,10 @@ const c = makeChecker();
 // - collision point: x 500 (local 25 — between the south gates at local
 //   0/50, gate half-width 4), one FRAME-SCALE move from the open meadow
 //   (z 2090, outside the foundation course's outer face at ~2068.6) into
-//   the course band (z 2060). Frame-scale matters twice over: a start at
-//   z ≤ 2068 is INSIDE the course volume (exact-placement free-move
-//   semantics), and the resolver's substeps test absolute positions, so a
-//   single move spanning the whole band lands free beyond it — real
-//   per-frame moves never do either
+//   the course band (z 2060). The start matters: a start at z ≤ 2068 is
+//   INSIDE the course volume, and exact-placement semantics let a body
+//   already inside a solid move freely (band-spanning moves themselves
+//   cannot tunnel — probe-wallcollide T1-T3 pin the incremental sweep)
 // - channel point: (0, 2400) on the meridian approach reach (the
 //   probe-walkfling corridor); wade eye ≈ ground + 5.5 sits just above the
 //   channel surface (plazaTop + 2), inside the water-claim cap
