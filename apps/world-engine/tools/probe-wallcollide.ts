@@ -44,7 +44,9 @@ Object.defineProperty(globalThis, 'window', { value: windowShim, configurable: t
 const { PerspectiveCamera } = await import('three');
 const { FlyCamera } = await import('../src/core/FlyCamera');
 const { wrapGroundProbeWithRiver } = await import('../src/nj/RiverOfLife');
-const { cityBlockedLocal, wrapMoveWithCityCollision } = await import('../src/nj/cityCollide');
+const { cityBlockedLocal, resolveCityMoveLocal, wrapMoveWithCityCollision } = await import(
+  '../src/nj/cityCollide'
+);
 const { NJ_SCALE } = await import('../src/nj/rimModel');
 const { makeChecker } = await import('./check');
 
@@ -241,6 +243,32 @@ const run = (cam: InstanceType<typeof FlyCamera>, frames: number): void => {
   c.check('P9 just off the tier-2 face is free', !cityBlockedLocal(-61, 0, 70), 'a 61, y 70');
   c.check('P10 crown face blocks', cityBlockedLocal(-22.01, 0, 140), 'a 22.01, y 140');
   c.check('P11 above the summit is free', !cityBlockedLocal(0, 0, 156.01), 'y 156.01');
+}
+
+// ---- T: no frame-spanning tunnel (LOCAL units) -----------------------------
+// The old absolute-interpolant substeps let one move long enough to span a
+// whole solid band (a dt-spike frame at fly speed) land free beyond it and
+// tunnel. The incremental sweep stops at the first face regardless of move
+// length; the gate lane stays passable end to end at any length.
+{
+  const hit = resolveCityMoveLocal(25, 105, 25, 95, 1); // spans course + wall
+  c.check(
+    'T1 a band-spanning move stops at the course face',
+    hit.z > 103.3,
+    `105→95 at u 25 stopped at z ${hit.z.toFixed(2)} (course outer ~103.43)`,
+  );
+  const lane = resolveCityMoveLocal(0, 105, 0, 95, 1); // gate lane end to end
+  c.check(
+    'T2 the same-length move passes through the gate lane',
+    Math.abs(lane.z - 95) < 0.01,
+    `105→95 at u 0 arrived at z ${lane.z.toFixed(2)}`,
+  );
+  const oblique = resolveCityMoveLocal(25, 105, 20, 95, 1); // into the course, obliquely
+  c.check(
+    'T3 an oblique band-spanning move still slides in x',
+    oblique.z > 103.3 && Math.abs(oblique.x - 20) < 0.01,
+    `x ${oblique.x.toFixed(2)} (target 20), z ${oblique.z.toFixed(2)}`,
+  );
 }
 
 c.finish();

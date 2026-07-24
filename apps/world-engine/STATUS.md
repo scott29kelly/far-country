@@ -138,6 +138,27 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-24) COLLISION SWEEP FIX — the frame-spanning tunnel closed.**
+
+- `cityCollide.resolveCityMoveLocal`: the axis-separated substeps used
+  to test ABSOLUTE interpolated positions, so one move long enough to
+  span a whole solid band (a 100+ m dt-spike frame at fly speed) landed
+  free beyond it and tunneled (found while building probe-stages-live;
+  frame-scale moves never triggered it). The sweep is now INCREMENTAL —
+  each candidate advances one substep from the current resolved
+  position — so a solid band always interposes regardless of move
+  length. Slide-along-face semantics and exact-placement free-move
+  (start inside a solid) are unchanged.
+- probe-wallcollide grows a T section pinning it: T1 band-spanning move
+  stops at the course face (z 103.45); T2 the same-length move passes
+  the gate lane end to end; T3 oblique band-spanning move still slides
+  in x. probe-stages-live's comment updated (its A2 case stays
+  frame-scale for the start-inside-solid reason only).
+- Battery note: probe-bootrite showed one timing-flaky FAIL ("fill
+  tracks the paced display value") when run back-to-back with seven
+  other live probes; clean ALL PASS in isolation. Pacing probes are
+  load-sensitive — re-run alone before treating as real.
+
 **(2026-07-23) PHASE C STARTED — named content stages (`?stages=`).**
 
 - `src/nj/stages.ts`: the seven content stages (city, river, trees,
