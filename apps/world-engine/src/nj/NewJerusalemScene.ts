@@ -40,6 +40,7 @@ import { buildPopulation } from './Population';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
+import { parseStages } from './stages';
 import { buildTemple } from './Temple';
 import { TEMPLE_SITE } from './templeModel';
 import { buildTreesOfLife } from './TreesOfLife';
@@ -51,6 +52,10 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const resizeProbeAblate = new Set(
     (new URLSearchParams(window.location.search).get('resizeprobe') ?? '').split(','),
   );
+  // ?stages= — named content stages (stages.ts, plan doc Phase C). A stage
+  // owns its geometry AND its derived probe hooks; terrain and the analytic
+  // entity/navigation contracts are never staged.
+  const stages = parseStages(new URLSearchParams(window.location.search).get('stages'));
 
   // Front-light the city. The sun arcs east → south → west across the day, so
   // only in the AFTERNOON does it swing into the south and rake the city's
@@ -141,7 +146,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // street-of-gold platform
   const plazaTopY = coreY + 2.8;
   if (!resizeProbeAblate.has('allotment')) {
-    const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null });
+    const allot = buildHolyAllotment({ gi, hf, atm: sunSky?.atmosphere ?? null, stages });
     allot.scale.setScalar(NJ_SCALE);
     allot.position.set(0, plazaTopY, 0);
     engine.scene.add(allot);
@@ -154,7 +159,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // RiverOfLife.ts and is shared verbatim with tools/probe-walkfling.ts —
   // no hand-mirrored copy to desync.
   const baseProbe = ctx.hooks.groundProbe;
-  if (baseProbe) {
+  if (baseProbe && stages.has('river')) {
     ctx.hooks.groundProbe = wrapGroundProbeWithRiver(baseProbe, plazaTopY, NJ_SCALE);
   }
 
@@ -165,43 +170,51 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // passes through the twelve gate openings (Ezek 48:30-34 order,
   // RENDERING-DECISIONS #2) and stops at wall segments, the gem foundation
   // course, and tier masses. Floors stay groundProbe territory.
-  ctx.hooks.moveProbe = wrapMoveWithCityCollision(plazaTopY, NJ_SCALE);
+  if (stages.has('city')) {
+    ctx.hooks.moveProbe = wrapMoveWithCityCollision(plazaTopY, NJ_SCALE);
+  }
 
   // Trees of life flanking the river's approach reach (Rev 22:2) — real
   // trees from the engine's own pipeline, placed in WORLD space (the ×20
   // allotment scale would distort them). Null when veg is ablated.
-  const treesOfLife = await buildTreesOfLife(ctx);
-  if (treesOfLife) engine.scene.add(treesOfLife);
+  if (stages.has('trees')) {
+    const treesOfLife = await buildTreesOfLife(ctx);
+    if (treesOfLife) engine.scene.add(treesOfLife);
+  }
 
   // Ezekiel's temple (Ezek 40-42 + the 43:13-17 altar): a world-space,
   // literal-cubit compound built from the cited measurement dataset
   // (ADR 0017/0018; RENDERING-DECISIONS #7) on the priests' campus band.
-  engine.scene.add(buildTemple({ hf, gi }));
+  if (stages.has('temple')) {
+    engine.scene.add(buildTemple({ hf, gi }));
+  }
 
   // The dwelling campus (Ezek 45:4-5; 48:10-14): human-scale garden-court
   // blocks in world space — the priests' band flanking the temple inside the
   // detailed ring, the Levites' podium band marching north across the far
   // shell (RENDERING-DECISIONS #8; USER-REFS #6; delta #6).
-  const dwellings = await buildDwellings({ hf, gi, renderer: engine.renderer });
-  engine.scene.add(dwellings.group);
+  if (stages.has('dwellings')) {
+    const dwellings = await buildDwellings({ hf, gi, renderer: engine.renderer });
+    engine.scene.add(dwellings.group);
 
-  // Beyond the heightfield mirror the terrain groundProbe clamps to the ring
-  // edge while the far shell keeps rolling — wrap it with the campus far-
-  // ground sampler (same idiom as the river-surface wrap above) so walk/fly
-  // grounding stays sane across the Levites' band.
-  const terrainProbe = ctx.hooks.groundProbe;
-  if (terrainProbe) {
-    ctx.hooks.groundProbe = (x, z, y) => {
-      const g = terrainProbe(x, z, y);
-      const far = dwellings.farGroundAt(x, z);
-      if (far === null) return g;
-      // the terrain probe's water term is CLAMPED to the mirror's edge row
-      // out here (a wet/high edge texel would pin the walker's wade floor
-      // above the rolling shell for a whole 4 km column) — there is no
-      // authored water in the band, so keep water at the dry-cell
-      // convention (~2 m below the bed) relative to the shell ground
-      return { ground: far, water: far - 2 };
-    };
+    // Beyond the heightfield mirror the terrain groundProbe clamps to the ring
+    // edge while the far shell keeps rolling — wrap it with the campus far-
+    // ground sampler (same idiom as the river-surface wrap above) so walk/fly
+    // grounding stays sane across the Levites' band.
+    const terrainProbe = ctx.hooks.groundProbe;
+    if (terrainProbe) {
+      ctx.hooks.groundProbe = (x, z, y) => {
+        const g = terrainProbe(x, z, y);
+        const far = dwellings.farGroundAt(x, z);
+        if (far === null) return g;
+        // the terrain probe's water term is CLAMPED to the mirror's edge row
+        // out here (a wet/high edge texel would pin the walker's wade floor
+        // above the rolling shell for a whole 4 km column) — there is no
+        // authored water in the band, so keep water at the dry-cell
+        // convention (~2 m below the bed) relative to the shell ground
+        return { ground: far, water: far - 2 };
+      };
+    }
   }
 
   // The inhabitants (roadmap M3.6): the great multitude on the plaza and
@@ -209,13 +222,15 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // RENDERING-DECISIONS #3 rendering under ADR 0011/0010. World-space,
   // human-scale content (the TreesOfLife convention); placements come from
   // populationModel.ts, standing on the same floors cityFloorLocalY walks.
-  engine.scene.add(buildPopulation({ gi, plazaTopY }));
+  if (stages.has('population')) {
+    engine.scene.add(buildPopulation({ gi, plazaTopY }));
+  }
 
   // Waterfalls off the mesa rim (ADR 0016): authored crystal ribbons at the
   // seed's REAL drainage crossings (the hydrology field cannot express
   // vertical falls); anchor sites near the basin's spill side keep the
   // south-face composition on seeds that drain nothing to the rim.
-  if (hf && sunSky) {
+  if (hf && sunSky && stages.has('falls')) {
     const emergent = findRimFallSites(hf);
     const sites = emergent.length > 0 ? emergent : anchorFallSites(hf);
     engine.scene.add(buildRimFalls(sites, hf, sunSky.atmosphere, gi));
@@ -227,7 +242,7 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // up through a gate onto the street of gold instead of wading chest-deep
   // under the slab. Same tables as geometry + collision; y-aware claims so
   // an 840 m terrace overhang never grabs a plaza-level walker.
-  if (ctx.hooks.groundProbe) {
+  if (ctx.hooks.groundProbe && stages.has('city')) {
     ctx.hooks.groundProbe = wrapGroundProbeWithCityFloors(
       ctx.hooks.groundProbe,
       plazaTopY,

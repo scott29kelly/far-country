@@ -143,7 +143,19 @@ overrides, ToD).
 
 **Effort: medium. ROI: high — foundation for #1's full version *and* for §3.**
 
-### Phase C — Staged assembly + instancing (idea #3)
+### Phase C — Staged assembly + instancing (idea #3) — STARTED 2026-07-23
+
+> First slice shipped: `src/nj/stages.ts` — seven named content stages
+> (city, river, trees, temple, dwellings, population, falls) selected
+> by `?stages=` (include list or `-name` exclusions), gated through
+> NewJerusalemScene/Allotment. A stage owns its geometry AND its
+> derived probe hooks (collision/floors/water wraps leave with their
+> stage). Probes: probe-stages (CPU parser) + probe-stages-live (two
+> boots, hook gating). The instancing half was largely done in earlier
+> passes (arcade arches, piers, dentils, glow panes, dwellings,
+> population, trees). Remaining when called: stage-granular toggling
+> INSIDE CityMassing (arcade detail as its own stage) and the timed
+> "city assembles itself" arrival sequence built on these stages.
 - Refactor `buildHolyAllotment` into **named, toggleable stages** (plateau →
   massing → arcade detail → river → trees → temple → glory): better debugging
   now, bones of a "city assembles itself" intro later.
