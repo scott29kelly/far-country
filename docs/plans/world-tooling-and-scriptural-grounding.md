@@ -107,8 +107,27 @@ Kills most of the rebuild→screenshot loop. **Effort: low. ROI: highest.**
 > `Dwellings.ts` consume the Ezek 45/48 measurement records
 > (RENDERING-DECISIONS entry #11). Second slice: the city-side Rev 21
 > resolver (`compressed-city` mode; `cityModel.CITY_HALF` consumes
-> `rev-city-side`; entry #12) — §3's last named remainder. Tier table /
-> palette / curve sections and `rebuildNewJerusalem(config)` remain.
+> `rev-city-side`; entry #12) — §3's last named remainder. Third slice
+> (2026-07-22): the tier-table rows and the NJ look defaults
+> (timeOfDay / aerial fog / clarity) consolidate into config, and the
+> ?edit=1 round trip emits the `NJ_CONFIG.look` shape.
+>
+> **`rebuildNewJerusalem(config)` — overtaken by events (2026-07-22).**
+> This item was written before the massing settled (entries #2/#10) and
+> before five analytic subsystems grew around `CITY_TIERS` as
+> shared-table consumers (cityCollide, city floors, entityPicks,
+> keyModel, populationModel — ~76 uses across 7 modules). A visual-only
+> live rebuild would desync collision/picks/floors/population from the
+> rendered city — exactly the desync the shared-table discipline
+> exists to prevent — and a full-fidelity rebuild means threading the
+> table through all seven probe-verified modules for a dev-only
+> convenience. The panel's live handles (ToD re-bake chain, aerial
+> uniforms, exposure) plus the config round trip cover the actual
+> tuning surface; structural massing changes go through source + the
+> probe battery, as they should. Revisit only if a real structural
+> tuning session demands it.
+>
+> **Phase B is CLOSED with this slice.**
 
 Lift scattered constants into one typed source of truth:
 **`apps/world-engine/src/nj/config.ts` → `NewJerusalemConfig`** (scale, tier

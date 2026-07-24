@@ -13,7 +13,7 @@
  * placeholder (ADR 0009 rule 6); true 12,000-stadia scale stays deferred.
  */
 
-import { NJ_SCALE, cityMeters } from './config';
+import { NJ_CONFIG, NJ_SCALE, cityMeters } from './config';
 
 /**
  * Half-width of the city base footprint, LOCAL units (× NJ_SCALE = world m).
@@ -174,14 +174,15 @@ export const FOUNDATION_BANDS: FoundationBand[] = (() => {
  * base → crown. Single source of truth: RiverOfLife used to hand-mirror this
  * table, a known desync risk (STATUS.md). Distinct from the legacy PYRAMID
  * model above, which belongs to the retired R3F scene's proportions.
+ *
+ * The row VALUES live in NJ_CONFIG.cityTiers (Phase B consolidation); the
+ * base row's half-width is the resolver-derived CITY_HALF (rev-city-side),
+ * composed here so every consumer keeps reading one table.
  */
 export type CityTier = { half: number; h: number; arches: number };
 export const CITY_TIERS: readonly CityTier[] = [
-  { half: CITY_HALF, h: 16, arches: 4 }, // jasper wall ring + plinth + gates
-  { half: 82, h: 42, arches: 5 },
-  { half: 60, h: 38, arches: 4 },
-  { half: 40, h: 34, arches: 3 },
-  { half: 22, h: 26, arches: 0 }, // crown (solid, glowing) under the glory
+  { half: CITY_HALF, ...NJ_CONFIG.cityTiers.base },
+  ...NJ_CONFIG.cityTiers.upper,
 ];
 
 /** Cumulative tier-bottom Ys (local; index i = bottom of CITY_TIERS[i]). */

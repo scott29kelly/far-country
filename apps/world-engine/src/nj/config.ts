@@ -36,6 +36,13 @@ export type DistrictScaleMode = 'compressed-district';
  */
 export type CityScaleMode = 'compressed-city';
 
+/** One massing terrace row — LOCAL units (× NJ_SCALE = world m). */
+export interface CityTierRow {
+  half: number;
+  h: number;
+  arches: number;
+}
+
 export interface NewJerusalemConfig {
   district: {
     mode: DistrictScaleMode;
@@ -51,6 +58,29 @@ export interface NewJerusalemConfig {
     cubitM: number;
     /** literal meters -> world meters, one factor for the whole city */
     compression: number;
+  };
+  /**
+   * The terraced massing rows (proportional art under the entry #2 documented
+   * harmonization — the text gives the cube's outer measure, not terraces).
+   * The BASE tier's half-width is NOT here: it derives from `rev-city-side`
+   * through the city resolver (cityModel.CITY_HALF); only its height and
+   * arch count are massing art.
+   */
+  cityTiers: {
+    base: { h: number; arches: number };
+    upper: CityTierRow[];
+  };
+  /**
+   * The NJ scene's tuned look — the values the ?edit=1 panel round-trips
+   * ("copy config (JSON)" emits this shape; paste tuned values back here).
+   * timeOfDay: afternoon sun rakes the south face the spawn looks at (a user
+   * ?T= wins). aerialFogK/aerialClarity: moderate de-haze over the restored
+   * landscape (ADR 0014/0015).
+   */
+  look: {
+    timeOfDay: number;
+    aerialFogK: number;
+    aerialClarity: number;
   };
 }
 
@@ -90,6 +120,20 @@ export const NJ_CONFIG: NewJerusalemConfig = {
     stadionM: 185,
     cubitM: 0.457,
     compression: 555,
+  },
+  cityTiers: {
+    base: { h: 16, arches: 4 }, // jasper wall ring + plinth + gates
+    upper: [
+      { half: 82, h: 42, arches: 5 },
+      { half: 60, h: 38, arches: 4 },
+      { half: 40, h: 34, arches: 3 },
+      { half: 22, h: 26, arches: 0 }, // crown (solid, glowing)
+    ],
+  },
+  look: {
+    timeOfDay: 17.0,
+    aerialFogK: 0.12,
+    aerialClarity: 0.35,
   },
 };
 

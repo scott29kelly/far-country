@@ -86,13 +86,6 @@ const PEARL = new Color(0xf3ecdf);
 const IVORY = new Color(0xf1e9d7);
 const JASPER = new Color(0xbfd6d2); // pale crystal-jasper (stylised, ADR 0009 r2)
 
-/**
- * Live-tunable handles for the dev-only ?edit=1 panel (plan doc §1 Phase A).
- * Populated when the city builds; the full data-driven NewJerusalemConfig
- * (Phase B) supersedes this ad-hoc registry.
- */
-export const njLive: { glory?: MeshStandardNodeMaterial } = {};
-
 type Face = { axis: 'x' | 'z'; sign: 1 | -1 };
 const FACES: Face[] = [
   { axis: 'z', sign: 1 },
