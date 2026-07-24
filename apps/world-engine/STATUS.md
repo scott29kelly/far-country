@@ -138,6 +138,34 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-23) PHASE C STARTED — named content stages (`?stages=`).**
+
+- `src/nj/stages.ts`: the seven content stages (city, river, trees,
+  temple, dwellings, population, falls) + the pure `parseStages`
+  parser (`?stages=city,river` includes; `?stages=-population`
+  excludes; absent = all). NewJerusalemScene gates each content build
+  on its stage; Allotment.ts splits city/river the same way.
+- Discipline: a stage owns its geometry AND its derived probe hooks
+  (river off drops the water-claim wrap; city off drops wall collision
+  and the city walk floors; dwellings off drops the far-ground wrap) —
+  geometry-only ablation that leaves stale invisible physics is
+  exactly the shared-table desync this codebase guards against.
+  Terrain (macroPatch/scatterExclude) and the analytic entity/nav
+  contracts are never staged. `?resizeprobe=` stays a separate
+  diagnostic contract (probe-resize.ts); both gates apply.
+- Probes: tools/probe-stages.ts (CPU, parser semantics) and
+  tools/probe-stages-live.ts (two boots: default asserts collision
+  blocks a frame-scale approach move, the channel claims wade water,
+  the plaza floor claims; `-city,-river` asserts moveProbe null, dry
+  channel, bare-terrain plaza). Probe development surfaced a latent
+  edge in resolveCityMoveLocal: substeps test ABSOLUTE positions, so
+  a single 100+ m frame move spanning a whole solid band tunnels
+  (frame-scale moves never do; flagged as a follow-up task, not
+  fixed here).
+- Debugging today; the bones of a "city assembles itself" arrival
+  sequence later (plan doc Phase C). Stage-granular instancing was
+  already largely done (arches/piers/dentils/glow panes).
+
 **(2026-07-22, later-2) PHASE B CLOSED — tier rows + look defaults in
 config; the structural live-rebuild recorded overtaken-by-events.**
 

@@ -35,11 +35,14 @@ import type { Atmosphere } from '../sky/Atmosphere';
 import type { Heightfield } from '../world/Heightfield';
 import { buildCityMassing } from './CityMassing';
 import { buildRiverOfLife } from './RiverOfLife';
+import type { NjStage } from './stages';
 
 export interface AllotmentDeps {
   gi?: ProbeGI | null;
   hf?: Heightfield | null;
   atm?: Atmosphere | null;
+  /** enabled build stages (stages.ts `?stages=`); absent = all */
+  stages?: ReadonlySet<NjStage>;
 }
 
 export const ALLOT_X = 360; // E-W half-extent (local units; ×NJ_SCALE = world m)
@@ -62,13 +65,15 @@ export function buildHolyAllotment(deps: AllotmentDeps = {}): Group {
     (new URLSearchParams(window.location.search).get('resizeprobe') ?? '').split(','),
   );
 
+  const stageOn = (s: NjStage): boolean => deps.stages?.has(s) ?? true;
+
   // The New Jerusalem at the south-centre, on the flat core (plaza at y = 0).
-  if (!resizeProbeAblate.has('city')) allot.add(buildCityMassing(gi));
+  if (stageOn('city') && !resizeProbeAblate.has('city')) allot.add(buildCityMassing(gi));
 
   // The river of life cascading the south terraces to the plain (Rev 22:1) —
   // crystal-water pass; shares the city's local frame. Trees of life are
   // world-space pipeline trees (TreesOfLife.ts), not built here.
-  if (!resizeProbeAblate.has('river')) allot.add(buildRiverOfLife(deps));
+  if (stageOn('river') && !resizeProbeAblate.has('river')) allot.add(buildRiverOfLife(deps));
 
   return allot;
 }
