@@ -23,8 +23,15 @@ from far_country.store.models import (
 # 0.2.0: per-entity exports gain an optional `measurements` array, and an
 # entity qualifies for export with approved measurements alone (ADR 0017 —
 # the dwelling-campus zones carry cited measurements before any descriptor
-# is extracted for them). Additive; canonical.json is unchanged.
-SCHEMA_VERSION: Final = "0.2.0"
+# is extracted for them). Additive; canonical.json was unchanged.
+#
+# 0.3.0: canonical.json's `entities` array adopts the same qualification
+# rule, so measurement-only entities are discoverable in the browse index
+# instead of existing only as per-entity files. No field changed shape:
+# `descriptors`/`citations` stay strictly descriptor-driven, so retrieval
+# and the grounded-answer contract are unaffected. Consumers that assumed
+# "every entity here has at least one descriptor" must handle zero.
+SCHEMA_VERSION: Final = "0.3.0"
 
 
 @dataclass(frozen=True)
@@ -226,9 +233,23 @@ def build_canonical_export(
     descriptor_stmt = descriptor_stmt.order_by(Descriptor.entity_id, Descriptor.created_at)
     descriptors = list(session.scalars(descriptor_stmt).unique())
 
-    # Only export entities that have at least one exported descriptor: an
-    # entity with no approved content adds noise to consumers.
-    entity_ids = {d.entity_id for d in descriptors}
+    # Export entities grounded in SOMETHING approved and cited — a descriptor
+    # OR a measurement. This mirrors ENTITY_SCHEMA's own anyOf and the
+    # `build_entity_exports` qualification rule: under ADR 0017 measurements
+    # carry the same citation/tier/review discipline, so a measurement-only
+    # zone (the Ezek 45:4-5 campus, Ezekiel's temple) is approved content and
+    # belongs in the index. The `descriptors` array below stays strictly
+    # descriptor-driven, so retrieval and the grounded-answer contract
+    # ("every answer cites a descriptor") are untouched — a measurement-only
+    # entity contributes no embeddable row.
+    measurement_entity_stmt = select(Measurement.entity_id)
+    if not include_pending:
+        measurement_entity_stmt = measurement_entity_stmt.where(
+            Measurement.review_status == "approved"
+        )
+    measurement_entity_ids = set(session.scalars(measurement_entity_stmt))
+
+    entity_ids = {d.entity_id for d in descriptors} | measurement_entity_ids
     entity_stmt = select(Entity).where(Entity.id.in_(entity_ids)).order_by(Entity.id)
     entities = list(session.scalars(entity_stmt))
 

@@ -1,0 +1,88 @@
+{
+  "id": "holy-district",
+  "name": "The Holy District",
+  "entity_type": "place",
+  "summary": "The portion of the land set apart for the LORD in the millennial allotment (Ezek 45:1; 48:8-20) - under the project's framing (ADR 0012) a literal future district in restored Israel, 25,000 cubits long and 20,000 broad (ESV; the Hebrew reads 10,000), holding the priests' and Levites' portions with the sanctuary in its midst; together with the city strip it squares to 25,000 (Ezek 48:20).",
+  "descriptors": [],
+  "relations": [],
+  "measurements": [
+    {
+      "id": "eza-holy-district-breadth",
+      "subject": "the holy district set apart for the LORD, breadth",
+      "dimension": "breadth",
+      "value": 20000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "debated",
+      "notes": "ESV follows the Septuagint ('20,000'); the Hebrew reads 10,000 in all three places (ESV footnotes at 45:1, 48:9 ['Compare 45:1'], and 48:13). With 10,000 the district is the priests' strip alone (48:10); with 20,000 it is the priests' + Levites' strips together (48:10-13), which 48:20's 25,000-square total (20,000 + the 5,000 city strip) supports. Both readings preserved; rendered per the ESV as printed.",
+      "citations": [
+        {
+          "id": "7f677103-f678-4ea4-9675-ed7c9e749138",
+          "measurement_id": "eza-holy-district-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 1,
+          "verse_end": null
+        },
+        {
+          "id": "e4385a3f-5a99-4e81-99fa-6eb0b651ae6e",
+          "measurement_id": "eza-holy-district-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 9,
+          "verse_end": null
+        },
+        {
+          "id": "3c21f7d7-1c57-41ca-a978-8cda2f9a6ba0",
+          "measurement_id": "eza-holy-district-breadth",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-holy-district-length",
+      "subject": "the holy district set apart for the LORD, length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "The ESV's measure footnote at 45:1/48:8 glosses both the common and the long cubit; recorded as the long cubit per the vision's own declared standard (Ezek 40:5), the convention used across the Ezekiel 40-48 dataset.",
+      "citations": [
+        {
+          "id": "588b9634-3fbd-4ef1-b6fa-372054694e14",
+          "measurement_id": "eza-holy-district-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 1,
+          "verse_end": null
+        },
+        {
+          "id": "0841eae1-77fc-4bbe-83e5-2d90013784f2",
+          "measurement_id": "eza-holy-district-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 9,
+          "verse_end": null
+        },
+        {
+          "id": "f5a939a1-d390-4532-98a7-1d3d3f26aa65",
+          "measurement_id": "eza-holy-district-length",
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
+}

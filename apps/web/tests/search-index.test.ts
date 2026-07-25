@@ -62,9 +62,21 @@ describe("loadSearchableEntities", () => {
   it("returns entries sorted by name", async () => {
     const entries = await loadSearchableEntities();
     expect(entries.map((e) => e.name)).toEqual([
+      "The Holy District",
       "The New Jerusalem",
       "The Twelve Gates",
     ]);
+  });
+
+  it("includes a measurement-only entity with an empty tier set", async () => {
+    // Tier filtering is descriptor-driven, so an entity grounded only by
+    // measurements is searchable by name but matches no tier chip. It must
+    // still appear in the list rather than vanishing from the index.
+    const entries = await loadSearchableEntities();
+    const district = entries.find((e) => e.id === "holy-district");
+    expect(district).toBeDefined();
+    expect(district?.tiers).toEqual([]);
+    expect(district?.statementsText).toBe("");
   });
 
   it("computes per-entity tier set from descriptors", async () => {

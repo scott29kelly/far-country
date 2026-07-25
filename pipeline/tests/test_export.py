@@ -377,11 +377,47 @@ def test_entity_exports_include_measurement_only_entities(session: Session) -> N
     assert "measurements" in priests.to_dict()
 
 
-def test_measurement_only_entities_stay_out_of_canonical(session: Session) -> None:
-    """canonical.json remains descriptor-driven — no empty-content entities."""
+def test_measurement_only_entities_enter_canonical_entities(session: Session) -> None:
+    """0.3.0: canonical.json indexes entities grounded by measurements alone.
+
+    They are approved, cited, tiered content (ADR 0017), so the browse index
+    must be able to find them — the pre-0.3.0 export left them reachable only
+    as per-entity files.
+    """
     from far_country.measure import seed_allotment
 
     seed_allotment(session, review_status="approved")
+    canonical = build_canonical_export(session)
+
+    ids = {e["id"] for e in canonical.entities}
+    assert "priests-portion" in ids
+    assert "levites-portion" in ids
+
+
+def test_measurement_only_entities_add_no_descriptors_to_canonical(
+    session: Session,
+) -> None:
+    """The grounding contract is unchanged: descriptors stay descriptor-driven.
+
+    Q&A retrieval embeds `canonical.descriptors`, so a measurement-only entity
+    must contribute zero rows — otherwise "every answer cites a descriptor"
+    would start resting on records that are not descriptors.
+    """
+    from far_country.measure import seed_allotment
+
+    seed_allotment(session, review_status="approved")
+    canonical = build_canonical_export(session)
+
+    assert canonical.entities, "guard: the entities did enter the export"
+    assert canonical.descriptors == []
+    assert canonical.citations == []
+
+
+def test_pending_measurements_do_not_enter_canonical(session: Session) -> None:
+    """Only approved measurements qualify an entity — review discipline holds."""
+    from far_country.measure import seed_allotment
+
+    seed_allotment(session, review_status="pending")
     canonical = build_canonical_export(session)
     assert canonical.entities == []
 

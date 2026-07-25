@@ -131,4 +131,53 @@ describe("EntityDetailPage", () => {
     // wouldn't appear on its own.
     expect(html).toContain("data-symbolic-referent");
   });
+
+  // --- measurement-only entities (export 0.3.0, ADR 0017) ---
+
+  it("renders a measurement-only entity instead of 404ing", async () => {
+    const html = await renderEntity("holy-district");
+    expect(html).toContain("The Holy District");
+    expect(html).toContain("data-measurement-id=\"eza-holy-district-breadth\"");
+  });
+
+  it("renders each measurement's subject and text-native value", async () => {
+    const html = await renderEntity("holy-district");
+    // Values stay in the text's own units — never pre-converted to metres.
+    expect(html).toContain("20,000 long cubits");
+    expect(html).toContain("25,000 long cubits");
+    expect(html).not.toMatch(/\bmetres?\b|\bmeters?\b/i);
+  });
+
+  it("carries a tier badge on every measurement", async () => {
+    const html = await renderEntity("holy-district");
+    // The fixture holds one debated breadth + one clear length.
+    expect(html).toMatch(/data-tier="debated"/);
+    expect(html).toMatch(/data-tier="clear"/);
+  });
+
+  it("preserves a text-critical variant in the measurement notes", async () => {
+    // Hermeneutic non-negotiable: the MT/LXX 10,000-vs-20,000 crux at
+    // Ezek 45:1 is `debated` and its note must survive to the page. The
+    // rendered value follows the ESV as printed; the note keeps the Hebrew
+    // reading visible rather than silently resolving it.
+    const html = await renderEntity("holy-district");
+    expect(html).toContain("data-measurement-notes");
+    expect(html).toContain("the Hebrew reads 10,000");
+  });
+
+  it("shows the citations backing each measurement", async () => {
+    const html = await renderEntity("holy-district");
+    expect(html).toContain("Ezekiel 45:1");
+  });
+
+  it("explains an empty descriptor list when measurements ground the entity", async () => {
+    const html = await renderEntity("holy-district");
+    expect(html).toContain("grounded by its cited measurements");
+  });
+
+  it("adds no measurements section to a descriptor-only entity", async () => {
+    const html = await renderEntity("new-jerusalem");
+    expect(html).not.toContain("data-measurement-id");
+    expect(html).not.toContain("Measurements (");
+  });
 });
