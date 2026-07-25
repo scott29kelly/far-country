@@ -127,6 +127,12 @@ code and `STATUS.md` over it where they disagree.
 - **After `far-country export`:** copy `data/exports/{canonical.json,
   manifest.json,entities/*}` into `apps/web/public/data/` and `git add -f`.
   Never commit `embeddings.json`, `data/canonical.sqlite`, or `data/exports/`.
+- **After `far-country measure export`:** that is a SEPARATE command and it
+  writes `measurements.json` plus the generated engine modules. The browse
+  UI reads `measurements.json` for tier filtering and search, so copy it into
+  `apps/web/public/data/` too (`git add -f`). A missing file degrades to
+  descriptor-only tiers rather than erroring, so staleness is silent — re-copy
+  whenever measurements are reseeded.
 - Any three.js upgrade: re-verify every patch in `src/render/ThreePatches.ts`
   against the new sources first (`docs/THREE-NOTES.md`).
 - **Last full green battery (2026-07-24, main `8f9b936`):** CPU probes

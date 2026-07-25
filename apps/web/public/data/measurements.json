@@ -1,0 +1,2391 @@
+{
+  "schema_version": "0.1.0",
+  "generated_at": "2026-07-25T03:59:58.535942Z",
+  "measurements": [
+    {
+      "id": "eza-city-portion-breadth",
+      "entity_id": "city-portion",
+      "subject": "the property of the city, breadth",
+      "dimension": "breadth",
+      "value": 5000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "For common use for the city, for dwellings and for open country (48:15); it belongs to the whole house of Israel (45:6).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 6,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-portion-length",
+      "entity_id": "city-portion",
+      "subject": "the property of the city, length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 6,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-remainder-east",
+      "entity_id": "city-portion",
+      "subject": "remainder of the city strip alongside the holy portion, to the east",
+      "dimension": "length",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Its produce is food for the workers of the city, who come from all the tribes of Israel (48:18-19).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-remainder-west",
+      "entity_id": "city-portion",
+      "subject": "remainder of the city strip alongside the holy portion, to the west",
+      "dimension": "length",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "See eza-city-remainder-east.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 18,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-circumference",
+      "entity_id": "ezekiel-city",
+      "subject": "the circumference of the city",
+      "dimension": "distance",
+      "value": 18000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Equals the four 4,500-cubit sides (48:16). Recorded under dimension 'distance' - the schema's closest fit for a perimeter.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 35,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-gates-per-side",
+      "entity_id": "ezekiel-city",
+      "subject": "gates of the city on each side, named after the tribes of Israel",
+      "dimension": "count",
+      "value": 3.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Three per side, twelve in all: Reuben, Judah, Levi (north); Joseph, Benjamin, Dan (east); Simeon, Issachar, Zebulun (south); Gad, Asher, Naphtali (west). 48:34's gate phrasing carries a minor text-critical variant (ESV footnote: one Hebrew manuscript, Syriac; most Hebrew manuscripts 'their gates three') that does not affect the count.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 30,
+          "verse_end": 34
+        }
+      ]
+    },
+    {
+      "id": "eza-city-open-land",
+      "entity_id": "ezekiel-city",
+      "subject": "open land around the city, on each side",
+      "dimension": "breadth",
+      "value": 250.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-city-side",
+      "entity_id": "ezekiel-city",
+      "subject": "the city, each of its four sides",
+      "dimension": "side",
+      "value": 4500.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Four equal sides, north, south, east, and west (48:16); repeated per side in the gate roster (48:30-34).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 16,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 30,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 32,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 33,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 34,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-sanctuary-open-space",
+      "entity_id": "ezekiel-temple",
+      "subject": "open space around the sanctuary plot",
+      "dimension": "breadth",
+      "value": 50.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-sanctuary-plot-side",
+      "entity_id": "ezekiel-temple",
+      "subject": "square plot for the sanctuary within the holy district",
+      "dimension": "side",
+      "value": 500.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Corroborates the ESV's 500-cubit reading of the 42:16-20 precinct measure (see ezt-precinct-side).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-base-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "base of the altar, breadth",
+      "dimension": "breadth",
+      "value": 1.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-base-height",
+      "entity_id": "ezekiel-temple",
+      "subject": "base of the altar",
+      "dimension": "height",
+      "value": 1.0,
+      "unit": "long-cubit",
+      "basis": "the cubit being a cubit and a handbreadth (Ezek 43:13)",
+      "tier": "clear",
+      "notes": "ESV footnote offers 'its gutter shall be one cubit deep' as an alternative.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-base-rim",
+      "entity_id": "ezekiel-temple",
+      "subject": "rim around the edge of the altar base",
+      "dimension": "breadth",
+      "value": 1.0,
+      "unit": "span",
+      "basis": "a span is about 9 in / 22 cm (ESV note), i.e. roughly 0.43 of the long cubit's ~21 in",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-hearth-height",
+      "entity_id": "ezekiel-temple",
+      "subject": "the altar hearth",
+      "dimension": "height",
+      "value": 4.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Four horns project upward from the hearth (Ezek 43:15); no horn dimension is given.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-hearth-side",
+      "entity_id": "ezekiel-temple",
+      "subject": "the altar hearth, square",
+      "dimension": "side",
+      "value": 12.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 16,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-horns",
+      "entity_id": "ezekiel-temple",
+      "subject": "horns projecting upward from the altar hearth",
+      "dimension": "count",
+      "value": 4.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": "No horn dimension is given; rendered size is interpretive (RENDERING-DECISIONS entry #7).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-ledge-rim",
+      "entity_id": "ezekiel-temple",
+      "subject": "rim around the altar ledge",
+      "dimension": "breadth",
+      "value": 0.5,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-ledge-side",
+      "entity_id": "ezekiel-temple",
+      "subject": "the ledge of the altar, square",
+      "dimension": "side",
+      "value": 14.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-lower-ledge-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the lower ledge",
+      "dimension": "breadth",
+      "value": 1.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-lower-ledge-rise",
+      "entity_id": "ezekiel-temple",
+      "subject": "from the base on the ground to the lower ledge",
+      "dimension": "height",
+      "value": 2.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-surround-base",
+      "entity_id": "ezekiel-temple",
+      "subject": "the base of the altar, all around",
+      "dimension": "breadth",
+      "value": 1.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "The steps of the altar face east (Ezek 43:17) - orientation, not a measurement; consumed directly by the renderer.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-upper-ledge-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth at the larger ledge step",
+      "dimension": "breadth",
+      "value": 1.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-altar-upper-ledge-rise",
+      "entity_id": "ezekiel-temple",
+      "subject": "from the smaller ledge to the larger ledge",
+      "dimension": "height",
+      "value": 4.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 43,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-chambers-gap",
+      "entity_id": "ezekiel-temple",
+      "subject": "between the side chambers of the temple and the other chambers, all around",
+      "dimension": "distance",
+      "value": 20.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 10,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 3,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-chambers-outer-wall-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "wall outside parallel to the chambers, toward the outer court, length",
+      "dimension": "length",
+      "value": 50.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 7,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 8,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-chambers-passage-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "passage inward before the chambers, length",
+      "dimension": "length",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "ESV follows the Septuagint/Syriac ('a hundred cubits long'); the Hebrew reads 'a way of one cubit' (ESV footnote).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 4,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-chambers-passage-width",
+      "entity_id": "ezekiel-temple",
+      "subject": "passage inward before the chambers, width",
+      "dimension": "breadth",
+      "value": 10.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 4,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-court-gate-to-gate",
+      "entity_id": "ezekiel-temple",
+      "subject": "from the inner front of the lower (outer) gate to the outer front of the inner court",
+      "dimension": "distance",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 19,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 23,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 27,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-free-space-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the free space around the house",
+      "dimension": "breadth",
+      "value": 5.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 11,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-barrier",
+      "entity_id": "ezekiel-temple",
+      "subject": "barrier before the side rooms, on either side",
+      "dimension": "breadth",
+      "value": 1.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the gate, from the ceiling of one side room to the ceiling of the other",
+      "dimension": "breadth",
+      "value": 25.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 13,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 21,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 25,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 29,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 33,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 36,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-inner-threshold-depth",
+      "entity_id": "ezekiel-temple",
+      "subject": "threshold of the gate by the vestibule of the gate at the inner end",
+      "dimension": "depth",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 7,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-jamb-thickness",
+      "entity_id": "ezekiel-temple",
+      "subject": "jambs of the gate vestibule",
+      "dimension": "thickness",
+      "value": 2.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "from the front of the gate at the entrance to the front of the inner vestibule of the gate",
+      "dimension": "length",
+      "value": 50.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 15,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 21,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 25,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 29,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 33,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 36,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-opening-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "length of the gateway (at the opening)",
+      "dimension": "length",
+      "value": 13.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "What span the 13 cubits measures (vs the 10-cubit opening width) is interpretively uncertain; not used to drive geometry.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 11,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-opening-width",
+      "entity_id": "ezekiel-temple",
+      "subject": "width of the opening of the gateway",
+      "dimension": "breadth",
+      "value": 10.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 11,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-sideroom-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "side rooms of the gate, breadth",
+      "dimension": "breadth",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 7,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-sideroom-gap",
+      "entity_id": "ezekiel-temple",
+      "subject": "space between the side rooms",
+      "dimension": "distance",
+      "value": 5.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 7,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-sideroom-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "side rooms of the gate, length",
+      "dimension": "length",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 7,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-sideroom-side",
+      "entity_id": "ezekiel-temple",
+      "subject": "the side rooms, six cubits on either side",
+      "dimension": "side",
+      "value": 6.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-siderooms-per-side",
+      "entity_id": "ezekiel-temple",
+      "subject": "side rooms on either side of the gate",
+      "dimension": "count",
+      "value": 3.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 10,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 21,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-threshold-depth",
+      "entity_id": "ezekiel-temple",
+      "subject": "threshold of the gate",
+      "dimension": "depth",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 6,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-vestibule-depth",
+      "entity_id": "ezekiel-temple",
+      "subject": "vestibule of the gateway",
+      "dimension": "depth",
+      "value": 8.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-vestibule-inside",
+      "entity_id": "ezekiel-temple",
+      "subject": "the vestibule of the gateway, measured on the inside",
+      "dimension": "depth",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "fuzzy",
+      "notes": "How 40:8's one-reed inside measure relates to 40:9's eight-cubit vestibule is a known crux; not used to drive geometry.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 8,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-gate-vestibule-sixty",
+      "entity_id": "ezekiel-temple",
+      "subject": "'he measured also the vestibule, sixty cubits'",
+      "dimension": "length",
+      "value": 60.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "ESV footnote: text uncertain (Hebrew: 'And he made the jambs sixty cubits, and to the jamb of the court was the gateway all around'). Not used to drive geometry.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-front-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the east front of the temple and the yard",
+      "dimension": "breadth",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 14,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-gate-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the gate of the temple vestibule",
+      "dimension": "breadth",
+      "value": 14.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "ESV follows the Septuagint; the Hebrew lacks 'was fourteen cubits, and the sidewalls of the gate' (ESV footnote).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 48,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-gate-sidewall",
+      "entity_id": "ezekiel-temple",
+      "subject": "sidewalls of the temple vestibule gate, on either side",
+      "dimension": "breadth",
+      "value": 3.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "See ezt-house-gate-breadth (Septuagint reading).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 48,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "the temple, length",
+      "dimension": "length",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-platform-height",
+      "entity_id": "ezekiel-temple",
+      "subject": "raised platform all around the temple (the foundations of the side chambers)",
+      "dimension": "height",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "a full reed of six long cubits (Ezek 41:8)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 8,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-steps",
+      "entity_id": "ezekiel-temple",
+      "subject": "steps up to the temple vestibule",
+      "dimension": "count",
+      "value": 10.0,
+      "unit": "step",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "ESV follows the Septuagint ('ten steps'); the Hebrew reads 'by steps that would go up' without the number (ESV footnote).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 49,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-vestibule-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the temple vestibule",
+      "dimension": "breadth",
+      "value": 12.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "ESV follows the Septuagint ('twelve'); the Hebrew reads 'eleven' (ESV footnote).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 49,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-vestibule-jamb",
+      "entity_id": "ezekiel-temple",
+      "subject": "jambs of the vestibule of the temple, on either side",
+      "dimension": "thickness",
+      "value": 5.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 48,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-vestibule-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "length of the temple vestibule",
+      "dimension": "length",
+      "value": 20.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 49,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-vestibule-pillars",
+      "entity_id": "ezekiel-temple",
+      "subject": "pillars beside the jambs of the temple vestibule, one on either side",
+      "dimension": "count",
+      "value": 2.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 49,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-house-wall-thickness",
+      "entity_id": "ezekiel-temple",
+      "subject": "wall of the temple",
+      "dimension": "thickness",
+      "value": 6.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 5,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-inner-court-chambers",
+      "entity_id": "ezekiel-temple",
+      "subject": "chambers in the inner court, at the sides of the north and south gates (for the priests)",
+      "dimension": "count",
+      "value": 2.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": "ESV follows the Septuagint at 40:44 ('two chambers'; Hebrew 'chambers for singers').",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 44,
+          "verse_end": 46
+        }
+      ]
+    },
+    {
+      "id": "ezt-inner-court-side",
+      "entity_id": "ezekiel-temple",
+      "subject": "the inner court, a square",
+      "dimension": "side",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 47,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-inner-gate-steps",
+      "entity_id": "ezekiel-temple",
+      "subject": "steps up to the inner gates",
+      "dimension": "count",
+      "value": 8.0,
+      "unit": "step",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 31,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 34,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 37,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-inner-gate-vestibule-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "vestibules all around (at the inner gates), breadth",
+      "dimension": "breadth",
+      "value": 5.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "See ezt-inner-gate-vestibule-length.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 30,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-inner-gate-vestibule-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "vestibules all around (at the inner gates), length",
+      "dimension": "length",
+      "value": 25.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "Ezek 40:30 is text-critically difficult (absent in some witnesses); ESV prints it. Not used to drive geometry.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 30,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-mhp-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the Most Holy Place, across the nave",
+      "dimension": "breadth",
+      "value": 20.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 4,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-mhp-entrance-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "entrance of the inner room",
+      "dimension": "breadth",
+      "value": 6.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 3,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-mhp-entrance-jamb",
+      "entity_id": "ezekiel-temple",
+      "subject": "jambs of the entrance to the inner room",
+      "dimension": "thickness",
+      "value": 2.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 3,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-mhp-entrance-sidewall",
+      "entity_id": "ezekiel-temple",
+      "subject": "sidewalls of the inner-room entrance",
+      "dimension": "breadth",
+      "value": 7.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "ESV follows the Septuagint ('the sidewalls on either side'); the Hebrew reads 'and the breadth' (ESV footnote).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 3,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-mhp-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "length of the Most Holy Place",
+      "dimension": "length",
+      "value": 20.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 4,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-nave-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "breadth of the nave",
+      "dimension": "breadth",
+      "value": 20.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-nave-entrance-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "entrance of the nave",
+      "dimension": "breadth",
+      "value": 10.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-nave-entrance-sidewall",
+      "entity_id": "ezekiel-temple",
+      "subject": "sidewalls of the nave entrance, on either side",
+      "dimension": "breadth",
+      "value": 5.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-nave-jamb-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "jambs of the nave, on each side",
+      "dimension": "breadth",
+      "value": 6.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 1,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-nave-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "length of the nave",
+      "dimension": "length",
+      "value": 40.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-outer-court-chambers",
+      "entity_id": "ezekiel-temple",
+      "subject": "chambers facing the pavement of the outer court",
+      "dimension": "count",
+      "value": 30.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-outer-gate-steps",
+      "entity_id": "ezekiel-temple",
+      "subject": "steps up to the outer gates",
+      "dimension": "count",
+      "value": 7.0,
+      "unit": "step",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 22,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 26,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-outer-wall-height",
+      "entity_id": "ezekiel-temple",
+      "subject": "height of the wall around the outside of the temple area",
+      "dimension": "height",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 5,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-outer-wall-thickness",
+      "entity_id": "ezekiel-temple",
+      "subject": "thickness of the wall around the outside of the temple area",
+      "dimension": "thickness",
+      "value": 1.0,
+      "unit": "reed",
+      "basis": "reed = 6 long cubits (Ezek 40:5)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 5,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-precinct-side",
+      "entity_id": "ezekiel-temple",
+      "subject": "the temple area measured on each of its four sides, with a wall all around, to make a separation between the holy and the common",
+      "dimension": "side",
+      "value": 500.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "debated",
+      "notes": "ESV prints '500 cubits by the measuring reed'. The Hebrew (and e.g. NASB) reads 500 REEDS (= 3,000 cubits) - a genuine translation-level dispute. Rendered per the ESV (500 cubits), which also closes the chapter's own arithmetic (50+100+50+100+100+100 = 500 east-west); see RENDERING-DECISIONS entry #7.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 16,
+          "verse_end": 20
+        }
+      ]
+    },
+    {
+      "id": "ezt-priest-chambers-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "the north chamber block, breadth",
+      "dimension": "breadth",
+      "value": 50.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 2,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-priest-chambers-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "the north chamber block opposite the separate yard, length",
+      "dimension": "length",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 2,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 8,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-priest-chambers-stories",
+      "entity_id": "ezekiel-temple",
+      "subject": "the chamber blocks, stories",
+      "dimension": "count",
+      "value": 3.0,
+      "unit": "story",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 3,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 42,
+          "verse_start": 6,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-reed-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "the measuring reed in the man's hand",
+      "dimension": "length",
+      "value": 6.0,
+      "unit": "long-cubit",
+      "basis": "each cubit being a cubit and a handbreadth (Ezek 40:5)",
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 5,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-side-chamber-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "side chambers all around the temple",
+      "dimension": "breadth",
+      "value": 4.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 5,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-side-chamber-outer-wall",
+      "entity_id": "ezekiel-temple",
+      "subject": "thickness of the outer wall of the side chambers",
+      "dimension": "thickness",
+      "value": 5.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 9,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-side-chamber-stories",
+      "entity_id": "ezekiel-temple",
+      "subject": "side chambers, stories one over another",
+      "dimension": "count",
+      "value": 3.0,
+      "unit": "story",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 6,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-side-chambers-per-story",
+      "entity_id": "ezekiel-temple",
+      "subject": "side chambers in each story",
+      "dimension": "count",
+      "value": 30.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 6,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-slaughter-hooks-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "hooks fastened all around within",
+      "dimension": "length",
+      "value": 1.0,
+      "unit": "handbreadth",
+      "basis": null,
+      "tier": "clear",
+      "notes": "ESV footnote offers 'shelves' as an alternative for 'hooks'.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 43,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-slaughter-tables",
+      "entity_id": "ezekiel-temple",
+      "subject": "tables at the north gate on which to slaughter the offerings",
+      "dimension": "count",
+      "value": 8.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Four on either side of the gate (Ezek 40:39-41: two pairs inside the vestibule, two pairs outside at the entrance).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 41,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-stone-table-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "tables of hewn stone for the burnt offering, breadth",
+      "dimension": "breadth",
+      "value": 1.5,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 42,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-stone-table-height",
+      "entity_id": "ezekiel-temple",
+      "subject": "tables of hewn stone for the burnt offering, height",
+      "dimension": "height",
+      "value": 1.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 42,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-stone-table-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "tables of hewn stone for the burnt offering, length",
+      "dimension": "length",
+      "value": 1.5,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 42,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-stone-tables-count",
+      "entity_id": "ezekiel-temple",
+      "subject": "tables of hewn stone for the burnt offering",
+      "dimension": "count",
+      "value": 4.0,
+      "unit": "item",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 40,
+          "verse_start": 42,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-west-building-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "building facing the separate yard on the west side, breadth",
+      "dimension": "breadth",
+      "value": 70.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-west-building-galleries-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "length of the building facing the yard at the back with its galleries",
+      "dimension": "length",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 15,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-west-building-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "building facing the separate yard on the west side, length",
+      "dimension": "length",
+      "value": 90.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-west-building-wall",
+      "entity_id": "ezekiel-temple",
+      "subject": "wall of the western building, all around",
+      "dimension": "thickness",
+      "value": 5.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 12,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-wood-altar-breadth",
+      "entity_id": "ezekiel-temple",
+      "subject": "the altar of wood, breadth",
+      "dimension": "breadth",
+      "value": 2.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "ESV follows the Septuagint; the Hebrew lacks 'two cubits broad' (ESV footnote).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 22,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-wood-altar-height",
+      "entity_id": "ezekiel-temple",
+      "subject": "the altar of wood (the table that is before the LORD), height",
+      "dimension": "height",
+      "value": 3.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 22,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-wood-altar-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "the altar of wood, length",
+      "dimension": "length",
+      "value": 2.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 22,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "ezt-yard-building-length",
+      "entity_id": "ezekiel-temple",
+      "subject": "the yard and the building with its walls, length",
+      "dimension": "length",
+      "value": 100.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 41,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-holy-district-breadth",
+      "entity_id": "holy-district",
+      "subject": "the holy district set apart for the LORD, breadth",
+      "dimension": "breadth",
+      "value": 20000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "debated",
+      "notes": "ESV follows the Septuagint ('20,000'); the Hebrew reads 10,000 in all three places (ESV footnotes at 45:1, 48:9 ['Compare 45:1'], and 48:13). With 10,000 the district is the priests' strip alone (48:10); with 20,000 it is the priests' + Levites' strips together (48:10-13), which 48:20's 25,000-square total (20,000 + the 5,000 city strip) supports. Both readings preserved; rendered per the ESV as printed.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 1,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 9,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-holy-district-length",
+      "entity_id": "holy-district",
+      "subject": "the holy district set apart for the LORD, length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "The ESV's measure footnote at 45:1/48:8 glosses both the common and the long cubit; recorded as the long cubit per the vision's own declared standard (Ezek 40:5), the convention used across the Ezekiel 40-48 dataset.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 1,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 9,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-whole-portion-square",
+      "entity_id": "holy-district",
+      "subject": "the whole set-apart portion (holy district together with the property of the city), square",
+      "dimension": "side",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "48:8 gives the full strip's 25,000-cubit breadth; 48:20 squares it: the 20,000-broad holy district plus the 5,000-broad property of the city.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 8,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 20,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-levites-portion-breadth",
+      "entity_id": "levites-portion",
+      "subject": "the Levites' allotment, breadth",
+      "dimension": "breadth",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "ESV follows the Septuagint at 45:5 for the holding's use ('as their possession for cities to live in'; Hebrew 'as their possession, twenty chambers' - ESV footnote).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 5,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-levites-portion-length",
+      "entity_id": "levites-portion",
+      "subject": "the Levites' allotment, length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": null,
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 5,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "rev-city-side",
+      "entity_id": "new-jerusalem",
+      "subject": "the city, each dimension (its length, width, and height are equal)",
+      "dimension": "side",
+      "value": 12000.0,
+      "unit": "stadia",
+      "basis": null,
+      "tier": "clear",
+      "notes": "The city lies foursquare; he measured it with the rod at 12,000 stadia, and 'its length and width and height are equal' (21:16). Recorded per dimension, the plain reading of the equality clause; a minority reading takes 12,000 as the total perimeter (3,000 per side). ESV footnote: 'About 1,380 miles; a stadion was about 607 feet.' Whether the equal height makes a cube or a pyramid the text does not say \u2014 a form question for the render, not this record (the engine's terraced massing is a documented decision, RENDERING-DECISIONS entry #2).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 16,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "rev-city-wall",
+      "entity_id": "new-jerusalem",
+      "subject": "the wall of the city, measured by the angel",
+      "dimension": "height",
+      "value": 144.0,
+      "unit": "cubit",
+      "basis": null,
+      "tier": "fuzzy",
+      "notes": "'He also measured its wall, 144 cubits by human measurement, which is also an angel's measurement' (21:17). The text does not say WHICH dimension: recorded as height after 21:12's 'a great, high wall', but many interpreters read thickness (a wall-section measure) \u2014 hence tier `fuzzy`; the referent is underdetermined, the number is not. ESV footnote: 'About 216 feet; a cubit was about 18 inches' \u2014 the common cubit, not Ezekiel's long cubit (Ezek 40:5 does not govern John's vision).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Revelation",
+          "chapter": 21,
+          "verse_start": 17,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-priests-portion-breadth",
+      "entity_id": "priests-portion",
+      "subject": "the priests' allotment (the sanctuary section), breadth",
+      "dimension": "breadth",
+      "value": 10000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "10,000 cubits on the western and on the eastern side (48:10). The portion is a place for the priests' houses and a holy place for the sanctuary (45:4).",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 3,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-priests-portion-length",
+      "entity_id": "priests-portion",
+      "subject": "the priests' allotment (the sanctuary section), length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "Measured on the northern and southern sides (48:10), with the sanctuary of the LORD in its midst.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 3,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 10,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
+}

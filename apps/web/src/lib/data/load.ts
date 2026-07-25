@@ -27,6 +27,8 @@ import type {
   Entity,
   EntityExport,
   Manifest,
+  MeasurementRecord,
+  MeasurementsExport,
 } from "./types";
 
 // Resolved per-call rather than at module-load time so tests can swap the
@@ -42,6 +44,7 @@ function fixtureDataDir(): string {
 type CacheKey =
   | "manifest"
   | "canonical"
+  | "measurements"
   | `entity:${string}`
   | "entities:index";
 
@@ -127,6 +130,33 @@ export async function loadEntity(slug: string): Promise<EntityExport | null> {
     }
     throw err;
   }
+}
+
+/**
+ * Load the flat measurement export (`measurements.json`, ADR 0017).
+ *
+ * Written by `far-country measure export`, NOT by `far-country export` —
+ * the two commands are separate, so this file can legitimately be absent
+ * from a checkout that has only ever run the descriptor export. A missing
+ * file is therefore an empty list, not an error: the browse UI degrades to
+ * descriptor-only tiers rather than 500ing.
+ */
+export async function loadMeasurements(): Promise<MeasurementRecord[]> {
+  const cached = cache.get("measurements") as MeasurementRecord[] | undefined;
+  if (cached) return cached;
+
+  let records: MeasurementRecord[] = [];
+  try {
+    const payload =
+      await readJsonWithFallback<MeasurementsExport>("measurements.json");
+    records = payload.measurements ?? [];
+  } catch (err) {
+    if (!(err instanceof Error && err.message.includes("not found at either"))) {
+      throw err;
+    }
+  }
+  cache.set("measurements", records);
+  return records;
 }
 
 /**

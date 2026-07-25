@@ -21,6 +21,7 @@ import {
   loadEntity,
   loadEntityIndex,
   loadManifest,
+  loadMeasurements,
 } from "@/lib/data/load";
 
 const FIXTURE_SRC = path.join(
@@ -124,6 +125,27 @@ describe("loadCanonical + loadEntityIndex", () => {
       (await loadCanonical()).descriptors.map((d) => d.entity_id),
     );
     expect(withDescriptors.has("holy-district")).toBe(false);
+  });
+
+  it("loads the flat measurement export", async () => {
+    const measurements = await loadMeasurements();
+    expect(measurements).toHaveLength(2);
+    expect(measurements.map((m) => m.entity_id)).toEqual([
+      "holy-district",
+      "holy-district",
+    ]);
+    expect(measurements.find((m) => m.tier === "debated")).toBeDefined();
+  });
+
+  it("treats a missing measurements.json as empty, not an error", async () => {
+    // `far-country measure export` writes this file, `far-country export`
+    // does not — a checkout that has only run the latter must still render
+    // the browse UI, just with descriptor-only tiers.
+    await fs.rm(
+      path.join(tmpDir, "src", "lib", "data", "__fixtures__", "measurements.json"),
+    );
+    _resetLoaderCacheForTests();
+    await expect(loadMeasurements()).resolves.toEqual([]);
   });
 
   it("sorts the entity index alphabetically by name", async () => {

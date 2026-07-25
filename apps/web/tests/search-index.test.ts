@@ -68,15 +68,31 @@ describe("loadSearchableEntities", () => {
     ]);
   });
 
-  it("includes a measurement-only entity with an empty tier set", async () => {
-    // Tier filtering is descriptor-driven, so an entity grounded only by
-    // measurements is searchable by name but matches no tier chip. It must
-    // still appear in the list rather than vanishing from the index.
+  it("gives a measurement-only entity the tiers of its measurements", async () => {
+    // The fixture district has a `debated` breadth (the Ezek 45:1 MT/LXX
+    // crux) and a `clear` length, and no descriptors at all. Both tiers must
+    // reach the filter — a tier vocabulary that hides contested readings
+    // defeats its own purpose.
     const entries = await loadSearchableEntities();
     const district = entries.find((e) => e.id === "holy-district");
     expect(district).toBeDefined();
-    expect(district?.tiers).toEqual([]);
-    expect(district?.statementsText).toBe("");
+    expect(district?.tiers).toEqual(["clear", "debated"]);
+  });
+
+  it("puts measurement subjects in the search corpus", async () => {
+    const entries = await loadSearchableEntities();
+    const district = entries.find((e) => e.id === "holy-district");
+    expect(district?.statementsText).toContain("breadth");
+    expect(district?.statementsText).toContain("length");
+  });
+
+  it("keeps descriptor tiers when an entity has both kinds", async () => {
+    // new-jerusalem has descriptors but no measurements in the fixture:
+    // unioning must not drop or reorder what was already there.
+    const entries = await loadSearchableEntities();
+    const nj = entries.find((e) => e.id === "new-jerusalem");
+    expect(nj?.tiers).toEqual(expect.arrayContaining(["clear", "debated"]));
+    expect(nj?.statementsText).toContain("comes down out of heaven");
   });
 
   it("computes per-entity tier set from descriptors", async () => {

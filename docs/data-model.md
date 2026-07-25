@@ -342,8 +342,14 @@ is deliberate and load-bearing: Q&A retrieval embeds `canonical.descriptors`,
 so a measurement-only entity contributes no embeddable row and the
 grounded-answer contract ("every answer cites a descriptor") is unchanged by
 this widening. Consumers must therefore handle an entity with zero descriptors.
-Tier filtering in the browse UI is likewise descriptor-driven — an entity
-grounded only by measurements is searchable by name but matches no tier chip.
+
+Tier filtering and search in the browse UI **do** span both: `/entities`
+unions descriptor tiers with measurement tiers, and measurement subjects join
+the search corpus. It reads `measurements.json` for that (below) rather than
+duplicating records into `canonical.json`. The tier vocabulary exists so that
+fuzzy and debated material stays visible, and the sharpest crux in the dataset
+— the Ezek 45:1 10,000-vs-20,000 breadth — is a `debated` *measurement*; a
+filter that saw only descriptors would have hidden it.
 
 Measurements export to their own file (additive — existing consumers are
 untouched), and to a generated, citation-annotated TypeScript module vendored
