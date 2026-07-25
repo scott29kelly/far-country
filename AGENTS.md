@@ -61,3 +61,11 @@ the user — do not resolve theological disputes silently.
 
 `/public/images/`, `.env`, `data/canonical.sqlite`, `data/exports/`, `shots/`.
 (`apps/web/public/laas` IS tracked but gitignored → always `git add -f`.)
+
+## Cursor Cloud specific instructions
+
+- Monorepo with **no root `package.json`** — dependencies and dev servers live per app under `apps/`. Run `npm install` inside each app you touch:
+  - `apps/web` — Next.js site. `npm run dev` serves on port **3030**; also `npm run build`, `npm test` (Vitest), `npm run typecheck`.
+  - `apps/world-engine` — Vite engine ("laas"). `npm run dev` serves on port **5173** (`--strictPort`).
+  - `apps/review` — Python review UI (not part of the Node install).
+- The `web` browse UI runs without secrets. The extraction pipeline and `apps/web` `build:index` (OpenAI embeddings) / `/api/ask` need API keys in the root `.env` (`ANTHROPIC_API_KEY`, `ESV_API_KEY`, `OPENAI_API_KEY`); see `.env.example`. These are secrets — the user must supply them.
