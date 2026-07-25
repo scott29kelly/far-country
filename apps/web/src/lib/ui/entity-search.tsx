@@ -67,7 +67,7 @@ export function EntitySearchList({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search names, summaries, descriptors…"
+          placeholder="Search names, summaries, descriptors, measurements…"
           className="w-full rounded-md border border-(--color-border) bg-(--color-card) px-3 py-2 text-sm text-(--color-fg) placeholder:text-(--color-fg-muted) focus:border-(--color-accent) focus:outline-none"
           data-entity-search-input
         />

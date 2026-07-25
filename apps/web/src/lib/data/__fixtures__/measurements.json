@@ -1,0 +1,74 @@
+{
+  "schema_version": "0.1.0",
+  "generated_at": "2026-07-25T03:59:58.535942Z",
+  "measurements": [
+    {
+      "id": "eza-holy-district-breadth",
+      "entity_id": "holy-district",
+      "subject": "the holy district set apart for the LORD, breadth",
+      "dimension": "breadth",
+      "value": 20000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "debated",
+      "notes": "ESV follows the Septuagint ('20,000'); the Hebrew reads 10,000 in all three places (ESV footnotes at 45:1, 48:9 ['Compare 45:1'], and 48:13). With 10,000 the district is the priests' strip alone (48:10); with 20,000 it is the priests' + Levites' strips together (48:10-13), which 48:20's 25,000-square total (20,000 + the 5,000 city strip) supports. Both readings preserved; rendered per the ESV as printed.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 1,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 9,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    },
+    {
+      "id": "eza-holy-district-length",
+      "entity_id": "holy-district",
+      "subject": "the holy district set apart for the LORD, length",
+      "dimension": "length",
+      "value": 25000.0,
+      "unit": "long-cubit",
+      "basis": null,
+      "tier": "clear",
+      "notes": "The ESV's measure footnote at 45:1/48:8 glosses both the common and the long cubit; recorded as the long cubit per the vision's own declared standard (Ezek 40:5), the convention used across the Ezekiel 40-48 dataset.",
+      "citations": [
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 45,
+          "verse_start": 1,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 9,
+          "verse_end": null
+        },
+        {
+          "source_type": "scripture",
+          "book": "Ezekiel",
+          "chapter": 48,
+          "verse_start": 13,
+          "verse_end": null
+        }
+      ]
+    }
+  ]
+}

@@ -119,6 +119,28 @@ export type EntityMeasurement = {
   citations: MeasurementCitation[];
 };
 
+/**
+ * Citation as it appears in the flat `measurements.json` export.
+ *
+ * Reference-only: unlike the per-entity inline shape, these carry no row
+ * `id` and no `measurement_id` — the writer emits the source reference
+ * alone (`measure/service.py`). Kept as its own type rather than loosening
+ * `Citation`, so nothing downstream assumes an id that isn't there.
+ */
+export type MeasurementSource = Omit<Citation, "id" | "descriptor_id">;
+
+/** Measurement as it appears in the flat `measurements.json` export. */
+export type MeasurementRecord = Omit<EntityMeasurement, "citations"> & {
+  entity_id: string;
+  citations: MeasurementSource[];
+};
+
+export type MeasurementsExport = {
+  schema_version: string;
+  generated_at: string;
+  measurements: MeasurementRecord[];
+};
+
 export type EntityExport = {
   id: string;
   name: string;

@@ -54,7 +54,8 @@ export default async function EntityIndexPage({ searchParams }: PageProps) {
         <h1 className="text-2xl font-semibold tracking-tight">Entities</h1>
         <p className="text-sm text-(--color-fg-muted)">
           {all.length} {all.length === 1 ? "entity" : "entities"} in the
-          dataset. Filter by type or tier, or search names and descriptors.
+          dataset. Filter by type or tier, or search names, descriptors and
+          measurements.
         </p>
       </header>
 
