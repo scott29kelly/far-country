@@ -19,6 +19,18 @@
  * content stands on it. Entity picks / key markers / navigation stay
  * installed (analytic, harmless without their geometry).
  *
+ * `arcade` is the one DETAIL stage: relief filigree inside the city massing
+ * (wall pilasters, terrace arch frames and fluted piers, the frieze fascia,
+ * the ivory arcade courses with their gold arches and glow panes, and the
+ * dentil courses). It owns no hooks BY CONSTRUCTION — `cityCollide` already
+ * declares this exact class as the filigree that does not collide, and none
+ * of it is a walk floor, a pick volume, or a cited claim. So `-arcade`
+ * strips ornament and must leave collision, floors and picks bit-identical;
+ * probe-stages-live asserts precisely that. It is a sub-stage of `city`:
+ * with `city` off nothing calls the massing builder, so `?stages=arcade`
+ * alone renders no city (inclusion semantics), which is consistent rather
+ * than special-cased.
+ *
  * `?resizeprobe=` (tools/probe-resize.ts) is a SEPARATE diagnostic contract
  * for bisecting render-target-lifetime regressions; both gates apply.
  *
@@ -28,6 +40,7 @@
 
 export const NJ_STAGES = [
   'city',
+  'arcade',
   'river',
   'trees',
   'temple',

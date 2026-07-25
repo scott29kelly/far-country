@@ -153,9 +153,22 @@ overrides, ToD).
 > stage). Probes: probe-stages (CPU parser) + probe-stages-live (two
 > boots, hook gating). The instancing half was largely done in earlier
 > passes (arcade arches, piers, dentils, glow panes, dwellings,
-> population, trees). Remaining when called: stage-granular toggling
-> INSIDE CityMassing (arcade detail as its own stage) and the timed
-> "city assembles itself" arrival sequence built on these stages.
+> population, trees).
+>
+> Second slice shipped (2026-07-24): the `arcade` DETAIL stage —
+> stage-granular toggling INSIDE CityMassing. `buildCityMassing(gi,
+> { arcade })` gates the six relief classes `cityCollide` already
+> declares non-colliding (pilasters, arch frames, terrace piers, frieze
+> fascia, arcade courses, dentils); structure, walk floors and pick
+> volumes always build. It owns no hooks by construction, and
+> probe-stages-live boot C pins that `-arcade` leaves collision, floors
+> and the river claim bit-identical (to 1e-6). Cost: -54 draw calls,
+> -663k triangles.
+>
+> Remaining when called: the timed "city assembles itself" arrival
+> sequence built on these stages. Needs Scott's direction first — build
+> order vs a scripted order, and whether it plays inside the existing
+> boot rite or replaces part of it.
 - Refactor `buildHolyAllotment` into **named, toggleable stages** (plateau →
   massing → arcade detail → river → trees → temple → glory): better debugging
   now, bones of a "city assembles itself" intro later.

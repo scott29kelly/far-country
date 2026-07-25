@@ -62,4 +62,23 @@ c.check(
   names(parseStages(',city,,river,')) === expect(['city', 'river']),
 );
 
+// E — the `arcade` detail stage (relief filigree inside the city massing)
+c.check('E1 arcade is a known stage', (NJ_STAGES as readonly string[]).includes('arcade'));
+c.check('E2 arcade is on by default', parseStages(null).has('arcade'));
+c.check(
+  'E3 -arcade strips ornament but keeps the city',
+  !parseStages('-arcade').has('arcade') && parseStages('-arcade').has('city'),
+);
+c.check(
+  'E4 -city does not implicitly disable arcade',
+  // The flag stays set; nothing calls the massing builder, so no relief
+  // builds either way. Keeping the parser dumb here means one rule, not a
+  // dependency graph — the sub-stage relationship lives in the builder.
+  parseStages('-city').has('arcade'),
+);
+c.check(
+  'E5 arcade alone renders no city (inclusion semantics, documented)',
+  parseStages('arcade').has('arcade') && !parseStages('arcade').has('city'),
+);
+
 c.finish();
