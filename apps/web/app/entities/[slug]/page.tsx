@@ -5,6 +5,7 @@ import { loadCanonical, loadEntity } from "@/lib/data/load";
 import type {
   Entity,
   EntityDescriptor,
+  EntityMeasurement,
   EntityType,
   Relation,
   TemporalPhase,
@@ -13,6 +14,7 @@ import type {
 import { TIERS } from "@/lib/data/types";
 import { TemporalPhaseBadge, TierBadge } from "@/lib/ui/badges";
 import { CitationLine } from "@/lib/ui/citation";
+import { formatMeasurement } from "@/lib/ui/measurement";
 
 const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   person: "Person",
@@ -45,6 +47,7 @@ export default async function EntityDetailPage({ params }: PageProps) {
 
   const grouped = groupByTier(entity.descriptors);
   const relations = entity.relations ?? [];
+  const measurements = entity.measurements ?? [];
 
   return (
     <article className="space-y-10">
@@ -79,7 +82,9 @@ export default async function EntityDetailPage({ params }: PageProps) {
 
         {entity.descriptors.length === 0 ? (
           <p className="text-(--color-fg-muted)">
-            No approved descriptors for this entity yet.
+            {measurements.length > 0
+              ? "No approved descriptors for this entity yet — it is grounded by its cited measurements below."
+              : "No approved descriptors for this entity yet."}
           </p>
         ) : (
           TIERS.map((tier) => {
@@ -91,6 +96,26 @@ export default async function EntityDetailPage({ params }: PageProps) {
           })
         )}
       </section>
+
+      {measurements.length > 0 ? (
+        <section aria-labelledby="measurements-heading" className="space-y-4">
+          <h2
+            id="measurements-heading"
+            className="text-sm font-medium uppercase tracking-wider text-(--color-fg-muted)"
+          >
+            Measurements ({measurements.length})
+          </h2>
+          <p className="text-sm leading-relaxed text-(--color-fg-muted)">
+            Dimensions as the text gives them — the unit is Scripture&apos;s
+            own, not a conversion.
+          </p>
+          <ul className="space-y-3">
+            {measurements.map((m) => (
+              <MeasurementCard key={m.id} measurement={m} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {relations.length > 0 ? (
         <section aria-labelledby="relations-heading" className="space-y-4">
@@ -177,6 +202,63 @@ function DescriptorCard({ descriptor }: { descriptor: EntityDescriptor }) {
       {descriptor.citations.length > 0 ? (
         <ul className="mt-4 space-y-1">
           {descriptor.citations.map((c) => (
+            <li key={c.id}>
+              <CitationLine citation={c} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </li>
+  );
+}
+
+function MeasurementCard({
+  measurement,
+}: {
+  measurement: EntityMeasurement;
+}) {
+  return (
+    <li
+      data-measurement-id={measurement.id}
+      className="rounded-lg border border-(--color-border) bg-(--color-card) p-5"
+    >
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <TierBadge tier={measurement.tier} />
+        <span className="text-xs uppercase tracking-wider text-(--color-fg-muted)">
+          {measurement.dimension}
+        </span>
+      </div>
+
+      <p className="text-base leading-relaxed text-(--color-fg)">
+        {measurement.subject} —{" "}
+        <span data-measurement-value className="font-medium">
+          {formatMeasurement(measurement)}
+        </span>
+      </p>
+
+      {measurement.basis ? (
+        <p className="mt-2 text-sm leading-relaxed text-(--color-fg-muted)">
+          <span className="font-medium">Basis:</span> {measurement.basis}
+        </p>
+      ) : null}
+
+      {/*
+        `notes` is where a text-critical variant lives (e.g. the Ezek 45:1
+        10,000-vs-20,000 breadth crux). Never collapse it into the value —
+        the tier badge above says the reading is contested, and this says why.
+      */}
+      {measurement.notes ? (
+        <p
+          data-measurement-notes
+          className="mt-3 border-l-2 border-(--color-border) pl-3 text-sm italic leading-relaxed text-(--color-fg-muted)"
+        >
+          {measurement.notes}
+        </p>
+      ) : null}
+
+      {measurement.citations.length > 0 ? (
+        <ul className="mt-4 space-y-1">
+          {measurement.citations.map((c) => (
             <li key={c.id}>
               <CitationLine citation={c} />
             </li>

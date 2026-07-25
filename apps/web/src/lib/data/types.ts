@@ -91,6 +91,34 @@ export type CanonicalExport = {
   relations: Relation[];
 };
 
+/**
+ * Citation on a measurement. Same source shape as a descriptor citation,
+ * but keyed to a measurement row (`docs/data-model.md` — the citation
+ * mirror table).
+ */
+export type MeasurementCitation = Omit<Citation, "descriptor_id"> & {
+  measurement_id?: string;
+};
+
+/**
+ * A cited dimensional fact (ADR 0017), as it appears inside a per-entity
+ * export. `value` + `unit` are text-native — "one reed" is stored as
+ * `1 reed`, never pre-converted to metres. The metric realization is the
+ * engine resolver's job (ADR 0018); this layer only displays what the
+ * text says.
+ */
+export type EntityMeasurement = {
+  id: string;
+  subject: string;
+  dimension: string;
+  value: number;
+  unit: string;
+  basis?: string | null;
+  tier: Tier;
+  notes?: string | null;
+  citations: MeasurementCitation[];
+};
+
 export type EntityExport = {
   id: string;
   name: string;
@@ -98,6 +126,8 @@ export type EntityExport = {
   summary?: string | null;
   descriptors: EntityDescriptor[];
   relations?: Relation[];
+  /** 0.2.0+ — omitted entirely when the entity carries no measurements. */
+  measurements?: EntityMeasurement[];
 };
 
 export type Manifest = {

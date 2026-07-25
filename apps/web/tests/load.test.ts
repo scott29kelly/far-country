@@ -70,8 +70,8 @@ afterEach(async () => {
 describe("loadManifest", () => {
   it("falls back to fixtures when public/data is empty", async () => {
     const manifest = await loadManifest();
-    expect(manifest.schema_version).toBe("0.1.0");
-    expect(manifest.counts.entities).toBe(2);
+    expect(manifest.schema_version).toBe("0.3.0");
+    expect(manifest.counts.entities).toBe(3);
   });
 
   it("prefers public/data when present", async () => {
@@ -110,13 +110,26 @@ describe("loadManifest", () => {
 describe("loadCanonical + loadEntityIndex", () => {
   it("returns the full canonical export from fixtures", async () => {
     const canonical = await loadCanonical();
-    expect(canonical.entities).toHaveLength(2);
+    // Three entities, but only two of them carry descriptors: the holy
+    // district is grounded by measurements alone (export 0.3.0).
+    expect(canonical.entities).toHaveLength(3);
     expect(canonical.descriptors).toHaveLength(4);
+  });
+
+  it("indexes an entity that has no descriptors", async () => {
+    const index = await loadEntityIndex();
+    const district = index.find((e) => e.id === "holy-district");
+    expect(district).toBeDefined();
+    const withDescriptors = new Set(
+      (await loadCanonical()).descriptors.map((d) => d.entity_id),
+    );
+    expect(withDescriptors.has("holy-district")).toBe(false);
   });
 
   it("sorts the entity index alphabetically by name", async () => {
     const index = await loadEntityIndex();
     expect(index.map((e) => e.name)).toEqual([
+      "The Holy District",
       "The New Jerusalem",
       "The Twelve Gates",
     ]);

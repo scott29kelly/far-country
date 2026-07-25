@@ -1,6 +1,6 @@
 {
-  "schema_version": "0.2.0",
-  "generated_at": "2026-07-23T02:18:58.051052Z",
+  "schema_version": "0.3.0",
+  "generated_at": "2026-07-25T02:03:07.808418Z",
   "entities": [
     {
       "id": "abolition-of-death",
@@ -261,6 +261,12 @@
       "summary": null
     },
     {
+      "id": "city-portion",
+      "name": "The Property of the City",
+      "entity_type": "place",
+      "summary": "The city strip alongside the holy district (Ezek 45:6; 48:15-19): 5,000 cubits broad by 25,000 long, for common use - dwellings and open country - belonging to the whole house of Israel, with the city in its midst and food-growing remainders east and west tilled by the city's workers."
+    },
+    {
       "id": "city-prepared-by-god",
       "name": "The City God Prepared",
       "entity_type": "place",
@@ -409,6 +415,18 @@
       "name": "Those Outside the City",
       "entity_type": "attribute",
       "summary": null
+    },
+    {
+      "id": "ezekiel-city",
+      "name": "Ezekiel's City",
+      "entity_type": "place",
+      "summary": "The city in the midst of the city strip (Ezek 48:15-17, 30-35): foursquare at 4,500 cubits per side with 250 cubits of open land around it and twelve tribal gates, three per side; its circumference 18,000 cubits and its name from that time on 'The LORD Is There' (Ezek 48:35). Whether this city and John's New Jerusalem are one, nested, or distinct is a debated harmonization the dataset does not resolve (ADR 0017); the render follows Willis's harmonization (RENDERING-DECISIONS entry #1)."
+    },
+    {
+      "id": "ezekiel-temple",
+      "name": "Ezekiel's Temple",
+      "entity_type": "place",
+      "summary": "The measured temple complex of Ezekiel's vision (Ezek 40-48) - under the project's framing (ADR 0012) a literal future millennial sanctuary in restored Israel, distinct from and adjacent to the New Jerusalem (Rev 21:22; Ezek 48:10)."
     },
     {
       "id": "faithful-and-true",
@@ -699,6 +717,12 @@
       "summary": null
     },
     {
+      "id": "holy-district",
+      "name": "The Holy District",
+      "entity_type": "place",
+      "summary": "The portion of the land set apart for the LORD in the millennial allotment (Ezek 45:1; 48:8-20) - under the project's framing (ADR 0012) a literal future district in restored Israel, 25,000 cubits long and 20,000 broad (ESV; the Hebrew reads 10,000), holding the priests' and Levites' portions with the sanctuary in its midst; together with the city strip it squares to 25,000 (Ezek 48:20)."
+    },
+    {
       "id": "holy-mountain",
       "name": "God's Holy Mountain",
       "entity_type": "place",
@@ -835,6 +859,12 @@
       "name": "Leaves of the Tree of Life",
       "entity_type": "thing",
       "summary": null
+    },
+    {
+      "id": "levites-portion",
+      "name": "The Levites' Portion",
+      "entity_type": "place",
+      "summary": "The Levites' allotment within the holy district (Ezek 45:5; 48:13-14): 25,000 cubits by 10,000 alongside the priests' territory, held by the Levites who minister at the temple; not to be sold, exchanged, or alienated (Ezek 48:14)."
     },
     {
       "id": "life-in-christ",
@@ -1093,6 +1123,12 @@
       "name": "Priests from the Nations",
       "entity_type": "person",
       "summary": null
+    },
+    {
+      "id": "priests-portion",
+      "name": "The Priests' Portion",
+      "entity_type": "place",
+      "summary": "The priests' allotment within the holy district (Ezek 45:3-4; 48:10-12): 25,000 cubits by 10,000 for the consecrated sons of Zadok, a place for their houses and a holy place for the sanctuary, with the sanctuary of the LORD in its midst."
     },
     {
       "id": "prize-of-upward-call",

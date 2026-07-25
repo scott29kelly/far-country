@@ -329,6 +329,22 @@ The canonical export is a flat JSON file plus per-entity files for the browse UI
 
 Only `review_status='approved'` descriptors appear in exports.
 
+**Which entities qualify (schema 0.3.0).** An entity is exported when it is
+grounded in *something* approved and cited — at least one descriptor **or** at
+least one measurement. Measurements carry the same citation, tier, and review
+discipline as descriptors (ADR 0017), so a measurement-only entity (the Ezek
+45:4-5 campus zones, Ezekiel's temple) is approved content, not noise, and
+appears both as a per-entity file and in `canonical.json`'s `entities` array
+so the browse index can find it.
+
+The `descriptors` and `citations` arrays stay strictly descriptor-driven. This
+is deliberate and load-bearing: Q&A retrieval embeds `canonical.descriptors`,
+so a measurement-only entity contributes no embeddable row and the
+grounded-answer contract ("every answer cites a descriptor") is unchanged by
+this widening. Consumers must therefore handle an entity with zero descriptors.
+Tier filtering in the browse UI is likewise descriptor-driven — an entity
+grounded only by measurements is searchable by name but matches no tier chip.
+
 Measurements export to their own file (additive — existing consumers are
 untouched), and to a generated, citation-annotated TypeScript module vendored
 into the world engine (ADR 0017 decision 3):

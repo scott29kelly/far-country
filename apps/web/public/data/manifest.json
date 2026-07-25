@@ -1,8 +1,8 @@
 {
-  "schema_version": "0.2.0",
-  "generated_at": "2026-07-23T02:18:57.906964Z",
+  "schema_version": "0.3.0",
+  "generated_at": "2026-07-25T02:03:07.723797Z",
   "counts": {
-    "entities": 263,
+    "entities": 269,
     "descriptors": 306,
     "citations": 307,
     "relations": 0

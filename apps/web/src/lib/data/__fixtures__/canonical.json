@@ -1,7 +1,13 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.3.0",
   "generated_at": "2026-05-21T00:00:00Z",
   "entities": [
+    {
+      "id": "holy-district",
+      "name": "The Holy District",
+      "entity_type": "place",
+      "summary": "The portion of the land set apart for the LORD in the millennial allotment (Ezek 45:1; 48:8-20) - under the project's framing (ADR 0012) a literal future district in restored Israel, 25,000 cubits long and 20,000 broad (ESV; the Hebrew reads 10,000), holding the priests' and Levites' portions with the sanctuary in its midst; together with the city strip it squares to 25,000 (Ezek 48:20)."
+    },
     {
       "id": "new-jerusalem",
       "name": "The New Jerusalem",
@@ -27,7 +33,7 @@
     {
       "id": "desc-nj-cube",
       "entity_id": "new-jerusalem",
-      "statement": "The city's length, breadth, and height are equal — measured as twelve thousand stadia on each side.",
+      "statement": "The city's length, breadth, and height are equal \u00e2\u20ac\u201d measured as twelve thousand stadia on each side.",
       "tier": "debated",
       "symbolic_referent": null,
       "temporal_phase": "final"
@@ -37,7 +43,7 @@
       "entity_id": "twelve-gates",
       "statement": "The twelve gates of the city are twelve pearls, each gate being made of a single pearl.",
       "tier": "symbolic",
-      "symbolic_referent": "The preciousness, purity, and singular costliness of access to God's eternal city — pearls in the ancient world were among the most valued materials and, unlike gold, are organic and singular rather than fabricated.",
+      "symbolic_referent": "The preciousness, purity, and singular costliness of access to God's eternal city \u00e2\u20ac\u201d pearls in the ancient world were among the most valued materials and, unlike gold, are organic and singular rather than fabricated.",
       "temporal_phase": "final"
     },
     {
