@@ -10,6 +10,12 @@
  * Boot B (?stages=-city,-river): moveProbe is null; the channel point is
  * dry; the plaza point falls through to bare terrain (≈2.8 m lower).
  *
+ * Boot C (?stages=-arcade): the mirror-image assertion. `arcade` is the one
+ * DETAIL stage — it strips relief filigree that cityCollide already declares
+ * non-colliding, so EVERY hook must read bit-identical to boot A. If a
+ * future refactor moves something load-bearing (a cornice pavement, the
+ * foundation course) under the arcade flag, these checks fail.
+ *
  *   npm run dev   (port 5173)
  *   npx tsx tools/probe-stages-live.ts
  */
@@ -92,9 +98,11 @@ async function main(): Promise<void> {
 
   let a: HookSample;
   let b: HookSample;
+  let d: HookSample;
   try {
     a = await bootAndSample(page, {});
     b = await bootAndSample(page, { stages: '-city,-river' });
+    d = await bootAndSample(page, { stages: '-arcade' });
   } finally {
     await browser.close();
   }
@@ -127,6 +135,33 @@ async function main(): Promise<void> {
     'B3 city off drops the plaza walk floor to bare terrain',
     a.plazaGround !== null && b.plazaGround !== null && a.plazaGround - b.plazaGround > 2,
     `plaza ground ${a.plazaGround?.toFixed(2)} (on) vs ${b.plazaGround?.toFixed(2)} (off)`,
+  );
+
+  // ---- C: -arcade boot — ornament leaves, every hook stays put ------------
+  c.check(
+    'C1 -arcade keeps wall collision installed',
+    d.moveProbeType === 'function',
+    `moveProbe typeof ${d.moveProbeType}`,
+  );
+  c.check(
+    'C2 -arcade blocks the approach frame at the SAME z as the full build',
+    a.blockedZ !== null && d.blockedZ !== null && Math.abs(a.blockedZ - d.blockedZ) < 1e-6,
+    `full ${a.blockedZ?.toFixed(4)} vs -arcade ${d.blockedZ?.toFixed(4)}`,
+  );
+  c.check(
+    'C3 -arcade leaves the plaza walk floor at the SAME height',
+    a.plazaGround !== null &&
+      d.plazaGround !== null &&
+      Math.abs(a.plazaGround - d.plazaGround) < 1e-6,
+    `full ${a.plazaGround?.toFixed(4)} vs -arcade ${d.plazaGround?.toFixed(4)}`,
+  );
+  c.check(
+    'C4 -arcade leaves the river claim untouched',
+    a.channel !== null &&
+      d.channel !== null &&
+      Math.abs(a.channel.water - d.channel.water) < 1e-6 &&
+      Math.abs(a.channel.ground - d.channel.ground) < 1e-6,
+    `full water ${a.channel?.water.toFixed(4)} vs -arcade ${d.channel?.water.toFixed(4)}`,
   );
 
   c.finish();

@@ -68,7 +68,11 @@ export function buildHolyAllotment(deps: AllotmentDeps = {}): Group {
   const stageOn = (s: NjStage): boolean => deps.stages?.has(s) ?? true;
 
   // The New Jerusalem at the south-centre, on the flat core (plaza at y = 0).
-  if (stageOn('city') && !resizeProbeAblate.has('city')) allot.add(buildCityMassing(gi));
+  // `arcade` is a detail sub-stage of `city`: the massing builder decides
+  // whether to lay its relief filigree, so it needs the flag rather than a
+  // second entry point (one builder, one shared tier table).
+  if (stageOn('city') && !resizeProbeAblate.has('city'))
+    allot.add(buildCityMassing(gi, { arcade: stageOn('arcade') }));
 
   // The river of life cascading the south terraces to the plain (Rev 22:1) —
   // crystal-water pass; shares the city's local frame. Trees of life are

@@ -138,6 +138,47 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-24, later) PHASE C SLICE 2 — the `arcade` detail stage.**
+
+- `stages.ts` gains an eighth stage, `arcade`, and it is the first DETAIL
+  stage: relief filigree inside the city massing rather than a content
+  block of its own. `buildCityMassing(gi, { arcade })` gates exactly six
+  classes — wall pilasters, terrace arch frames, terrace fluted piers,
+  the gold frieze fascia, the ivory arcade courses (fascia + gold arches
+  + glow panes), and the dentil courses.
+- The boundary was NOT invented here: `cityCollide`'s own header already
+  declares this class ("relief filigree, same class throughout:
+  pilasters, piers, arch frames, dentil/arcade courses...") as what does
+  NOT collide. The stage makes the geometry honour a line the collision
+  module had already drawn, which is why it owns no hooks. Structure
+  stays on through `-arcade`: massing, wall, gate portals + inscriptions,
+  foundation course (picked AND collided), the glass tier skin, cornice
+  pavements (walk floors), crown, ascent ramps.
+- Sub-stage of `city` — with `city` off nothing calls the massing
+  builder. The parser stays dumb (no dependency graph): `?stages=arcade`
+  alone renders no city, which probe-stages E5 pins as intended
+  inclusion semantics rather than a bug.
+- Probes: probe-stages grows section E (5 checks, arcade defaults on,
+  `-arcade` keeps city, `-city` does not implicitly clear the flag);
+  probe-stages-live grows boot C — with `-arcade` the wall collision is
+  still installed and the approach frame blocks at the SAME z
+  (2069.0000), the plaza walk floor sits at the SAME height (483.8500),
+  and the river claim is untouched, all to 1e-6. That equality IS the
+  stage's contract: if a refactor ever moves a cornice pavement or the
+  foundation course under the flag, boot C fails.
+- Measured: draw calls 1083 -> 1029, triangles 19.74M -> 19.08M
+  (-663k). Stills shots/wip/arcade-{on,off}.png at the Issachar gate:
+  ornament gone, wall/gate/inscription/pearl arch/cornice/glass bays/
+  cascade identical.
+- Battery: CPU population, entitypick, cityfloors, walkfling,
+  wallcollide, visualkey, ascent, stages ALL PASS; live visualkey-live,
+  entityhud-live, campus-live, navigation, arrival, stages-live ALL
+  PASS; bootui done; bootrite ALL PASS (run alone). tsc + build clean;
+  engine re-vendored (index-CSnvzx6j.js).
+- Phase C remainder: the timed "city assembles itself" arrival sequence
+  — Scott's direction needed on build-order-vs-scripted-order and
+  whether it plays inside the existing boot rite or replaces part of it.
+
 **(2026-07-24) COLLISION SWEEP FIX — the frame-spanning tunnel closed.**
 
 - `cityCollide.resolveCityMoveLocal`: the axis-separated substeps used

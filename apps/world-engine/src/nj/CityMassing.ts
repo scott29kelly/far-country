@@ -720,7 +720,25 @@ export function makeArchWindow(width: number, height: number, m: MeshStandardNod
 // The city
 // ---------------------------------------------------------------------------
 
-export function buildCityMassing(gi: ProbeGI | null = null): Group {
+/** Build options — see `stages.ts` for the `arcade` detail stage. */
+export type CityMassingOptions = {
+  /**
+   * Lay the relief filigree (default true). This gates EXACTLY the class
+   * `cityCollide` already declares as non-colliding ornament: wall
+   * pilasters, terrace arch frames and fluted piers, the frieze fascia, the
+   * ivory arcade courses with their arches and glow panes, and the dentil
+   * courses. Nothing here is collided, walked on, picked, or cited — the
+   * massing, gates, foundation course and cornice pavements are structure
+   * and always build.
+   */
+  arcade?: boolean;
+};
+
+export function buildCityMassing(
+  gi: ProbeGI | null = null,
+  opts: CityMassingOptions = {},
+): Group {
+  const arcade = opts.arcade ?? true;
   const city = new Group();
   city.name = 'new-jerusalem';
 
@@ -809,16 +827,18 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
 
       // Wall pilasters between the gates (the pier rhythm skips every slot
       // within a gate width of a gate offset — the portals own those slots).
-      const pilGeo = flutedPierGeometry(4, H, 2.6);
-      const pilPlaces: Placement[] = [];
-      for (const face of FACES) {
-        for (let k = -4; k <= 4; k++) {
-          const u = k * 25;
-          if (GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_WIDTH)) continue;
-          pilPlaces.push({ u, y: 0, off: t.half + 0.6, face });
+      if (arcade) {
+        const pilGeo = flutedPierGeometry(4, H, 2.6);
+        const pilPlaces: Placement[] = [];
+        for (const face of FACES) {
+          for (let k = -4; k <= 4; k++) {
+            const u = k * 25;
+            if (GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_WIDTH)) continue;
+            pilPlaces.push({ u, y: 0, off: t.half + 0.6, face });
+          }
         }
+        city.add(instancedOnFaces(pilGeo, trimInst, pilPlaces));
       }
-      city.add(instancedOnFaces(pilGeo, trimInst, pilPlaces));
     } else if (ti === last) {
       // Crown — solid, glowing, under the glory (deliberate gentle bloom).
       const crownMat = new MeshStandardNodeMaterial();
@@ -855,8 +875,9 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       const winH = Math.max(8, yTop - 5.5 - winBot - ow / 2);
       const paneH = winH + ow / 2;
 
+      // The glass skin is the tier's SURFACE, not ornament — it stays on
+      // through `-arcade` (the arch frames around it are the ornament).
       const glassGeo = glassPaneGeometry(ow, winH);
-      const frameGeo = archFrameGeometry(ow, winH, bay * 0.07, 2.4);
       const glassMat = goldGlassMaterial(f, paneH);
       const glassPlaces: Placement[] = [];
       const framePlaces: Placement[] = [];
@@ -870,26 +891,30 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
       const glassMesh = instancedOnFaces(glassGeo, glassMat, glassPlaces, { castShadow: false });
       glassMesh.receiveShadow = false;
       city.add(glassMesh);
-      city.add(instancedOnFaces(frameGeo, trimInst, framePlaces));
 
-      // Full-height fluted piers at the bay lines.
-      const pierGeo = flutedPierGeometry(bay * 0.2, H - 2.2, 3);
-      const pierPlaces: Placement[] = [];
-      for (const face of FACES) {
-        for (let i = 0; i <= t.arches; i++) {
-          const u = -W / 2 + bay * i;
-          if (riverSlot(face, u)) continue; // the cascade owns the meridian
-          pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
+      if (arcade) {
+        const frameGeo = archFrameGeometry(ow, winH, bay * 0.07, 2.4);
+        city.add(instancedOnFaces(frameGeo, trimInst, framePlaces));
+
+        // Full-height fluted piers at the bay lines.
+        const pierGeo = flutedPierGeometry(bay * 0.2, H - 2.2, 3);
+        const pierPlaces: Placement[] = [];
+        for (const face of FACES) {
+          for (let i = 0; i <= t.arches; i++) {
+            const u = -W / 2 + bay * i;
+            if (riverSlot(face, u)) continue; // the cascade owns the meridian
+            pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
+          }
         }
-      }
-      city.add(instancedOnFaces(pierGeo, trimInst, pierPlaces));
+        city.add(instancedOnFaces(pierGeo, trimInst, pierPlaces));
 
-      // Gold frieze fascia between the glass heads and the cornice.
-      for (const face of FACES) {
-        const fascia = new Mesh(new BoxGeometry(W, 3.6, 1.2), trimPlain);
-        placeOnFace(fascia, 0, yTop - 4.2, t.half + 0.2, face);
-        fascia.castShadow = true;
-        city.add(fascia);
+        // Gold frieze fascia between the glass heads and the cornice.
+        for (const face of FACES) {
+          const fascia = new Mesh(new BoxGeometry(W, 3.6, 1.2), trimPlain);
+          placeOnFace(fascia, 0, yTop - 4.2, t.half + 0.2, face);
+          fascia.castShadow = true;
+          city.add(fascia);
+        }
       }
     }
 
@@ -930,19 +955,22 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
     }
 
     // Gold dentil course under the cornice lip.
-    for (const face of FACES) {
-      const n = Math.floor((2 * t.half) / 1.55);
-      for (let i = 0; i < n; i++) {
-        const u = -t.half + 1.55 * (i + 0.5);
-        if (ti === 0 && GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_WIDTH / 2 + 1.6)) continue;
-        if (riverSlot(face, u)) continue;
-        dentilPlaces.push({ u, y: yTop - 3.1, off: t.half + 2.1, face });
+    if (arcade) {
+      for (const face of FACES) {
+        const n = Math.floor((2 * t.half) / 1.55);
+        for (let i = 0; i < n; i++) {
+          const u = -t.half + 1.55 * (i + 0.5);
+          if (ti === 0 && GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_WIDTH / 2 + 1.6))
+            continue;
+          if (riverSlot(face, u)) continue;
+          dentilPlaces.push({ u, y: yTop - 3.1, off: t.half + 2.1, face });
+        }
       }
     }
 
     // Arcade course(s) ringing the next tier's base on this ledge: ivory
     // fascia bands carrying rows of gold arches with warm glow panes.
-    if (ti < last) {
+    if (arcade && ti < last) {
       const ringHalf = tiers[ti + 1].half;
       const courses = ti === 0 ? 2 : 1;
       for (let c = 0; c < courses; c++) {
@@ -967,13 +995,15 @@ export function buildCityMassing(gi: ProbeGI | null = null): Group {
     yBot += H;
   }
 
-  city.add(instancedOnFaces(arcadeArcGeo, trimInst, arcadePlaces));
-  const glows = instancedOnFaces(arcadeGlowGeo, arcGlowMat, arcadeGlowPlaces, {
-    castShadow: false,
-  });
-  glows.receiveShadow = false;
-  city.add(glows);
-  city.add(instancedOnFaces(dentilGeo, trimInst, dentilPlaces));
+  if (arcade) {
+    city.add(instancedOnFaces(arcadeArcGeo, trimInst, arcadePlaces));
+    const glows = instancedOnFaces(arcadeGlowGeo, arcGlowMat, arcadeGlowPlaces, {
+      castShadow: false,
+    });
+    glows.receiveShadow = false;
+    city.add(glows);
+    city.add(instancedOnFaces(dentilGeo, trimInst, dentilPlaces));
+  }
 
   // Processional ascent (ascentModel — interpretive architecture within the
   // RENDERING-DECISIONS #1 step-mountain, entry #10; deliberately UNCITED and
