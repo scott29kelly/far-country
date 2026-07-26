@@ -122,9 +122,18 @@ export class Engine {
     installFramebufferBindingRefresh(renderer);
 
     window.addEventListener('resize', () => {
-      engine.camera.aspect = window.innerWidth / window.innerHeight;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      // A collapsed host (hidden/zero-width iframe pane, display:none
+      // container) reports 0. `0 / 0` is NaN, and a NaN aspect poisons the
+      // projection matrix for every later frame — it does not recover when
+      // the host is shown again. Hold the last good size instead; the resize
+      // back to a real viewport applies normally. BootUI guards its own
+      // paint the same way.
+      if (vw <= 0 || vh <= 0) return;
+      engine.camera.aspect = vw / vh;
       engine.camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(vw, vh);
       // recreate viewport framebuffer textures here, between frames — their
       // mid-pass in-place resize races the encoder (see ThreePatches)
       resizeFramebufferTextures(renderer);

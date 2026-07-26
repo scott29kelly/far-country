@@ -787,6 +787,15 @@ export class BootUI {
   private buildViewportLayers(): void {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    // A COLLAPSED HOST reports 0 (the /world-preview iframe while its pane is
+    // hidden or zero-width, a display:none container, a tab laid out before
+    // it is shown). Every layer below is sized from these, and a canvas with
+    // a 0 dimension is an illegal drawImage SOURCE — the next paint would
+    // throw InvalidStateError and trip the LAAS fatal handler, killing the
+    // boot for a purely cosmetic layer. Keep whatever layers we already have
+    // (they are still valid to draw); the resize back to a real size rebuilds
+    // them. drawScene guards the paint side to match.
+    if (w <= 0 || h <= 0) return;
     const mk = (seed: string, count: number, maxR: number, alpha: number): HTMLCanvasElement => {
       const rng = new Rng(hashString(seed));
       const c = document.createElement('canvas');
@@ -973,6 +982,9 @@ export class BootUI {
     if (!ctx) return;
     const w = window.innerWidth;
     const h = window.innerHeight;
+    // Nothing can be painted into a collapsed host, and the geometry below
+    // would run on zeros. Bail before any drawImage — see buildViewportLayers.
+    if (w <= 0 || h <= 0) return;
     const now = this.reduced ? 0 : performance.now() / 1000;
     const p = this.displayP;
 
