@@ -217,6 +217,81 @@ async function main(): Promise<void> {
     await ctx.close();
   }
 
+  // --- run 4: COLLAPSED HOST — a zero-sized viewport must not kill the boot ---
+  // The /world-preview iframe reports innerWidth/innerHeight 0 whenever its
+  // pane is hidden or zero-width. Every viewport layer is sized from those, and
+  // a canvas with a 0 dimension is an illegal drawImage SOURCE, so the paint
+  // threw InvalidStateError and tripped the LAAS fatal handler — the whole
+  // world died for a cosmetic star field. Playwright cannot set a 0 viewport,
+  // so we reproduce exactly what the code reads.
+  {
+    const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+    const errors: string[] = [];
+    page.on('pageerror', (err) => {
+      errors.push(err.message);
+    });
+    await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await waitRig(page);
+    await setP(page, 0.45, 'gathering the light');
+    await page.waitForTimeout(400);
+
+    // Force the star/meadow path. Those are the only VIEWPORT-SIZED layers, so
+    // they are the ones that go 0-dimension and throw — but drawScene returns
+    // early once the matte layers are active, and off a local dev server they
+    // decode almost immediately. The real crash window is early boot, before
+    // that decode lands; without this the case cannot fail no matter how
+    // broken the guard is.
+    await page.evaluate(() => {
+      const rig = (window as unknown as { __rig: { ui: { layersActive: boolean } } }).__rig;
+      rig.ui.layersActive = false;
+    });
+
+    await page.evaluate(() => {
+      Object.defineProperty(window, 'innerWidth', { value: 0, configurable: true });
+      Object.defineProperty(window, 'innerHeight', { value: 0, configurable: true });
+      window.dispatchEvent(new Event('resize'));
+    });
+    // long enough for the debounced layer rebuild AND many rAF paints
+    await page.waitForTimeout(1200);
+    await setP(page, 0.75, 'still collapsed');
+    await page.waitForTimeout(600);
+
+    const collapsedErrors = errors.filter(
+      (e) => e.includes('drawImage') || e.includes('InvalidStateError'),
+    );
+    check(
+      'D1 a collapsed host raises no drawImage error',
+      collapsedErrors.length === 0,
+      collapsedErrors[0] ?? '',
+    );
+    check('D2 a collapsed host raises no page error at all', errors.length === 0, errors[0] ?? '');
+
+    // and it must RECOVER: the pane reopening rebuilds the layers and paints.
+    // Restore by redefining rather than deleting — `innerWidth` is an OWN
+    // property of window in Chromium, so `delete` leaves it undefined instead
+    // of falling back to the native getter, and the guard would keep bailing.
+    await page.evaluate(
+      ([vw, vh]) => {
+        Object.defineProperty(window, 'innerWidth', { value: vw, configurable: true });
+        Object.defineProperty(window, 'innerHeight', { value: vh, configurable: true });
+        window.dispatchEvent(new Event('resize'));
+      },
+      [W, H],
+    );
+    await page.waitForTimeout(1200);
+    const painted = await page.evaluate(() => {
+      const c = document.querySelector('#boot canvas') as HTMLCanvasElement | null;
+      return c ? { w: c.width, h: c.height } : null;
+    });
+    check(
+      'D3 reopening the host restores a painted canvas',
+      painted !== null && painted.w > 0 && painted.h > 0,
+      painted ? `${painted.w}x${painted.h}` : 'no canvas',
+    );
+    check('D4 recovery raises no page error', errors.length === 0, errors[0] ?? '');
+    await page.close();
+  }
+
   await browser.close();
   finish();
 }
