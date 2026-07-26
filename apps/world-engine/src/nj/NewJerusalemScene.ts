@@ -348,8 +348,8 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     {
       id: 'summit-overlook',
       name: 'Summit overlook',
-      detail: 'Rainbow halo and sea of glass',
-      citation: 'Rev 4:3,6',
+      detail: 'Sea of glass before the throne',
+      citation: 'Rev 4:6',
       pose: { p: [500, summitClearY, 1500], yaw: 0, pitch: -0.22 },
       mode: 'fly',
     },

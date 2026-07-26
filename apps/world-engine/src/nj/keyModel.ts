@@ -125,12 +125,15 @@ export function keyMarkers(
     p: [host.x * S, wy((host.y0 + host.y1) / 2), host.z * S],
   });
 
-  // Throne and glory (Rev 4:2-3; 21:23) — inside the upper glory volume,
-  // well above the crown so it reads against the sky.
+  // Throne and glory (Rev 4:2-3; 21:23) — the marker sat high against the sky
+  // when the rainbow ring hung above the crown. The ring is gone
+  // (2026-07-25) and nothing is drawn up there, so it drops to just over the
+  // crown: a reading-key marker points AT something, and one hanging in bare
+  // sky reads as a bug. Still clear of the sea-of-glass marker below it.
   out.push({
     slug: 'throne-of-god',
     label: 'Throne and Glory',
-    p: [0, wy(CITY_SUMMIT_Y + 10) + 15 * S, 0],
+    p: [0, wy(CITY_SUMMIT_Y + 2) + 6 * S, 0],
   });
 
   // Sea of glass (Rev 4:6) — the crown's south rim, off the river meridian.

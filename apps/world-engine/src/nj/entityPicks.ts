@@ -147,13 +147,19 @@ export function buildEntityPicks(
     }
   }
 
-  // Summit glory + rainbow ring (Rev 4:2-3; 21:23) — the conflated aniconic
-  // throne/glory primitive picks as the throne entity.
+  // Summit glory (Rev 4:2-3; 21:23) — the conflated aniconic throne/glory
+  // picks as the throne entity. The sphere used to be centred 10 local above
+  // the crown because the rainbow ring hung there; with the ring gone
+  // (2026-07-25) nothing renders above the crown, so it sits ON the crown
+  // instead — the emissive crown is what carries the glory now. A pick
+  // volume must never float in empty sky: clicking air and getting a card is
+  // the same shared-table desync the campus discipline forbids. It keeps the
+  // higher priority so it wins over the sea-of-glass band beneath it.
   vols.push({
     slug: 'throne-of-god',
     label: 'Summit · Throne and Glory',
     priority: 4,
-    shape: { kind: 'sphere', c: [0, wy(CITY_SUMMIT_Y + 10), 0], r: 21 * S },
+    shape: { kind: 'sphere', c: [0, wy(CITY_SUMMIT_Y + 2), 0], r: 12 * S },
   });
 
   // Sea of glass across the crown top (Rev 4:6).
