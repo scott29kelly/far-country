@@ -1067,13 +1067,14 @@ export function buildCityMassing(
     city.add(wedge);
   }
 
-  // Throne glory (2026-07-20, user directive): the discrete glowing sphere is
-  // REMOVED — no orb at the summit, here or in the boot backdrop. Rev 21:23's
-  // "the glory of God gives it light" is carried by the emissive crown and
-  // arcade glows; the rainbow ring below (Rev 4:3) remains the aniconic
-  // throne marker at the old glory height (ADR 0010 posture unchanged:
-  // abstract light only, now with no body at all).
-  const GLORY_Y = yBot + 10;
+  // Throne glory: NOTHING is built above the crown. The glowing sphere went
+  // first (2026-07-20), the spectral rainbow ring second (2026-07-25) — both
+  // on Scott's direct call. Rev 21:23's "the glory of God gives it light" is
+  // carried by the emissive crown, the sea of glass and the arcade glows;
+  // Rev 4:3's rainbow is NOT depicted. ADR 0010's aniconic posture is
+  // unchanged and now total: abstract light only, no discrete body at all.
+  // See RENDERING-DECISIONS entry #4. Do not reintroduce a summit object
+  // without his word.
 
   // Sea of glass before the throne (Rev 4:6, clear tier — rendered as the
   // figure of the vision per ADR 0009 rule 2): a reflective crystalline
@@ -1093,49 +1094,6 @@ export function buildCityMassing(
   sea.position.y = yBot + 0.06;
   sea.receiveShadow = true;
   city.add(sea);
-
-  // The rainbow around the throne (Rev 4:3) — full spectrum with emerald
-  // prominence per RENDERING-DECISIONS #4: a horizontal spectral ring
-  // encircling the glory, additive-glow read; the emerald band alone grazes
-  // the bloom threshold (its stated prominence).
-  const RING_R = 17;
-  const RING_TUBE = 2.4;
-  const rainGeo = new TorusGeometry(RING_R, RING_TUBE, 16, 96);
-  rainGeo.rotateX(Math.PI / 2);
-  const rainMat = new MeshStandardNodeMaterial();
-  rainMat.transparent = true;
-  rainMat.depthWrite = false;
-  rainMat.side = DoubleSide;
-  const rad = positionLocal.xz.length() as unknown as NF;
-  const fSpec = rad.sub(RING_R - RING_TUBE).div(2 * RING_TUBE).clamp(0, 1) as unknown as NF;
-  const cBlue = mix(
-    vec3(0.45, 0.15, 0.85),
-    vec3(0.15, 0.35, 0.95),
-    smoothstep(0.0, 0.22, fSpec) as unknown as NF,
-  ) as unknown as NV3;
-  const cEmerald = mix(
-    cBlue,
-    vec3(0.05, 0.9, 0.4),
-    smoothstep(0.22, 0.45, fSpec) as unknown as NF,
-  ) as unknown as NV3;
-  const cYellow = mix(
-    cEmerald,
-    vec3(0.85, 0.85, 0.2),
-    smoothstep(0.58, 0.78, fSpec) as unknown as NF,
-  ) as unknown as NV3;
-  const cRed = mix(
-    cYellow,
-    vec3(0.9, 0.2, 0.15),
-    smoothstep(0.78, 0.95, fSpec) as unknown as NF,
-  ) as unknown as NV3;
-  rainMat.colorNode = vec3(0, 0, 0) as unknown as typeof rainMat.colorNode;
-  rainMat.emissiveNode = cRed.mul(2.1) as unknown as typeof rainMat.emissiveNode;
-  rainMat.opacityNode = smoothstep(0.0, 0.12, fSpec)
-    .mul(smoothstep(1.0, 0.88, fSpec) as unknown as NF)
-    .mul(0.75) as unknown as typeof rainMat.opacityNode;
-  const rainbow = new Mesh(rainGeo, rainMat);
-  rainbow.position.y = GLORY_Y;
-  city.add(rainbow);
 
   return city;
 }

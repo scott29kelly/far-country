@@ -222,6 +222,36 @@ debate, so no separate entry.
 - Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/components/Throne.tsx` (`RainbowHalo`, sea of glass)
 - Code (current `/world-preview`, **implemented 2026-07-02** in the M3 material pass): `apps/world-engine/src/nj/CityMassing.ts` now renders a horizontal full-spectrum ring (violet → emerald-prominent green → red, the emerald band alone grazing the bloom threshold) encircling the summit glory, plus a reflective crystalline sea-of-glass disc across the crown top. The glory sphere itself remains the conflated throne/glory-light primitive (aniconic per ADR 0010); a distinct throne treatment stays open.
 
+### Addendum (2026-07-25) — the rainbow is no longer depicted
+
+Scott saw the ring in-scene and called it: removed. Nothing is now built above
+the crown. The glory sphere had already gone the same way on 2026-07-20, so the
+summit carries **no discrete object at all** — ADR 0010's aniconic posture,
+previously a statement about *how* the throne is depicted, is now total.
+
+The reasoning above is untouched and stands: **if** the rainbow is rendered, it
+is a full spectrum with emerald prominence. What changed is the prior question
+of *whether* to render it. That is a rendering choice, not a claim about the
+text: Rev 4:3 remains in the dataset with its `debated` tier, and the browse UI
+and the HUD still surface it. This entry now records that the world declines to
+depict it — the honest position when a depiction reads as an artifact rather
+than as glory.
+
+Consequences carried through in the same pass, since geometry and analytic
+volumes must agree:
+
+- The `throne-of-god` **pick volume** was a sphere centred 10 local above the
+  crown, sized to enclose the ring. It now sits on the crown (`CITY_SUMMIT_Y +
+  2`, r 12 local) — the emissive crown and the sea of glass are what carry
+  Rev 21:23's light now. A pick floating in empty sky would pop a card for a
+  click on nothing.
+- The **reading-key marker** dropped with it, for the same reason: a marker
+  points at something.
+- The `summit-overlook` navigation target reads "Sea of glass before the
+  throne" (Rev 4:6); its old copy advertised the halo.
+
+Do not reintroduce a summit object without Scott's word.
+
 ---
 
 ## Entry #5 — New-earth landscape: the engine's wild terrain, unchanged (not an idealized paradise)

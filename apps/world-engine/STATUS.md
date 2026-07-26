@@ -138,6 +138,39 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-25) SUMMIT RAINBOW RING REMOVED (Scott's call) + COLLAPSED-HOST
+BOOT FIX.**
+
+- Scott saw the spectral ring floating over the crown and called it: gone.
+  `CityMassing` builds NOTHING above the crown now — the glory sphere went
+  2026-07-20, the Rev 4:3 rainbow ring 2026-07-25. ADR 0010's aniconic
+  posture is total: the emissive crown, the sea of glass and the arcade
+  glows carry Rev 21:23's light, and Rev 4:3 is simply not depicted. The
+  descriptor keeps its `debated` tier in the dataset and still shows in the
+  browse UI and HUD — this is a rendering choice, not a claim about the text.
+  RENDERING-DECISIONS #4 gains an addendum saying so.
+- Geometry and analytic volumes must agree, so two anchors moved with it:
+  the `throne-of-god` PICK sphere (was centred 10 local above the crown to
+  enclose the ring — now on the crown at SUMMIT+2, r 12) and its reading-key
+  MARKER. A pick volume or key marker left hanging in empty sky pops a card
+  for a click on nothing, which is the same desync the shared-table
+  discipline exists to prevent. `summit-overlook` nav copy now reads "Sea of
+  glass before the throne" (Rev 4:6).
+- Separately, from the same session: BootUI/Engine now survive a COLLAPSED
+  HOST. A hidden or zero-width /world-preview iframe reports innerWidth/
+  innerHeight 0; the boot's star and meadow layers are sized from those, and
+  a 0-dimension canvas is an illegal drawImage SOURCE — it threw
+  InvalidStateError and the LAAS fatal handler killed the world for a
+  cosmetic star field. buildViewportLayers and drawScene now bail on a zero
+  viewport, and Engine's resize holds the last good size (0/0 is NaN, and a
+  NaN camera aspect never recovers). probe-bootrite run 4 (D1-D4) pins it,
+  and it FORCES layersActive false first — otherwise the matte layers decode
+  before the star path runs and the case cannot fail however broken the
+  guard is. Verified failing without the guard, passing with it.
+- Battery: CPU entitypick, visualkey, population, cityfloors, walkfling,
+  wallcollide, ascent, stages ALL PASS; live navigation, arrival, resize,
+  bootrite ALL PASS; bootui done. tsc + build clean, re-vendored.
+
 **(2026-07-24, later) PHASE C SLICE 2 — the `arcade` detail stage.**
 
 - `stages.ts` gains an eighth stage, `arcade`, and it is the first DETAIL
