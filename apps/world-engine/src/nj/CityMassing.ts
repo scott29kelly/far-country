@@ -50,9 +50,12 @@ import {
   MeshStandardNodeMaterial,
 } from 'three/webgpu';
 import {
+  cameraPosition,
   float,
+  floor as tslFloor,
   fract,
   instanceIndex,
+  max as tslMax,
   mix,
   normalWorld,
   positionLocal,
@@ -126,6 +129,97 @@ function riverSlot(face: Face, u: number): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Bay rhythm
+// ---------------------------------------------------------------------------
+
+/**
+ * Relative bay widths across one face, mean 1 (so `W / n` stays the unit and
+ * the tier's `arches` count in config still means what it said).
+ *
+ * WHY THIS EXISTS. Every bay on every face of every tier used to be the same
+ * arch at the same spacing, and a 2026-07-29 GPU pass found that reads as a
+ * tiled panel rather than as architecture at every distance — the
+ * CITY-QUALITY-BAR Assassin's Creed benchmark inverted, since kit-bashed
+ * density needs *varied* repeated modules to hold up. Per-instance colour
+ * jitter was already there and does not help: the eye reads RHYTHM, not noise.
+ *
+ * So the widths are AUTHORED, not randomised: a dominant centre bay on the
+ * meridian, major bays flanking it, and narrow bays closing the corners — the
+ * ABCBA cadence monumental arcades actually use. Deterministic and identical
+ * on all four faces, because a holy mountain that is not symmetric about its
+ * meridians would be asserting something the composition does not mean.
+ *
+ * This is interpretive articulation, not a claim: the text fixes the wall, the
+ * gates and their tribes, not a bay count or an arch profile
+ * (docs/plans/procedural-asset-authoring.md section 6.1).
+ */
+function bayRhythm(n: number): number[] {
+  const GRAND = 1.34;
+  const MAJOR = 1.0;
+  const MINOR = 0.79;
+  let w: number[];
+  if (n <= 1) w = [MAJOR];
+  else if (n === 2) w = [MAJOR, MAJOR];
+  else if (n % 2 === 1) {
+    // odd: a single grand bay on the meridian, minors at both corners
+    w = Array.from({ length: n }, (_, i) =>
+      i === (n - 1) / 2 ? GRAND : i === 0 || i === n - 1 ? MINOR : MAJOR,
+    );
+  } else {
+    // even: no centre bay to grant, so the pair astride the meridian carries it
+    const c = n / 2;
+    w = Array.from({ length: n }, (_, i) =>
+      i === c - 1 || i === c ? MAJOR : i === 0 || i === n - 1 ? MINOR : MAJOR * 0.9,
+    );
+  }
+  const sum = w.reduce((a, b) => a + b, 0);
+  return w.map((v) => (v * n) / sum);
+}
+
+/**
+ * Radial course widths across a terrace pavement, inner edge to outer lip,
+ * normalised to sum to 1.
+ *
+ * Authored for the same reason `bayRhythm` is: evenly divided courses read as
+ * a running track, not as a pavement. Real monumental paving is a BORDER and a
+ * FIELD — tight courses banding the edges where the eye needs the boundary
+ * stated, broad plain courses across the middle where it does not. The
+ * profile is symmetric because the pavement is a ring and both its edges are
+ * boundaries: the riser of the tier above, and the drop at the lip.
+ */
+function pavementCourses(): number[] {
+  const w = [0.045, 0.03, 0.055, 0.22, 0.26, 0.22, 0.055, 0.03, 0.045];
+  const sum = w.reduce((a, b) => a + b, 0);
+  return w.map((v) => v / sum);
+}
+
+/** A run of bays of one width — one geometry, one InstancedMesh, one draw. */
+type BayClass = { key: string; width: number; centres: number[] };
+
+/**
+ * Group a face's rhythm into width classes. Instancing needs one geometry per
+ * mesh, so distinct widths must become distinct meshes; quantising to 1e-4
+ * keeps that count at the two or three the rhythm actually contains rather
+ * than one per bay.
+ */
+function bayClasses(n: number, W: number): BayClass[] {
+  const rel = bayRhythm(n);
+  const unit = W / n;
+  const byKey = new Map<string, BayClass>();
+  let cursor = -W / 2;
+  for (const r of rel) {
+    const width = r * unit;
+    const centre = cursor + width / 2;
+    cursor += width;
+    const key = width.toFixed(4);
+    const cls = byKey.get(key) ?? { key, width, centres: [] };
+    cls.centres.push(centre);
+    byKey.set(key, cls);
+  }
+  return [...byKey.values()];
+}
+
+// ---------------------------------------------------------------------------
 // Probe-GI opt-in (fragment stage — tier faces are far larger than the 16 m
 // probe grid, so the veg-style vertex hoist would smear; see Forests.patchGI)
 // ---------------------------------------------------------------------------
@@ -166,6 +260,51 @@ function trimGoldPlain(gi: ProbeGI | null): MeshStandardNodeMaterial {
   m.emissiveIntensity = FAM.gold.selfLight;
   patchCityGI(m, gi);
   return m;
+}
+
+/**
+ * Paving articulation for the terrace pavements: joint grooves and a faint
+ * per-slab tone variation on a world-space grid.
+ *
+ * WHY A MATERIAL AND NOT GEOMETRY. Pillar A's "geometry, not textures" rule
+ * is written for WALL planes and specifies "~0.3 m of real coursing/reveal
+ * depth" — a spec for reveals you look ACROSS. A pavement is looked ALONG,
+ * and what breaks up a floor is the joint between slabs, which on real
+ * monumental paving is one to three centimetres. Modelling 2.4 m slabs in real
+ * relief across a 490 m annulus is hundreds of thousands of boxes for a
+ * feature whose entire depth is below a pixel at every viewing angle a walker
+ * can take. The merged course bands carry the mid and far read; this carries
+ * the near one, where the pavement is otherwise a single unbroken plane
+ * filling most of the frame.
+ *
+ * World-space, so the grid stays put as the walker crosses it and does not
+ * swim with the mesh; and shared by both pavement materials, so a course
+ * boundary never breaks the joint lattice running across it.
+ */
+function pavingDetail(m: MeshStandardNodeMaterial, base: Color): void {
+  const PITCH = 0.12; // local units — 2.4 m slabs at NJ_SCALE
+  const p = positionWorld.xz.div(PITCH * 20);
+  const g = fract(p) as unknown as { x: NF; y: NF };
+  const dx = g.x.sub(0.5).abs() as unknown as NF;
+  const dz = g.y.sub(0.5).abs() as unknown as NF;
+  // 0 across a slab face, 1 in the joint
+  const joint = smoothstep(0.44, 0.5, tslMax(dx, dz) as unknown as NF) as unknown as NF;
+  // per-slab tone: a cheap hash of the slab's integer cell
+  const cell = tslFloor(p) as unknown as { x: NF; y: NF };
+  const h = fract(
+    cell.x.mul(0.1031).add(cell.y.mul(0.1741)).add(cell.x.mul(cell.y).mul(0.0973)).sin().mul(43758.5453),
+  ) as unknown as NF;
+  const tone = h.mul(0.09).add(0.955) as unknown as NF;
+  // Fade the lattice out with distance. A fixed-width analytic grid aliases
+  // into crawling moire once a slab is under a pixel, and TRAA turns that into
+  // shimmer rather than removing it. Past ~130 m the merged course bands are
+  // carrying the read anyway, so the joints have nothing left to do.
+  const near = positionWorld.distance(cameraPosition) as unknown as NF;
+  const fade = smoothstep(260, 90, near) as unknown as NF;
+  const j = joint.mul(fade) as unknown as NF;
+  m.colorNode = vec3(base.r, base.g, base.b)
+    .mul(mix(float(1.0), tone, fade) as unknown as NF)
+    .mul(mix(float(1.0), float(0.72), j) as unknown as NF) as unknown as NV3;
 }
 
 /** Ivory/white course material — the pale bands alternating with the gold. */
@@ -762,6 +901,23 @@ export function buildCityMassing(
   const trimInst = trimGoldInstanced(gi);
   const trimPlain = trimGoldPlain(gi);
   const ivory = ivoryMaterial(gi);
+  // Paving gold: a VARIATION on the gold family for the terrace course bands,
+  // not a family of its own (see CityPalette's scope note). A floor is walked,
+  // not polished — the trim's 0.85 metalness would make a 490 m terrace a
+  // mirror and blow the sun straight back at the camera, so the metal drops
+  // and the roughness rises while the hue stays the family's.
+  const pavingGold = ivoryMaterial(gi);
+  pavingGold.color.copy(GOLD).lerp(IVORY, 0.42);
+  pavingGold.metalness = 0.18;
+  pavingGold.roughness = 0.62;
+  pavingGold.emissive.copy(pavingGold.color);
+  pavingGold.emissiveIntensity = FAM.ivory.selfLight;
+  pavingDetail(pavingGold, pavingGold.color);
+  // the ivory courses share the same joint lattice — a separate ivory instance
+  // so the cornice fascias and arcade bands keep the plain material
+  const pavingIvory = ivoryMaterial(gi);
+  pavingIvory.roughness = 0.58;
+  pavingDetail(pavingIvory, pavingIvory.color);
   const pearl = pearlMaterial();
 
   // Street-of-gold apron around the base.
@@ -886,44 +1042,73 @@ export function buildCityMassing(
 
       const W = 2 * t.half;
       const bay = W / t.arches;
-      const ow = bay * 0.62;
+      const classes = bayClasses(t.arches, W);
       const coursesBelow = ti === 1 ? 2 : 1;
       const winBot = yBot + coursesBelow * 4.6 + 1.4;
-      const winH = Math.max(8, yTop - 5.5 - winBot - ow / 2);
-      const paneH = winH + ow / 2;
+      // Every class shares ONE head top, so a wider bay reads as a fuller,
+      // lower-springing arch rather than as the same arch scaled — arcades of
+      // mixed bay width share their impost line, and letting the heads
+      // stagger would read as an error rather than as a rhythm.
+      const headTop = yTop - 5.5;
 
       // The glass skin is the tier's SURFACE, not ornament — it stays on
       // through `-arcade` (the arch frames around it are the ornament).
-      const glassGeo = glassPaneGeometry(ow, winH);
-      const glassMat = goldGlassMaterial(f, paneH);
-      const glassPlaces: Placement[] = [];
-      const framePlaces: Placement[] = [];
-      for (const face of FACES) {
-        for (let i = 0; i < t.arches; i++) {
-          const u = -W / 2 + bay * (i + 0.5);
-          glassPlaces.push({ u, y: winBot, off: t.half + TIER_GLASS_PROUD, face });
-          framePlaces.push({ u, y: winBot, off: t.half + 0.7, face });
+      // One InstancedMesh per width class: three widths cost three draws, not
+      // three hundred, and these frames are draw-submission bound already.
+      for (const cls of classes) {
+        const ow = cls.width * 0.62;
+        const paneH = Math.max(8 + ow / 2, headTop - winBot);
+        const winH = paneH - ow / 2;
+        const glassPlaces: Placement[] = [];
+        const framePlaces: Placement[] = [];
+        for (const face of FACES) {
+          for (const u of cls.centres) {
+            glassPlaces.push({ u, y: winBot, off: t.half + TIER_GLASS_PROUD, face });
+            framePlaces.push({ u, y: winBot, off: t.half + 0.7, face });
+          }
+        }
+        const glassMesh = instancedOnFaces(
+          glassPaneGeometry(ow, winH),
+          goldGlassMaterial(f, paneH),
+          glassPlaces,
+          { castShadow: false },
+        );
+        glassMesh.receiveShadow = false;
+        city.add(glassMesh);
+        if (arcade) {
+          const frameGeo = archFrameGeometry(ow, winH, cls.width * 0.07, 2.4);
+          city.add(instancedOnFaces(frameGeo, trimInst, framePlaces));
         }
       }
-      const glassMesh = instancedOnFaces(glassGeo, glassMat, glassPlaces, { castShadow: false });
-      glassMesh.receiveShadow = false;
-      city.add(glassMesh);
 
       if (arcade) {
-        const frameGeo = archFrameGeometry(ow, winH, bay * 0.07, 2.4);
-        city.add(instancedOnFaces(frameGeo, trimInst, framePlaces));
-
-        // Full-height fluted piers at the bay lines.
+        // Full-height fluted piers at the bay LINES, which the rhythm has
+        // made non-uniform. Corner piers get their own heavier geometry: the
+        // corners are where a stepped mass either reads as built or as a
+        // extruded box, and the old uniform run gave them nothing.
+        const lines: number[] = [-W / 2];
+        {
+          // walk the AUTHORED order — `classes` is grouped by width and has
+          // lost it
+          let cursor = -W / 2;
+          for (const r of bayRhythm(t.arches)) {
+            cursor += (r * W) / t.arches;
+            lines.push(cursor);
+          }
+        }
         const pierGeo = flutedPierGeometry(bay * 0.2, H - 2.2, 3);
+        const cornerGeo = flutedPierGeometry(bay * 0.34, H - 1.4, 4.2);
         const pierPlaces: Placement[] = [];
+        const cornerPlaces: Placement[] = [];
         for (const face of FACES) {
-          for (let i = 0; i <= t.arches; i++) {
-            const u = -W / 2 + bay * i;
+          for (const u of lines) {
             if (riverSlot(face, u)) continue; // the cascade owns the meridian
-            pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
+            if (Math.abs(Math.abs(u) - W / 2) < 1e-6) cornerPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
+            else pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
           }
         }
         city.add(instancedOnFaces(pierGeo, trimInst, pierPlaces));
+        city.add(instancedOnFaces(cornerGeo, trimInst, cornerPlaces));
 
         // Gold frieze fascia between the glass heads and the cornice.
         for (const face of FACES) {
@@ -946,9 +1131,15 @@ export function buildCityMassing(
     const corniceDrop = ti === last ? 0.15 : 0;
     const corniceY = yTop - CORNICE_T / 2 - corniceDrop;
     const slabHalf = t.half + 2.5;
-    const addSlab = (sx0: number, sx1: number, sz0: number, sz1: number): void => {
+    const addSlab = (
+      sx0: number,
+      sx1: number,
+      sz0: number,
+      sz1: number,
+      mat: MeshStandardNodeMaterial = ivory,
+    ): void => {
       if (sx1 - sx0 < 0.01 || sz1 - sz0 < 0.01) return;
-      const slab = new Mesh(new BoxGeometry(sx1 - sx0, CORNICE_T, sz1 - sz0), ivory);
+      const slab = new Mesh(new BoxGeometry(sx1 - sx0, CORNICE_T, sz1 - sz0), mat);
       slab.position.set((sx0 + sx1) / 2, corniceY, (sz0 + sz1) / 2);
       slab.castShadow = true;
       slab.receiveShadow = true;
@@ -967,8 +1158,75 @@ export function buildCityMassing(
         xCursor = h.x1;
       }
       addSlab(xCursor, slabHalf, hz0, hz1);
-    } else {
+    } else if (ti === last || ti + 1 >= tiers.length) {
       addSlab(-slabHalf, slabHalf, -slabHalf, slabHalf);
+    } else {
+      // TERRACE PAVEMENT COURSING.
+      //
+      // These cornice tops are the largest surfaces in most framings of the
+      // city — a 2026-07-29 GPU pass found four of them reading as blank
+      // white planes filling more screen than every piece of ornament
+      // combined, and from a walker standing on one the pavement is ~65% of
+      // the frame with nothing in it. CITY-QUALITY-BAR pillar A is written
+      // for "every wall plane"; the horizontal surfaces slipped the clause.
+      //
+      // The read comes from CONCENTRIC COURSE BANDS, alternating pale ivory
+      // with a soft paving gold (Rev 21:21's street of gold, at floor
+      // roughness rather than the trim's mirror metal). Flat inlay, not
+      // relief, and that is a considered reading of the pillar rather than a
+      // dodge: a monumental pavement gets its scale and its centre from
+      // banded inlay — Siena, St Peter's — while raised relief underfoot
+      // would be a lie here, because cityCollide claims the whole ring at one
+      // height and a walker would clip straight through any kerb we drew. A
+      // real parapet or plinth course needs a collision change and is left as
+      // the follow-up.
+      //
+      // Bands abut and never overlap: the one-owner-per-pavement-plane rule
+      // that the 2026-07-19 z-fight fix established still holds exactly.
+      const inner = tiers[ti + 1].half;
+      addSlab(-inner, inner, -inner, inner); // covered by the tier above
+      // MERGED, so the course profile is an art decision rather than a
+      // draw-call budget: one mesh per material for the whole ring however
+      // many courses it has.
+      const widths = pavementCourses();
+      const span = slabHalf - inner;
+      const geoA: BufferGeometry[] = [];
+      const geoB: BufferGeometry[] = [];
+      const push = (
+        into: BufferGeometry[],
+        sx0: number,
+        sx1: number,
+        sz0: number,
+        sz1: number,
+      ): void => {
+        if (sx1 - sx0 < 0.01 || sz1 - sz0 < 0.01) return;
+        const g = new BoxGeometry(sx1 - sx0, CORNICE_T, sz1 - sz0);
+        g.translate((sx0 + sx1) / 2, corniceY, (sz0 + sz1) / 2);
+        into.push(g);
+      };
+      let r0 = inner;
+      widths.forEach((w, k) => {
+        const r1 = r0 + span * w;
+        const into = k % 2 === 1 ? geoB : geoA;
+        push(into, -r1, r1, -r1, -r0); // north
+        push(into, -r1, r1, r0, r1); // south
+        push(into, -r1, -r0, -r0, r0); // west
+        push(into, r0, r1, -r0, r0); // east
+        r0 = r1;
+      });
+      for (const [parts, mat] of [
+        [geoA, pavingIvory],
+        [geoB, pavingGold],
+      ] as const) {
+        if (parts.length === 0) continue;
+        const merged = mergeGeometries(parts, false);
+        for (const g of parts) g.dispose();
+        if (!merged) continue;
+        const mesh = new Mesh(merged, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        city.add(mesh);
+      }
     }
 
     // Gold dentil course under the cornice lip.
