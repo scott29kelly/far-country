@@ -108,6 +108,11 @@ export interface LaasHooks {
   /** in-scene reading-key anchors (roadmap M3.5) — installed by scenes with
    *  cited content (nj/keyModel.ts builds; VisualKeyUI projects; probes read) */
   entityKeyMarkers: EntityKeyMarker[];
+  /** composed REVIEW framings — camera setups a scene publishes so visual
+   *  judgment is repeatable (tools/cityshots.ts shoots the whole set in one
+   *  boot; ?shot=N and the digit keys jump to one). Tooling only: a framing
+   *  asserts nothing about the content it points at. */
+  reviewFramings: ReviewFraming[];
 }
 
 /** a picked structure: canonical entity slug + in-world label + hit distance */
@@ -115,6 +120,17 @@ export type EntityPickResult = { slug: string; label: string; t: number };
 
 /** a reading-key anchor: canonical entity slug + fallback label + world pos */
 export type EntityKeyMarker = { slug: string; label: string; p: [number, number, number] };
+
+/** a composed review framing: stable id, what it is composed to judge, pose */
+export type ReviewFraming = {
+  id: string;
+  name: string;
+  /** the quality-bar clause this framing exercises */
+  tests: string;
+  pose: CamPose;
+  /** authored time of day for the framing */
+  tod: number;
+};
 
 declare global {
   interface Window {
@@ -144,6 +160,7 @@ export function initHooks(): LaasHooks {
     entityPick: null,
     entityNear: null,
     entityKeyMarkers: [],
+    reviewFramings: [],
   };
   window.__laas = hooks;
   return hooks;
