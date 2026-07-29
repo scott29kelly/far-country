@@ -377,17 +377,68 @@ hardware.
 
 ---
 
-## 8. Open questions for Scott
+## 8. Open questions for Scott — ANSWERED 2026-07-29
 
 1. **Is the stylized/painterly register on the table at all**, or is the target
    staying where `PROJECT_LAAS_v2.md` put it (UE5-class reference frames)? This
    is upstream of most art-direction work and touches ADR 0009 rule 2.
+
+   **ANSWERED: the target stays photoreal.** ADR 0009 rule 2 is untouched and
+   no superseding ADR is needed. The consequence for this note is that the
+   city's remaining gap is re-diagnosed as an **optics** problem (flat
+   Lambertian gold, no gem transmission read, dead-flat pavements) rather than
+   a rendering-register problem — which promotes **Lever 4** from "cleanest
+   win" to the substantive art-direction work, with Lever 3 as its precondition.
+
 2. **Kit extraction now, or after the current Phase C remainder** (stage-granular
    `CityMassing` toggling, the timed arrival sequence)? They touch the same
    file and would conflict.
+
+   **ANSWERED by delegation:** Scott's direction is to optimise purely for the
+   quality of the finished world, and to sequence accordingly. Recorded order,
+   with §7's pilot amended — **Lever 2 first, not Lever 3**:
+
+   1. **Lever 2 (review surface).** Promoted to first because the constraint it
+      removes is now the binding one. Every city framing in
+      `CITY-QUALITY-BAR.md` had gone stale (the 2026-07-01 poses no longer
+      frame the city at all — the massing outgrew them), and each still costs a
+      ~50 s world boot, so a six-shot look at the city costs six minutes and is
+      not repeatable across builds. A composed framing table plus a one-boot
+      contact sheet makes that one boot for the whole set, and makes framings
+      an owned artifact that cannot silently go stale again. Levers 3 and 4 are
+      both judged visually, so this multiplies everything after it.
+   2. **Lever 3** (palette into `config.ts`) — precondition for coherent
+      material work, and now reviewable.
+   3. **Lever 4** (material optics, literature-grounded) — the substantive win
+      under a photoreal target.
+   4. **Lever 1** (kit extraction) — last, and the point at which it collides
+      with the Phase C remainder. Sequence that collision when we get there.
+
 3. **Does an ADR belong here?** Lever 1 changes how city geometry is authored,
    which is arguably the same class of decision as ADR 0017 (Scripture as data).
    My read is that Levers 2–5 are plainly under existing decisions and Lever 1
    is the only candidate.
+
+   **ANSWERED: yes, one ADR, written with Lever 1 rather than ahead of it.**
+   Sharpening the rationale: the ADR-worthy decision is not "extract a kit" —
+   refactors do not need ADRs. It is that a kit is a **detail-generating
+   machine**, and per §6.1 detail in this project is a truth claim. What the
+   ADR must fix is the rule that keeps generated detail from asserting
+   anything. That is the same class of decision as ADR 0017.
+
 4. **Confirm the classification rule in §6.1** is what you want before any kit
    data model is designed — it is cheap to build in and expensive to retrofit.
+
+   **ANSWERED: confirmed, with one amendment — the classification is not
+   binary.** The gates are the counterexample. A gate is *cited* in its
+   existence (Rev 21:12 twelve gates and their tribes, Rev 21:21 each a single
+   pearl) and *interpretive* in its articulation (voussoir count, fluting
+   pitch, reveal depth, jamb profile — the text fixes none of these). A
+   two-state `cited | declared-art` flag forces a choice between over-claiming
+   the ornament and dropping the citation from a cited structure, and both are
+   wrong. A kit module record must therefore carry its citation for **what the
+   text fixes** and mark the remainder as articulation, with `entityPicks.ts`
+   and the reading key keyed off the cited part only. The
+   RENDERING-DECISIONS #10 precedent (the processional ascent: uncited,
+   unpickable) remains correct for modules that are interpretive *all the way
+   down* — it is the degenerate case of this rule, not a different rule.
