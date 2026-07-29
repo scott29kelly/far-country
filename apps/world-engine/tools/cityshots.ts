@@ -13,8 +13,24 @@
  *   npx tsx tools/cityshots.ts
  *   npx tsx tools/cityshots.ts --only foundation-course,arcade-bay --w 1600 --h 1000
  *   npx tsx tools/cityshots.ts --dir shots/city/before --settle 24
+ *   npx tsx tools/cityshots.ts --dir shots/city/after --framealign 0
+ *
+ * `--framealign N` pins every capture to the same frame-indexed jitter phase
+ * (TRAA camera offsets, contact-shadow and cloud hash offsets cycle mod 1024),
+ * so two sheets from two DIFFERENT builds are pixel-comparable through
+ * `tools/diff.ts`. Without it two captures of an identical scene differ by
+ * ~20-27% of pixels from phase alone, which drowns any real change. Use it
+ * whenever a sheet is going to be diffed rather than just looked at.
+ *
+ * COST: alignment spins up to 1024 real frames PER FRAMING. On a fast GPU that
+ * is seconds; on an integrated part running this scene at ~15-25 fps it is up
+ * to ~70 s each, and a full aligned sheet is ~10 minutes of unbroken
+ * rendering — enough to lose the WebGPU device. Prefer `--framealign` with
+ * `--only` on the two or three framings a change should actually move. A lost
+ * context is reported per framing and the sheet still lists what was captured.
  *
  * Flags: --only <ids>  --dir <path>  --w/--h  --settle N  --tod H  --stages S
+ *        --framealign N
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -43,6 +59,8 @@ async function main(): Promise<void> {
   const settle = Number(args['settle'] ?? 20);
   const dir = args['dir'] ?? 'shots/city';
   const only = args['only'] ? new Set(args['only'].split(',').map((s) => s.trim())) : null;
+  const frameAlign =
+    args['framealign'] !== undefined ? ((Number(args['framealign']) % 1024) + 1024) % 1024 : null;
 
   const extra: Record<string, string> = {};
   if (args['stages']) extra['stages'] = args['stages'];
@@ -77,31 +95,63 @@ async function main(): Promise<void> {
     }
 
     mkdirSync(dir, { recursive: true });
-    const sheet: { id: string; name: string; tests: string; file: string; stats: unknown }[] = [];
+    const sheet: {
+      id: string;
+      name: string;
+      tests: string;
+      file: string;
+      phase: number | null;
+      stats: unknown;
+    }[] = [];
 
     for (const f of framings) {
       if (only && !only.has(f.id)) continue;
-      // Re-settle from scratch at every framing. A cut to a wildly different
-      // exposure (gallery interior -> 10 km aerial) needs the auto-exposure
-      // and TRAA histories to converge or the still reads as a mis-graded
-      // frame rather than as the framing's actual look.
-      await page.evaluate(
-        async ([pose, tod, frames]) => {
-          window.__laas.setTimeOfDay?.(tod as number);
-          window.__laas.setPose?.(pose as Parameters<NonNullable<Window['__laas']['setPose']>>[0]);
-          if (window.__laas.settle) await window.__laas.settle(frames as number);
-        },
-        [f.pose, f.tod, settle] as const,
-      );
-      const file = `${dir}/${f.id}.png`;
-      await page.screenshot({ path: file });
-      const stats = await page.evaluate(() => {
-        const s = window.__laas.stats;
-        return s ? { fps: s.fps, drawCalls: s.drawCalls, triangles: s.triangles } : null;
-      });
-      sheet.push({ id: f.id, name: f.name, tests: f.tests, file, stats });
-      const tri = stats ? `${(stats.triangles / 1e6).toFixed(1)}M tris` : 'no stats';
-      console.log(`[cityshots] ${f.id.padEnd(22)} ${tri.padStart(10)}  -> ${file}`);
+      try {
+        // Re-settle from scratch at every framing. A cut to a wildly different
+        // exposure (gallery interior -> 10 km aerial) needs the auto-exposure
+        // and TRAA histories to converge or the still reads as a mis-graded
+        // frame rather than as the framing's actual look.
+        await page.evaluate(
+          async ([pose, tod, frames]) => {
+            window.__laas.setTimeOfDay?.(tod as number);
+            window.__laas.setPose?.(
+              pose as Parameters<NonNullable<Window['__laas']['setPose']>>[0],
+            );
+            if (window.__laas.settle) await window.__laas.settle(frames as number);
+          },
+          [f.pose, f.tod, settle] as const,
+        );
+        let phase: number | null = null;
+        if (frameAlign !== null) {
+          phase = await page.evaluate(async (t) => {
+            const s = window.__laas;
+            if (!s.settle || !s.stats) return -1;
+            for (let guard = 0; guard < 1100; guard++) {
+              if (s.stats.frame % 1024 === t) break;
+              await s.settle(1);
+            }
+            return s.stats.frame % 1024;
+          }, frameAlign);
+          if (phase !== frameAlign) {
+            console.warn(`[cityshots] ${f.id}: alignment missed (phase ${phase}) — not diffable`);
+          }
+        }
+        const file = `${dir}/${f.id}.png`;
+        await page.screenshot({ path: file });
+        const stats = await page.evaluate(() => {
+          const s = window.__laas.stats;
+          return s ? { fps: s.fps, drawCalls: s.drawCalls, triangles: s.triangles } : null;
+        });
+        sheet.push({ id: f.id, name: f.name, tests: f.tests, file, phase, stats });
+        const tri = stats ? `${(stats.triangles / 1e6).toFixed(1)}M tris` : 'no stats';
+        console.log(`[cityshots] ${f.id.padEnd(22)} ${tri.padStart(10)}  -> ${file}`);
+      } catch (e) {
+        // A long aligned run can lose the WebGPU device. Report which framing
+        // died and keep the partial sheet — a sheet of eight is still worth
+        // having, and silently truncating one would be read as "unchanged".
+        console.error(`[cityshots] ${f.id}: FAILED — ${e instanceof Error ? e.message : e}`);
+        break;
+      }
     }
 
     writeFileSync(`${dir}/sheet.json`, JSON.stringify(sheet, null, 2));

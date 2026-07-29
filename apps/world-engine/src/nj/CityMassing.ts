@@ -64,6 +64,7 @@ import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { NF, NU, NV3 } from '../gpu/TSLTypes';
 import { slotHash } from '../render/VegInstance';
 import { ascentRamps, baseCorniceHoles, RAMP_SINK, rampSurfaceY } from './ascentModel';
+import { NJ_CONFIG } from './config';
 import {
   CITY_TIERS,
   FOUNDATION_BAND_OFFSETS,
@@ -80,11 +81,22 @@ import {
   type Side,
 } from './cityModel';
 
-const GOLD = new Color(0xd9a441);
-const CRYSTAL = new Color(0xdfeaf0);
-const PEARL = new Color(0xf3ecdf);
-const IVORY = new Color(0xf1e9d7);
-const JASPER = new Color(0xbfd6d2); // pale crystal-jasper (stylised, ADR 0009 r2)
+/**
+ * The city's colour script and optics live in `config.ts` (`NJ_CONFIG.palette`)
+ * — one named table for every colour and every constant governing how light
+ * behaves on it, rather than five loose `Color` constants here and roughness
+ * values inlined at each use site. See `CityPalette`'s doc comment for why the
+ * per-family record is albedo-plus-optics rather than the lit/mid/shade/bounce
+ * shape a cel-shaded renderer would want.
+ */
+const P = NJ_CONFIG.palette;
+const FAM = P.families;
+
+const GOLD = new Color(FAM.gold.albedo);
+const CRYSTAL = new Color(P.ascent.summit);
+const PEARL = new Color(FAM.pearl.albedo);
+const IVORY = new Color(FAM.ivory.albedo);
+const JASPER = new Color(FAM.jasper.albedo);
 
 type Face = { axis: 'x' | 'z'; sign: 1 | -1 };
 const FACES: Face[] = [
@@ -132,12 +144,14 @@ function patchCityGI(mat: MeshStandardNodeMaterial, gi: ProbeGI | null): void {
 /** Opaque gold trim for INSTANCED relief (per-instance value jitter). */
 function trimGoldInstanced(gi: ProbeGI | null): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
-  m.metalness = 0.85;
-  m.roughness = 0.3;
+  m.metalness = FAM.gold.metalness;
+  m.roughness = FAM.gold.roughness;
   const jit = slotHash(instanceIndex as unknown as NU, 11).mul(0.14).add(0.93) as unknown as NF;
   m.colorNode = vec3(GOLD.r, GOLD.g, GOLD.b).mul(jit) as unknown as NV3;
   // faint self-light so shaded courses stay legible gold, far under bloom
-  m.emissiveNode = vec3(GOLD.r, GOLD.g, GOLD.b).mul(jit).mul(0.18) as unknown as NV3;
+  m.emissiveNode = vec3(GOLD.r, GOLD.g, GOLD.b)
+    .mul(jit)
+    .mul(FAM.gold.selfLight) as unknown as NV3;
   patchCityGI(m, gi);
   return m;
 }
@@ -146,10 +160,10 @@ function trimGoldInstanced(gi: ProbeGI | null): MeshStandardNodeMaterial {
 function trimGoldPlain(gi: ProbeGI | null): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
   m.color.copy(GOLD);
-  m.metalness = 0.85;
-  m.roughness = 0.3;
+  m.metalness = FAM.gold.metalness;
+  m.roughness = FAM.gold.roughness;
   m.emissive.copy(GOLD);
-  m.emissiveIntensity = 0.18;
+  m.emissiveIntensity = FAM.gold.selfLight;
   patchCityGI(m, gi);
   return m;
 }
@@ -158,10 +172,10 @@ function trimGoldPlain(gi: ProbeGI | null): MeshStandardNodeMaterial {
 function ivoryMaterial(gi: ProbeGI | null): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
   m.color.copy(IVORY);
-  m.metalness = 0.05;
-  m.roughness = 0.5;
+  m.metalness = FAM.ivory.metalness;
+  m.roughness = FAM.ivory.roughness;
   m.emissive.copy(IVORY);
-  m.emissiveIntensity = 0.12;
+  m.emissiveIntensity = FAM.ivory.selfLight;
   patchCityGI(m, gi);
   return m;
 }
@@ -203,16 +217,16 @@ function interiorMaterial(f: number, tierH: number, gi: ProbeGI | null): MeshSta
  */
 function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
+  const G = FAM.goldGlass;
   m.color.copy(GOLD.clone().lerp(CRYSTAL, f));
-  m.metalness = 0;
-  m.roughness = 0.07;
-  // 0.85 muddied the panes to beige — keep more gold body
-  m.transmission = transmissionAblated() ? 0 : 0.7;
-  m.ior = 1.45;
-  m.thickness = 0.9; // local units — ×20 world scale ⇒ ~18 m of gold glass depth
-  m.attenuationColor.copy(GOLD);
-  m.attenuationDistance = 1.4;
-  m.specularIntensity = 1.0;
+  m.metalness = G.metalness;
+  m.roughness = G.roughness;
+  m.transmission = transmissionAblated() ? 0 : (G.transmission ?? 0);
+  m.ior = G.ior ?? 1.5;
+  m.thickness = G.thickness ?? 1;
+  m.attenuationColor.set(G.attenuationColor ?? '#ffffff');
+  m.attenuationDistance = G.attenuationDistance ?? Infinity;
+  m.specularIntensity = G.specularIntensity ?? 1.0;
   m.side = FrontSide; // avoids the DoubleSide double-pass + second framebuffer copy
 
   // mullion grid: cells ~21×29 m world, each cell an arched pane (bright
@@ -243,13 +257,14 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
 /** Crystal-jasper wall material (Rev 21:18 "wall built of jasper... clear as glass"). */
 function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
+  const J = FAM.jasper;
   m.color.copy(JASPER);
-  m.metalness = 0.05;
-  m.roughness = 0.3; // 0.18 + 0.35 emissive washed the wall flat white
-  m.clearcoat = 1.0;
-  m.clearcoatRoughness = 0.15;
+  m.metalness = J.metalness;
+  m.roughness = J.roughness;
+  m.clearcoat = J.clearcoat ?? 0;
+  m.clearcoatRoughness = J.clearcoatRoughness ?? 0;
   m.emissive.copy(JASPER);
-  m.emissiveIntensity = 0.22;
+  m.emissiveIntensity = J.selfLight;
   patchCityGI(m, gi);
   return m;
 }
@@ -257,18 +272,19 @@ function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
 /** Nacre pearl for the gate heads (Rev 21:21 — each gate a single pearl). */
 function pearlMaterial(): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
+  const R = FAM.pearl;
   m.color.copy(PEARL);
-  m.metalness = 0;
-  m.roughness = 0.32;
-  m.clearcoat = 1.0;
-  m.clearcoatRoughness = 0.12;
-  m.iridescence = 1.0;
-  m.iridescenceIOR = 1.8;
-  m.iridescenceThicknessRange = [180, 480];
-  m.sheen = 0.5;
-  m.sheenColor.set(0xfff2e0);
+  m.metalness = R.metalness;
+  m.roughness = R.roughness;
+  m.clearcoat = R.clearcoat ?? 0;
+  m.clearcoatRoughness = R.clearcoatRoughness ?? 0;
+  m.iridescence = R.iridescence ?? 0;
+  m.iridescenceIOR = R.iridescenceIOR ?? 1.3;
+  m.iridescenceThicknessRange = R.iridescenceThicknessRange ?? [100, 400];
+  m.sheen = R.sheen ?? 0;
+  m.sheenColor.set(R.sheenColor ?? '#ffffff');
   m.emissive.copy(PEARL);
-  m.emissiveIntensity = 0.5;
+  m.emissiveIntensity = R.selfLight;
   m.side = DoubleSide;
   return m;
 }
@@ -291,23 +307,24 @@ function transmissionAblated(): boolean {
 /** Faceted gem material for one foundation stone (transmission + dispersion). */
 function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
+  // hue is CITED data (FOUNDATION_GEMS, Rev 21:19-20); everything else is the
+  // shared gem optics from the palette table
+  const E = FAM.gem;
   m.color.set(hex);
-  m.metalness = 0;
-  m.roughness = 0.08;
-  // 0.6: enough body that per-facet shading survives
-  m.transmission = transmissionAblated() ? 0 : 0.6;
-  m.ior = 2.0;
-  m.thickness = 1.2;
+  m.metalness = E.metalness;
+  m.roughness = E.roughness;
+  m.transmission = transmissionAblated() ? 0 : (E.transmission ?? 0);
+  m.ior = E.ior ?? 1.5;
+  m.thickness = E.thickness ?? 1;
   m.attenuationColor.copy(m.color);
-  m.attenuationDistance = 0.9;
-  m.dispersion = 0.25;
-  m.specularIntensity = 1.0;
+  m.attenuationDistance = E.attenuationDistance ?? Infinity;
+  m.dispersion = E.dispersion ?? 0;
+  m.specularIntensity = E.specularIntensity ?? 1.0;
   m.side = FrontSide;
   m.emissive.copy(m.color);
-  // low enough that facet shading reads (0.7 flattened the cut faces to a
-  // uniform pastel strip); saturated hues stay far under bloom either way,
-  // and the grade's c.max(0) clamp (PostStack) covers the saturated-dark case
-  m.emissiveIntensity = 0.4;
+  // saturated hues stay far under bloom either way, and the grade's c.max(0)
+  // clamp (PostStack) covers the saturated-dark case
+  m.emissiveIntensity = E.selfLight;
   return m;
 }
 

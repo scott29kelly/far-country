@@ -43,6 +43,96 @@ export interface CityTierRow {
   arches: number;
 }
 
+/**
+ * One material family's optics. Colour and the constants that govern how light
+ * behaves on it live together because separating them is what produced the
+ * problem this table fixes: five loose `Color` constants in `CityMassing.ts`
+ * and a paragraph of prose in `CITY-QUALITY-BAR.md`, with every roughness and
+ * transmission value inlined at its use site and tuned in isolation.
+ *
+ * Hoshi-no-Tani's one-palette lesson (docs/plans/procedural-asset-authoring.md
+ * lever 3) is adapted rather than copied. Their table is lit/mid/shade/bounce
+ * per family plus a shadow tint, because a cel-shaded renderer must AUTHOR its
+ * shade colour. Ours must not: shade here comes from the irradiance probe
+ * field and the hemisphere ambient, and hand-authoring it would fight the
+ * light transport that Pillar B is built on. The transferable part is the
+ * discipline — every colour in the city, named, in one place, addressable —
+ * and for a physically-based stack the honest per-family record is albedo plus
+ * the optical constants.
+ */
+export interface CityOptics {
+  /**
+   * sRGB hex base albedo. Absent for `gem`, whose twelve hues are cited data
+   * (`cityModel.FOUNDATION_GEMS`, Rev 21:19-20) and are not art direction to
+   * be tuned here.
+   */
+  albedo?: string;
+  metalness: number;
+  roughness: number;
+  /** emissive intensity, with the family's own albedo as the emissive colour —
+   *  keeps a shaded face legible without crossing `bloomThreshold` */
+  selfLight: number;
+  clearcoat?: number;
+  clearcoatRoughness?: number;
+  transmission?: number;
+  ior?: number;
+  /** LOCAL units (x NJ_SCALE = world metres) */
+  thickness?: number;
+  attenuationColor?: string;
+  attenuationDistance?: number;
+  dispersion?: number;
+  specularIntensity?: number;
+  iridescence?: number;
+  iridescenceIOR?: number;
+  iridescenceThicknessRange?: [number, number];
+  sheen?: number;
+  sheenColor?: string;
+}
+
+/**
+ * SCOPE, deliberately drawn: `families` holds the six material identities the
+ * text itself names — gold, ivory course, jasper wall, pearl gate, gold-like-
+ * clear-glass, and the twelve foundation stones. It does NOT absorb every
+ * material in `CityMassing.ts`. The interior core, the gate inscriptions, the
+ * plinth apron, the arcade glow, the crown and the sea of glass are per-element
+ * VARIATIONS on those families (a brighter gold here, a rougher one there), and
+ * pulling them in would turn a palette into a dump of every constant in the
+ * file — which is the readability problem this table exists to solve, not a
+ * second copy of it. A variation belongs at its use site, stated as a variation.
+ */
+export interface CityPalette {
+  families: {
+    /** opaque gold trim: piers, arch rings, frieze, inscriptions */
+    gold: CityOptics;
+    /** pale cornice and course bands alternating with the gold */
+    ivory: CityOptics;
+    /** the wall (Rev 21:18 "the wall was built of jasper") */
+    jasper: CityOptics;
+    /** the twelve gates (Rev 21:21 "each of the gates made of a single pearl") */
+    pearl: CityOptics;
+    /** the tier skin (Rev 21:18 "the city was pure gold, like clear glass") */
+    goldGlass: CityOptics;
+    /** the twelve foundation stones (Rev 21:19-20) */
+    gem: CityOptics;
+  };
+  /**
+   * CITY-QUALITY-BAR pillar E's colour script, as data rather than prose:
+   * "warm gold at the base ascending to pale luminous crystal at the summit."
+   * The tier skin and interior lerp from their family albedo toward `summit`
+   * by normalised tier height.
+   */
+  ascent: {
+    summit: string;
+  };
+  /**
+   * The PostStack bloom threshold city emissives must stay under. Only the
+   * crown crosses it (STATUS: worst population emissive luminance 1.31).
+   * Recorded here because it is the constraint every `selfLight` above is
+   * tuned against, and it was previously only a comment.
+   */
+  bloomThreshold: number;
+}
+
 export interface NewJerusalemConfig {
   district: {
     mode: DistrictScaleMode;
@@ -70,6 +160,8 @@ export interface NewJerusalemConfig {
     base: { h: number; arches: number };
     upper: CityTierRow[];
   };
+  /** every colour and optical constant the city massing builds from */
+  palette: CityPalette;
   /**
    * The NJ scene's tuned look — the values the ?edit=1 panel round-trips
    * ("copy config (JSON)" emits this shape; paste tuned values back here).
@@ -129,6 +221,71 @@ export const NJ_CONFIG: NewJerusalemConfig = {
       { half: 40, h: 34, arches: 3 },
       { half: 22, h: 26, arches: 0 }, // crown (solid, glowing)
     ],
+  },
+  // Every value below was LIFTED VERBATIM from its previous use site in
+  // CityMassing.ts. This section is infrastructure, not art direction: it
+  // changes where the numbers live, not what they are, so the sheet before and
+  // after is pixel-identical. Retuning happens against this table afterwards,
+  // where a change is one edit and its effect is one diff.
+  palette: {
+    families: {
+      gold: { albedo: '#d9a441', metalness: 0.85, roughness: 0.3, selfLight: 0.18 },
+      ivory: { albedo: '#f1e9d7', metalness: 0.05, roughness: 0.5, selfLight: 0.12 },
+      jasper: {
+        albedo: '#bfd6d2', // pale crystal-jasper (stylised, ADR 0009 rule 2)
+        metalness: 0.05,
+        // 0.18 with the 0.35 self-light washed the wall flat white
+        roughness: 0.3,
+        selfLight: 0.22,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.15,
+      },
+      pearl: {
+        albedo: '#f3ecdf',
+        metalness: 0,
+        roughness: 0.32,
+        selfLight: 0.5,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.12,
+        iridescence: 1.0,
+        iridescenceIOR: 1.8,
+        iridescenceThicknessRange: [180, 480],
+        sheen: 0.5,
+        sheenColor: '#fff2e0',
+      },
+      goldGlass: {
+        albedo: '#d9a441', // lerped toward `ascent.summit` by tier height
+        metalness: 0,
+        roughness: 0.07,
+        selfLight: 0, // carried by the mullion emissive node, not a flat term
+        // 0.85 muddied the panes to beige — keep more gold body
+        transmission: 0.7,
+        ior: 1.45,
+        thickness: 0.9, // local units — x20 world scale => ~18 m of glass depth
+        attenuationColor: '#d9a441',
+        attenuationDistance: 1.4,
+        specularIntensity: 1.0,
+      },
+      gem: {
+        // no albedo: the twelve hues are cited data (FOUNDATION_GEMS)
+        metalness: 0,
+        roughness: 0.08,
+        // 0.6: enough body that per-facet shading survives
+        transmission: 0.6,
+        ior: 2.0,
+        thickness: 1.2,
+        attenuationDistance: 0.9,
+        dispersion: 0.25,
+        specularIntensity: 1.0,
+        // low enough that facet shading reads — 0.7 flattened the cut faces to
+        // a uniform pastel strip
+        selfLight: 0.4,
+      },
+    },
+    ascent: {
+      summit: '#dfeaf0',
+    },
+    bloomThreshold: 1.5,
   },
   look: {
     timeOfDay: 17.0,
