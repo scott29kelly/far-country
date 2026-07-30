@@ -409,7 +409,26 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   return m;
 }
 
-/** Crystal-jasper wall material (Rev 21:18 "wall built of jasper... clear as glass"). */
+/**
+ * Crystal-jasper wall material.
+ *
+ * CITATION, corrected 2026-07-29. This comment used to read
+ * `Rev 21:18 "wall built of jasper... clear as glass"`, which elides across a
+ * clause boundary and misattributes the text. Rev 21:18 as the canonical
+ * dataset records it is: "The wall of the city is built of jasper, while the
+ * city itself is pure gold, LIKE CLEAR GLASS" — the transparency belongs to
+ * the gold city, not to the wall.
+ *
+ * The crystalline reading of the jasper is nonetheless supported, from
+ * **Rev 21:11** (`glory-of-god-illuminating-the-city`, tier `clear`): "radiance
+ * like a most rare jewel, like jasper, CLEAR AS CRYSTAL". So a translucent
+ * wall stands on an inference ACROSS TWO VERSES — 21:18 makes the wall jasper,
+ * 21:11 makes John's jasper clear as crystal — and 21:11 is describing the
+ * city's radiance rather than the wall's fabric. That is a reasonable
+ * inference and it is the one this render makes, but it is an inference, and
+ * labelling it as a single-verse warrant (as the old comment did) is exactly
+ * the silent smoothing CLAUDE.md forbids.
+ */
 function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
   const J = FAM.jasper;
@@ -418,8 +437,17 @@ function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
   m.roughness = J.roughness;
   m.clearcoat = J.clearcoat ?? 0;
   m.clearcoatRoughness = J.clearcoatRoughness ?? 0;
-  m.emissive.copy(JASPER);
-  m.emissiveIntensity = J.selfLight;
+  m.transmission = transmissionAblated() ? 0 : (J.transmission ?? 0);
+  m.ior = J.ior ?? 1.5;
+  m.thickness = J.thickness ?? 1;
+  m.attenuationColor.copy(JASPER);
+  m.attenuationDistance = J.attenuationDistance ?? Infinity;
+  // Grazing-weighted, like the gems and the glass — the flat 0.22 term was
+  // the third instance of the same fault and it is what kept a 600 m wall
+  // reading as one pale unbroken plate.
+  m.emissiveNode = vec3(JASPER.r, JASPER.g, JASPER.b)
+    .mul(grazing().mul(0.7).add(0.3))
+    .mul(J.selfLight) as unknown as NV3;
   patchCityGI(m, gi);
   return m;
 }
@@ -685,6 +713,29 @@ function wallSegments(outer: number): Array<[number, number]> {
  */
 const CORNICE_T = 2.4;
 
+/**
+ * Ashlar coursing on the wall's OUTER face: horizontal courses standing proud
+ * of the slab, each with a recessed joint under it.
+ *
+ * Pillar A is unambiguous for this surface — "every wall plane needs at least
+ * ~0.3 m of real coursing/reveal depth", geometry and not a normal map — and
+ * unlike the terrace pavements there is no compression argument against it
+ * here: a wall is looked ACROSS, which is precisely the case the rule is
+ * written for. The 2026-07-29 pass found the jasper reading as a single flat
+ * pale plate at 600 m from the camera, the largest unbroken surface in the
+ * city and the one the whole southern approach is composed around.
+ *
+ * Courses are MERGED into the caller's mesh list, one geometry per wall
+ * segment run, so a coursed wall costs the same handful of draw calls the
+ * plain slab did. They stand proud of the outer face rather than being cut
+ * into it, so the slab stays a single closed box and cityCollide's wall claim
+ * — which is analytic on `WALL_INNER` and the outer radius — does not move.
+ * The proud depth is well under the collision slab's own thickness, so a
+ * walker still stops at the face and never clips a course.
+ */
+const WALL_COURSE_H = 0.8; // local units — ~16 m courses on a 600 m wall
+const WALL_COURSE_PROUD = 0.32; // ~6.4 m reveal, well over Pillar A's 0.3 m floor
+
 function buildWallSide(
   face: Face,
   inner: number,
@@ -695,6 +746,7 @@ function buildWallSide(
   const meshes: Mesh[] = [];
   const radialMid = (face.sign * (inner + outer)) / 2;
   const radialThick = outer - inner;
+  const courseParts: BufferGeometry[] = [];
   for (const [t0, t1] of wallSegments(outer)) {
     const len = t1 - t0;
     const mid = (t0 + t1) / 2;
@@ -708,6 +760,33 @@ function buildWallSide(
     seg.castShadow = true;
     seg.receiveShadow = true;
     meshes.push(seg);
+
+    // Alternating courses only: a proud band every OTHER course leaves the
+    // slab face itself as the recessed joint, so one box buys both the
+    // projection and the shadow line under it.
+    const faceR = face.sign * (outer + WALL_COURSE_PROUD / 2);
+    const n = Math.floor(h / WALL_COURSE_H);
+    for (let k = 0; k < n; k += 2) {
+      const cy = (k + 0.5) * WALL_COURSE_H;
+      if (cy + WALL_COURSE_H / 2 > h) break;
+      const cg =
+        face.axis === 'z'
+          ? new BoxGeometry(len, WALL_COURSE_H * 0.72, WALL_COURSE_PROUD)
+          : new BoxGeometry(WALL_COURSE_PROUD, WALL_COURSE_H * 0.72, len);
+      if (face.axis === 'z') cg.translate(mid, cy, faceR);
+      else cg.translate(faceR, cy, mid);
+      courseParts.push(cg);
+    }
+  }
+  if (courseParts.length > 0) {
+    const merged = mergeGeometries(courseParts, false);
+    for (const g of courseParts) g.dispose();
+    if (merged) {
+      const courses = new Mesh(merged, mat);
+      courses.castShadow = true;
+      courses.receiveShadow = true;
+      meshes.push(courses);
+    }
   }
   return meshes;
 }

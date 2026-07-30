@@ -249,9 +249,22 @@ export const NJ_CONFIG: NewJerusalemConfig = {
         metalness: 0.05,
         // 0.18 with the 0.35 self-light washed the wall flat white
         roughness: 0.3,
-        selfLight: 0.22,
+        // was 0.22 as a FLAT term, which is what kept a 600 m wall reading as
+        // one pale unbroken plate; now grazing-weighted (see jasperMaterial)
+        selfLight: 0.14,
         clearcoat: 1.0,
         clearcoatRoughness: 0.15,
+        // Modest, deliberately. The wall is the largest single surface in the
+        // city and a glassy one would stop reading as a WALL (Rev 21:12's
+        // "great, high wall") — and it is the boundary the whole approach
+        // composition is built on. Enough volume that light finds depth in it,
+        // not enough to dissolve it. n matches the Jasper entry in
+        // FOUNDATION_GEMS (chalcedony, 1.54) so the wall and its own
+        // foundation stone are the same substance, which the text says twice.
+        transmission: 0.45,
+        ior: 1.54,
+        thickness: 1.0,
+        attenuationDistance: 0.85,
       },
       pearl: {
         albedo: '#f3ecdf',
