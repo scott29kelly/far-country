@@ -255,6 +255,44 @@ material-and-mesh problem in 2026-07-02), then **4 and 5 together** (one optics
 pass over the transmissive families, now that `NJ_CONFIG.palette` gives them
 one home), then **3**, then **6**.
 
+### Executed 2026-07-29/30 — items 1-6 closed to first-pass quality
+
+Branch `claude/city-review-framings`. Full description in `STATUS.md`'s
+2026-07-29/30 entry; what closed, against the list above:
+
+- **1 (blank pavements)** — merged concentric course bands on an authored
+  border-and-field profile, plus a world-space paving lattice for the near
+  ground. The lattice is a MATERIAL, and deliberately: Pillar A's ~0.3 m reveal
+  spec is written for surfaces you look ACROSS, and a floor is looked ALONG,
+  where the read comes from centimetre-wide slab joints. Modelling those in
+  relief across a 490 m annulus is hundreds of thousands of boxes for a feature
+  under a pixel at every angle a walker can take. On the WALL, by contrast, the
+  rule is taken literally and the coursing is real geometry — see item 3.
+- **2 (one module tiled)** — an authored ABCBA bay cadence plus heavier corner
+  piers. Rhythm, not randomisation: per-instance colour jitter already existed
+  and does nothing for this, because the eye reads cadence.
+- **3 (empty plaza gallery)** — the wall's inward face coursed, an ENGAGED
+  colonnade on the plinth face, and the street-of-gold apron paved. Engaged
+  rather than free-standing because collision claims the band as open, so a
+  colonnade in the walk space would be furniture the walker walks through.
+- **4/5/6 (gems, glass, river)** — one bug in three places, plus the wall as a
+  fourth: each carried real transmission or simulation under a CONSTANT
+  emissive or opacity floor that erased the material's whole signature. All
+  four grazing-weighted now. Gems additionally take per-species published
+  refractive index and dispersion, so the twelve differ as the minerals do.
+- **7 (silhouette value contrast at range)** — NOT addressed. Still open.
+
+**Still open after this pass:** item 7; a real parapet or plinth course at the
+terrace lip (needs a `cityCollide` change — a kerb a walker clips through is a
+lie, so it was deliberately not built); the temple's architectural identity
+(old delta #8); wayfinding (old delta #10).
+
+**Needs Scott's call:** the gem optics are keyed to CONTESTED mineral-species
+identifications (`Gem.species` records which reading each stone uses; jacinth,
+chrysolite, agate and beryl each carry more than one credible reconstruction).
+Flagged rather than settled — nothing entered the dataset and no descriptor
+tier moved, but it is a step closer to a claim than a colour swatch is.
+
 ---
 
 ## Ranked delta list (worst-first, visual impact) — 2026-07-01

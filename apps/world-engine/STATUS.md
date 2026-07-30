@@ -138,6 +138,89 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-29/30) CITY REVIEW SURFACE + ART-DIRECTION PASS.** Branch
+`claude/city-review-framings`, 8 commits, UNPUSHED and NOT RE-VENDORED at
+time of writing. First GPU pass over the city since 2026-07-02 — the
+07-24..07-28 sessions had no GPU, so the visual state had gone eleven days
+unlooked-at while docs work continued on top of it.
+
+- **Register question SETTLED (Scott):** the city stays PHOTOREAL. ADR 0009
+  rule 2 untouched, no superseding ADR. The remaining gap is therefore an
+  OPTICS problem, not a rendering-register one. Recorded with the other
+  three answers in `docs/plans/procedural-asset-authoring.md` §8.
+- **`src/nj/reviewFramings.ts`** — nine composed review framings, the city's
+  counterpart to the terrain's nine `debug/Bookmarks.ts`. Authored in LOCAL
+  city units and resolved through the owner tables, because the 2026-07-01
+  framings in `docs/CITY-QUALITY-BAR.md` were absolute world coordinates and
+  NOT ONE still framed the city — the massing outgrew them silently. Yaw and
+  pitch derive from an aim point. Published on `hooks.reviewFramings`;
+  `?shot=1..9` and digit keys 1-9 jump (matching the terrain scene).
+  `tools/cityshots.ts` shoots the whole set from ONE boot (~2.5 min vs ~8,
+  and one shared world/exposure/cloud state so sheets are comparable build
+  to build); `--framealign N` for pixel-diffable sheets, but it spins up to
+  1024 frames PER FRAMING and a full aligned sheet can lose the WebGPU
+  device on integrated parts — use with `--only`. New standing probe
+  `tools/probe-framings.ts`.
+- **`NJ_CONFIG.palette`** — six named material families (the identities the
+  text names), albedo plus optics each, replacing five loose `Color`
+  constants and inlined per-use-site roughness values. Adapted not copied
+  from the Hoshi one-palette lesson: their lit/mid/shade/bounce shape suits
+  a cel renderer that must author shade; ours comes from the probe field.
+  Verified a no-op by frame-aligned diff (0.10/3.38/0.04% against a
+  same-build two-boot control of 2.90%).
+- **Bay rhythm** — authored ABCBA cadence (grand centre bay on the meridian,
+  majors flanking, narrows at the corners) plus heavier corner piers,
+  replacing N identical bays. Widths group into 2-3 classes per tier, one
+  InstancedMesh each, ~8 extra draw calls. All classes share one head top.
+- **Pavement coursing** — merged concentric course bands on an authored
+  border-and-field profile, plus a world-space paving lattice (fades past
+  ~130 m to avoid moire TRAA amplifies). Bands abut, no coplanar overlap, no
+  cityCollide floor moved. NOTE the deliberate omission: no raised kerb or
+  parapet, because collision claims the ring at one height and a walker
+  would clip through it — that needs a collision change.
+- **Optics pass — one bug in four places.** Gems, tier glass, city cascade
+  and the jasper wall each had real transmission or simulation under a
+  CONSTANT emissive/opacity floor that erased the very thing the material
+  is. All four are now grazing-weighted (`grazing()` in CityMassing).
+  Gems additionally: per-species published refractive index and dispersion
+  in `FOUNDATION_GEMS` (chalcedony 1.53/0.013 vs zircon 1.93/0.039 — a 3x
+  spread in fire, variation drawn from the cited stone list), consumed
+  through the declared `palette.gemDispersionScale`; facet pitch halved and
+  depth jitter doubled. River: floor 0.18 -> 0.05 on the CITY cascade only
+  (`crystalFallMaterialWorld` keeps its floors — rim falls are judged at
+  ~1 km).
+- **CITATION CORRECTION.** `jasperMaterial`'s comment read
+  Rev 21:18 "wall built of jasper... clear as glass" — an ellipsis across a
+  clause boundary. Per this repo's own canonical export, 21:18 is "the wall
+  ... is built of jasper, while the city itself is pure gold, LIKE CLEAR
+  GLASS": the transparency is the GOLD CITY's. The crystalline jasper
+  reading comes from **Rev 21:11** ("like jasper, clear as crystal", tier
+  `clear`), so a translucent wall is an inference ACROSS TWO VERSES and
+  21:11 describes the city's radiance, not the wall's fabric. Comment now
+  states the derivation and its limit.
+- **Wall + gallery articulation.** Ashlar coursing on the wall's outer face
+  (Pillar A taken literally here — a wall is looked ACROSS, which is the case
+  the ~0.3 m reveal rule is written for) AND its inward face, which on the
+  base tier is the gallery's outer wall. Engaged colonnade on the plinth
+  face — ENGAGED because a free-standing one would be furniture the walker
+  walks through; corners left bare for the base ascent. Street-of-gold apron
+  paved and its metalness dropped 0.5 -> 0.2.
+- **SCOTT-OWED:** (1) whether the gem optics may stay keyed to CONTESTED
+  mineral-species identifications (`Gem.species` records which reading;
+  jacinth/chrysolite/agate/beryl each have more than one credible
+  reconstruction) — flagged, not settled; (2) the parapet/collision
+  follow-up; (3) re-vendor + push.
+- **Battery each commit:** framings, entitypick, cityfloors, walkfling,
+  wallcollide, visualkey, ascent, stages, population ALL PASS; stages-live,
+  navigation, campus-live ALL PASS; tsc + vite build clean. Perf note for
+  any later verdict: these frames are DRAW-SUBMISSION bound, not GPU bound
+  (GPU render+compute ~16 ms vs `cpu.submitMs100` 2430 = 24 ms/frame) on an
+  Intel Xe-LPG part at ~25-35 fps / 1280x800.
+- **Open observations, not chased:** a white wash low in the distant
+  framings (probably the foreground cloud layer — UNCONFIRMED) and thin
+  vertical bright streaks in the sky at `crown-sea-of-glass` (probably
+  particles; the light-pillar hosts do not appear in that framing at all).
+
 **(2026-07-25) SUMMIT RAINBOW RING REMOVED (Scott's call) + COLLAPSED-HOST
 BOOT FIX.**
 
