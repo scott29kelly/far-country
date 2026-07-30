@@ -76,6 +76,7 @@ import {
   foundationCourseSpans,
   FOUNDATION_GEMS,
   type Gem,
+  GATE_CLEAR_HALF,
   GATE_OFFSETS,
   GATE_WIDTH,
   GATES,
@@ -742,6 +743,8 @@ function buildWallSide(
   outer: number,
   h: number,
   mat: MeshStandardNodeMaterial,
+  /** also course the INWARD face — it is the gallery's outer wall (see below) */
+  courseInner = false,
 ): Mesh[] {
   const meshes: Mesh[] = [];
   const radialMid = (face.sign * (inner + outer)) / 2;
@@ -764,18 +767,30 @@ function buildWallSide(
     // Alternating courses only: a proud band every OTHER course leaves the
     // slab face itself as the recessed joint, so one box buys both the
     // projection and the shadow line under it.
-    const faceR = face.sign * (outer + WALL_COURSE_PROUD / 2);
+    //
+    // The INWARD face gets the same treatment when asked, because on the base
+    // tier it is not a back face at all — it is the outer wall of the covered
+    // street-of-gold gallery, which the 2026-07-29 pass found reading as an
+    // empty corridor between two unbroken planes. Coursing it costs nothing
+    // extra: same merge, same material, courses offset by one so the two faces
+    // do not read as a single striped slab seen through.
+    const facesR: Array<{ r: number; phase: number }> = [
+      { r: face.sign * (outer + WALL_COURSE_PROUD / 2), phase: 0 },
+    ];
+    if (courseInner) facesR.push({ r: face.sign * (inner - WALL_COURSE_PROUD / 2), phase: 1 });
     const n = Math.floor(h / WALL_COURSE_H);
-    for (let k = 0; k < n; k += 2) {
-      const cy = (k + 0.5) * WALL_COURSE_H;
-      if (cy + WALL_COURSE_H / 2 > h) break;
-      const cg =
-        face.axis === 'z'
-          ? new BoxGeometry(len, WALL_COURSE_H * 0.72, WALL_COURSE_PROUD)
-          : new BoxGeometry(WALL_COURSE_PROUD, WALL_COURSE_H * 0.72, len);
-      if (face.axis === 'z') cg.translate(mid, cy, faceR);
-      else cg.translate(faceR, cy, mid);
-      courseParts.push(cg);
+    for (const { r: faceR, phase } of facesR) {
+      for (let k = phase; k < n; k += 2) {
+        const cy = (k + 0.5) * WALL_COURSE_H;
+        if (cy + WALL_COURSE_H / 2 > h) break;
+        const cg =
+          face.axis === 'z'
+            ? new BoxGeometry(len, WALL_COURSE_H * 0.72, WALL_COURSE_PROUD)
+            : new BoxGeometry(WALL_COURSE_PROUD, WALL_COURSE_H * 0.72, len);
+        if (face.axis === 'z') cg.translate(mid, cy, faceR);
+        else cg.translate(faceR, cy, mid);
+        courseParts.push(cg);
+      }
     }
   }
   if (courseParts.length > 0) {
@@ -1042,11 +1057,25 @@ export function buildCityMassing(
   pavingDetail(pavingIvory, pavingIvory.color);
   const pearl = pearlMaterial();
 
-  // Street-of-gold apron around the base.
+  // Street-of-gold apron around the base (Rev 21:21, "the street of the city
+  // was pure gold"). This slab IS the gallery floor and the plaza a walker
+  // arrives on through a gate, and until now it was bare: the 2026-07-29 pass
+  // found it taking half the frame from inside the gallery with nothing on it.
+  //
+  // Two changes. It gets the same world-space paving lattice as the terrace
+  // pavements — one shared grid, so a walker crossing from plaza to terrace
+  // reads one continuous convention. And the metalness drops from 0.5: at that
+  // value a 4,600 m gold plaza is a half-mirror that throws the sun straight
+  // back at the camera, which is the opposite of the gold-ground reference in
+  // reference-city/ (Hagia Sophia — gold that CATCHES and redistributes light
+  // rather than specularly reflecting it).
   const apron = new MeshStandardNodeMaterial();
   apron.color.copy(GOLD);
-  apron.metalness = 0.5;
-  apron.roughness = 0.3;
+  apron.metalness = 0.2;
+  apron.roughness = 0.55;
+  apron.emissive.copy(GOLD);
+  apron.emissiveIntensity = FAM.ivory.selfLight;
+  pavingDetail(apron, apron.color);
   patchCityGI(apron, gi);
   const plaza = new Mesh(new BoxGeometry(232, 5, 232), apron);
   plaza.position.y = -2.5;
@@ -1109,7 +1138,8 @@ export function buildCityMassing(
       // the base ascent climbs (ascentModel) — cityCollide opens the same
       // band, one shared table, no mirrors.
       for (const face of FACES) {
-        for (const seg of buildWallSide(face, WALL_INNER, t.half, H - CORNICE_T, jasper))
+        // courseInner: this slab's inward face is the gallery's outer wall
+        for (const seg of buildWallSide(face, WALL_INNER, t.half, H - CORNICE_T, jasper, true))
           city.add(seg);
       }
       for (const gate of GATES) {
@@ -1133,6 +1163,35 @@ export function buildCityMassing(
           }
         }
         city.add(instancedOnFaces(pilGeo, trimInst, pilPlaces));
+
+        // GALLERY COLONNADE — engaged piers on the plinth's outward face, the
+        // gallery's INNER wall. With the wall's inward face now coursed, this
+        // is the other of the two unbroken planes the 2026-07-29 pass found
+        // filling that corridor.
+        //
+        // ENGAGED, not free-standing, and that is the whole design constraint.
+        // A colonnade down the middle of a walkable gallery would be furniture
+        // the walker walks through, because cityCollide claims the band as open
+        // and treats relief as non-colliding (its own header draws that line).
+        // Attached to a face the walker already stops at, the rhythm costs no
+        // honesty: the collision boundary and the visible surface still agree.
+        //
+        // Slots stay inside |u| <= 60 and clear of the gate lanes. The CORNERS
+        // are deliberately left bare — the base ascent climbs there (it is the
+        // only assembly-and-gate-free span of the ring, per ascentModel), and
+        // an engaged pier in a ramp's path would be geometry intersecting the
+        // one route a walker has to the terraces.
+        const galGeo = flutedPierGeometry(3.4, H - CORNICE_T - 1.2, 2.0);
+        const galPlaces: Placement[] = [];
+        for (const face of FACES) {
+          for (let k = -6; k <= 6; k++) {
+            const u = k * 10;
+            if (Math.abs(u) > 60) continue;
+            if (GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_CLEAR_HALF + 3)) continue;
+            galPlaces.push({ u, y: 0, off: PLINTH_HALF + 0.4, face });
+          }
+        }
+        city.add(instancedOnFaces(galGeo, trimInst, galPlaces));
       }
     } else if (ti === last) {
       // Crown — solid, glowing, under the glory (deliberate gentle bloom).
