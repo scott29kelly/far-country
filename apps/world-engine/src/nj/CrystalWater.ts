@@ -302,11 +302,24 @@ export function crystalFallMaterial(
   const waterCol = vec3(0.62, 0.78, 0.86).mul(sky.mul(0.5).add(vec3(0.5, 0.5, 0.5))) as unknown as NV3;
   const white = vec3(0.92, 0.95, 0.97) as unknown as NV3;
   mat.colorNode = vec3(0.2, 0.24, 0.26).mul(body) as unknown as typeof mat.colorNode;
+  // The 2026-07-29 GPU pass found the city cascade reading as a flat grey
+  // veil hung over the whole south facade rather than as water, and a
+  // ?stages=-river ablation confirmed the owner. The streak simulation above
+  // was never the problem: the CONSTANT FLOORS underneath it were. An opacity
+  // floor of 0.18 makes the sheet 18% opaque everywhere the streaks are NOT,
+  // so the gaps between strands — the part that should show the facade behind
+  // and read as falling water rather than a pane — were a uniform wash; the
+  // 0.25 emissive floor then lit that wash. Dropping both to near zero lets
+  // `body` actually carry the sheet, which is what it was written to do.
+  //
+  // Only the CITY cascade changes. `crystalFallMaterialWorld` keeps its
+  // higher floors on purpose: the rim falls are judged from ~1 km against
+  // pale rock, where this close-range translucency would vanish.
   mat.emissiveNode = mix(waterCol.mul(0.45), white.mul(0.85), plunge.mul(0.6).add(fres.mul(0.25)))
-    .mul(body.mul(0.75).add(0.25)) as unknown as typeof mat.emissiveNode;
+    .mul(body.mul(0.92).add(0.08)) as unknown as typeof mat.emissiveNode;
   mat.opacityNode = body
-    .mul(0.62)
-    .add(0.18)
+    .mul(0.88)
+    .add(0.05)
     .mul(edge)
     .mul(sideFade) as unknown as typeof mat.opacityNode;
 

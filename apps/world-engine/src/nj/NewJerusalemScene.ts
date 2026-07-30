@@ -40,6 +40,7 @@ import { buildPopulation } from './Population';
 import { anchorFallSites, buildRimFalls, findRimFallSites } from './RimFalls';
 import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
+import { resolveCityFramings } from './reviewFramings';
 import { parseStages } from './stages';
 import { buildTemple } from './Temple';
 import { TEMPLE_SITE } from './templeModel';
@@ -388,6 +389,38 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       return overCity ? Math.max(terrainClear, summitClearY) : terrainClear;
     },
   };
+
+  // Composed REVIEW framings (reviewFramings.ts) — the city's counterpart to
+  // the terrain's nine Bookmarks. Published on the hooks so tooling can shoot
+  // the whole set in ONE boot (tools/cityshots.ts) rather than paying a ~50 s
+  // world build per still, and so a framing is an owned artifact that follows
+  // the owner tables instead of a world coordinate pasted into a doc. Not
+  // navigation and not content: a framing carries no citation and no pick.
+  // resolved through the FINAL composed probe, same as the navigation targets
+  const framings = resolveCityFramings(plazaTopY, ctx.hooks.groundProbe ?? undefined);
+  ctx.hooks.reviewFramings = framings;
+
+  // ?shot=N boots into framing N; digit keys 1-9 jump, matching the terrain
+  // scene's binding so the two scenes behave the same way under the hand.
+  // An explicit ?cam= always wins (tooling poses must not be second-guessed).
+  const applyFraming = (i: number): void => {
+    const f = framings[i];
+    if (!f) return;
+    ctx.hooks.setPose?.(f.pose);
+    ctx.hooks.setTimeOfDay?.(f.tod);
+  };
+  window.addEventListener('keydown', (e) => {
+    const m = /^Digit([1-9])$/.exec(e.code);
+    if (m) applyFraming(Number(m[1]) - 1);
+  });
+  if (params.shot !== null && params.cam === null) {
+    const f = framings[params.shot - 1];
+    if (f) {
+      ctx.hooks.initialPose = f.pose;
+      ctx.hooks.initialPoseMode = 'fly';
+      ctx.hooks.setTimeOfDay?.(f.tod);
+    }
+  }
 
   ctx.progress(1, 'newjerusalem ready');
 }

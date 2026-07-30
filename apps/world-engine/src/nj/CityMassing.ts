@@ -50,9 +50,12 @@ import {
   MeshStandardNodeMaterial,
 } from 'three/webgpu';
 import {
+  cameraPosition,
   float,
+  floor as tslFloor,
   fract,
   instanceIndex,
+  max as tslMax,
   mix,
   normalWorld,
   positionLocal,
@@ -64,6 +67,7 @@ import type { ProbeGI } from '../gpu/passes/ProbeGI';
 import type { NF, NU, NV3 } from '../gpu/TSLTypes';
 import { slotHash } from '../render/VegInstance';
 import { ascentRamps, baseCorniceHoles, RAMP_SINK, rampSurfaceY } from './ascentModel';
+import { NJ_CONFIG } from './config';
 import {
   CITY_TIERS,
   FOUNDATION_BAND_OFFSETS,
@@ -71,6 +75,8 @@ import {
   FOUNDATION_COURSE,
   foundationCourseSpans,
   FOUNDATION_GEMS,
+  type Gem,
+  GATE_CLEAR_HALF,
   GATE_OFFSETS,
   GATE_WIDTH,
   GATES,
@@ -80,11 +86,22 @@ import {
   type Side,
 } from './cityModel';
 
-const GOLD = new Color(0xd9a441);
-const CRYSTAL = new Color(0xdfeaf0);
-const PEARL = new Color(0xf3ecdf);
-const IVORY = new Color(0xf1e9d7);
-const JASPER = new Color(0xbfd6d2); // pale crystal-jasper (stylised, ADR 0009 r2)
+/**
+ * The city's colour script and optics live in `config.ts` (`NJ_CONFIG.palette`)
+ * — one named table for every colour and every constant governing how light
+ * behaves on it, rather than five loose `Color` constants here and roughness
+ * values inlined at each use site. See `CityPalette`'s doc comment for why the
+ * per-family record is albedo-plus-optics rather than the lit/mid/shade/bounce
+ * shape a cel-shaded renderer would want.
+ */
+const P = NJ_CONFIG.palette;
+const FAM = P.families;
+
+const GOLD = new Color(FAM.gold.albedo);
+const CRYSTAL = new Color(P.ascent.summit);
+const PEARL = new Color(FAM.pearl.albedo);
+const IVORY = new Color(FAM.ivory.albedo);
+const JASPER = new Color(FAM.jasper.albedo);
 
 type Face = { axis: 'x' | 'z'; sign: 1 | -1 };
 const FACES: Face[] = [
@@ -114,6 +131,97 @@ function riverSlot(face: Face, u: number): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Bay rhythm
+// ---------------------------------------------------------------------------
+
+/**
+ * Relative bay widths across one face, mean 1 (so `W / n` stays the unit and
+ * the tier's `arches` count in config still means what it said).
+ *
+ * WHY THIS EXISTS. Every bay on every face of every tier used to be the same
+ * arch at the same spacing, and a 2026-07-29 GPU pass found that reads as a
+ * tiled panel rather than as architecture at every distance — the
+ * CITY-QUALITY-BAR Assassin's Creed benchmark inverted, since kit-bashed
+ * density needs *varied* repeated modules to hold up. Per-instance colour
+ * jitter was already there and does not help: the eye reads RHYTHM, not noise.
+ *
+ * So the widths are AUTHORED, not randomised: a dominant centre bay on the
+ * meridian, major bays flanking it, and narrow bays closing the corners — the
+ * ABCBA cadence monumental arcades actually use. Deterministic and identical
+ * on all four faces, because a holy mountain that is not symmetric about its
+ * meridians would be asserting something the composition does not mean.
+ *
+ * This is interpretive articulation, not a claim: the text fixes the wall, the
+ * gates and their tribes, not a bay count or an arch profile
+ * (docs/plans/procedural-asset-authoring.md section 6.1).
+ */
+function bayRhythm(n: number): number[] {
+  const GRAND = 1.34;
+  const MAJOR = 1.0;
+  const MINOR = 0.79;
+  let w: number[];
+  if (n <= 1) w = [MAJOR];
+  else if (n === 2) w = [MAJOR, MAJOR];
+  else if (n % 2 === 1) {
+    // odd: a single grand bay on the meridian, minors at both corners
+    w = Array.from({ length: n }, (_, i) =>
+      i === (n - 1) / 2 ? GRAND : i === 0 || i === n - 1 ? MINOR : MAJOR,
+    );
+  } else {
+    // even: no centre bay to grant, so the pair astride the meridian carries it
+    const c = n / 2;
+    w = Array.from({ length: n }, (_, i) =>
+      i === c - 1 || i === c ? MAJOR : i === 0 || i === n - 1 ? MINOR : MAJOR * 0.9,
+    );
+  }
+  const sum = w.reduce((a, b) => a + b, 0);
+  return w.map((v) => (v * n) / sum);
+}
+
+/**
+ * Radial course widths across a terrace pavement, inner edge to outer lip,
+ * normalised to sum to 1.
+ *
+ * Authored for the same reason `bayRhythm` is: evenly divided courses read as
+ * a running track, not as a pavement. Real monumental paving is a BORDER and a
+ * FIELD — tight courses banding the edges where the eye needs the boundary
+ * stated, broad plain courses across the middle where it does not. The
+ * profile is symmetric because the pavement is a ring and both its edges are
+ * boundaries: the riser of the tier above, and the drop at the lip.
+ */
+function pavementCourses(): number[] {
+  const w = [0.045, 0.03, 0.055, 0.22, 0.26, 0.22, 0.055, 0.03, 0.045];
+  const sum = w.reduce((a, b) => a + b, 0);
+  return w.map((v) => v / sum);
+}
+
+/** A run of bays of one width — one geometry, one InstancedMesh, one draw. */
+type BayClass = { key: string; width: number; centres: number[] };
+
+/**
+ * Group a face's rhythm into width classes. Instancing needs one geometry per
+ * mesh, so distinct widths must become distinct meshes; quantising to 1e-4
+ * keeps that count at the two or three the rhythm actually contains rather
+ * than one per bay.
+ */
+function bayClasses(n: number, W: number): BayClass[] {
+  const rel = bayRhythm(n);
+  const unit = W / n;
+  const byKey = new Map<string, BayClass>();
+  let cursor = -W / 2;
+  for (const r of rel) {
+    const width = r * unit;
+    const centre = cursor + width / 2;
+    cursor += width;
+    const key = width.toFixed(4);
+    const cls = byKey.get(key) ?? { key, width, centres: [] };
+    cls.centres.push(centre);
+    byKey.set(key, cls);
+  }
+  return [...byKey.values()];
+}
+
+// ---------------------------------------------------------------------------
 // Probe-GI opt-in (fragment stage — tier faces are far larger than the 16 m
 // probe grid, so the veg-style vertex hoist would smear; see Forests.patchGI)
 // ---------------------------------------------------------------------------
@@ -132,12 +240,15 @@ function patchCityGI(mat: MeshStandardNodeMaterial, gi: ProbeGI | null): void {
 /** Opaque gold trim for INSTANCED relief (per-instance value jitter). */
 function trimGoldInstanced(gi: ProbeGI | null): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
-  m.metalness = 0.85;
-  m.roughness = 0.3;
+  m.metalness = FAM.gold.metalness;
+  m.roughness = FAM.gold.roughness;
   const jit = slotHash(instanceIndex as unknown as NU, 11).mul(0.14).add(0.93) as unknown as NF;
   m.colorNode = vec3(GOLD.r, GOLD.g, GOLD.b).mul(jit) as unknown as NV3;
   // faint self-light so shaded courses stay legible gold, far under bloom
-  m.emissiveNode = vec3(GOLD.r, GOLD.g, GOLD.b).mul(jit).mul(0.18) as unknown as NV3;
+  m.emissiveNode = vec3(GOLD.r, GOLD.g, GOLD.b)
+    .mul(jit)
+    .mul(distantLift())
+    .mul(FAM.gold.selfLight) as unknown as NV3;
   patchCityGI(m, gi);
   return m;
 }
@@ -146,22 +257,65 @@ function trimGoldInstanced(gi: ProbeGI | null): MeshStandardNodeMaterial {
 function trimGoldPlain(gi: ProbeGI | null): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
   m.color.copy(GOLD);
-  m.metalness = 0.85;
-  m.roughness = 0.3;
-  m.emissive.copy(GOLD);
-  m.emissiveIntensity = 0.18;
+  m.metalness = FAM.gold.metalness;
+  m.roughness = FAM.gold.roughness;
+  m.emissiveNode = selfLightNode(GOLD, FAM.gold.selfLight, 0);
   patchCityGI(m, gi);
   return m;
+}
+
+/**
+ * Paving articulation for the terrace pavements: joint grooves and a faint
+ * per-slab tone variation on a world-space grid.
+ *
+ * WHY A MATERIAL AND NOT GEOMETRY. Pillar A's "geometry, not textures" rule
+ * is written for WALL planes and specifies "~0.3 m of real coursing/reveal
+ * depth" — a spec for reveals you look ACROSS. A pavement is looked ALONG,
+ * and what breaks up a floor is the joint between slabs, which on real
+ * monumental paving is one to three centimetres. Modelling 2.4 m slabs in real
+ * relief across a 490 m annulus is hundreds of thousands of boxes for a
+ * feature whose entire depth is below a pixel at every viewing angle a walker
+ * can take. The merged course bands carry the mid and far read; this carries
+ * the near one, where the pavement is otherwise a single unbroken plane
+ * filling most of the frame.
+ *
+ * World-space, so the grid stays put as the walker crosses it and does not
+ * swim with the mesh; and shared by both pavement materials, so a course
+ * boundary never breaks the joint lattice running across it.
+ */
+function pavingDetail(m: MeshStandardNodeMaterial, base: Color): void {
+  const PITCH = 0.12; // local units — 2.4 m slabs at NJ_SCALE
+  const p = positionWorld.xz.div(PITCH * 20);
+  const g = fract(p) as unknown as { x: NF; y: NF };
+  const dx = g.x.sub(0.5).abs() as unknown as NF;
+  const dz = g.y.sub(0.5).abs() as unknown as NF;
+  // 0 across a slab face, 1 in the joint
+  const joint = smoothstep(0.44, 0.5, tslMax(dx, dz) as unknown as NF) as unknown as NF;
+  // per-slab tone: a cheap hash of the slab's integer cell
+  const cell = tslFloor(p) as unknown as { x: NF; y: NF };
+  const h = fract(
+    cell.x.mul(0.1031).add(cell.y.mul(0.1741)).add(cell.x.mul(cell.y).mul(0.0973)).sin().mul(43758.5453),
+  ) as unknown as NF;
+  const tone = h.mul(0.09).add(0.955) as unknown as NF;
+  // Fade the lattice out with distance. A fixed-width analytic grid aliases
+  // into crawling moire once a slab is under a pixel, and TRAA turns that into
+  // shimmer rather than removing it. Past ~130 m the merged course bands are
+  // carrying the read anyway, so the joints have nothing left to do.
+  const near = positionWorld.distance(cameraPosition) as unknown as NF;
+  const fade = smoothstep(260, 90, near) as unknown as NF;
+  const j = joint.mul(fade) as unknown as NF;
+  m.colorNode = vec3(base.r, base.g, base.b)
+    .mul(mix(float(1.0), tone, fade) as unknown as NF)
+    .mul(mix(float(1.0), float(0.72), j) as unknown as NF) as unknown as NV3;
 }
 
 /** Ivory/white course material — the pale bands alternating with the gold. */
 function ivoryMaterial(gi: ProbeGI | null): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
   m.color.copy(IVORY);
-  m.metalness = 0.05;
-  m.roughness = 0.5;
-  m.emissive.copy(IVORY);
-  m.emissiveIntensity = 0.12;
+  m.metalness = FAM.ivory.metalness;
+  m.roughness = FAM.ivory.roughness;
+  m.emissiveNode = selfLightNode(IVORY, FAM.ivory.selfLight, 0);
   patchCityGI(m, gi);
   return m;
 }
@@ -203,16 +357,16 @@ function interiorMaterial(f: number, tierH: number, gi: ProbeGI | null): MeshSta
  */
 function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
+  const G = FAM.goldGlass;
   m.color.copy(GOLD.clone().lerp(CRYSTAL, f));
-  m.metalness = 0;
-  m.roughness = 0.07;
-  // 0.85 muddied the panes to beige — keep more gold body
-  m.transmission = transmissionAblated() ? 0 : 0.7;
-  m.ior = 1.45;
-  m.thickness = 0.9; // local units — ×20 world scale ⇒ ~18 m of gold glass depth
-  m.attenuationColor.copy(GOLD);
-  m.attenuationDistance = 1.4;
-  m.specularIntensity = 1.0;
+  m.metalness = G.metalness;
+  m.roughness = G.roughness;
+  m.transmission = transmissionAblated() ? 0 : (G.transmission ?? 0);
+  m.ior = G.ior ?? 1.5;
+  m.thickness = G.thickness ?? 1;
+  m.attenuationColor.set(G.attenuationColor ?? '#ffffff');
+  m.attenuationDistance = G.attenuationDistance ?? Infinity;
+  m.specularIntensity = G.specularIntensity ?? 1.0;
   m.side = FrontSide; // avoids the DoubleSide double-pass + second framebuffer copy
 
   // mullion grid: cells ~21×29 m world, each cell an arched pane (bright
@@ -229,27 +383,79 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   ) as unknown as NF;
   const grad = mix(float(1.0), float(0.55), positionLocal.y.div(paneH).clamp(0, 1)) as unknown as NF;
   const jit = slotHash(instanceIndex as unknown as NU, 7).mul(0.25).add(0.85) as unknown as NF;
-  // bloom contract: K·grad·Y(warm) ≤ ~0.85 at the base tier, rising with f;
-  // only the crown/glory cross the 1.5 threshold
-  const K = 1.05 + 1.0 * f;
+  // The 2026-07-29 GPU pass found these bays reading as flat printed panels
+  // despite carrying real transmission. Same fault as the gems: the emissive
+  // was doing all the work. The old floor term (`pane*0.62 + 0.38`) meant even
+  // the RIBS emitted 38%, so the panel was an emissive texture with
+  // transmission underneath it that nothing could see through. Dropping the
+  // floor to 0.10 lets the glowing interior core behind the skin -- which has
+  // floor bands and column shading built for exactly this -- refract into
+  // view, which is where the depth was supposed to come from all along.
+  //
+  // The grazing term is what makes glass read AS glass: a pane brightens hard
+  // toward its silhouette as reflectance climbs, and a flat panel does not.
+  // Adding it back at the edges recovers the punch the lower floor gives up.
+  //
+  // Bloom contract: peak is K x grad x jit x (0.10 + 0.90 + 0.35 grazing)
+  // against the old K x grad x jit x 1.0, and K itself drops, so every tier
+  // sits further under NJ_CONFIG.palette.bloomThreshold than before. Only the
+  // crown still crosses.
+  // BLOOM ARITHMETIC, corrected. The previous commit claimed every tier now
+  // sits further under `bloomThreshold` than before; that is true FACE-ON and
+  // false at the silhouette, where the grazing term adds. Worked through: the
+  // warm emissive vec has luminance ~0.772, the top glass tier is f = 0.75
+  // (the crown is a different branch, so f never reaches 1), grad <= 1 and
+  // jit <= 1.1. Old peak = (1.05 + 0.75) x 1.0 x 1.1 x 0.772 = 1.53, already
+  // at the line. With a 0.35 grazing weight the new peak is 1.67, i.e. OVER.
+  // At 0.20 it is (0.92 + 0.54) x 1.2 x 1.1 x 0.772 = 1.49 — under the
+  // threshold and under the old value at both limits, which is what the claim
+  // should have said.
+  const K = 0.92 + 0.72 * f;
   m.emissiveNode = vec3(1.0, 0.74, 0.42)
-    .mul(pane.mul(0.62).add(0.38))
+    .mul(pane.mul(0.9).add(0.1).add(grazing().mul(0.2)))
     .mul(grad)
     .mul(jit)
     .mul(K) as unknown as NV3;
   return m;
 }
 
-/** Crystal-jasper wall material (Rev 21:18 "wall built of jasper... clear as glass"). */
+/**
+ * Crystal-jasper wall material.
+ *
+ * CITATION, corrected 2026-07-29. This comment used to read
+ * `Rev 21:18 "wall built of jasper... clear as glass"`, which elides across a
+ * clause boundary and misattributes the text. Rev 21:18 as the canonical
+ * dataset records it is: "The wall of the city is built of jasper, while the
+ * city itself is pure gold, LIKE CLEAR GLASS" — the transparency belongs to
+ * the gold city, not to the wall.
+ *
+ * The crystalline reading of the jasper is nonetheless supported, from
+ * **Rev 21:11** (`glory-of-god-illuminating-the-city`, tier `clear`): "radiance
+ * like a most rare jewel, like jasper, CLEAR AS CRYSTAL". So a translucent
+ * wall stands on an inference ACROSS TWO VERSES — 21:18 makes the wall jasper,
+ * 21:11 makes John's jasper clear as crystal — and 21:11 is describing the
+ * city's radiance rather than the wall's fabric. That is a reasonable
+ * inference and it is the one this render makes, but it is an inference, and
+ * labelling it as a single-verse warrant (as the old comment did) is exactly
+ * the silent smoothing CLAUDE.md forbids.
+ */
 function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
+  const J = FAM.jasper;
   m.color.copy(JASPER);
-  m.metalness = 0.05;
-  m.roughness = 0.3; // 0.18 + 0.35 emissive washed the wall flat white
-  m.clearcoat = 1.0;
-  m.clearcoatRoughness = 0.15;
-  m.emissive.copy(JASPER);
-  m.emissiveIntensity = 0.22;
+  m.metalness = J.metalness;
+  m.roughness = J.roughness;
+  m.clearcoat = J.clearcoat ?? 0;
+  m.clearcoatRoughness = J.clearcoatRoughness ?? 0;
+  m.transmission = transmissionAblated() ? 0 : (J.transmission ?? 0);
+  m.ior = J.ior ?? 1.5;
+  m.thickness = J.thickness ?? 1;
+  m.attenuationColor.copy(JASPER);
+  m.attenuationDistance = J.attenuationDistance ?? Infinity;
+  // Grazing-weighted, like the gems and the glass — the flat 0.22 term was
+  // the third instance of the same fault and it is what kept a 600 m wall
+  // reading as one pale unbroken plate.
+  m.emissiveNode = selfLightNode(JASPER, J.selfLight, 0.7);
   patchCityGI(m, gi);
   return m;
 }
@@ -257,20 +463,73 @@ function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
 /** Nacre pearl for the gate heads (Rev 21:21 — each gate a single pearl). */
 function pearlMaterial(): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
+  const R = FAM.pearl;
   m.color.copy(PEARL);
-  m.metalness = 0;
-  m.roughness = 0.32;
-  m.clearcoat = 1.0;
-  m.clearcoatRoughness = 0.12;
-  m.iridescence = 1.0;
-  m.iridescenceIOR = 1.8;
-  m.iridescenceThicknessRange = [180, 480];
-  m.sheen = 0.5;
-  m.sheenColor.set(0xfff2e0);
+  m.metalness = R.metalness;
+  m.roughness = R.roughness;
+  m.clearcoat = R.clearcoat ?? 0;
+  m.clearcoatRoughness = R.clearcoatRoughness ?? 0;
+  m.iridescence = R.iridescence ?? 0;
+  m.iridescenceIOR = R.iridescenceIOR ?? 1.3;
+  m.iridescenceThicknessRange = R.iridescenceThicknessRange ?? [100, 400];
+  m.sheen = R.sheen ?? 0;
+  m.sheenColor.set(R.sheenColor ?? '#ffffff');
   m.emissive.copy(PEARL);
-  m.emissiveIntensity = 0.5;
+  m.emissiveIntensity = R.selfLight;
   m.side = DoubleSide;
   return m;
+}
+
+/**
+ * Grazing-angle weight, 0 face-on and 1 at the silhouette — the Schlick shape
+ * without the F0 term, used as an artistic weight rather than as a
+ * reflectance. Shared by the gem and glass families, which both had the same
+ * bug: a CONSTANT self-light term standing in for the angle-dependent
+ * behaviour that is the entire visual signature of a transmissive material.
+ */
+function grazing(): NF {
+  const v = cameraPosition.sub(positionWorld).normalize() as unknown as NV3;
+  return float(1)
+    .sub(normalWorld.dot(v).abs() as unknown as NF)
+    .clamp(0, 1) as unknown as NF;
+}
+
+/**
+ * Distance lift on the city's self-light: 1x near, ~2.8x beyond ~9 km.
+ *
+ * CITY-QUALITY-BAR pillar D's remaining half. The stepped silhouette now reads
+ * at 12 km (the bay rhythm and coursing fixed that), but the 2026-07-30 pass
+ * showed the city is NOT the brightest thing in its own landscape at range —
+ * the cloud deck is, comfortably, and the city sits as a warm tan mass inside
+ * the pale haze band at the horizon. Aerial perspective is a post-pass, so it
+ * cannot be selectively lifted off one object; what CAN be raised is the
+ * radiance going into it.
+ *
+ * This is a beacon term, and it is the one place in the city where boosting
+ * emissive with distance is not a cheat but the actual claim: Rev 21:23, "the
+ * glory of God gives it light", and 21:24, "the nations will walk by its
+ * light". A city lit by God that fades into haze at 12 km is asserting
+ * something the text denies. Pillar D says the same thing in its own words —
+ * the summit is "a wayfinding beacon visible from anywhere in the visible
+ * landscape".
+ *
+ * Applied ONLY to the opaque families (gold trim, ivory course, jasper wall),
+ * whose self-light is 0.12-0.18 and stays far under `bloomThreshold` even at
+ * 2.8x. Deliberately NOT applied to the tier glass, whose emissive is already
+ * within ~0.01 of the threshold at the top tier (see goldGlassMaterial), nor
+ * to the crown, which is over it on purpose already.
+ */
+function distantLift(): NF {
+  const d = positionWorld.distance(cameraPosition) as unknown as NF;
+  return smoothstep(2500, 9000, d).mul(1.8).add(1) as unknown as NF;
+}
+
+/** Family self-light as a node: albedo x grazing mix x distance lift x k. */
+function selfLightNode(c: Color, k: number, grazeMix: number): NV3 {
+  const w = grazing()
+    .mul(grazeMix)
+    .add(1 - grazeMix) as unknown as NF;
+  return vec3(c.r, c.g, c.b).mul(w).mul(distantLift()).mul(k) as unknown as NV3;
 }
 
 /**
@@ -289,25 +548,31 @@ function transmissionAblated(): boolean {
 }
 
 /** Faceted gem material for one foundation stone (transmission + dispersion). */
-function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
+function gemMaterial(gem: Gem): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
-  m.color.set(hex);
-  m.metalness = 0;
-  m.roughness = 0.08;
-  // 0.6: enough body that per-facet shading survives
-  m.transmission = transmissionAblated() ? 0 : 0.6;
-  m.ior = 2.0;
-  m.thickness = 1.2;
+  // hue and optics are per-stone data (FOUNDATION_GEMS, Rev 21:19-20); the
+  // palette table holds only what all twelve share
+  const E = FAM.gem;
+  m.color.set(gem.color);
+  m.metalness = E.metalness;
+  m.roughness = E.roughness;
+  m.transmission = transmissionAblated() ? 0 : (E.transmission ?? 0);
+  m.ior = gem.n;
+  m.thickness = E.thickness ?? 1;
   m.attenuationColor.copy(m.color);
-  m.attenuationDistance = 0.9;
-  m.dispersion = 0.25;
-  m.specularIntensity = 1.0;
+  m.attenuationDistance = E.attenuationDistance ?? Infinity;
+  m.dispersion = gem.dispersion * P.gemDispersionScale;
+  m.specularIntensity = E.specularIntensity ?? 1.0;
   m.side = FrontSide;
-  m.emissive.copy(m.color);
-  // low enough that facet shading reads (0.7 flattened the cut faces to a
-  // uniform pastel strip); saturated hues stay far under bloom either way,
-  // and the grade's c.max(0) clamp (PostStack) covers the saturated-dark case
-  m.emissiveIntensity = 0.4;
+  // Grazing-weighted, NOT constant. The old flat term lit every facet the same
+  // and that is what made a cut stone read as a painted slab; weighting it to
+  // the silhouette is where a real stone's internal reflections pile up, and
+  // it keeps a shaded course off black (Pillar B) without erasing the facets.
+  // Saturated hues stay far under bloom, and PostStack's c.max(0) clamp covers
+  // the saturated-dark case.
+  m.emissiveNode = vec3(m.color.r, m.color.g, m.color.b)
+    .mul(grazing().mul(0.75).add(0.25))
+    .mul(E.selfLight) as unknown as NV3;
   return m;
 }
 
@@ -401,11 +666,16 @@ function arcadeGlowGeometry(): BufferGeometry {
  * deterministic vertex jitter, then flat facet normals (non-indexed).
  */
 function facetedBandGeometry(len: number, h: number, thick: number, seed: number): BufferGeometry {
-  // facet pitch ~2.2 local (≈44 m world): big enough to read from the plaza,
-  // small enough to break the band into distinct cut faces (len/7 gave 140 m
-  // undulations that read as a smooth wavy strip, not a jewelled course)
-  const segs = Math.max(12, Math.round(len / 2.2));
-  const geo = new BoxGeometry(len, h, thick, segs, 3, 3);
+  // Facet pitch ~1.2 local (~24 m world). It was 2.2, and the 2026-07-29 GPU
+  // pass showed why that is too coarse: with only ~15 facets spanning a band,
+  // most of a course shares one orientation, so either the whole band catches
+  // the sun or none of it does. A cut stone's brilliance is the CHANCE that
+  // some facet is aimed at the light while its neighbour is not, which needs
+  // enough distinct orientations for that to vary across the surface. (len/7
+  // was the original and gave 140 m undulations reading as a smooth wavy
+  // strip, not a jewelled course — this is the same error, less of it.)
+  const segs = Math.max(20, Math.round(len / 1.2));
+  const geo = new BoxGeometry(len, h, thick, segs, 5, 3);
   const pos = geo.getAttribute('position');
   let state = (seed * 2654435761) >>> 0;
   const rand = (): number => {
@@ -417,7 +687,10 @@ function facetedBandGeometry(len: number, h: number, thick: number, seed: number
     const y = pos.getY(i);
     // keep the ends and the ground line intact so courses still meet cleanly
     if (Math.abs(x) > len / 2 - 0.6 || y < -h / 2 + 0.3) continue;
-    pos.setXYZ(i, x + rand() * 1.1, y + rand() * 0.85, pos.getZ(i) + rand() * 1.0);
+    // more depth jitter than lateral: tilting facets OUT of the band plane is
+    // what varies their normals against the sun, and the old +/-0.5 on a
+    // 4-thick course barely moved them off flush
+    pos.setXYZ(i, x + rand() * 0.9, y + rand() * 0.8, pos.getZ(i) + rand() * 1.9);
   }
   const faceted = geo.toNonIndexed();
   geo.dispose();
@@ -486,16 +759,42 @@ function wallSegments(outer: number): Array<[number, number]> {
  */
 const CORNICE_T = 2.4;
 
+/**
+ * Ashlar coursing on the wall's OUTER face: horizontal courses standing proud
+ * of the slab, each with a recessed joint under it.
+ *
+ * Pillar A is unambiguous for this surface — "every wall plane needs at least
+ * ~0.3 m of real coursing/reveal depth", geometry and not a normal map — and
+ * unlike the terrace pavements there is no compression argument against it
+ * here: a wall is looked ACROSS, which is precisely the case the rule is
+ * written for. The 2026-07-29 pass found the jasper reading as a single flat
+ * pale plate at 600 m from the camera, the largest unbroken surface in the
+ * city and the one the whole southern approach is composed around.
+ *
+ * Courses are MERGED into the caller's mesh list, one geometry per wall
+ * segment run, so a coursed wall costs the same handful of draw calls the
+ * plain slab did. They stand proud of the outer face rather than being cut
+ * into it, so the slab stays a single closed box and cityCollide's wall claim
+ * — which is analytic on `WALL_INNER` and the outer radius — does not move.
+ * The proud depth is well under the collision slab's own thickness, so a
+ * walker still stops at the face and never clips a course.
+ */
+const WALL_COURSE_H = 0.8; // local units — ~16 m courses on a 600 m wall
+const WALL_COURSE_PROUD = 0.32; // ~6.4 m reveal, well over Pillar A's 0.3 m floor
+
 function buildWallSide(
   face: Face,
   inner: number,
   outer: number,
   h: number,
   mat: MeshStandardNodeMaterial,
+  /** also course the INWARD face — it is the gallery's outer wall (see below) */
+  courseInner = false,
 ): Mesh[] {
   const meshes: Mesh[] = [];
   const radialMid = (face.sign * (inner + outer)) / 2;
   const radialThick = outer - inner;
+  const courseParts: BufferGeometry[] = [];
   for (const [t0, t1] of wallSegments(outer)) {
     const len = t1 - t0;
     const mid = (t0 + t1) / 2;
@@ -509,6 +808,45 @@ function buildWallSide(
     seg.castShadow = true;
     seg.receiveShadow = true;
     meshes.push(seg);
+
+    // Alternating courses only: a proud band every OTHER course leaves the
+    // slab face itself as the recessed joint, so one box buys both the
+    // projection and the shadow line under it.
+    //
+    // The INWARD face gets the same treatment when asked, because on the base
+    // tier it is not a back face at all — it is the outer wall of the covered
+    // street-of-gold gallery, which the 2026-07-29 pass found reading as an
+    // empty corridor between two unbroken planes. Coursing it costs nothing
+    // extra: same merge, same material, courses offset by one so the two faces
+    // do not read as a single striped slab seen through.
+    const facesR: Array<{ r: number; phase: number }> = [
+      { r: face.sign * (outer + WALL_COURSE_PROUD / 2), phase: 0 },
+    ];
+    if (courseInner) facesR.push({ r: face.sign * (inner - WALL_COURSE_PROUD / 2), phase: 1 });
+    const n = Math.floor(h / WALL_COURSE_H);
+    for (const { r: faceR, phase } of facesR) {
+      for (let k = phase; k < n; k += 2) {
+        const cy = (k + 0.5) * WALL_COURSE_H;
+        if (cy + WALL_COURSE_H / 2 > h) break;
+        const cg =
+          face.axis === 'z'
+            ? new BoxGeometry(len, WALL_COURSE_H * 0.72, WALL_COURSE_PROUD)
+            : new BoxGeometry(WALL_COURSE_PROUD, WALL_COURSE_H * 0.72, len);
+        if (face.axis === 'z') cg.translate(mid, cy, faceR);
+        else cg.translate(faceR, cy, mid);
+        courseParts.push(cg);
+      }
+    }
+  }
+  if (courseParts.length > 0) {
+    const merged = mergeGeometries(courseParts, false);
+    for (const g of courseParts) g.dispose();
+    if (merged) {
+      const courses = new Mesh(merged, mat);
+      courses.castShadow = true;
+      courses.receiveShadow = true;
+      meshes.push(courses);
+    }
   }
   return meshes;
 }
@@ -674,7 +1012,7 @@ function buildFoundationCourse(outer: number): Group {
     // FOUNDATION_GEMS colours are ESV-order stylised hues (ADR 0009 rule 2 —
     // not photoreal mineralogy); ordered access mirrors cityModel's own
     // FOUNDATION_BANDS↔FOUNDATION_GEMS[band.gem] pairing.
-    const mat = gemMaterial(FOUNDATION_GEMS[band.gem].color);
+    const mat = gemMaterial(FOUNDATION_GEMS[band.gem]);
     const bandIdx = FOUNDATION_BAND_OFFSETS.indexOf(band.offset);
     const radialMid = face.sign * (outer + bandThick / 2 - inset);
     spans
@@ -745,13 +1083,46 @@ export function buildCityMassing(
   const trimInst = trimGoldInstanced(gi);
   const trimPlain = trimGoldPlain(gi);
   const ivory = ivoryMaterial(gi);
+  // Paving gold: a VARIATION on the gold family for the terrace course bands,
+  // not a family of its own (see CityPalette's scope note). A floor is walked,
+  // not polished — the trim's 0.85 metalness would make a 490 m terrace a
+  // mirror and blow the sun straight back at the camera, so the metal drops
+  // and the roughness rises while the hue stays the family's.
+  const pavingGold = ivoryMaterial(gi);
+  pavingGold.color.copy(GOLD).lerp(IVORY, 0.42);
+  pavingGold.metalness = 0.18;
+  pavingGold.roughness = 0.62;
+  // emissiveNode, not emissive/emissiveIntensity: ivoryMaterial now sets a
+  // NODE (for the distance lift), and a node wins over the scalar pair — this
+  // course would have emitted ivory over its gold albedo otherwise
+  pavingGold.emissiveNode = selfLightNode(pavingGold.color, FAM.ivory.selfLight, 0);
+  pavingDetail(pavingGold, pavingGold.color);
+  // the ivory courses share the same joint lattice — a separate ivory instance
+  // so the cornice fascias and arcade bands keep the plain material
+  const pavingIvory = ivoryMaterial(gi);
+  pavingIvory.roughness = 0.58;
+  pavingDetail(pavingIvory, pavingIvory.color);
   const pearl = pearlMaterial();
 
-  // Street-of-gold apron around the base.
+  // Street-of-gold apron around the base (Rev 21:21, "the street of the city
+  // was pure gold"). This slab IS the gallery floor and the plaza a walker
+  // arrives on through a gate, and until now it was bare: the 2026-07-29 pass
+  // found it taking half the frame from inside the gallery with nothing on it.
+  //
+  // Two changes. It gets the same world-space paving lattice as the terrace
+  // pavements — one shared grid, so a walker crossing from plaza to terrace
+  // reads one continuous convention. And the metalness drops from 0.5: at that
+  // value a 4,600 m gold plaza is a half-mirror that throws the sun straight
+  // back at the camera, which is the opposite of the gold-ground reference in
+  // reference-city/ (Hagia Sophia — gold that CATCHES and redistributes light
+  // rather than specularly reflecting it).
   const apron = new MeshStandardNodeMaterial();
   apron.color.copy(GOLD);
-  apron.metalness = 0.5;
-  apron.roughness = 0.3;
+  apron.metalness = 0.2;
+  apron.roughness = 0.55;
+  apron.emissive.copy(GOLD);
+  apron.emissiveIntensity = FAM.ivory.selfLight;
+  pavingDetail(apron, apron.color);
   patchCityGI(apron, gi);
   const plaza = new Mesh(new BoxGeometry(232, 5, 232), apron);
   plaza.position.y = -2.5;
@@ -814,7 +1185,8 @@ export function buildCityMassing(
       // the base ascent climbs (ascentModel) — cityCollide opens the same
       // band, one shared table, no mirrors.
       for (const face of FACES) {
-        for (const seg of buildWallSide(face, WALL_INNER, t.half, H - CORNICE_T, jasper))
+        // courseInner: this slab's inward face is the gallery's outer wall
+        for (const seg of buildWallSide(face, WALL_INNER, t.half, H - CORNICE_T, jasper, true))
           city.add(seg);
       }
       for (const gate of GATES) {
@@ -838,6 +1210,35 @@ export function buildCityMassing(
           }
         }
         city.add(instancedOnFaces(pilGeo, trimInst, pilPlaces));
+
+        // GALLERY COLONNADE — engaged piers on the plinth's outward face, the
+        // gallery's INNER wall. With the wall's inward face now coursed, this
+        // is the other of the two unbroken planes the 2026-07-29 pass found
+        // filling that corridor.
+        //
+        // ENGAGED, not free-standing, and that is the whole design constraint.
+        // A colonnade down the middle of a walkable gallery would be furniture
+        // the walker walks through, because cityCollide claims the band as open
+        // and treats relief as non-colliding (its own header draws that line).
+        // Attached to a face the walker already stops at, the rhythm costs no
+        // honesty: the collision boundary and the visible surface still agree.
+        //
+        // Slots stay inside |u| <= 60 and clear of the gate lanes. The CORNERS
+        // are deliberately left bare — the base ascent climbs there (it is the
+        // only assembly-and-gate-free span of the ring, per ascentModel), and
+        // an engaged pier in a ramp's path would be geometry intersecting the
+        // one route a walker has to the terraces.
+        const galGeo = flutedPierGeometry(3.4, H - CORNICE_T - 1.2, 2.0);
+        const galPlaces: Placement[] = [];
+        for (const face of FACES) {
+          for (let k = -6; k <= 6; k++) {
+            const u = k * 10;
+            if (Math.abs(u) > 60) continue;
+            if (GATE_OFFSETS.some((g0) => Math.abs(g0 - u) < GATE_CLEAR_HALF + 3)) continue;
+            galPlaces.push({ u, y: 0, off: PLINTH_HALF + 0.4, face });
+          }
+        }
+        city.add(instancedOnFaces(galGeo, trimInst, galPlaces));
       }
     } else if (ti === last) {
       // Crown — solid, glowing, under the glory (deliberate gentle bloom).
@@ -869,44 +1270,73 @@ export function buildCityMassing(
 
       const W = 2 * t.half;
       const bay = W / t.arches;
-      const ow = bay * 0.62;
+      const classes = bayClasses(t.arches, W);
       const coursesBelow = ti === 1 ? 2 : 1;
       const winBot = yBot + coursesBelow * 4.6 + 1.4;
-      const winH = Math.max(8, yTop - 5.5 - winBot - ow / 2);
-      const paneH = winH + ow / 2;
+      // Every class shares ONE head top, so a wider bay reads as a fuller,
+      // lower-springing arch rather than as the same arch scaled — arcades of
+      // mixed bay width share their impost line, and letting the heads
+      // stagger would read as an error rather than as a rhythm.
+      const headTop = yTop - 5.5;
 
       // The glass skin is the tier's SURFACE, not ornament — it stays on
       // through `-arcade` (the arch frames around it are the ornament).
-      const glassGeo = glassPaneGeometry(ow, winH);
-      const glassMat = goldGlassMaterial(f, paneH);
-      const glassPlaces: Placement[] = [];
-      const framePlaces: Placement[] = [];
-      for (const face of FACES) {
-        for (let i = 0; i < t.arches; i++) {
-          const u = -W / 2 + bay * (i + 0.5);
-          glassPlaces.push({ u, y: winBot, off: t.half + TIER_GLASS_PROUD, face });
-          framePlaces.push({ u, y: winBot, off: t.half + 0.7, face });
+      // One InstancedMesh per width class: three widths cost three draws, not
+      // three hundred, and these frames are draw-submission bound already.
+      for (const cls of classes) {
+        const ow = cls.width * 0.62;
+        const paneH = Math.max(8 + ow / 2, headTop - winBot);
+        const winH = paneH - ow / 2;
+        const glassPlaces: Placement[] = [];
+        const framePlaces: Placement[] = [];
+        for (const face of FACES) {
+          for (const u of cls.centres) {
+            glassPlaces.push({ u, y: winBot, off: t.half + TIER_GLASS_PROUD, face });
+            framePlaces.push({ u, y: winBot, off: t.half + 0.7, face });
+          }
+        }
+        const glassMesh = instancedOnFaces(
+          glassPaneGeometry(ow, winH),
+          goldGlassMaterial(f, paneH),
+          glassPlaces,
+          { castShadow: false },
+        );
+        glassMesh.receiveShadow = false;
+        city.add(glassMesh);
+        if (arcade) {
+          const frameGeo = archFrameGeometry(ow, winH, cls.width * 0.07, 2.4);
+          city.add(instancedOnFaces(frameGeo, trimInst, framePlaces));
         }
       }
-      const glassMesh = instancedOnFaces(glassGeo, glassMat, glassPlaces, { castShadow: false });
-      glassMesh.receiveShadow = false;
-      city.add(glassMesh);
 
       if (arcade) {
-        const frameGeo = archFrameGeometry(ow, winH, bay * 0.07, 2.4);
-        city.add(instancedOnFaces(frameGeo, trimInst, framePlaces));
-
-        // Full-height fluted piers at the bay lines.
+        // Full-height fluted piers at the bay LINES, which the rhythm has
+        // made non-uniform. Corner piers get their own heavier geometry: the
+        // corners are where a stepped mass either reads as built or as a
+        // extruded box, and the old uniform run gave them nothing.
+        const lines: number[] = [-W / 2];
+        {
+          // walk the AUTHORED order — `classes` is grouped by width and has
+          // lost it
+          let cursor = -W / 2;
+          for (const r of bayRhythm(t.arches)) {
+            cursor += (r * W) / t.arches;
+            lines.push(cursor);
+          }
+        }
         const pierGeo = flutedPierGeometry(bay * 0.2, H - 2.2, 3);
+        const cornerGeo = flutedPierGeometry(bay * 0.34, H - 1.4, 4.2);
         const pierPlaces: Placement[] = [];
+        const cornerPlaces: Placement[] = [];
         for (const face of FACES) {
-          for (let i = 0; i <= t.arches; i++) {
-            const u = -W / 2 + bay * i;
+          for (const u of lines) {
             if (riverSlot(face, u)) continue; // the cascade owns the meridian
-            pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
+            if (Math.abs(Math.abs(u) - W / 2) < 1e-6) cornerPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
+            else pierPlaces.push({ u, y: yBot, off: t.half + 0.6, face });
           }
         }
         city.add(instancedOnFaces(pierGeo, trimInst, pierPlaces));
+        city.add(instancedOnFaces(cornerGeo, trimInst, cornerPlaces));
 
         // Gold frieze fascia between the glass heads and the cornice.
         for (const face of FACES) {
@@ -929,9 +1359,15 @@ export function buildCityMassing(
     const corniceDrop = ti === last ? 0.15 : 0;
     const corniceY = yTop - CORNICE_T / 2 - corniceDrop;
     const slabHalf = t.half + 2.5;
-    const addSlab = (sx0: number, sx1: number, sz0: number, sz1: number): void => {
+    const addSlab = (
+      sx0: number,
+      sx1: number,
+      sz0: number,
+      sz1: number,
+      mat: MeshStandardNodeMaterial = ivory,
+    ): void => {
       if (sx1 - sx0 < 0.01 || sz1 - sz0 < 0.01) return;
-      const slab = new Mesh(new BoxGeometry(sx1 - sx0, CORNICE_T, sz1 - sz0), ivory);
+      const slab = new Mesh(new BoxGeometry(sx1 - sx0, CORNICE_T, sz1 - sz0), mat);
       slab.position.set((sx0 + sx1) / 2, corniceY, (sz0 + sz1) / 2);
       slab.castShadow = true;
       slab.receiveShadow = true;
@@ -950,8 +1386,75 @@ export function buildCityMassing(
         xCursor = h.x1;
       }
       addSlab(xCursor, slabHalf, hz0, hz1);
-    } else {
+    } else if (ti === last || ti + 1 >= tiers.length) {
       addSlab(-slabHalf, slabHalf, -slabHalf, slabHalf);
+    } else {
+      // TERRACE PAVEMENT COURSING.
+      //
+      // These cornice tops are the largest surfaces in most framings of the
+      // city — a 2026-07-29 GPU pass found four of them reading as blank
+      // white planes filling more screen than every piece of ornament
+      // combined, and from a walker standing on one the pavement is ~65% of
+      // the frame with nothing in it. CITY-QUALITY-BAR pillar A is written
+      // for "every wall plane"; the horizontal surfaces slipped the clause.
+      //
+      // The read comes from CONCENTRIC COURSE BANDS, alternating pale ivory
+      // with a soft paving gold (Rev 21:21's street of gold, at floor
+      // roughness rather than the trim's mirror metal). Flat inlay, not
+      // relief, and that is a considered reading of the pillar rather than a
+      // dodge: a monumental pavement gets its scale and its centre from
+      // banded inlay — Siena, St Peter's — while raised relief underfoot
+      // would be a lie here, because cityCollide claims the whole ring at one
+      // height and a walker would clip straight through any kerb we drew. A
+      // real parapet or plinth course needs a collision change and is left as
+      // the follow-up.
+      //
+      // Bands abut and never overlap: the one-owner-per-pavement-plane rule
+      // that the 2026-07-19 z-fight fix established still holds exactly.
+      const inner = tiers[ti + 1].half;
+      addSlab(-inner, inner, -inner, inner); // covered by the tier above
+      // MERGED, so the course profile is an art decision rather than a
+      // draw-call budget: one mesh per material for the whole ring however
+      // many courses it has.
+      const widths = pavementCourses();
+      const span = slabHalf - inner;
+      const geoA: BufferGeometry[] = [];
+      const geoB: BufferGeometry[] = [];
+      const push = (
+        into: BufferGeometry[],
+        sx0: number,
+        sx1: number,
+        sz0: number,
+        sz1: number,
+      ): void => {
+        if (sx1 - sx0 < 0.01 || sz1 - sz0 < 0.01) return;
+        const g = new BoxGeometry(sx1 - sx0, CORNICE_T, sz1 - sz0);
+        g.translate((sx0 + sx1) / 2, corniceY, (sz0 + sz1) / 2);
+        into.push(g);
+      };
+      let r0 = inner;
+      widths.forEach((w, k) => {
+        const r1 = r0 + span * w;
+        const into = k % 2 === 1 ? geoB : geoA;
+        push(into, -r1, r1, -r1, -r0); // north
+        push(into, -r1, r1, r0, r1); // south
+        push(into, -r1, -r0, -r0, r0); // west
+        push(into, r0, r1, -r0, r0); // east
+        r0 = r1;
+      });
+      for (const [parts, mat] of [
+        [geoA, pavingIvory],
+        [geoB, pavingGold],
+      ] as const) {
+        if (parts.length === 0) continue;
+        const merged = mergeGeometries(parts, false);
+        for (const g of parts) g.dispose();
+        if (!merged) continue;
+        const mesh = new Mesh(merged, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        city.add(mesh);
+      }
     }
 
     // Gold dentil course under the cornice lip.

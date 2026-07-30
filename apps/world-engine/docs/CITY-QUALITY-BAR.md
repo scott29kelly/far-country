@@ -160,9 +160,153 @@ approach once it exists.
 
 ---
 
+## Framings are now owned code, not coordinates in this file
+
+**(2026-07-29)** The four framings listed with the 2026-07-01 delta list below
+were absolute world coordinates, and by 2026-07-29 **not one of them still
+framed the city** — the massing outgrew them (at `p:[0,1000,5200]` the city now
+overflows the frame and is cropped at the top) and nothing flagged it. The
+ranked list was being re-read against poses that no longer showed what they
+claimed to show. Those coordinates are kept below only as the historical record
+of that session.
+
+The replacement lives in code: **`src/nj/reviewFramings.ts`**, nine composed
+framings authored in LOCAL city units and resolved through the same owner
+tables the geometry, collision and picks consume, so a rescale or a retuned
+tier carries them along. Yaw and pitch derive from an aim point rather than
+being typed. `tools/probe-framings.ts` pins them; `tools/cityshots.ts` shoots
+the whole set from **one boot** (nine stills in ~2.5 min instead of ~8, and
+sharing one world, one auto-exposure history and one cloud state, so a sheet is
+comparable build to build).
+
+| id | judges |
+|---|---|
+| `distant-silhouette` | Pillar D at ~10 km |
+| `south-approach` | Pillar E, the composed hero |
+| `three-quarter-aerial` | Pillars D/E, the massing read |
+| `gate-approach` | Pillar A, gate portal as a real volume |
+| `foundation-course` | the twelve-gem floor, close |
+| `plaza-gallery` | Pillars A/B/C inside the wall |
+| `terrace-pavement` | Pillar A on the HORIZONTAL |
+| `arcade-bay` | Pillar A, relief depth on one repeated module |
+| `crown-sea-of-glass` | Pillars B/F at the summit |
+
+Use `npx tsx tools/cityshots.ts`; add `--framealign 0` (with `--only`) when a
+sheet is going to be pixel-diffed rather than looked at.
+
+---
+
+## Re-judged on real hardware — 2026-07-29
+
+The first GPU pass over the city since the 2026-07-02 material work. (Every
+verdict below 2026-07-18 had been taken on a machine that could render; the
+2026-07-24 to 07-28 cloud sessions had **no GPU at all**, so the visual state
+had gone eleven days unlooked-at while docs work continued on top of it.)
+Captured through the framing set above on an Intel Xe-LPG part: ~25–35 fps at
+1280×800, 19.6 M triangles, 1368 draw calls. Note for any later perf verdict:
+GPU render+compute is ~16 ms while `cpu.submitMs100` is 2430 (24 ms/frame), so
+these frames are **draw-call-submission bound, not GPU bound**.
+
+**The headline: the city is no longer a beige box, and it is now a wedding
+cake.** The 2026-07-02 pass genuinely landed — there is real instanced relief,
+voussoir arch frames, fluted piers, dentil courses, recessed gate portals with
+jambs and tribe inscriptions, and the gold trim has a convincing specular
+response at close range. What the sheet shows is that the failure moved rather
+than closed.
+
+1. **The cornice pavements are blank, and they are the largest surfaces in the
+   composition.** In `three-quarter-aerial` four enormous flat white terrace
+   tops occupy more screen than all the ornament combined; in
+   `terrace-pavement` the pavement is ~65% of the frame and carries nothing at
+   all. Pillar A is written for *wall* planes ("every wall plane needs at least
+   ~0.3 m of real coursing/reveal depth") and the horizontal surfaces slipped
+   through the clause. **They are now the single biggest gap.**
+2. **One module, tiled, with no variation axis.** Every bay on every face of
+   every tier is the same arch at the same spacing. This is the Assassin's
+   Creed benchmark inverted — kit-bashed density requires *varied* repeated
+   modules — and it is the strongest independent argument for the kit
+   extraction in `docs/plans/procedural-asset-authoring.md` lever 1: not a
+   code-organisation preference, the visible failure.
+3. **The plaza gallery is an empty corridor of two flat planes.** Gold plinth
+   wall one side, blue-grey jasper wall the other, blank floor taking half the
+   frame, no coursing or relief on any of them. The logged debt ("interior
+   plaza/wall dressing is thin at walking range") understates it, and this is a
+   place the walker is *guaranteed* to reach on foot via the processional
+   ascent.
+4. **The foundation gems read as opaque low-poly slabs.** At close range
+   (`foundation-course`) a band is a flat teal mass with a handful of large
+   triangular facets — no transmission read, no dispersion, no internal
+   structure, despite the material carrying `transmission 0.6`, `ior 2.0` and
+   `dispersion 0.25`. Closer inspection makes it *worse*, not better, which
+   inverts the intended two-scale legibility.
+5. **The tier glass bays read as flat printed panels.** In `arcade-bay` the
+   mullion grid behind the gold arch has no depth, no transmission read and no
+   glow — wallpaper inside a good frame. (Pillar B does hold here: the arcade
+   shadows are soft warm grey, not black.)
+6. **The river reads as grey haze, not water.** A pale vertical band runs the
+   full height of the south face and continues across the plain. A
+   `?stages=-river` ablation confirms the owner: it is the river of life, and
+   at close range it carries no flow, refraction, specular or foam — it reads
+   as fog laid over the facade. Delta #7 was recorded closed "to first pass" in
+   2026-07-02; at walking range it is not.
+7. **The silhouette holds its steps but loses its presence.** At ~10 km the
+   terrace bands stay legible (Pillar D's geometric half passes) but the city
+   goes pale tan against pale sky and reads smaller than it is.
+
+**Not chased, flagged only:** thin vertical bright streaks scattered across the
+sky in `crown-sea-of-glass`, most likely the particle system rather than the
+light-pillar hosts, which do not appear in that framing at all.
+
+**Ranking for the next execution pass**, by visual impact ÷ effort: **1 and 2
+together** (they are one kit-and-variation problem, exactly as #1/#3 were one
+material-and-mesh problem in 2026-07-02), then **4 and 5 together** (one optics
+pass over the transmissive families, now that `NJ_CONFIG.palette` gives them
+one home), then **3**, then **6**.
+
+### Executed 2026-07-29/30 — items 1-6 closed to first-pass quality
+
+Branch `claude/city-review-framings`. Full description in `STATUS.md`'s
+2026-07-29/30 entry; what closed, against the list above:
+
+- **1 (blank pavements)** — merged concentric course bands on an authored
+  border-and-field profile, plus a world-space paving lattice for the near
+  ground. The lattice is a MATERIAL, and deliberately: Pillar A's ~0.3 m reveal
+  spec is written for surfaces you look ACROSS, and a floor is looked ALONG,
+  where the read comes from centimetre-wide slab joints. Modelling those in
+  relief across a 490 m annulus is hundreds of thousands of boxes for a feature
+  under a pixel at every angle a walker can take. On the WALL, by contrast, the
+  rule is taken literally and the coursing is real geometry — see item 3.
+- **2 (one module tiled)** — an authored ABCBA bay cadence plus heavier corner
+  piers. Rhythm, not randomisation: per-instance colour jitter already existed
+  and does nothing for this, because the eye reads cadence.
+- **3 (empty plaza gallery)** — the wall's inward face coursed, an ENGAGED
+  colonnade on the plinth face, and the street-of-gold apron paved. Engaged
+  rather than free-standing because collision claims the band as open, so a
+  colonnade in the walk space would be furniture the walker walks through.
+- **4/5/6 (gems, glass, river)** — one bug in three places, plus the wall as a
+  fourth: each carried real transmission or simulation under a CONSTANT
+  emissive or opacity floor that erased the material's whole signature. All
+  four grazing-weighted now. Gems additionally take per-species published
+  refractive index and dispersion, so the twelve differ as the minerals do.
+- **7 (silhouette value contrast at range)** — NOT addressed. Still open.
+
+**Still open after this pass:** item 7; a real parapet or plinth course at the
+terrace lip (needs a `cityCollide` change — a kerb a walker clips through is a
+lie, so it was deliberately not built); the temple's architectural identity
+(old delta #8); wayfinding (old delta #10).
+
+**Needs Scott's call:** the gem optics are keyed to CONTESTED mineral-species
+identifications (`Gem.species` records which reading each stone uses; jacinth,
+chrysolite, agate and beryl each carry more than one credible reconstruction).
+Flagged rather than settled — nothing entered the dataset and no descriptor
+tier moved, but it is a step closer to a claim than a colour swatch is.
+
+---
+
 ## Ranked delta list (worst-first, visual impact) — 2026-07-01
 
-Framings: south establishing view (`p:[0,1000,5200], yaw:0, pitch:-0.12`),
+Framings (HISTORICAL — superseded by `src/nj/reviewFramings.ts`; see above):
+south establishing view (`p:[0,1000,5200], yaw:0, pitch:-0.12`),
 close facade (`p:[0,900,6500], pitch:-0.25`), summit top-down
 (`p:[0,6000,-2000], pitch:-0.85`), north allotment overview
 (`p:[0,3200,-20000], pitch:-0.15`). All screenshots this session via

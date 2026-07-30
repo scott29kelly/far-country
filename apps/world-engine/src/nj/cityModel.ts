@@ -118,22 +118,55 @@ export const GATES: GateDef[] = [
   { side: 'west', offset: 50, position: [-CITY_HALF, 0, 50], tribe: 'Naphtali' },
 ];
 
-export type Gem = { name: string; color: string };
+export type Gem = {
+  name: string;
+  color: string;
+  /**
+   * Mineral species the optics below are taken from. This is an
+   * IDENTIFICATION, and identifications of the Revelation stone names with
+   * modern mineral species are contested — ancient lithonyms do not map
+   * cleanly onto modern taxonomy, and `chrysolite`, `jacinth`, `agate` and
+   * `beryl` in particular carry more than one credible reconstruction.
+   * Recorded so the reader can see WHICH reading the render is keyed to.
+   */
+  species: string;
+  /** refractive index, sodium-D line (published gemmological data) */
+  n: number;
+  /** dispersion, the B-G interval (published gemmological data) */
+  dispersion: number;
+};
 
-/** Twelve foundation stones in ESV order (Rev 21:19-20); stylised gem hues. */
+/**
+ * Twelve foundation stones in ESV order (Rev 21:19-20).
+ *
+ * Hues are stylised (ADR 0009 rule 2). The optical constants are NOT: `n` and
+ * `dispersion` are the published sodium-D refractive index and B-G dispersion
+ * interval for the named species, so the twelve stones differ from each other
+ * the way the real minerals do — chalcedony's flat 1.53/0.013 against zircon's
+ * 1.93/0.039 is a three-fold spread in fire, and that spread is the variation
+ * axis the course gets instead of twelve tinted copies of one material.
+ *
+ * WHAT THIS IS AND IS NOT. It is art direction with a defensible derivation,
+ * on the CITY-QUALITY-BAR's "materials show transmission/subsurface response,
+ * not flat Lambertian paint" line. It is NOT a claim that John meant zircon by
+ * `jacinth` or peridot by `chrysolite` — those identifications are debated and
+ * `species` records the one this render happens to be keyed to. Nothing here
+ * enters the canonical dataset, nothing is pickable on this basis, and the
+ * descriptor tiers are untouched.
+ */
 export const FOUNDATION_GEMS: Gem[] = [
-  { name: 'Jasper', color: '#8FB3C9' },
-  { name: 'Sapphire', color: '#3457D5' },
-  { name: 'Agate', color: '#B7C7C9' },
-  { name: 'Emerald', color: '#1FA968' },
-  { name: 'Onyx', color: '#5A5A66' },
-  { name: 'Carnelian', color: '#B33A2B' },
-  { name: 'Chrysolite', color: '#BFD43A' },
-  { name: 'Beryl', color: '#5FD3C4' },
-  { name: 'Topaz', color: '#E8B23A' },
-  { name: 'Chrysoprase', color: '#6FBF73' },
-  { name: 'Jacinth', color: '#E07B2E' },
-  { name: 'Amethyst', color: '#8E5BC2' },
+  { name: 'Jasper', color: '#8FB3C9', species: 'chalcedony (quartz)', n: 1.54, dispersion: 0.013 },
+  { name: 'Sapphire', color: '#3457D5', species: 'corundum', n: 1.77, dispersion: 0.018 },
+  { name: 'Agate', color: '#B7C7C9', species: 'chalcedony (quartz)', n: 1.53, dispersion: 0.013 },
+  { name: 'Emerald', color: '#1FA968', species: 'beryl', n: 1.577, dispersion: 0.014 },
+  { name: 'Onyx', color: '#5A5A66', species: 'chalcedony (quartz)', n: 1.54, dispersion: 0.013 },
+  { name: 'Carnelian', color: '#B33A2B', species: 'chalcedony (quartz)', n: 1.54, dispersion: 0.013 },
+  { name: 'Chrysolite', color: '#BFD43A', species: 'olivine (peridot)', n: 1.65, dispersion: 0.02 },
+  { name: 'Beryl', color: '#5FD3C4', species: 'beryl', n: 1.577, dispersion: 0.014 },
+  { name: 'Topaz', color: '#E8B23A', species: 'topaz', n: 1.62, dispersion: 0.014 },
+  { name: 'Chrysoprase', color: '#6FBF73', species: 'chalcedony (quartz)', n: 1.53, dispersion: 0.013 },
+  { name: 'Jacinth', color: '#E07B2E', species: 'zircon', n: 1.93, dispersion: 0.039 },
+  { name: 'Amethyst', color: '#8E5BC2', species: 'quartz', n: 1.54, dispersion: 0.013 },
 ];
 
 export const FOUNDATION_BAND_OFFSETS = [(-2 * CITY_HALF) / 3, 0, (2 * CITY_HALF) / 3] as const;
