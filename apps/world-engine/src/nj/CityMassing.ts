@@ -75,6 +75,7 @@ import {
   FOUNDATION_COURSE,
   foundationCourseSpans,
   FOUNDATION_GEMS,
+  type Gem,
   GATE_OFFSETS,
   GATE_WIDTH,
   GATES,
@@ -382,11 +383,26 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   ) as unknown as NF;
   const grad = mix(float(1.0), float(0.55), positionLocal.y.div(paneH).clamp(0, 1)) as unknown as NF;
   const jit = slotHash(instanceIndex as unknown as NU, 7).mul(0.25).add(0.85) as unknown as NF;
-  // bloom contract: K·grad·Y(warm) ≤ ~0.85 at the base tier, rising with f;
-  // only the crown/glory cross the 1.5 threshold
-  const K = 1.05 + 1.0 * f;
+  // The 2026-07-29 GPU pass found these bays reading as flat printed panels
+  // despite carrying real transmission. Same fault as the gems: the emissive
+  // was doing all the work. The old floor term (`pane*0.62 + 0.38`) meant even
+  // the RIBS emitted 38%, so the panel was an emissive texture with
+  // transmission underneath it that nothing could see through. Dropping the
+  // floor to 0.10 lets the glowing interior core behind the skin -- which has
+  // floor bands and column shading built for exactly this -- refract into
+  // view, which is where the depth was supposed to come from all along.
+  //
+  // The grazing term is what makes glass read AS glass: a pane brightens hard
+  // toward its silhouette as reflectance climbs, and a flat panel does not.
+  // Adding it back at the edges recovers the punch the lower floor gives up.
+  //
+  // Bloom contract: peak is K x grad x jit x (0.10 + 0.90 + 0.35 grazing)
+  // against the old K x grad x jit x 1.0, and K itself drops, so every tier
+  // sits further under NJ_CONFIG.palette.bloomThreshold than before. Only the
+  // crown still crosses.
+  const K = 0.92 + 0.72 * f;
   m.emissiveNode = vec3(1.0, 0.74, 0.42)
-    .mul(pane.mul(0.62).add(0.38))
+    .mul(pane.mul(0.9).add(0.1).add(grazing().mul(0.35)))
     .mul(grad)
     .mul(jit)
     .mul(K) as unknown as NV3;
@@ -429,6 +445,20 @@ function pearlMaterial(): MeshPhysicalNodeMaterial {
 }
 
 /**
+ * Grazing-angle weight, 0 face-on and 1 at the silhouette — the Schlick shape
+ * without the F0 term, used as an artistic weight rather than as a
+ * reflectance. Shared by the gem and glass families, which both had the same
+ * bug: a CONSTANT self-light term standing in for the angle-dependent
+ * behaviour that is the entire visual signature of a transmissive material.
+ */
+function grazing(): NF {
+  const v = cameraPosition.sub(positionWorld).normalize() as unknown as NV3;
+  return float(1)
+    .sub(normalWorld.dot(v).abs() as unknown as NF)
+    .clamp(0, 1) as unknown as NF;
+}
+
+/**
  * ?resizeprobe=transmission — diagnostic ablation used by
  * tools/probe-resize.ts (--ablate) to bisect render-target-lifetime
  * regressions (transmission triggers the mid-pass backdrop copy); never set
@@ -444,26 +474,31 @@ function transmissionAblated(): boolean {
 }
 
 /** Faceted gem material for one foundation stone (transmission + dispersion). */
-function gemMaterial(hex: string): MeshPhysicalNodeMaterial {
+function gemMaterial(gem: Gem): MeshPhysicalNodeMaterial {
   const m = new MeshPhysicalNodeMaterial();
-  // hue is CITED data (FOUNDATION_GEMS, Rev 21:19-20); everything else is the
-  // shared gem optics from the palette table
+  // hue and optics are per-stone data (FOUNDATION_GEMS, Rev 21:19-20); the
+  // palette table holds only what all twelve share
   const E = FAM.gem;
-  m.color.set(hex);
+  m.color.set(gem.color);
   m.metalness = E.metalness;
   m.roughness = E.roughness;
   m.transmission = transmissionAblated() ? 0 : (E.transmission ?? 0);
-  m.ior = E.ior ?? 1.5;
+  m.ior = gem.n;
   m.thickness = E.thickness ?? 1;
   m.attenuationColor.copy(m.color);
   m.attenuationDistance = E.attenuationDistance ?? Infinity;
-  m.dispersion = E.dispersion ?? 0;
+  m.dispersion = gem.dispersion * P.gemDispersionScale;
   m.specularIntensity = E.specularIntensity ?? 1.0;
   m.side = FrontSide;
-  m.emissive.copy(m.color);
-  // saturated hues stay far under bloom either way, and the grade's c.max(0)
-  // clamp (PostStack) covers the saturated-dark case
-  m.emissiveIntensity = E.selfLight;
+  // Grazing-weighted, NOT constant. The old flat term lit every facet the same
+  // and that is what made a cut stone read as a painted slab; weighting it to
+  // the silhouette is where a real stone's internal reflections pile up, and
+  // it keeps a shaded course off black (Pillar B) without erasing the facets.
+  // Saturated hues stay far under bloom, and PostStack's c.max(0) clamp covers
+  // the saturated-dark case.
+  m.emissiveNode = vec3(m.color.r, m.color.g, m.color.b)
+    .mul(grazing().mul(0.75).add(0.25))
+    .mul(E.selfLight) as unknown as NV3;
   return m;
 }
 
@@ -557,11 +592,16 @@ function arcadeGlowGeometry(): BufferGeometry {
  * deterministic vertex jitter, then flat facet normals (non-indexed).
  */
 function facetedBandGeometry(len: number, h: number, thick: number, seed: number): BufferGeometry {
-  // facet pitch ~2.2 local (≈44 m world): big enough to read from the plaza,
-  // small enough to break the band into distinct cut faces (len/7 gave 140 m
-  // undulations that read as a smooth wavy strip, not a jewelled course)
-  const segs = Math.max(12, Math.round(len / 2.2));
-  const geo = new BoxGeometry(len, h, thick, segs, 3, 3);
+  // Facet pitch ~1.2 local (~24 m world). It was 2.2, and the 2026-07-29 GPU
+  // pass showed why that is too coarse: with only ~15 facets spanning a band,
+  // most of a course shares one orientation, so either the whole band catches
+  // the sun or none of it does. A cut stone's brilliance is the CHANCE that
+  // some facet is aimed at the light while its neighbour is not, which needs
+  // enough distinct orientations for that to vary across the surface. (len/7
+  // was the original and gave 140 m undulations reading as a smooth wavy
+  // strip, not a jewelled course — this is the same error, less of it.)
+  const segs = Math.max(20, Math.round(len / 1.2));
+  const geo = new BoxGeometry(len, h, thick, segs, 5, 3);
   const pos = geo.getAttribute('position');
   let state = (seed * 2654435761) >>> 0;
   const rand = (): number => {
@@ -573,7 +613,10 @@ function facetedBandGeometry(len: number, h: number, thick: number, seed: number
     const y = pos.getY(i);
     // keep the ends and the ground line intact so courses still meet cleanly
     if (Math.abs(x) > len / 2 - 0.6 || y < -h / 2 + 0.3) continue;
-    pos.setXYZ(i, x + rand() * 1.1, y + rand() * 0.85, pos.getZ(i) + rand() * 1.0);
+    // more depth jitter than lateral: tilting facets OUT of the band plane is
+    // what varies their normals against the sun, and the old +/-0.5 on a
+    // 4-thick course barely moved them off flush
+    pos.setXYZ(i, x + rand() * 0.9, y + rand() * 0.8, pos.getZ(i) + rand() * 1.9);
   }
   const faceted = geo.toNonIndexed();
   geo.dispose();
@@ -830,7 +873,7 @@ function buildFoundationCourse(outer: number): Group {
     // FOUNDATION_GEMS colours are ESV-order stylised hues (ADR 0009 rule 2 —
     // not photoreal mineralogy); ordered access mirrors cityModel's own
     // FOUNDATION_BANDS↔FOUNDATION_GEMS[band.gem] pairing.
-    const mat = gemMaterial(FOUNDATION_GEMS[band.gem].color);
+    const mat = gemMaterial(FOUNDATION_GEMS[band.gem]);
     const bandIdx = FOUNDATION_BAND_OFFSETS.indexOf(band.offset);
     const radialMid = face.sign * (outer + bandThick / 2 - inset);
     spans

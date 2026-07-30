@@ -125,6 +125,19 @@ export interface CityPalette {
     summit: string;
   };
   /**
+   * DECLARED MAPPING from a published B-G dispersion interval to three.js's
+   * `dispersion` parameter, in the spirit of the scale resolvers in this file:
+   * one stated factor, so the interpretive step is visible instead of hidden
+   * in tuned per-material numbers.
+   *
+   * The two are not the same quantity — three's is an artistic strength for a
+   * chromatic-aberration approximation, not a refractive spread — so a factor
+   * is the honest way to consume real data here. At 9x the range across the
+   * twelve stones runs quartz 0.12 to zircon 0.35, which spans three's usable
+   * band while preserving the real 3x ratio between them.
+   */
+  gemDispersionScale: number;
+  /**
    * The PostStack bloom threshold city emissives must stay under. Only the
    * crown crosses it (STATUS: worst population emissive luminance 1.31).
    * Recorded here because it is the constraint every `selfLight` above is
@@ -258,8 +271,10 @@ export const NJ_CONFIG: NewJerusalemConfig = {
         metalness: 0,
         roughness: 0.07,
         selfLight: 0, // carried by the mullion emissive node, not a flat term
-        // 0.85 muddied the panes to beige — keep more gold body
-        transmission: 0.7,
+        // 0.85 muddied the panes to beige when the emissive floor was doing
+        // the work; with that floor dropped the volume has to carry the read,
+        // and the interior core behind the skin is what it should be showing
+        transmission: 0.82,
         ior: 1.45,
         thickness: 0.9, // local units — x20 world scale => ~18 m of glass depth
         attenuationColor: '#d9a441',
@@ -267,24 +282,36 @@ export const NJ_CONFIG: NewJerusalemConfig = {
         specularIntensity: 1.0,
       },
       gem: {
-        // no albedo: the twelve hues are cited data (FOUNDATION_GEMS)
+        // no albedo, no ior, no dispersion: the twelve hues are cited data and
+        // the refractive index and dispersion are per-species published values
+        // (cityModel.FOUNDATION_GEMS). Only what is SHARED across the twelve
+        // lives here.
         metalness: 0,
-        roughness: 0.08,
-        // 0.6: enough body that per-facet shading survives
-        transmission: 0.6,
-        ior: 2.0,
+        roughness: 0.05,
+        // 0.6 left too much opaque body for the volume to read at all; the
+        // colour now comes from Beer-Lambert absorption along the path rather
+        // than from a diffuse albedo term
+        transmission: 0.92,
         thickness: 1.2,
-        attenuationDistance: 0.9,
-        dispersion: 0.25,
+        // ~1.25x thickness. At 0.6x the Beer-Lambert term ate ~80% of the
+        // light and the course read saturated but heavy, trading one failure
+        // (flat and bright) for another (deep and dead).
+        attenuationDistance: 1.5,
         specularIntensity: 1.0,
-        // low enough that facet shading reads — 0.7 flattened the cut faces to
-        // a uniform pastel strip
-        selfLight: 0.4,
+        // A CONSTANT self-light term is what made these read as painted slabs:
+        // a cut stone's whole character is the CONTRAST between facets that
+        // catch the light and facets that do not, and a uniform 0.4x-albedo
+        // floor erases exactly that. What remains is a small Fresnel-weighted
+        // term (see gemMaterial) so a shaded course still carries colour
+        // rather than going black — Pillar B, satisfied at the edges instead
+        // of by flooding the whole surface.
+        selfLight: 0.16,
       },
     },
     ascent: {
       summit: '#dfeaf0',
     },
+    gemDispersionScale: 9,
     bloomThreshold: 1.5,
   },
   look: {
