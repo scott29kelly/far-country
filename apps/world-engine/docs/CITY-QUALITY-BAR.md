@@ -142,6 +142,14 @@ a browser and is explicitly out of scope.
   (arch module, pilaster module, cornice module, gem-course module) instanced
   around the tiers, not more box primitives.
 
+> **Related research (2026-07-28):** the "architectural kit" recommendation
+> below is developed further in
+> [`docs/plans/procedural-asset-authoring.md`](../../../docs/plans/procedural-asset-authoring.md),
+> which compares the city's authoring setup against the engine's own
+> `src/vegetation/` pipeline (parameters-as-data + generator + gallery scene +
+> budget tools) and against an external single-file procedural world. Research
+> only — no decision taken.
+
 **Net takeaway:** we are not trying to solve Cyberpunk's wayfinding problem —
 we structurally don't have it (one landmark, not a skyline). We need GTA's
 "legible from anywhere" quality and AC's "kit-bashed relief at every distance"
