@@ -247,6 +247,7 @@ function trimGoldInstanced(gi: ProbeGI | null): MeshStandardNodeMaterial {
   // faint self-light so shaded courses stay legible gold, far under bloom
   m.emissiveNode = vec3(GOLD.r, GOLD.g, GOLD.b)
     .mul(jit)
+    .mul(distantLift())
     .mul(FAM.gold.selfLight) as unknown as NV3;
   patchCityGI(m, gi);
   return m;
@@ -258,8 +259,7 @@ function trimGoldPlain(gi: ProbeGI | null): MeshStandardNodeMaterial {
   m.color.copy(GOLD);
   m.metalness = FAM.gold.metalness;
   m.roughness = FAM.gold.roughness;
-  m.emissive.copy(GOLD);
-  m.emissiveIntensity = FAM.gold.selfLight;
+  m.emissiveNode = selfLightNode(GOLD, FAM.gold.selfLight, 0);
   patchCityGI(m, gi);
   return m;
 }
@@ -315,8 +315,7 @@ function ivoryMaterial(gi: ProbeGI | null): MeshStandardNodeMaterial {
   m.color.copy(IVORY);
   m.metalness = FAM.ivory.metalness;
   m.roughness = FAM.ivory.roughness;
-  m.emissive.copy(IVORY);
-  m.emissiveIntensity = FAM.ivory.selfLight;
+  m.emissiveNode = selfLightNode(IVORY, FAM.ivory.selfLight, 0);
   patchCityGI(m, gi);
   return m;
 }
@@ -401,9 +400,19 @@ function goldGlassMaterial(f: number, paneH: number): MeshPhysicalNodeMaterial {
   // against the old K x grad x jit x 1.0, and K itself drops, so every tier
   // sits further under NJ_CONFIG.palette.bloomThreshold than before. Only the
   // crown still crosses.
+  // BLOOM ARITHMETIC, corrected. The previous commit claimed every tier now
+  // sits further under `bloomThreshold` than before; that is true FACE-ON and
+  // false at the silhouette, where the grazing term adds. Worked through: the
+  // warm emissive vec has luminance ~0.772, the top glass tier is f = 0.75
+  // (the crown is a different branch, so f never reaches 1), grad <= 1 and
+  // jit <= 1.1. Old peak = (1.05 + 0.75) x 1.0 x 1.1 x 0.772 = 1.53, already
+  // at the line. With a 0.35 grazing weight the new peak is 1.67, i.e. OVER.
+  // At 0.20 it is (0.92 + 0.54) x 1.2 x 1.1 x 0.772 = 1.49 — under the
+  // threshold and under the old value at both limits, which is what the claim
+  // should have said.
   const K = 0.92 + 0.72 * f;
   m.emissiveNode = vec3(1.0, 0.74, 0.42)
-    .mul(pane.mul(0.9).add(0.1).add(grazing().mul(0.35)))
+    .mul(pane.mul(0.9).add(0.1).add(grazing().mul(0.2)))
     .mul(grad)
     .mul(jit)
     .mul(K) as unknown as NV3;
@@ -446,9 +455,7 @@ function jasperMaterial(gi: ProbeGI | null): MeshPhysicalNodeMaterial {
   // Grazing-weighted, like the gems and the glass — the flat 0.22 term was
   // the third instance of the same fault and it is what kept a 600 m wall
   // reading as one pale unbroken plate.
-  m.emissiveNode = vec3(JASPER.r, JASPER.g, JASPER.b)
-    .mul(grazing().mul(0.7).add(0.3))
-    .mul(J.selfLight) as unknown as NV3;
+  m.emissiveNode = selfLightNode(JASPER, J.selfLight, 0.7);
   patchCityGI(m, gi);
   return m;
 }
@@ -485,6 +492,44 @@ function grazing(): NF {
   return float(1)
     .sub(normalWorld.dot(v).abs() as unknown as NF)
     .clamp(0, 1) as unknown as NF;
+}
+
+/**
+ * Distance lift on the city's self-light: 1x near, ~2.8x beyond ~9 km.
+ *
+ * CITY-QUALITY-BAR pillar D's remaining half. The stepped silhouette now reads
+ * at 12 km (the bay rhythm and coursing fixed that), but the 2026-07-30 pass
+ * showed the city is NOT the brightest thing in its own landscape at range —
+ * the cloud deck is, comfortably, and the city sits as a warm tan mass inside
+ * the pale haze band at the horizon. Aerial perspective is a post-pass, so it
+ * cannot be selectively lifted off one object; what CAN be raised is the
+ * radiance going into it.
+ *
+ * This is a beacon term, and it is the one place in the city where boosting
+ * emissive with distance is not a cheat but the actual claim: Rev 21:23, "the
+ * glory of God gives it light", and 21:24, "the nations will walk by its
+ * light". A city lit by God that fades into haze at 12 km is asserting
+ * something the text denies. Pillar D says the same thing in its own words —
+ * the summit is "a wayfinding beacon visible from anywhere in the visible
+ * landscape".
+ *
+ * Applied ONLY to the opaque families (gold trim, ivory course, jasper wall),
+ * whose self-light is 0.12-0.18 and stays far under `bloomThreshold` even at
+ * 2.8x. Deliberately NOT applied to the tier glass, whose emissive is already
+ * within ~0.01 of the threshold at the top tier (see goldGlassMaterial), nor
+ * to the crown, which is over it on purpose already.
+ */
+function distantLift(): NF {
+  const d = positionWorld.distance(cameraPosition) as unknown as NF;
+  return smoothstep(2500, 9000, d).mul(1.8).add(1) as unknown as NF;
+}
+
+/** Family self-light as a node: albedo x grazing mix x distance lift x k. */
+function selfLightNode(c: Color, k: number, grazeMix: number): NV3 {
+  const w = grazing()
+    .mul(grazeMix)
+    .add(1 - grazeMix) as unknown as NF;
+  return vec3(c.r, c.g, c.b).mul(w).mul(distantLift()).mul(k) as unknown as NV3;
 }
 
 /**
@@ -1047,8 +1092,10 @@ export function buildCityMassing(
   pavingGold.color.copy(GOLD).lerp(IVORY, 0.42);
   pavingGold.metalness = 0.18;
   pavingGold.roughness = 0.62;
-  pavingGold.emissive.copy(pavingGold.color);
-  pavingGold.emissiveIntensity = FAM.ivory.selfLight;
+  // emissiveNode, not emissive/emissiveIntensity: ivoryMaterial now sets a
+  // NODE (for the distance lift), and a node wins over the scalar pair — this
+  // course would have emitted ivory over its gold albedo otherwise
+  pavingGold.emissiveNode = selfLightNode(pavingGold.color, FAM.ivory.selfLight, 0);
   pavingDetail(pavingGold, pavingGold.color);
   // the ivory courses share the same joint lattice — a separate ivory instance
   // so the cornice fascias and arcade bands keep the plain material

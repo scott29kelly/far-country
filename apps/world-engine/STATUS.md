@@ -205,6 +205,23 @@ unlooked-at while docs work continued on top of it.
   face — ENGAGED because a free-standing one would be furniture the walker
   walks through; corners left bare for the base ascent. Street-of-gold apron
   paved and its metalness dropped 0.5 -> 0.2.
+- **Pillar D beacon (item 7)** — `distantLift()`: opaque-family self-light
+  ramps 1x -> ~2.8x beyond ~9 km, because the stepped silhouette now reads at
+  12 km but the city was NOT the brightest thing in its own landscape (the
+  cloud deck was). Aerial perspective is a post-pass and cannot be lifted off
+  one object, so the radiance entering it is raised instead. This is the one
+  place boosting emissive with distance is the CLAIM rather than a cheat
+  (Rev 21:23-24). Applied to gold/ivory/jasper only — NOT the tier glass
+  (already within ~0.01 of `bloomThreshold`) nor the crown (over it on
+  purpose). PARTIAL: the city now holds as a warm luminous mass instead of
+  washing to tan, but the clouds are still brighter. Going further needs a
+  glory/bloom treatment and a decision about the contract.
+- **Bloom claim corrected.** The 2026-07-29 optics commit said every glass
+  tier sat further under `bloomThreshold` than before. True face-on, FALSE at
+  the silhouette, where the new grazing term adds. Worked arithmetic is now in
+  `goldGlassMaterial`; the grazing weight dropped 0.35 -> 0.20, which puts the
+  top glass tier at 1.49 against the old 1.53 — under the threshold and under
+  the old value at both limits.
 - **SCOTT-OWED:** (1) whether the gem optics may stay keyed to CONTESTED
   mineral-species identifications (`Gem.species` records which reading;
   jacinth/chrysolite/agate/beryl each have more than one credible
