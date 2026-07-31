@@ -10,6 +10,8 @@ import { chromium, type Browser } from 'playwright';
 interface LaunchRecipe {
   headless: boolean;
   channel?: string;
+  /** Absolute path to a Chromium build, when the pinned browser is absent. */
+  executablePath?: string;
   args: string[];
 }
 
@@ -19,12 +21,26 @@ interface LaunchRecipe {
  *    (navigator.gpu is simply absent on opaque origins).
  *  - Playwright's default headless uses the GPU-less "headless shell": adapter = null.
  *    Full Chromium new-headless via channel:'chromium' yields an apple/metal-3 adapter.
+ *  - On a GPU-less runner there is no hardware adapter at all, but Chromium's
+ *    SwiftShader fallback answers requestAdapter() under --enable-unsafe-webgpu.
+ *    It renders the real pipeline in software: correct pixels, ~100x slower.
  */
 const CANDIDATES: LaunchRecipe[] = [
   { headless: true, channel: 'chromium', args: [] },
   { headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu'] },
   { headless: false, args: [] },
+  { headless: true, args: ['--enable-unsafe-webgpu'] },
 ];
+
+/**
+ * A system Chromium to fall back on when the Playwright-pinned build is not
+ * installed (cloud runners preinstall one and point PLAYWRIGHT_BROWSERS_PATH
+ * at it). LAAS_CHROMIUM overrides for anything unusual.
+ */
+function systemChromium(): string | undefined {
+  const candidates = [process.env['LAAS_CHROMIUM'], '/opt/pw-browsers/chromium'];
+  return candidates.find((p): p is string => !!p && existsSync(p));
+}
 
 const CACHE_PATH = '.cache/webgpu-flags.json';
 const PROBE_BASE = 'http://localhost:5173';
@@ -36,7 +52,8 @@ async function probeRecipe(recipe: LaunchRecipe): Promise<Browser | null> {
       headless: recipe.headless,
       args: recipe.args,
     };
-    if (recipe.channel) launchOpts.channel = recipe.channel;
+    if (recipe.executablePath) launchOpts.executablePath = recipe.executablePath;
+    else if (recipe.channel) launchOpts.channel = recipe.channel;
     browser = await chromium.launch(launchOpts);
     const page = await browser.newPage();
     // any path on the dev server works — we only need the secure localhost origin
@@ -66,20 +83,27 @@ export async function launchWebGPU(): Promise<{ browser: Browser; recipe: Launch
   } catch {
     /* no cache yet */
   }
-  for (const recipe of CANDIDATES) {
+  // Each recipe is tried as written, then re-tried against a system Chromium —
+  // a runner whose pinned browser is missing fails the first form on launch,
+  // not on WebGPU, and would otherwise never reach the software fallback.
+  const sys = systemChromium();
+  const recipes = CANDIDATES.flatMap((r) =>
+    sys ? [r, { ...r, channel: undefined, executablePath: sys }] : [r],
+  );
+  for (const recipe of recipes) {
     const browser = await probeRecipe(recipe);
     if (browser) {
       mkdirSync('.cache', { recursive: true });
       writeFileSync(CACHE_PATH, JSON.stringify(recipe, null, 2));
       console.log(
-        `[launch] WebGPU OK — headless=${recipe.headless} channel=${recipe.channel ?? 'default'} args=[${recipe.args.join(' ')}]`,
+        `[launch] WebGPU OK — headless=${recipe.headless} browser=${recipe.executablePath ?? recipe.channel ?? 'default'} args=[${recipe.args.join(' ')}]`,
       );
       return { browser, recipe };
     }
   }
   throw new Error(
     'No Chromium launch recipe produced a WebGPU adapter (requires dev server on :5173 for the secure-context probe). ' +
-      'Tried channel:chromium headless and headed.',
+      `Tried channel:chromium headless and headed${sys ? `, and ${sys}` : ''}.`,
   );
 }
 
@@ -90,8 +114,8 @@ export async function launchAnyChromium(): Promise<Browser> {
   try {
     return await chromium.launch({ headless: true });
   } catch (e) {
-    const sys = '/opt/pw-browsers/chromium';
-    if (existsSync(sys)) return chromium.launch({ headless: true, executablePath: sys });
+    const sys = systemChromium();
+    if (sys) return chromium.launch({ headless: true, executablePath: sys });
     throw e;
   }
 }

@@ -86,6 +86,9 @@ async function main(): Promise<void> {
   const url = base ? laasUrl(urlOpts, base) : laasUrl(urlOpts);
   console.log(`[shoot] ${url} → ${out}`);
 
+  // A cold Vite graph on a slow runner can outlast Playwright's 30 s default
+  // before domcontentloaded — give navigation the same budget as readiness.
+  page.setDefaultNavigationTimeout(timeoutMs);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const t0 = Date.now();
   await page
