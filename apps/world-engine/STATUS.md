@@ -138,6 +138,67 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-07-31) TEMPLE COLLISION + FLOORS BUILT — half of the standing
+"dwellings/temple collision and floors remain open" debt closed.** A walker
+previously phased through the perimeter wall, the sanctuary and the altar,
+and stood at meadow height inside the courts.
+
+- `Temple.ts` now RECORDS the world AABB of each massing box as it builds it
+  (`solidBox`/`recordSolid`), returning `{ group, solids }`. This inverts the
+  cityCollide idiom deliberately: the city massing is a few concentric square
+  rings that `cityModel`'s tables describe exactly, but the temple is 57
+  individually placed boxes whose layout arithmetic lives inline in the
+  builder — deriving a parallel description in a collide module would BE the
+  hand-mirrored copy the idiom forbids. The collider set is the geometry.
+- `templeCollide.ts` (new, pure — no three.js, no DOM) consumes that list:
+  lateral collision with cityCollide's axis-separated incremental sweep
+  (no tunnelling, no trapping on programmatic poses) plus floors from the
+  top face of each mass, y-aware so the sanctuary roof never claims a walker
+  in the court beside it. Filigree (merlons, windows, arch heads, trim
+  courses, vestibule pillars, altar horns, glow membranes) is excluded at the
+  source by simply not calling `solidBox`.
+- **STEP_OVER (1.0 m) is the load-bearing constant.** The plinth is a 0.8 m
+  lip ringing the whole compound; blocking it laterally walled off the gates
+  as effectively as the masonry, and the counted stair flights (Ezek 40:22,
+  26, 49) became impassable ridges. A mass whose top is within 1.0 m of the
+  body is stepped over rather than blocked. Deliberately far tighter than
+  `FLOOR_STEP_UP_M` (3.5): the floor rule governs what may be STOOD on, this
+  governs what may be walked THROUGH, and the 3.15 m perimeter wall must stay
+  solid from the outer court.
+- Verification: `tools/probe-templecollide.ts`, 20/20 PASS — real FlyCamera
+  physics against the real wraps over the real recorded solids. Proves the
+  wall stops a walker, the EAST gate portal passes one (Ezek 40:11's ten-cubit
+  opening is a real gap), the WEST wall has no gate (Ezek 42:15-20), oblique
+  motion slides, the outer court and inner terrace are real stacked floors,
+  the house platform blocks short of the sanctuary, a pose inside a solid is
+  never trapped, and a compound-spanning move cannot tunnel. Regression:
+  probe-wallcollide / probe-cityfloors / probe-walkfling all still 0
+  failures; `tsc --noEmit` and `vite build` clean.
+- **Owed:** live GPU/hardware walk of the compound (Scott's — no GPU in the
+  cloud container; see the software-rasteriser note below). **Still open:** the
+  DWELLINGS half of this debt, and there is no walkable ascent onto the inner
+  terrace — its 3.3 m rise has no rendered flight, the same class of gap as
+  the city's "no stairs/ramps between floors" debt.
+
+**(2026-07-31) SOFTWARE-WEBGPU CAPTURE IN THE CLOUD CONTAINER: PARTIAL.**
+`tools/launch.ts` now falls back to a system Chromium (`LAAS_CHROMIUM`, else
+`/opt/pw-browsers/chromium`) and a headless `--enable-unsafe-webgpu`
+candidate, which resolves Chromium's SwiftShader adapter where the pinned
+browser is absent and no GPU exists; `shoot.ts` gives navigation the same
+budget as readiness. Verified: adapter acquired (`google / swiftshader`), and
+three.js `getArrayBufferAsync` over `instancedArray` reads back 2048² in
+165 ms. **But the New Jerusalem scene still cannot be captured here.** At the
+default `high` preset the 4096² terrain readback did not return within 15
+minutes; at `preset=low` it returns in ~5.5 min and boot proceeds into
+vegetation, where the renderer process is then destroyed mid-atlas-capture.
+A real WebGPU validation error surfaces on the way: a 2D texture view against
+the 3D 256×256×6 RGBA16Float probe field (`gpu/passes/ProbeGI.ts` — the
+engine's own `Storage3DTexture` + `textureStore(vec3)` + `texture3D` usage all
+look correct, so the 2D view is created inside three.js's backend). Worth a
+look on hardware, since Dawn validation is backend-independent and this is not
+obviously a SwiftShader artefact. Conclusion unchanged: visual judgment needs
+real hardware; CPU probes remain the cloud-side verification bar.
+
 **(2026-07-29/30) CITY REVIEW SURFACE + ART-DIRECTION PASS.** Branch
 `claude/city-review-framings`, 8 commits, UNPUSHED and NOT RE-VENDORED at
 time of writing. First GPU pass over the city since 2026-07-02 — the

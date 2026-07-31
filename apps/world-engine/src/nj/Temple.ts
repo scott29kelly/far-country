@@ -98,9 +98,60 @@ function box(
   return m;
 }
 
+/** World-space axis-aligned massing volume (walk collision + floors). */
+export interface TempleAabb {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+  z0: number;
+  z1: number;
+}
+
+/** Record a world AABB from the same w/h/d/centre the geometry call uses. */
+function recordSolid(
+  out: TempleAabb[],
+  w: number,
+  h: number,
+  d: number,
+  x: number,
+  y: number,
+  z: number,
+): void {
+  out.push({
+    x0: x - w / 2,
+    x1: x + w / 2,
+    y0: y - h / 2,
+    y1: y + h / 2,
+    z0: z - d / 2,
+    z1: z + d / 2,
+  });
+}
+
+/**
+ * `box` + its collision volume in one call — the ONLY way a mass enters both
+ * the scene and the collider set, so the two cannot desync. Filigree keeps
+ * calling plain `box` (see the module doc's what-collides policy).
+ */
+function solidBox(
+  g: Group,
+  out: TempleAabb[],
+  mat: MeshStandardNodeMaterial,
+  w: number,
+  h: number,
+  d: number,
+  x: number,
+  y: number,
+  z: number,
+): Mesh {
+  recordSolid(out, w, h, d, x, y, z);
+  return box(g, mat, w, h, d, x, y, z);
+}
+
 /** A tower-gatehouse with an arched, glowing portal through its long axis. */
 function gatehouse(
   g: Group,
+  out: TempleAabb[],
   sand: MeshStandardNodeMaterial,
   trim: MeshStandardNodeMaterial,
   glow: MeshStandardNodeMaterial,
@@ -119,17 +170,32 @@ function gatehouse(
   // local frame: portal runs along +X (depth), width along Z
   const jambW = (width - openW) / 2;
   const openH = h * 0.62;
+  // yaw is only ever 0 (east gate) or PI/2 (north/south) — a quarter turn
+  // swaps the local X/Z extents, so the world AABB stays exact rather than
+  // conservative. Local (lx, lz) maps to world (lz, -lx) at PI/2.
+  const turned = Math.abs(Math.sin(yaw)) > 0.5;
+  const worldSolid = (lw: number, lh: number, ld: number, lz: number, ly: number): void => {
+    const w = turned ? ld : lw;
+    const d = turned ? lw : ld;
+    const x = turned ? cx + lz : cx;
+    const z = turned ? cz : cz + lz;
+    recordSolid(out, w, lh, d, x, baseY + ly, z);
+  };
   for (const s of [-1, 1] as const) {
     const jamb = new Mesh(new BoxGeometry(depth, h, jambW), sand);
     jamb.position.set(0, h / 2, s * (openW / 2 + jambW / 2));
     jamb.castShadow = true;
     jamb.receiveShadow = true;
     gh.add(jamb);
+    worldSolid(depth, h, jambW, s * (openW / 2 + jambW / 2), h / 2);
   }
   const lintel = new Mesh(new BoxGeometry(depth, h - openH, openW), sand);
   lintel.position.set(0, openH + (h - openH) / 2, 0);
   lintel.castShadow = true;
   gh.add(lintel);
+  // the lintel spans the portal ABOVE the opening — recorded so a flier
+  // cannot pass through the masonry over a walker's head
+  worldSolid(depth, h - openH, openW, 0, openH + (h - openH) / 2);
   // arch heads + glow planes at both mouths
   for (const e of [-1, 1] as const) {
     const arch = new Mesh(new CircleGeometry(openW / 2, 16, 0, Math.PI), trim);
@@ -153,11 +219,22 @@ export interface TempleDeps {
   gi: ProbeGI | null;
 }
 
-/** Build the compound (world space; add directly to the scene). */
-export function buildTemple(deps: TempleDeps): Group {
+export interface TempleResult {
+  group: Group;
+  /**
+   * Every massing volume in world space, recorded by the geometry calls
+   * themselves — the collider set IS the geometry. Consumed by
+   * templeCollide.ts for lateral collision and walk floors.
+   */
+  solids: TempleAabb[];
+}
+
+/** Build the compound (world space; add `group` directly to the scene). */
+export function buildTemple(deps: TempleDeps): TempleResult {
   const { hf, gi } = deps;
   const g = new Group();
   g.name = 'ezekiel-temple';
+  const solids: TempleAabb[] = [];
 
   const c = { x: TEMPLE_SITE.x, z: TEMPLE_SITE.z };
   const half = meters('ezt-precinct-side') / 2; // 500 cu (Ezek 42:16-20, ESV)
@@ -201,14 +278,14 @@ export function buildTemple(deps: TempleDeps): Group {
 
   // ---------------------------------------------------------------- plinth
   const plinthPad = half + INTERP.plinthMargin;
-  box(g, sandDark, plinthPad * 2, 7, plinthPad * 2, c.x, plinthTop - 3.5, c.z);
+  solidBox(g, solids, sandDark, plinthPad * 2, 7, plinthPad * 2, c.x, plinthTop - 3.5, c.z);
 
   // ------------------------------------------------- perimeter wall + towers
   // three gate gaps (east, north, south — no west gate, Ezek 42:15-20's
   // circuit lists gates only where chapters 40 describes them)
   const y0 = plinthTop;
   const wallSeg = (w: number, d: number, x: number, z: number): void => {
-    box(g, sand, w, wallH, d, c.x + x, y0 + wallH / 2, c.z + z);
+    solidBox(g, solids, sand, w, wallH, d, c.x + x, y0 + wallH / 2, c.z + z);
   };
   const sideRun = half - gateW / 2; // wall length each side of a gate gap
   // east wall (gap at z=0): two segments running north-south
@@ -225,8 +302,9 @@ export function buildTemple(deps: TempleDeps): Group {
   // corner towers (art direction — USER-REFS #5)
   for (const sx of [-1, 1] as const) {
     for (const sz of [-1, 1] as const) {
-      box(
+      solidBox(
         g,
+        solids,
         sand,
         INTERP.towerSide,
         INTERP.towerH,
@@ -252,9 +330,9 @@ export function buildTemple(deps: TempleDeps): Group {
   // 50 x 25 cu tower-gatehouses projecting inward from the wall line
   // (Ezek 40:6-16, 20-27); approached by seven steps (Ezek 40:22, 26)
   const outerRise = count('ezt-outer-gate-steps') * INTERP.stepRise;
-  gatehouse(g, sand, trim, glow, c.x + half - gateL / 2, y0, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, sand, trim, glow, c.x, y0, c.z - (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, sand, trim, glow, c.x, y0, c.z + (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x + half - gateL / 2, y0, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x, y0, c.z - (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x, y0, c.z + (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
 
   // ------------------------------------------------------------ inner terrace
   // the inner court stands a flight above the outer court: outer gates climb
@@ -265,8 +343,9 @@ export function buildTemple(deps: TempleDeps): Group {
   const terrX1 = innerSide; // inner-gate outer face (x = +52.5)
   const terrW = terrX1 - terrX0;
   const terrD = innerSide * 2 + 16; // spans inner court + both inner N/S gates
-  box(
+  solidBox(
     g,
+    solids,
     sand,
     terrW,
     outerRise + innerRise,
@@ -278,9 +357,9 @@ export function buildTemple(deps: TempleDeps): Group {
   const terrTop = y0 + outerRise + innerRise;
 
   // --------------------------------------------------------- inner gatehouses
-  gatehouse(g, sand, trim, glow, c.x + innerSide - gateL / 2, terrTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, sand, trim, glow, c.x, terrTop, c.z - (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, sand, trim, glow, c.x, terrTop, c.z + (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x + innerSide - gateL / 2, terrTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x, terrTop, c.z - (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x, terrTop, c.z + (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
 
   // ------------------------------------------------------------------- altar
   // Ezek 43:13-17: base + two ledges + hearth (11 cu of rise), hearth 12 cu
@@ -293,13 +372,13 @@ export function buildTemple(deps: TempleDeps): Group {
   const hUpper = meters('ezt-altar-upper-ledge-rise');
   const hHearth = meters('ezt-altar-hearth-height');
   let ay = terrTop;
-  box(g, sandDark, baseSide, hBase, baseSide, c.x, ay + hBase / 2, c.z);
+  solidBox(g, solids, sandDark, baseSide, hBase, baseSide, c.x, ay + hBase / 2, c.z);
   ay += hBase;
-  box(g, sand, ledgeSide, hLower, ledgeSide, c.x, ay + hLower / 2, c.z);
+  solidBox(g, solids, sand, ledgeSide, hLower, ledgeSide, c.x, ay + hLower / 2, c.z);
   ay += hLower;
-  box(g, sand, ledgeSide - 1.05, hUpper, ledgeSide - 1.05, c.x, ay + hUpper / 2, c.z);
+  solidBox(g, solids, sand, ledgeSide - 1.05, hUpper, ledgeSide - 1.05, c.x, ay + hUpper / 2, c.z);
   ay += hUpper;
-  box(g, sandDark, hearthSide, hHearth, hearthSide, c.x, ay + hHearth / 2, c.z);
+  solidBox(g, solids, sandDark, hearthSide, hHearth, hearthSide, c.x, ay + hHearth / 2, c.z);
   ay += hHearth;
   // four horns (count grounded, Ezek 43:15; horn size interpretive)
   for (const sx of [-1, 1] as const) {
@@ -319,8 +398,9 @@ export function buildTemple(deps: TempleDeps): Group {
   // altar steps face east (Ezek 43:17)
   for (let i = 0; i < 6; i++) {
     const w = 1.1;
-    box(
+    solidBox(
       g,
+      solids,
       sand,
       w,
       (hBase + hLower + hUpper) * (1 - i / 6),
@@ -339,13 +419,14 @@ export function buildTemple(deps: TempleDeps): Group {
   const px0 = px1 - houseL; // -78.75
   const padW = houseL + 6;
   const padD = houseW + 2 * meters('ezt-free-space-breadth') + 6;
-  box(g, sand, padW, platformH, padD, c.x + (px0 + px1) / 2, terrTop + platformH / 2, c.z);
+  solidBox(g, solids, sand, padW, platformH, padD, c.x + (px0 + px1) / 2, terrTop + platformH / 2, c.z);
   const padTop = terrTop + platformH;
   const houseSteps = count('ezt-house-steps');
   for (let i = 0; i < houseSteps; i++) {
     const rise = (platformH * (houseSteps - i)) / houseSteps;
-    box(
+    solidBox(
       g,
+      solids,
       sand,
       1.0,
       rise,
@@ -359,11 +440,11 @@ export function buildTemple(deps: TempleDeps): Group {
   // ------------------------------------------------------------------- house
   // side-chamber shoulder: full 50-cu envelope, three stories (Ezek 41:5-9)
   const shoulderH = count('ezt-side-chamber-stories') * INTERP.storyH;
-  box(g, sand, houseL, shoulderH, houseW, c.x + (px0 + px1) / 2, padTop + shoulderH / 2, c.z);
+  solidBox(g, solids, sand, houseL, shoulderH, houseW, c.x + (px0 + px1) / 2, padTop + shoulderH / 2, c.z);
   // sanctuary core: nave + walls (20 + 6 + 6 = 32 cu wide), rising to the
   // interpretive ~30-cubit wall height (RENDERING-DECISIONS #7)
   const coreW = meters('ezt-nave-breadth') + 2 * meters('ezt-house-wall-thickness');
-  box(g, sand, houseL, INTERP.houseWallH, coreW, c.x + (px0 + px1) / 2, padTop + INTERP.houseWallH / 2, c.z);
+  solidBox(g, solids, sand, houseL, INTERP.houseWallH, coreW, c.x + (px0 + px1) / 2, padTop + INTERP.houseWallH / 2, c.z);
   // pale course bands (trim) on the core
   for (const bandY of [0.35, 0.7] as const) {
     box(
@@ -400,7 +481,7 @@ export function buildTemple(deps: TempleDeps): Group {
   const wbL = meters('ezt-west-building-length');
   const wbW = meters('ezt-west-building-breadth');
   const wbH = 2 * INTERP.storyH + 2;
-  box(g, sand, wbL, wbH, wbW, c.x + px0 - 2 - wbL / 2, terrTop + wbH / 2, c.z);
+  solidBox(g, solids, sand, wbL, wbH, wbW, c.x + px0 - 2 - wbL / 2, terrTop + wbH / 2, c.z);
 
   // ------------------------------------------------- priests' chamber blocks
   // 100 x 50 cu, three stories, north and south of the yard strip
@@ -410,7 +491,7 @@ export function buildTemple(deps: TempleDeps): Group {
   const cbH = count('ezt-priest-chambers-stories') * INTERP.storyH;
   const cbZ = houseW / 2 + meters('ezt-chambers-gap') + cbW / 2;
   for (const s of [-1, 1] as const) {
-    box(g, sand, cbL, cbH, cbW, c.x + (px0 + px1) / 2, terrTop + cbH / 2, c.z + s * cbZ);
+    solidBox(g, solids, sand, cbL, cbH, cbW, c.x + (px0 + px1) / 2, terrTop + cbH / 2, c.z + s * cbZ);
     box(
       g,
       trim,
@@ -476,5 +557,5 @@ export function buildTemple(deps: TempleDeps): Group {
   mers.castShadow = true;
   g.add(mers);
 
-  return g;
+  return { group: g, solids };
 }

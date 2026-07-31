@@ -42,7 +42,11 @@ import { NJ_SCALE, PLATEAU_Y, RIM, RIM_CLIFF } from './rimModel';
 import { wrapGroundProbeWithRiver } from './RiverOfLife';
 import { resolveCityFramings } from './reviewFramings';
 import { parseStages } from './stages';
-import { buildTemple } from './Temple';
+import { buildTemple, type TempleAabb } from './Temple';
+import {
+  wrapGroundProbeWithTempleFloors,
+  wrapMoveWithTempleCollision,
+} from './templeCollide';
 import { TEMPLE_SITE } from './templeModel';
 import { buildTreesOfLife } from './TreesOfLife';
 
@@ -186,8 +190,11 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // Ezekiel's temple (Ezek 40-42 + the 43:13-17 altar): a world-space,
   // literal-cubit compound built from the cited measurement dataset
   // (ADR 0017/0018; RENDERING-DECISIONS #7) on the priests' campus band.
+  let templeSolids: readonly TempleAabb[] = [];
   if (stages.has('temple')) {
-    engine.scene.add(buildTemple({ hf, gi }));
+    const temple = buildTemple({ hf, gi });
+    engine.scene.add(temple.group);
+    templeSolids = temple.solids;
   }
 
   // The dwelling campus (Ezek 45:4-5; 48:10-14): human-scale garden-court
@@ -249,6 +256,22 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       plazaTopY,
       NJ_SCALE,
     );
+  }
+
+  // The same two debts, closed for the temple compound (STATUS "still open:
+  // dwellings/temple collision and floors"). Volumes come from the geometry
+  // calls themselves (Temple.ts's solidBox), so nothing here mirrors the
+  // compound's layout arithmetic. Wrapped AFTER the city wraps: the two sites
+  // are 5.6 km apart and never contest a frame, and each wrap early-outs on
+  // its own bound.
+  if (templeSolids.length > 0) {
+    ctx.hooks.moveProbe = wrapMoveWithTempleCollision(ctx.hooks.moveProbe, templeSolids);
+    if (ctx.hooks.groundProbe) {
+      ctx.hooks.groundProbe = wrapGroundProbeWithTempleFloors(
+        ctx.hooks.groundProbe,
+        templeSolids,
+      );
+    }
   }
 
   // Walk physics: the heightfield IS the plateau now — the terrain scene's
