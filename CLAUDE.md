@@ -70,6 +70,15 @@ Rationale: [`docs/adr/0002-tech-stack.md`](docs/adr/0002-tech-stack.md).
 
 ## Working style for this repo
 
+- **Talk to Scott in plain language.** Scott is a novice coder. When explaining
+  work, decisions, or problems to him, avoid industry jargon — or if a technical
+  term is unavoidable, define it in one plain sentence the first time it is used.
+  Explain *what* something does and *why it matters to the project*, not just its
+  internal mechanics. This applies to chat replies and PR descriptions; code
+  comments and STATUS.md may stay technical (they are written for future
+  engineering sessions).
+- Scott's development machine is a **Lenovo Legion laptop (Windows)** — not a
+  Mac. Do not assume Apple hardware when giving him local instructions.
 - Prefer editing existing docs over creating new ones unless the plan explicitly calls for a new file.
 - ADRs are append-only — never edit a `Status: Accepted` ADR in place; supersede it with a new one.
 - Commit messages: present tense, what changed and why (one line summary, blank line, body).
