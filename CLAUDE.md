@@ -79,6 +79,12 @@ Rationale: [`docs/adr/0002-tech-stack.md`](docs/adr/0002-tech-stack.md).
   engineering sessions).
 - Scott's development machine is a **Lenovo Legion laptop (Windows)** — not a
   Mac. Do not assume Apple hardware when giving him local instructions.
+- **All project folders on Scott's laptop live in `C:\Users\scott\Documents\Repos`.**
+  This repo's local copy is `C:\Users\scott\Documents\Repos\far-country`. Any
+  instruction that downloads or creates a project folder on his machine must
+  target that Repos folder explicitly (e.g. `cd C:\Users\scott\Documents\Repos`
+  before `git clone`), never the terminal's default location. If the right
+  destination is unclear, ask Scott where he wants it before giving the command.
 - Prefer editing existing docs over creating new ones unless the plan explicitly calls for a new file.
 - ADRs are append-only — never edit a `Status: Accepted` ADR in place; supersede it with a new one.
 - Commit messages: present tense, what changed and why (one line summary, blank line, body).
