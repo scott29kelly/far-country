@@ -195,6 +195,42 @@ export const CITY_FRAMINGS: readonly CityFraming[] = [
   },
 ];
 
+/**
+ * Crowd-review annex (M3.6 / ADR 0019): framings composed to judge the
+ * multitude rebuild specifically — appended AFTER the nine core framings so
+ * `?shot=1..9` and the digit keys keep their meaning; these are reached as
+ * `?shot=10..` and by `tools/cityshots.ts`, which shoots the whole set.
+ * Both stand in the south plaza-ring assembly at u=25 (populationModel
+ * stations it at the gallery centre, PLAZA_RING_R).
+ */
+export const CROWD_FRAMINGS: readonly CityFraming[] = [
+  {
+    id: 'multitude-near',
+    name: 'Multitude near read',
+    tests:
+      'ADR 0019 — near-ring figures at walking range: human silhouette, diversity of build/age/skin, robes and raised fronds; the gated photoreal tier is judged here',
+    anchor: 'ground',
+    // INSIDE the assembly, north of its centre looking south-southeast —
+    // the figures face the summit (north-west-ish), so this is the FACE
+    // read: nearest figures at arm's length, the far side at ~90 m (R1)
+    p: [24.8, 0, PLAZA_RING_R - 1.6],
+    lookAt: [25.2, 0.085, PLAZA_RING_R + 0.8],
+    fov: 55,
+  },
+  {
+    id: 'multitude-lod-run',
+    name: 'Multitude LOD run',
+    tests:
+      'M3.6 LOD seams — one frame spanning R0 figures at the feet, the R1 ring mid-gallery, and the impostor band down the south run; dither bands must not read',
+    anchor: 'ground',
+    // standing at the assembly edge, sighting down the gallery past the
+    // Zebulun corridor toward the u=75 assembly (~1 km — impostor ring)
+    p: [22, 0, PLAZA_RING_R],
+    lookAt: [70, 0.1, PLAZA_RING_R],
+    fov: 60,
+  },
+];
+
 export interface ResolvedFraming {
   id: string;
   name: string;
@@ -260,7 +296,9 @@ export function resolveFraming(
   };
 }
 
-/** The whole set, resolved against a built scene's plaza line and probe. */
+/** The whole set — nine core + the crowd annex, resolved against a built
+ *  scene's plaza line and probe. Order is load-bearing: indices 0..8 are the
+ *  digit-key core, the annex follows. */
 export function resolveCityFramings(plazaTopY: number, groundAt?: GroundAt): ResolvedFraming[] {
-  return CITY_FRAMINGS.map((f) => resolveFraming(f, plazaTopY, groundAt));
+  return [...CITY_FRAMINGS, ...CROWD_FRAMINGS].map((f) => resolveFraming(f, plazaTopY, groundAt));
 }

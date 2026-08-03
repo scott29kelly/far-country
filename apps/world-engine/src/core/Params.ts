@@ -17,7 +17,7 @@ export interface LaasParams {
   hud: boolean;
   /** camera pose: "px,py,pz,yaw,pitch[,fov]" */
   cam: string | null;
-  /** bookmark index to start at (1..9) */
+  /** bookmark/framing index to start at (1-based; 1..9 = digit-key core) */
   shot: number | null;
   /** freeze world time/motion (deterministic screenshots) */
   freeze: boolean;
@@ -56,7 +56,10 @@ export function parseParams(search: string = window.location.search): LaasParams
     // full debug panel hidden by default — F3 toggles it (fps chip always on)
     hud: q.get('hud') === '1',
     cam: q.get('cam'),
-    shot: shotN >= 1 && shotN <= 9 ? Math.floor(shotN) : null,
+    // 1..9 are the digit-key core in both scenes; higher indices reach the
+    // city's review annex (reviewFramings CROWD_FRAMINGS). Out-of-range
+    // indices are a no-op at the consumer (`framings[shot-1]` guarded).
+    shot: shotN >= 1 ? Math.floor(shotN) : null,
     freeze: q.get('freeze') === '1',
     dpr: q.get('dpr') !== null ? num(q.get('dpr'), 1) : null,
     rite: q.get('rite') !== '0',

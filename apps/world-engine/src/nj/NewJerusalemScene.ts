@@ -226,12 +226,20 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   }
 
   // The inhabitants (roadmap M3.6): the great multitude on the plaza and
-  // terrace pavements and the angelic hosts ringing the summit — the settled
-  // RENDERING-DECISIONS #3 rendering under ADR 0011/0010. World-space,
-  // human-scale content (the TreesOfLife convention); placements come from
-  // populationModel.ts, standing on the same floors cityFloorLocalY walks.
+  // terrace pavements (ADR 0019 — seeded parametric humans under a GPU LOD
+  // cull, Crowd.ts) and the angelic hosts ringing the summit (ADR 0011,
+  // unchanged). World-space, human-scale content (the TreesOfLife
+  // convention); placements come from populationModel.ts, standing on the
+  // same floors cityFloorLocalY walks. Async: the far-ring impostor atlas
+  // is captured through the live renderer; the per-frame hook runs the
+  // crowd's cull + indirect computes.
   if (stages.has('population')) {
-    engine.scene.add(buildPopulation({ gi, plazaTopY }));
+    const population = await buildPopulation({ gi, plazaTopY, renderer: engine.renderer });
+    engine.scene.add(population.group);
+    engine.onUpdate(() => {
+      population.update(engine.renderer, engine.camera);
+      Object.assign(engine.stats.counters, population.counterSnapshot());
+    });
   }
 
   // Waterfalls off the mesa rim (ADR 0016): authored crystal ribbons at the

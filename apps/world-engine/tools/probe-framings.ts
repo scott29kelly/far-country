@@ -16,8 +16,18 @@
 import { cityBlockedLocal, wrapGroundProbeWithCityFloors } from '../src/nj/cityCollide';
 import { CITY_HALF, CITY_SUMMIT_Y } from '../src/nj/cityModel';
 import { NJ_SCALE } from '../src/nj/config';
-import { CITY_FRAMINGS, resolveCityFramings, resolveFraming } from '../src/nj/reviewFramings';
+import {
+  CITY_FRAMINGS,
+  CROWD_FRAMINGS,
+  resolveCityFramings,
+  resolveFraming,
+} from '../src/nj/reviewFramings';
 import { makeChecker } from './check';
+
+/** every framing the resolver publishes: the digit-key core + the crowd
+ *  annex (M3.6 / ADR 0019) — annex framings obey every core contract except
+ *  digit-key reachability, which is A5's core-only claim */
+const ALL_FRAMINGS = [...CITY_FRAMINGS, ...CROWD_FRAMINGS];
 
 const c = makeChecker();
 
@@ -42,26 +52,31 @@ const groundAt = wrapGroundProbeWithCityFloors(
 const resolved = resolveCityFramings(PLAZA_Y, groundAt);
 
 // A — table shape
-c.check('A1 nine framings, mirroring the terrain bookmarks', CITY_FRAMINGS.length === 9);
+c.check('A1 nine CORE framings, mirroring the terrain bookmarks', CITY_FRAMINGS.length === 9);
 c.check(
-  'A2 ids are unique',
-  new Set(CITY_FRAMINGS.map((f) => f.id)).size === CITY_FRAMINGS.length,
+  'A2 ids are unique across core + annex',
+  new Set(ALL_FRAMINGS.map((f) => f.id)).size === ALL_FRAMINGS.length,
 );
 c.check(
   'A3 ids are filename-safe slugs (they name the contact-sheet PNGs)',
-  CITY_FRAMINGS.every((f) => /^[a-z0-9-]+$/.test(f.id)),
+  ALL_FRAMINGS.every((f) => /^[a-z0-9-]+$/.test(f.id)),
 );
 c.check(
   'A4 every framing declares what quality-bar clause it tests',
-  CITY_FRAMINGS.every((f) => f.tests.trim().length > 12),
+  ALL_FRAMINGS.every((f) => f.tests.trim().length > 12),
 );
 c.check(
-  'A5 at most nine, so ?shot=N and the digit keys can reach them all',
+  'A5 at most nine CORE framings, so the digit keys can reach them all',
   CITY_FRAMINGS.length <= 9,
+);
+c.check(
+  'A6 the crowd annex resolves AFTER the core (?shot=1..9 semantics stable)',
+  resolved.length === ALL_FRAMINGS.length &&
+    resolved.slice(0, CITY_FRAMINGS.length).every((r, i) => r.id === CITY_FRAMINGS[i].id),
 );
 
 // B — resolution is total and finite
-c.check('B1 all framings resolve', resolved.length === CITY_FRAMINGS.length);
+c.check('B1 all framings resolve', resolved.length === ALL_FRAMINGS.length);
 c.check(
   'B2 every resolved pose is finite',
   resolved.every(
@@ -84,7 +99,7 @@ c.check(
 // C — the camera is never inside solid geometry, and a standing framing
 //     resolves to the surface it MEANT to stand on. Both are checked in LOCAL
 //     units against the same owner tables the massing and collision consume.
-for (const f of CITY_FRAMINGS) {
+for (const f of ALL_FRAMINGS) {
   const r = resolveFraming(f, PLAZA_Y, groundAt);
   const lx = r.pose.p[0] / NJ_SCALE;
   const lz = r.pose.p[2] / NJ_SCALE;
@@ -116,7 +131,7 @@ for (const f of CITY_FRAMINGS) {
 //     derivation is right and that no framing aims at the point it occupies.
 c.check(
   'D1 no framing is degenerate (camera coincident with its aim point)',
-  CITY_FRAMINGS.every((f) => {
+  ALL_FRAMINGS.every((f) => {
     const r = resolveFraming(f, PLAZA_Y);
     const d = Math.hypot(
       f.lookAt[0] * NJ_SCALE - r.pose.p[0],
@@ -182,7 +197,7 @@ c.check(
 
 // E — every framing actually points at the city. A framing that has drifted
 //     off the subject is the specific failure this file exists to prevent.
-for (const f of CITY_FRAMINGS) {
+for (const f of ALL_FRAMINGS) {
   c.check(
     `E1 ${f.id}: aims within the city footprint and below the crown`,
     Math.max(Math.abs(f.lookAt[0]), Math.abs(f.lookAt[2])) <= CITY_HALF + 8 &&

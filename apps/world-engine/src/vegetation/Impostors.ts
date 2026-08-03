@@ -61,6 +61,9 @@ export interface ImpostorPart {
   barkTex?: { texA: Texture; texB: Texture };
   /** base tint (mesh foliage) */
   color?: { r: number; g: number; b: number };
+  /** mesh: albedo from a per-vertex 'color' attribute (multi-region assets
+   *  like the crowd figures, which have no vdata jitter channel) */
+  vertexColor?: boolean;
 }
 
 export interface ImpostorAtlas {
@@ -87,6 +90,9 @@ function passMaterial(part: ImpostorPart, pass: PassKind, camDist: number, radiu
   if (pass === 'albedo') {
     if (part.kind === 'cards' && alphaTex) {
       mat.emissiveNode = alphaTex.rgb; // already sqrt-encoded in the atlas
+    } else if (part.kind === 'mesh' && part.vertexColor) {
+      const c = attribute('color', 'vec3') as unknown as NV3;
+      mat.emissiveNode = sqrt(c as unknown as NF) as unknown as NV3;
     } else if (part.kind === 'bark' && part.barkTex) {
       const a = texture(part.barkTex.texA, uv() as never) as unknown as NV4;
       mat.emissiveNode = a.rgb; // sqrt-encoded
@@ -193,9 +199,15 @@ export async function captureImpostor(
   renderer: Renderer,
   parts: ImpostorPart[],
   bounds: { centerY: number; radius: number },
+  opts?: {
+    /** override tile resolution (default IMPOSTOR_TILE) — small assets like
+     *  the crowd figures don't need 256 px/view; the runtime material only
+     *  depends on the grid, so tile size is free per atlas */
+    tile?: number;
+  },
 ): Promise<ImpostorAtlas> {
   const grid = IMPOSTOR_GRID;
-  const tile = IMPOSTOR_TILE;
+  const tile = opts?.tile ?? IMPOSTOR_TILE;
   const atlasRes = grid * tile;
   const albedoPx = new Uint8Array(atlasRes * atlasRes * 4);
   const normalPx = new Uint8Array(atlasRes * atlasRes * 4);

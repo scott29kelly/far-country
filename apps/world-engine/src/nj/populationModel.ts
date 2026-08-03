@@ -48,7 +48,13 @@ import {
 } from './cityModel';
 import { NJ_SCALE } from './rimModel';
 
-/** Figure dimensions, WORLD metres (legacy Inhabitants.tsx proportions). */
+/**
+ * Figure dimensions, WORLD metres. The robe/head/palm dims are the legacy
+ * cone-and-sphere proportions (pre-ADR-0019; kept for scale documentation) —
+ * figure GEOMETRY is now owned by figureModel.ts archetypes. The scale
+ * fields remain load-bearing: multitudePlacements draws per-figure `s`
+ * from them, and the crowd applies it on top of each archetype's height.
+ */
 export const FIGURE = {
   robeH: 1.55,
   robeR: 0.31,
@@ -97,11 +103,10 @@ export const HOST = {
 /**
  * Emissive constants (probe-asserted): the PostStack bloom threshold is
  * luminance 1.5 and only the crown + glory may cross it (CityMassing
- * contract). Every population emissive stays far below.
+ * contract). Every population emissive stays far below. The multitude's
+ * per-region emissives moved to figureModel.CROWD_EMISSIVE (ADR 0019
+ * rebuild); the hosts' stay here.
  */
-export const ROBE_EMISSIVE = 0.22;
-export const HEAD_EMISSIVE = 0.08;
-export const PALM_EMISSIVE = 0.25;
 export const HOST_CORE_EMISSIVE = 1.4; // lum 1.31 — under the 1.5 line
 export const HOST_HALO_EMISSIVE = 1.0;
 

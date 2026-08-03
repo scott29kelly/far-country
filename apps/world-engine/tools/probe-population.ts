@@ -35,12 +35,9 @@ Object.defineProperty(globalThis, 'window', {
 
 const {
   FIGURE,
-  HEAD_EMISSIVE,
   HOST,
   HOST_CORE_EMISSIVE,
   HOST_HALO_EMISSIVE,
-  PALM_EMISSIVE,
-  ROBE_EMISSIVE,
   SWAY,
   assemblyVolumes,
   hostClusterVolumes,
@@ -49,6 +46,7 @@ const {
   multitudePlacements,
   populationInvariants,
 } = await import('../src/nj/populationModel');
+const { figureModelInvariants } = await import('../src/nj/figureModel');
 const { cityFloorLocalY } = await import('../src/nj/cityCollide');
 const { CITY_SUMMIT_Y, CITY_TIERS } = await import('../src/nj/cityModel');
 const { buildEntityPicks, nearestEntityAt, pickEntityAt } = await import('../src/nj/entityPicks');
@@ -98,20 +96,20 @@ c.check(
   `${hosts.length} hosts, baseY ${Math.min(...hosts.map((h) => h.baseY)).toFixed(1)}..${Math.max(...hosts.map((h) => h.baseY)).toFixed(1)} (summit ${CITY_SUMMIT_Y})`,
 );
 
-// bloom contract: luminance of every population emissive stays under 1.5
+// bloom contract: luminance of every population emissive stays under 1.5.
+// The multitude's per-region emissives live in figureModel (ADR 0019) —
+// its invariants cover palette-worst-case luminance; the hosts' stay here.
 const lum = (r: number, g: number, b: number, k: number): number =>
   (0.2126 * r + 0.7152 * g + 0.0722 * b) * k;
-const worst = Math.max(
-  lum(1.0, 0.953, 0.886, ROBE_EMISSIVE),
-  lum(0.74, 0.63, 0.55, HEAD_EMISSIVE),
-  lum(0.165, 0.29, 0.118, PALM_EMISSIVE),
+const fInv = figureModelInvariants();
+const worstHost = Math.max(
   lum(1.0, 0.93, 0.78, HOST_CORE_EMISSIVE),
   lum(1.0, 0.93, 0.78, HOST_HALO_EMISSIVE),
 );
 c.check(
   'A5 bloom contract: every population emissive under the 1.5 threshold',
-  worst < 1.5,
-  `worst luminance ${worst.toFixed(3)}`,
+  fInv.ok && worstHost < 1.5,
+  `figures: ${fInv.detail}; worst host luminance ${worstHost.toFixed(3)}`,
 );
 
 c.check(
