@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-07-22)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-02)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,32 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-08-02) HARDWARE SELF-VERIFICATION ESTABLISHED ON SCOTT'S LAPTOP —
+the Phase 3 gate ("no Phase 4 until the agent can see its own work") is
+cleared.** First agent-driven capture on real hardware since the city
+sessions: `tools/shoot.ts --scene newjerusalem` from a fresh checkout
+(worktree, `npm install` from cache) acquired the **`nvidia / blackwell`**
+adapter through the plain cached recipe `{headless: true, channel:
+'chromium', args: []}` — none of the software-adapter fallback candidates
+added on 2026-07-31 were needed. Boot ready in 58.9 s, 42 fps at 1600×900,
+21.0 M triangles, 1169 draw calls; `shots/nj-check.png` shows the city
+(tiers, bay rhythm, gate-lintel names legible), not the boot screen.
+
+- **The ProbeGI validation error does NOT reproduce on hardware.** The full
+  page console was captured for the whole boot and first frames: no
+  validation error, and the GI passes ran with normal timings
+  (`c.probeGather` 0.19 ms, `c.probePublish` 0.004 ms). The 2D-view-against-
+  3D-texture error is therefore a SwiftShader-path artefact, not an engine or
+  three.js backend bug that hardware exercises. Per the standing constraint
+  (no three.js patch without a hardware repro) there is nothing to fix;
+  if GI ever looks wrong on hardware, re-open with fresh evidence.
+- Console noise on hardware, for the record (all pre-existing classes, none
+  fatal): `powerPreference` ignored on Windows (crbug.com/369219127), the
+  timestamp-query pool warning, and one `THREE.TSL: Vertex attribute
+  "normal" not found` warning.
+- Cloud/SwiftShader capture remains a dead end per the 2026-07-31 entry;
+  the visual bar lives on this machine now.
 
 **(2026-07-31) TEMPLE COLLISION + FLOORS BUILT — half of the standing
 "dwellings/temple collision and floors remain open" debt closed.** A walker
