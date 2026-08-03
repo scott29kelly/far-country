@@ -180,6 +180,36 @@ the inhabitants altogether.
 - Code (legacy `/world`, retired per ADR 0013): `apps/web/src/lib/world/components/Inhabitants.tsx`
 - Code (current `/world-preview`, **implemented 2026-07-18** — M3.6 first pass): `apps/world-engine/src/nj/populationModel.ts` (CPU-pure placements: 40 worship assemblies on the plaza ring + tier 1–3 terrace pavements, every figure on a real walk floor; 12 host clusters ringing the summit off the cardinal meridians) and `apps/world-engine/src/nj/Population.ts` (instanced robe/head/palm figures with per-instance warm-tone/scale variation; core+halo light-pillar hosts with a shader-time rise/fall). Pick registry anchors the assemblies to `great-multitude` (Rev 7:9) and the host ring to `myriads-of-angels` (Rev 5:11 — this entry's own citation; the similar `angels-around-throne` entity is Rev 7:11). Verification: `apps/world-engine/STATUS.md` 2026-07-18 later-5 entry.
 
+### Addendum (2026-08-03) — the multitude re-rendered under ADR 0019
+
+[ADR 0019](docs/adr/0019-photorealistic-redeemed-humans.md) (2026-08-01,
+Scott's directive on Rev 7:13–14) supersedes this entry's "no facial or
+identity features" clause **for the redeemed only**: the multitude is
+explicitly identified as redeemed *humans*, so rendering them as visibly
+unhuman abstractions under-claimed the text. The chosen rendering is now
+**generic, anonymous, visibly diverse human beings** — six seeded body
+archetypes spanning age and build, skin and hair tones drawn uniformly
+across full palette ramps ("from every nation… all tribes and peoples and
+languages", Rev 7:9), white robes and raised palm branches kept, every
+figure still facing the summit light (ADR 0010 pattern unchanged).
+
+What withholding remains is now an *engineering* state, not the policy:
+faces are currently featureless (a nose hint, no eyes or mouth) because the
+near-ring photoreal tier awaits the authoring-posture decision recorded in
+`apps/world-engine/STATUS.md` (2026-08-03). The policy ceiling is ADR 0019
+itself: photoreal is permitted; portraits and named-person likenesses are
+not. **The hosts are unchanged** — ADR 0019 rule 5 leaves the abstract
+light-pillar rendering above exactly as this entry settled it.
+
+- Code (2026-08-03 rebuild): `apps/world-engine/src/nj/figureModel.ts`
+  (archetypes, palettes, per-figure seeded params — diversity as data),
+  `FigureMesh.ts` (one parametric generator, both LOD meshes),
+  `Crowd.ts` (GPU compute-cull → per-ring indirect draws; far ring as
+  captured atlas impostors). Placements unchanged
+  (`populationModel.multitudePlacements()`), so every 2026-07-18 floor/
+  clearance/pick verification carries over; new budget/diversity probe:
+  `apps/world-engine/tools/probe-crowd.ts`.
+
 ---
 
 ## Entry #4 — The rainbow around the throne: full spectrum with emerald prominence

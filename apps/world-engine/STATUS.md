@@ -138,8 +138,78 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-02) M3.6 ATTACK PLAN (recorded, not started) — the ADR 0019
-photorealistic-multitude rebuild.** Sized during this session; it is a
+**(2026-08-03) M3.6 REBUILD STEPS 1-2 BUILT — the ADR 0019 multitude is live
+as a GPU-driven LOD crowd of seeded parametric humans; the near-ring
+photoreal tier remains GATED on Scott's authoring-posture answer.** The
+attack plan below was executed in order; the ~12,700 cone-and-sphere
+placeholders are gone.
+
+- **Step 1 (LOD infrastructure): `src/nj/Crowd.ts`** — the vegetation idiom
+  on a static transform set: three CPU-filled storage buffers (world
+  transform + yaw/lean/archetype + skin/hair/warmth/width), a per-frame
+  compute cull (frustum sphere test + distance-ring classify with the
+  complementary dither bands) appending into per-(archetype, ring) compact
+  regions, indirect instance counts written GPU-side. Rings: R0 ≤ 35 m full
+  generator mesh, R1 ≤ 160 m reduced mesh, hemi-octahedral atlas impostors
+  beyond (ImpostorRuntime unchanged; capture extended with a `vertexColor`
+  albedo path and a `tile` override — the crowd atlas is 8×8 views at
+  128 px). Recorded simplifications vs the Forests caster rig: crowd casters
+  reuse the MAIN-view compact lists (an off-screen figure's shadow is ~2 m,
+  not a tree crown), the cull skips the terrain-occlusion march (the city is
+  the occluder, and a culled figure would only have been a 2-tri impostor),
+  and ONE captured atlas (adult-tall, mid palette) serves the whole far ring
+  — beyond 160 m identity rides scale/yaw/tint.
+- **Step 2 (one seeded generator): `src/nj/figureModel.ts` (pure) +
+  `src/nj/FigureMesh.ts`** — six archetypes (three adult builds, elder,
+  youth, child; authored weights, probe-asserted present at weight) and
+  per-figure seeded params: skin/hair drawn UNIFORM across shared palette
+  ramps so no tone is the default (ADR 0019 rule 2 as a testable property),
+  robe warmth, width jitter. One generator emits both LOD meshes per
+  archetype (identity-stable): fold-pleated robe loft capped at hem and
+  neckline, head with jaw taper + nose ridge hint, three hair-shell styles
+  with age-cast graying, sleeved arms — one raised holding a leafleted palm
+  frond (Rev 7:9), hands beyond the cuffs — feet at the origin. Placements
+  are `multitudePlacements()` VERBATIM: every floor/clearance/pick probe
+  carried over untouched. Hosts (ADR 0011) untouched.
+- **Numbers:** N = 12,712. LOD0 ≤ 3,833 tris, LOD1 ≤ 555. Analytic worst
+  case (densest R0 disc + densest R1 disc + all-impostor aerial,
+  probe-crowd C1 against the real placements): 1.64 M tris ≤ the 2.2 M
+  budget. Live on hardware, standing inside an assembly: crowd.r0 84 /
+  crowd.r1 242 / 453 k crowd tris on screen; the worst in-crowd framing
+  costs ~8 ms GPU render (19.7 ms vs 11.5 ms with `?stages=-population`) and
+  fps is unchanged (18.8 both — the frame is bound elsewhere on this laptop
+  at that view). HUD counters `crowd.r0/r1/imp/tris` land in `--stats`
+  (first counter readback at frame 24 so settled stills carry them).
+- **Verification:** `tools/probe-crowd.ts` (new, 10 checks: determinism,
+  diversity-at-weight, ramp-tail coverage, tri ceilings, feet-at-origin,
+  region completeness, LOD identity envelope, budget, capacity margins,
+  capture bake gamut) ALL PASS; probe-population / probe-entitypick /
+  probe-framings / probe-wallcollide / probe-cityfloors /
+  probe-templecollide / probe-walkfling / probe-stages regressions ALL
+  PASS; tsc + vite build clean. Hardware stills (nvidia/blackwell, plain
+  recipe): `shots/wip/crowd/{multitude-near,multitude-lod-run,aerial-check}.png`
+  — LOD bands invisible in the lod-run still, no hole bands, fronds read at
+  every ring, shadows cast. One GPU-review finding fixed in-pass: the hand
+  was swallowed by the sleeve cuff (cuff slimmed, hand moved past it).
+- **Review surface:** `CROWD_FRAMINGS` annex in `reviewFramings.ts` —
+  `multitude-near` (arm's-length face read INSIDE an assembly; the framing
+  that judges the gated tier) and `multitude-lod-run` (one frame spanning
+  R0 → R1 → impostor band down the south gallery), appended after the nine
+  core framings; `?shot=` now accepts indices past 9 (`core/Params.ts`),
+  digit keys unchanged, probe-framings extended to the full set.
+- **GATED remainder (the ONE decision Scott owns, still unanswered):** the
+  near-ring photoreal tier — true photoreal faces/skin/hair. Today's LOD0
+  is the honest runtime-procedural ceiling: real human proportions, pose
+  and diversity, but featureless faces (a nose hint, no eyes/mouth). The
+  question: **in-engine procedural only, or vendored offline-generated
+  assets** (the posture already contemplated for the audio layer)? Under
+  "procedural" the near tier means sculpting faces in code (slow, capped
+  quality); under "vendored" the generator's archetypes become the
+  mid/far LODs beneath swapped-in generated near meshes. Steps 1-2 serve
+  either answer, as planned.
+
+**(2026-08-02) M3.6 ATTACK PLAN (recorded; steps 1-2 executed 2026-08-03,
+see the entry above) — the ADR 0019 photorealistic-multitude rebuild.** Sized during this session; it is a
 dedicated-session build, not a tail-of-session slice. Order of attack:
 
 1. **LOD infrastructure FIRST — it is the binding constraint.** The current
