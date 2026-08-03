@@ -138,6 +138,32 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-02) M3.6 ATTACK PLAN (recorded, not started) — the ADR 0019
+photorealistic-multitude rebuild.** Sized during this session; it is a
+dedicated-session build, not a tail-of-session slice. Order of attack:
+
+1. **LOD infrastructure FIRST — it is the binding constraint.** The current
+   figures are ~100 tris; any human mesh is thousands, and 12,700 x
+   thousands swamps the frame. Give the crowd the vegetation idiom applied
+   to a static transform set: one storage buffer of figure transforms, a
+   compute cull/binning pass into per-LOD indirect draws (the veg.g0..g3
+   pattern), far ring as atlas impostors (`vegetation/Impostors.ts` is the
+   template). On-screen budget for the whole multitude: ~2M tris.
+2. **Figure authoring: one parametric generator, both LOD meshes.** Seeded
+   per-figure parameters (height, build, skin tone, hair, age cast) for the
+   ADR 0019 rule-2 diversity; white robes + palm branches stay (rule 3);
+   figures keep facing the summit light (ADR 0010 pattern unchanged).
+3. **The near-ring photoreal tier is gated on ONE decision Scott owns:**
+   in-engine procedural only, or vendored offline-generated assets (the
+   posture already contemplated for the audio layer). Face/skin/hair at
+   true photoreal quality is not honestly reachable as runtime-procedural
+   boxes-and-lathes; do not build the near tier before Scott picks the
+   authoring posture. Steps 1-2 are fork-independent — they are needed
+   under either answer.
+4. **GPU review at every step** (ADR 0019 consequence): add plaza-crowd
+   review framings alongside the build; CPU probes only guard placement,
+   bloom contract, and draw/tri budgets.
+
 **(2026-08-02) TEMPLE ASCENT BUILT — the counted stair flights are rendered
 and walkable, closing the "no walkable ascent onto the inner terrace" debt.**
 The single 3.3 m terrace block was two cited flights flattened into one
