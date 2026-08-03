@@ -9,8 +9,10 @@
  * Identity (USER-REFS directive #5, CITY-QUALITY-BAR delta #8): a fortified
  * warm-sandstone compound, architecturally alien to the gold-glass city —
  * one-reed perimeter wall with three tower-gatehouses (east, north, south;
- * none on the west, Ezek 40; 42:15-20), raised inner court with three inner
- * gates, the house on its six-cubit platform (Ezek 41:8), the eleven-cubit
+ * none on the west, Ezek 40; 42:15-20), the outer court raised the seven
+ * steps its gates are climbed by (Ezek 40:22, 26), the inner court a further
+ * eight behind the three inner gates (Ezek 40:31, 34, 37) — both flights
+ * rendered and walkable — the house on its six-cubit platform (Ezek 41:8), the eleven-cubit
  * altar with eastward steps (Ezek 43:13-17), the western building, and the
  * two priests' chamber blocks (Ezek 42:1-14). Crenellations and corner
  * towers are art direction; window glow renders Ezek 40:16's windows within
@@ -326,20 +328,35 @@ export function buildTemple(deps: TempleDeps): TempleResult {
     }
   }
 
+  // --------------------------------------------------------- raised outer court
+  // The outer gates are climbed by seven steps (Ezek 40:22, 26 — 40:6 climbs
+  // the east one), so the whole outer court stands that flight above the
+  // plinth. One pavement slab spans the walled interior, inset to the walls'
+  // inner faces (the wall boxes own the exterior planes — no coplanar
+  // fighting); a threshold strip through each gate gap carries the portal
+  // floor across the wall-thickness band to meet the flight outside.
+  const outerRise = count('ezt-outer-gate-steps') * INTERP.stepRise;
+  const innerRise = count('ezt-inner-gate-steps') * INTERP.stepRise;
+  const courtTop = y0 + outerRise;
+  const slabHalf = half - wallT;
+  solidBox(g, solids, sand, slabHalf * 2, outerRise, slabHalf * 2, c.x, y0 + outerRise / 2, c.z);
+  solidBox(g, solids, sandDark, wallT, outerRise, gateW, c.x + half - wallT / 2, y0 + outerRise / 2, c.z);
+  solidBox(g, solids, sandDark, gateW, outerRise, wallT, c.x, y0 + outerRise / 2, c.z - (half - wallT / 2));
+  solidBox(g, solids, sandDark, gateW, outerRise, wallT, c.x, y0 + outerRise / 2, c.z + (half - wallT / 2));
+
   // --------------------------------------------------------- outer gatehouses
   // 50 x 25 cu tower-gatehouses projecting inward from the wall line
-  // (Ezek 40:6-16, 20-27); approached by seven steps (Ezek 40:22, 26)
-  const outerRise = count('ezt-outer-gate-steps') * INTERP.stepRise;
-  gatehouse(g, solids, sand, trim, glow, c.x + half - gateL / 2, y0, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, solids, sand, trim, glow, c.x, y0, c.z - (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, solids, sand, trim, glow, c.x, y0, c.z + (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  // (Ezek 40:6-16, 20-27), standing at court level — their seven-step
+  // flights descend outside the wall face (built below with the inner ones)
+  gatehouse(g, solids, sand, trim, glow, c.x + half - gateL / 2, courtTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x, courtTop, c.z - (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, trim, glow, c.x, courtTop, c.z + (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
 
   // ------------------------------------------------------------ inner terrace
-  // the inner court stands a flight above the outer court: outer gates climb
-  // seven steps, inner gates eight (Ezek 40:22, 31) — rendered as two
-  // terraces with stepped flights at the gates
-  const innerRise = count('ezt-inner-gate-steps') * INTERP.stepRise;
-  const terrX0 = -half; // west wall
+  // the inner court stands the inner gates' eight-step flight above the
+  // outer court (Ezek 40:31, 34, 37); its west edge stops at the west
+  // wall's inner face (the wall owns the exterior plane)
+  const terrX0 = -half + wallT; // west wall inner face
   const terrX1 = innerSide; // inner-gate outer face (x = +52.5)
   const terrW = terrX1 - terrX0;
   const terrD = innerSide * 2 + 16; // spans inner court + both inner N/S gates
@@ -348,13 +365,13 @@ export function buildTemple(deps: TempleDeps): TempleResult {
     solids,
     sand,
     terrW,
-    outerRise + innerRise,
+    innerRise,
     terrD,
     c.x + (terrX0 + terrX1) / 2,
-    y0 + (outerRise + innerRise) / 2,
+    courtTop + innerRise / 2,
     c.z,
   );
-  const terrTop = y0 + outerRise + innerRise;
+  const terrTop = courtTop + innerRise;
 
   // --------------------------------------------------------- inner gatehouses
   gatehouse(g, solids, sand, trim, glow, c.x + innerSide - gateL / 2, terrTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
@@ -556,6 +573,123 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   mers.instanceMatrix.needsUpdate = true;
   mers.castShadow = true;
   g.add(mers);
+
+  // ------------------------------------------------- counted stair flights
+  // The ascent the survey counts, rendered and walkable: seven steps at the
+  // three outer gates (Ezek 40:22, 26), eight at the three inner (Ezek
+  // 40:31, 34, 37). Each flight is a stack of full-height treads (the
+  // house-steps idiom, portal-opening wide) flanked by parapet cheeks whose
+  // caps rake down the flight in two falls; a pale nosing band sits proud of
+  // every tread edge. Risers/treads are INTERP.stepRise/stepGoing
+  // (RENDERING-DECISIONS #7). Treads and cheeks are massing — each records
+  // its solid from the same numbers its instance matrix uses, so the
+  // collider set stays the geometry; caps and nosings are filigree. Four
+  // instanced draws total: every piece is an axis-aligned box, so scale +
+  // translation is the whole matrix.
+  const going = INTERP.stepGoing;
+  const treadM: Matrix4[] = [];
+  const cheekM: Matrix4[] = [];
+  const capM: Matrix4[] = [];
+  const noseM: Matrix4[] = [];
+  const put = (
+    list: Matrix4[],
+    w: number,
+    h: number,
+    d: number,
+    x: number,
+    y: number,
+    z: number,
+  ): void => {
+    mtx.makeScale(w, h, d);
+    mtx.setPosition(x, y, z);
+    list.push(mtx.clone());
+  };
+  const solidPut = (
+    list: Matrix4[],
+    w: number,
+    h: number,
+    d: number,
+    x: number,
+    y: number,
+    z: number,
+  ): void => {
+    recordSolid(solids, w, h, d, x, y, z);
+    put(list, w, h, d, x, y, z);
+  };
+  // origin (ox, oz) is where the flight meets its upper floor; treads descend
+  // outward along the unit axis (dx, dz), the top tread flush with that floor
+  const flight = (
+    ox: number,
+    oz: number,
+    dx: number,
+    dz: number,
+    baseY: number,
+    steps: number,
+  ): void => {
+    const run = steps * going;
+    for (let k = steps; k >= 1; k--) {
+      const rise = k * INTERP.stepRise;
+      const dc = (steps - k + 0.5) * going;
+      solidPut(
+        treadM,
+        dx !== 0 ? going : gateOpen,
+        rise,
+        dx !== 0 ? gateOpen : going,
+        ox + dx * dc,
+        baseY + rise / 2,
+        oz + dz * dc,
+      );
+      const edge = (steps - k + 1) * going; // this tread's outer face
+      put(
+        noseM,
+        dx !== 0 ? 0.1 : gateOpen - 0.16,
+        0.06,
+        dx !== 0 ? gateOpen - 0.16 : 0.1,
+        ox + dx * (edge - 0.03),
+        baseY + rise - 0.025,
+        oz + dz * (edge - 0.03),
+      );
+    }
+    const across = gateOpen / 2 + INTERP.stairCheekT / 2;
+    const topY = baseY + steps * INTERP.stepRise;
+    const segs: Array<[number, number, number]> = [
+      // [start, length, cap height]: the upper fall hugs the landing, the
+      // lower steps down the rake and runs a stub past the bottom tread
+      [0, run / 2, topY + INTERP.stairParapetH],
+      [run / 2, run / 2 + 0.35, baseY + (topY - baseY) / 2 + INTERP.stairParapetH],
+    ];
+    for (const s of [-1, 1] as const) {
+      for (const [d0, len, top] of segs) {
+        const dc = d0 + len / 2;
+        const cx2 = ox + dx * dc + (dx !== 0 ? 0 : s * across);
+        const cz2 = oz + dz * dc + (dx !== 0 ? s * across : 0);
+        const w = dx !== 0 ? len : INTERP.stairCheekT;
+        const d = dx !== 0 ? INTERP.stairCheekT : len;
+        solidPut(cheekM, w, top - baseY, d, cx2, (baseY + top) / 2, cz2);
+        put(capM, w + 0.12, 0.12, d + 0.12, cx2, top + 0.06, cz2);
+      }
+    }
+  };
+  const outerSteps = count('ezt-outer-gate-steps');
+  const innerSteps = count('ezt-inner-gate-steps');
+  flight(c.x + half, c.z, 1, 0, y0, outerSteps);
+  flight(c.x, c.z - half, 0, -1, y0, outerSteps);
+  flight(c.x, c.z + half, 0, 1, y0, outerSteps);
+  flight(c.x + innerSide, c.z, 1, 0, courtTop, innerSteps);
+  flight(c.x, c.z - terrD / 2, 0, -1, courtTop, innerSteps);
+  flight(c.x, c.z + terrD / 2, 0, 1, courtTop, innerSteps);
+  const inst = (mats: Matrix4[], m: MeshStandardNodeMaterial, shadow: boolean): void => {
+    const im = new InstancedMesh(new BoxGeometry(1, 1, 1), m, mats.length);
+    mats.forEach((mm, i) => im.setMatrixAt(i, mm));
+    im.instanceMatrix.needsUpdate = true;
+    im.castShadow = shadow;
+    im.receiveShadow = true;
+    g.add(im);
+  };
+  inst(treadM, sand, true);
+  inst(cheekM, sandDark, true);
+  inst(capM, trim, true);
+  inst(noseM, trim, false);
 
   return { group: g, solids };
 }

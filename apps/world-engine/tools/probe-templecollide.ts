@@ -17,12 +17,18 @@
  *      (Ezek 42:15-20 lists no west gate);
  *   T4 oblique motion into a wall SLIDES along the face;
  *   T5 the outer court is a real FLOOR — a walker inside the compound
- *      stands on the plinth top, not at meadow height;
+ *      stands on the court pavement, seven steps above the plinth;
  *   T6 the inner terrace claims as a higher floor than the outer court;
  *   T7 the sanctuary core BLOCKS rather than admitting a walker;
  *   T8 a start inside a solid is never trapped (exact-placement semantics);
  *   T9 without the wraps nothing blocks (the compound is opt-in per stage);
  *   T10 a band-spanning move cannot tunnel the wall;
+ *   T11 the outer seven-step flight carries a walker up onto the court
+ *      ON FOOT (Ezek 40:22, 26 — the ascent is walkable, not just modeled);
+ *   T12 the inner eight-step flight carries a walker on up to the inner
+ *      terrace (Ezek 40:31, 34, 37);
+ *   T13 mid-flight tread heights equal the cited count x riser arithmetic
+ *      (both flights realize their counted steps, not an approximate ramp);
  *   P*  pure-function spot checks of the recorded volume set.
  *
  *   npx tsx tools/probe-templecollide.ts
@@ -53,7 +59,7 @@ const {
   wrapGroundProbeWithTempleFloors,
   wrapMoveWithTempleCollision,
 } = await import('../src/nj/templeCollide');
-const { TEMPLE_SITE } = await import('../src/nj/templeModel');
+const { INTERP, TEMPLE_SITE, count, meters } = await import('../src/nj/templeModel');
 const { makeChecker } = await import('./check');
 
 const press = (code: string): void => {
@@ -80,8 +86,12 @@ const probe = wrapGroundProbeWithTempleFloors(terrainProbe, solids);
 const movePr = wrapMoveWithTempleCollision(null, solids);
 
 const C = TEMPLE_SITE;
-/** plinth top — the outer-court pavement (buildTemple: gMax + 0.8) */
+/** plinth top (buildTemple: gMax + 0.8) */
 const PLINTH_TOP = GROUND_Y + 0.8;
+// the two terrace levels, derived through the SAME resolver the builder
+// uses (shared-table discipline — no hand-mirrored constants)
+const COURT_TOP = PLINTH_TOP + count('ezt-outer-gate-steps') * INTERP.stepRise;
+const TERR_TOP = COURT_TOP + count('ezt-inner-gate-steps') * INTERP.stepRise;
 
 const domShim = { addEventListener: () => {} } as unknown as HTMLElement;
 const DT = 1 / 60;
@@ -176,9 +186,9 @@ c.check(
   const pz = C.z - 90;
   const g = probe(px, pz, PLINTH_TOP + 1.7);
   c.check(
-    'T5 the outer court stands on the plinth top, not the meadow',
-    g.ground > GROUND_Y + 0.5,
-    `ground ${g.ground.toFixed(2)} (meadow ${GROUND_Y.toFixed(2)}, plinth top ~${PLINTH_TOP.toFixed(2)})`,
+    'T5 the outer court pavement stands seven steps above the plinth',
+    Math.abs(g.ground - COURT_TOP) < 0.05,
+    `ground ${g.ground.toFixed(2)} (meadow ${GROUND_Y.toFixed(2)}, court ${COURT_TOP.toFixed(2)})`,
   );
 }
 
@@ -190,8 +200,8 @@ c.check(
   const inner = probe(C.x - 12, C.z + 40, PLINTH_TOP + 1.7);
   c.check(
     'T6 the inner terrace is a higher floor than the outer court',
-    inner.ground > outer.ground,
-    `inner ${inner.ground.toFixed(2)} vs outer ${outer.ground.toFixed(2)}`,
+    inner.ground > outer.ground && Math.abs(inner.ground - TERR_TOP) < 0.05,
+    `inner ${inner.ground.toFixed(2)} (terrace ${TERR_TOP.toFixed(2)}) vs outer ${outer.ground.toFixed(2)}`,
   );
 }
 
@@ -259,6 +269,66 @@ c.check(
     'T10b the same move on the gate row is not stopped by the east wall',
     lane.x < C.x + 120,
     `arrived at x ${lane.x.toFixed(2)} on the gate row`,
+  );
+}
+
+// ---- T11: the outer flight carries a walker up onto the court on foot -----
+{
+  const cam = freshCam(true);
+  // start on the meadow east of the east gate; 700 frames of walking crosses
+  // the plinth lip, climbs the seven treads, and passes the portal
+  cam.setPose({ p: [C.x + 140, PLINTH_TOP + 1.7, C.z], yaw: Math.PI / 2, pitch: 0 });
+  cam.setMode('walk');
+  press('KeyW');
+  run(cam, 700);
+  release('KeyW');
+  const x = cam.camera.position.x;
+  const feet = cam.camera.position.y - 1.7;
+  c.check(
+    'T11 the seven-step flight lifts a walker onto the outer court (Ezek 40:22)',
+    x < C.x + 105 && Math.abs(feet - COURT_TOP) < 0.3,
+    `x ${x.toFixed(1)} (gatehouse inner end ~+105), feet ${feet.toFixed(2)} (court ${COURT_TOP.toFixed(2)})`,
+  );
+}
+
+// ---- T12: the inner flight carries the walker on up to the terrace --------
+{
+  const cam = freshCam(true);
+  cam.setPose({ p: [C.x + 80, COURT_TOP + 1.7, C.z], yaw: Math.PI / 2, pitch: 0 });
+  cam.setMode('walk');
+  press('KeyW');
+  run(cam, 700);
+  release('KeyW');
+  const x = cam.camera.position.x;
+  const feet = cam.camera.position.y - 1.7;
+  c.check(
+    'T12 the eight-step flight lifts a walker onto the inner terrace (Ezek 40:31)',
+    x < C.x + 45 && Math.abs(feet - TERR_TOP) < 0.3,
+    `x ${x.toFixed(1)}, feet ${feet.toFixed(2)} (terrace ${TERR_TOP.toFixed(2)})`,
+  );
+}
+
+// ---- T13: mid-flight treads realize the counted-step arithmetic -----------
+{
+  const HALF = meters('ezt-precinct-side') / 2;
+  const INNER = meters('ezt-inner-court-side');
+  const oSteps = count('ezt-outer-gate-steps');
+  const iSteps = count('ezt-inner-gate-steps');
+  // centre of tread 4 on each flight, from the same layout arithmetic the
+  // builder uses (origin at the upper floor edge, treads descend outward)
+  const oX = C.x + HALF + (oSteps - 4 + 0.5) * INTERP.stepGoing;
+  const oFloor = templeFloorWorldY(solids, oX, C.z, PLINTH_TOP + 3.5, GROUND_Y - 60);
+  c.check(
+    'T13 the outer flight is seven real 0.22 m treads, not a ramp',
+    Math.abs(oFloor - (PLINTH_TOP + 4 * INTERP.stepRise)) < 0.01,
+    `tread-4 top ${oFloor.toFixed(3)} (expected ${(PLINTH_TOP + 4 * INTERP.stepRise).toFixed(3)})`,
+  );
+  const iX = C.x + INNER + (iSteps - 4 + 0.5) * INTERP.stepGoing;
+  const iFloor = templeFloorWorldY(solids, iX, C.z, COURT_TOP + 3.5, GROUND_Y - 60);
+  c.check(
+    'T13b the inner flight climbs from court level by its eight cited steps',
+    Math.abs(iFloor - (COURT_TOP + 4 * INTERP.stepRise)) < 0.01,
+    `tread-4 top ${iFloor.toFixed(3)} (expected ${(COURT_TOP + 4 * INTERP.stepRise).toFixed(3)})`,
   );
 }
 

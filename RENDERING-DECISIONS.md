@@ -358,6 +358,13 @@ Both reasons point the same direction, so the engine's default terrain is used a
      is proportional, not surveyed. The Ezek 47 river issuing from under
      the threshold is deferred to the Millennial-Kingdom milestone
      (roadmap M4) and not yet rendered.
+  6. **(Amended 2026-08-02) The counted flights are rendered and walkable,
+     and the courts stand at their heads:** the outer court rises the seven
+     steps its gates are climbed by (Ezek 40:22, 26 — 40:6 climbs the east
+     one), the inner terrace the inner gates' eight (40:31, 34, 37). The
+     text gives the counts; the riser stays point 3's ~0.22 m, and the
+     ~0.45 m tread depth, parapet cheeks with pale caps, and tread nosing
+     bands are interpretive stair dressing in point 4's posture.
 
 ### What is grounded vs. a rendering choice
 
@@ -365,9 +372,10 @@ Both reasons point the same direction, so the engine's default terrain is used a
   courts, house, chambers, west building, precinct, altar — Ezek 40:5–47;
   40:48–41:15; 42:1–20; 43:13–17), gate/steps counts, eastward altar steps
   (43:17), three outer + three inner gates (E/N/S; none on the west).
-- **Rendering choice:** house/gatehouse heights, step risers, red-sandstone
-  palette, crenellations and corner towers, window glow intensity, and the
-  plinth that seats the literal-scale compound on the rolling meadow.
+- **Rendering choice:** house/gatehouse heights, step risers and tread
+  depth, the stair parapet dressing, red-sandstone palette, crenellations
+  and corner towers, window glow intensity, and the plinth that seats the
+  literal-scale compound on the rolling meadow.
 
 ### Governing sources
 

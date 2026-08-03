@@ -51,6 +51,11 @@ export const INTERP = {
   gatehouseH: 9,
   /** step riser for the counted stair flights (7/8/10 steps) */
   stepRise: 0.22,
+  /** tread depth for the counted flights — processional low-rise/deep-tread */
+  stepGoing: 0.45,
+  /** parapet cheek walls flanking each flight: thickness + height above the rake */
+  stairCheekT: 0.55,
+  stairParapetH: 0.95,
   /** corner towers + crenellations: art direction (USER-REFS #5), not text */
   towerSide: 8,
   towerH: 10.5,

@@ -138,6 +138,43 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-02) TEMPLE ASCENT BUILT — the counted stair flights are rendered
+and walkable, closing the "no walkable ascent onto the inner terrace" debt.**
+The single 3.3 m terrace block was two cited flights flattened into one
+cliff; the build now realizes the survey's own vertical structure:
+
+- **The outer court is raised the seven steps its gates are climbed by**
+  (Ezek 40:22, 26): a pavement slab spans the walled interior (inset to the
+  walls' inner faces so no exterior plane is coplanar), threshold strips
+  carry the portal floors across the wall band, and the three outer
+  gatehouses stand at court level. The inner terrace keeps its top exactly
+  where it was (courtTop + the inner gates' eight steps, Ezek 40:31, 34,
+  37), so the altar, house, western building and chamber blocks are
+  untouched. Its west edge now stops at the west wall's inner face — that
+  removes a latent coplanar z-fight band on the west exterior.
+- **Six flights** (three outer 7-step, three inner 8-step), each: full
+  portal-opening width, full-height stacked treads (the house-steps idiom),
+  parapet cheeks whose pale caps rake down in two falls, and a trim nosing
+  band proud of every tread edge. Four InstancedMeshes total (treads,
+  cheeks, caps, nosings — axis-aligned boxes, scale+translate matrices), so
+  the whole ascent system costs 4 draw calls. Treads and cheeks are massing:
+  `solidPut` records each solid from the same numbers its instance matrix
+  uses, keeping "the collider set IS the geometry". Caps and nosings are
+  filigree. New INTERP constants (stepGoing 0.45, stairCheekT, stairParapetH)
+  recorded in RENDERING-DECISIONS #7 (amendment 6).
+- **Verification:** probe-templecollide extended T11-T13b (24 checks, ALL
+  PASS): a real FlyCamera walker starting on the meadow climbs the east
+  outer flight onto the court ON FOOT (feet land at courtTop exactly), then
+  the inner flight onto the terrace; mid-flight tread heights equal the
+  cited count x riser arithmetic, with the terrace levels derived through
+  the resolver, not hand-mirrored. probe-wallcollide / probe-cityfloors /
+  probe-walkfling all still pass; tsc clean. Hardware stills:
+  `shots/wip/stairs-{aerial,eastgate,innergate}.png` — the east portal
+  finally reads as an invitation up, not a cliff face.
+- Note for the walking-range dressing pass (quality-bar pillar A, still
+  open): the raised court doubles the bare-sand pavement area seen at eye
+  level; coursing/banding for the temple courts should ride that pass.
+
 **(2026-08-02) HARDWARE SELF-VERIFICATION ESTABLISHED ON SCOTT'S LAPTOP —
 the Phase 3 gate ("no Phase 4 until the agent can see its own work") is
 cleared.** First agent-driven capture on real hardware since the city
