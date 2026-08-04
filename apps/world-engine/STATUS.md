@@ -138,6 +138,53 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-04, later) ANNY NEAR TIER SLICE 1 BUILT — the ADR 0020 vendored
+heads and hands are live in the crowd's near ring.** ADR 0020 (new) fixes
+the generation-recipe guards Scott's authoring answer required; the
+pipeline proof followed the same day.
+
+- **ADR 0020** (`docs/adr/0020-vendored-generated-assets-anny-path.md`):
+  offline seeded generation over the Anny parametric human (code
+  Apache-2.0, assets CC0, artist-authored MakeHuman morphs — anonymity by
+  construction), vendored as generated data; anny topology ONLY (smplx
+  interop is non-commercial — banned); provenance headers everywhere; one
+  material per LOD tier; baked-texture animation when it comes.
+- **`pipeline/figures/`** (uv, CPU torch + anny 0.5 + warp-lang — anny
+  0.5's import chain needs warp and it installs cleanly on Windows;
+  first model build caches MakeHuman assets to `~/.cache/anny`). The
+  seeded generator maps the six archetypes to phenotypes
+  (age/gender/height/weight/muscle), evaluates rest-pose bodies, and
+  exports ONLY what the robe leaves visible: head (decimated to 2,400
+  tris), eye fronts (140), hands (240 each, wrist-centered with rest
+  forearm axes). Heights normalize to archetype metres so age-authentic
+  head-to-body proportion survives (the child keeps a child's head ratio).
+  The archetype table crosses into Python via
+  `tools/export-archetypes.ts → archetypes.gen.json` — exported, never
+  mirrored. NO skeleton posing in slice 1: rest-pose open hands are the
+  recorded simplification (finger grip posing is a later slice).
+- **`figuresVendored.gen.ts`** (298 KB, base64 payloads + provenance
+  header) feeds `FigureMesh` at LOD0: head placed by top-of-head
+  alignment; procedural hair shell refit to the real skull (full bbox
+  radii — a shrunken shell sinks into the occipital bulge; nape-reaching
+  angular range; smaller face window); hands aligned to the figure's own
+  arm chains, tucked into the cuffs; eyes are a fifth material region
+  (dark, roughness 0.28). LOD1/impostor/probe-fallback stay procedural.
+- **Budget honesty:** the head adds ~2.4k tris/figure → the near ring
+  pulled in 35 → 30 m; probe-crowd C1 recomputes the worst case against
+  the real placements: 275 × 6,038 + R1 + impostors = **1.96 M ≤ 2.2 M**.
+  New probe section E asserts the vendored module itself (provenance
+  completeness + topology guard, per-part decode consistency and
+  ceilings, eye region reaching the built geometry). Full battery ALL
+  PASS; tsc + vite build clean (bundle 1.55 MB, +300 KB payload).
+- **Hardware review** (`shots/wip/anny4/`): real skull silhouettes, ears
+  and jawlines at arm's length in ?shot=10; the ?shot=11 LOD run is
+  seamless with the vendored ring live (24 fps). Two GPU-review findings
+  fixed in-pass (hair-shell face window and occiput clearance on the real
+  head). **Honest remainder:** skin is still flat ramp albedo — faces
+  read as real geometry under toy shading. Slice 2 is the texture pass
+  (CC0/MakeHuman skins as texture arrays inside the one crowd material,
+  per ADR 0020 rules 3-4), then finger-grip posing.
+
 **(2026-08-04) DWELLINGS COLLISION + FLOORS BUILT — the second half of the
 standing "dwellings/temple collision and floors" debt is closed.** A walker
 previously phased through every campus house and stood at shell depth on
