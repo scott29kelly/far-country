@@ -138,6 +138,43 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-04) DWELLINGS COLLISION + FLOORS BUILT — the second half of the
+standing "dwellings/temple collision and floors" debt is closed.** A walker
+previously phased through every campus house and stood at shell depth on
+the Levites' band.
+
+- `Dwellings.ts` records a world AABB for every SOLID kit part from the
+  same `Inst` records its instance matrices bake from (`poolSolids` — the
+  Temple `solidBox` idiom one level up): house bodies and corner houses,
+  their roofs (so a walker set down on a house stands on the ridge plane
+  instead of sinking into the gable prism), gate posts, court wells
+  (2.5 m ring — a STEP_OVER, crossed on foot by design), and the podium
+  slabs. Filigree excluded at the source: door/window frames, glow panes,
+  door leaves (all recessed inside solid walls), and the hedges (soft
+  vegetation — recorded exclusion; far-band courts stay reachable through
+  them). 7,916 solids at the current tables.
+- **No new resolver.** templeCollide's functions were already generic over
+  a recorded solids list; the scene wraps the SAME
+  `wrapMoveWithTempleCollision` / `wrapGroundProbeWithTempleFloors` over
+  the campus set (chained after the far-ground wrap so podium floors stack
+  on the shell surface). One collision semantics, one probe-tested
+  implementation, two content sites.
+- `buildDwellings` gained a headless path (`renderer: null` → flat far
+  grid) so `tools/probe-dwellingscollide.ts` composes the real resolvers
+  over the real recorded set: stops at a house face without tunnelling,
+  slides along stepped facades, every scanned block admits entry through
+  its real gate gaps while the runs block (17 crossings / 323 blocked on
+  the swept block), inside-a-house starts never trap, podium tops claim as
+  floors proud of the shell, roofs claim for set-down walkers, wells step
+  over, and the whole set is in-band and non-degenerate — 9 checks ALL
+  PASS. Full battery (temple/wall/cityfloors/walkfling/stages/population/
+  crowd/framings/entitypick) still ALL PASS; tsc + vite build clean;
+  hardware boot verified standing in a garden court
+  (`shots/wip/crowd/campus-check.png`).
+- Remaining classes of this debt: NONE — city, temple and dwellings all
+  collide and floor. Scott's live walk of the campus is still his to
+  enjoy; the probes say it will hold.
+
 **(2026-08-03) M3.6 REBUILD STEPS 1-2 BUILT — the ADR 0019 multitude is live
 as a GPU-driven LOD crowd of seeded parametric humans; the near-ring
 photoreal tier remains GATED on Scott's authoring-posture answer.** The
