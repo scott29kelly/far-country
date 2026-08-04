@@ -29,8 +29,11 @@
  *  stay near ~2M on-screen triangles; tools/probe-crowd.ts asserts the
  *  analytic worst case against these numbers using the real placements. */
 export const CROWD_LOD = {
-  /** near ring (full generator mesh) fades out past this */
-  r0Far: 35,
+  /** near ring (full generator mesh + ADR 0020 vendored head/hands) fades
+   *  out past this. 35 → 30 with the vendored tier: the Anny head adds
+   *  ~2.4k tris/figure, and the ring must shrink for the worst-case disc
+   *  to stay under trisBudget (probe-crowd C1 recomputes it honestly). */
+  r0Far: 30,
   band0: 6,
   /** mid ring (reduced mesh) fades out past this; impostors beyond */
   r1Far: 160,
@@ -48,8 +51,14 @@ export const CROWD_LOD = {
   tris1Max: 900,
 } as const;
 
-/** geometry region ids carried in the 'aregion' vertex attribute */
-export const REGION = { robe: 0, skin: 1, hair: 2, frond: 3 } as const;
+/** geometry region ids carried in the 'aregion' vertex attribute.
+ *  `eye` arrived with the ADR 0020 vendored heads (the Anny eye-front
+ *  surfaces are a separate dark-material part). */
+export const REGION = { robe: 0, skin: 1, hair: 2, frond: 3, eye: 4 } as const;
+
+/** fixed eye albedo (LINEAR) — dark iris/sclera mass; at crowd range the
+ *  eye reads as a value break, not an anatomy claim */
+export const EYE_ALBEDO: readonly [number, number, number] = [0.05, 0.038, 0.03];
 
 /** per-region emissive floors (Pillar B: distant figures never pepper
  *  black) — every one stays far under the 1.5 bloom threshold; the probe
@@ -59,6 +68,7 @@ export const CROWD_EMISSIVE = {
   skin: 0.08,
   hair: 0.05,
   frond: 0.25,
+  eye: 0.04,
 } as const;
 
 /**
@@ -239,6 +249,7 @@ export function figureModelInvariants(): { ok: boolean; detail: string } {
     lum(skinAt(1), CROWD_EMISSIVE.skin),
     lum(hairAt(1, 1), CROWD_EMISSIVE.hair),
     lum([0.31, 0.604, 0.235], CROWD_EMISSIVE.frond),
+    lum(EYE_ALBEDO, CROWD_EMISSIVE.eye),
   );
   if (worst >= 1.5) {
     return { ok: false, detail: `emissive luminance ${worst.toFixed(3)} crosses bloom 1.5` };

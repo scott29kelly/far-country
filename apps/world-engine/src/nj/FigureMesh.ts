@@ -23,8 +23,37 @@
  *     triangle-budget probes.
  */
 
-import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
-import { REGION, skinAt, hairAt, robeAlbedo, type FigureArchetype } from './figureModel';
+import { BufferAttribute, BufferGeometry, Quaternion, Vector3 } from 'three';
+import {
+  EYE_ALBEDO,
+  REGION,
+  hairAt,
+  robeAlbedo,
+  skinAt,
+  type FigureArchetype,
+} from './figureModel';
+import { FIGURES_VENDORED, type VendoredPart } from './figuresVendored.gen';
+
+/**
+ * The ADR 0020 vendored near tier: per-archetype Anny head/eye/hand
+ * submeshes, keyed by archetype name. The near LOD consumes them when
+ * present; every other tier and the probe fallback path stay procedural.
+ */
+const VENDORED = new Map(FIGURES_VENDORED.figures.map((f) => [f.name, f]));
+
+function decodeB64(s: string): Uint8Array {
+  const bin = atob(s);
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return u;
+}
+
+function decodePart(p: VendoredPart): { pos: Float32Array; idx: Uint16Array } {
+  return {
+    pos: new Float32Array(decodeB64(p.pos).buffer),
+    idx: new Uint16Array(decodeB64(p.idx).buffer),
+  };
+}
 
 /** per-LOD tessellation plan (the generator's only LOD-dependent input) */
 interface LodSpec {
@@ -96,6 +125,24 @@ class MeshAcc {
 
   tri(a: number, b: number, c: number): void {
     this.idx.push(a, b, c);
+  }
+
+  /** append a decoded vendored part, rotated then offset into figure space */
+  part(
+    p: { pos: Float32Array; idx: Uint16Array },
+    region: number,
+    rot: Quaternion | null,
+    off: Vector3,
+  ): void {
+    const base = this.pos.length / 3;
+    const v = new Vector3();
+    for (let i = 0; i < p.pos.length; i += 3) {
+      v.set(p.pos[i], p.pos[i + 1], p.pos[i + 2]);
+      if (rot) v.applyQuaternion(rot);
+      this.pos.push(v.x + off.x, v.y + off.y, v.z + off.z);
+      this.region.push(region);
+    }
+    for (let i = 0; i < p.idx.length; i++) this.idx.push(base + p.idx[i]);
   }
 
   build(): BufferGeometry {
@@ -241,9 +288,19 @@ function hairShell(
   style: 0 | 1 | 2,
   w: number,
   h: number,
+  // face-window thresholds: no hair where -dz > faceDz AND dy < faceDy.
+  // Defaults fit the procedural ellipsoid head; the vendored Anny heads
+  // (real skull proportions, chin inside the bbox) pass a smaller window
+  // or the shell collapses to a back strip — GPU-review finding, slice 1.
+  faceDz = 0.42,
+  faceDy = 0.55,
+  // angular-reach multiplier: the vendored Anny skulls need the shell to
+  // reach the nape (the ellipsoid tuning stops above the occiput)
+  phiScale = 1,
 ): void {
   const off = 1.09;
-  const maxPhi = style === 2 ? Math.PI * 0.46 : style === 1 ? Math.PI * 0.72 : Math.PI * 0.6;
+  const maxPhi =
+    (style === 2 ? Math.PI * 0.46 : style === 1 ? Math.PI * 0.72 : Math.PI * 0.6) * phiScale;
   const grid: (number | null)[][] = [];
   for (let j = 0; j <= h; j++) {
     const row: (number | null)[] = [];
@@ -254,7 +311,7 @@ function hairShell(
       const dy = Math.cos(phi);
       const dz = Math.sin(phi) * Math.cos(th);
       // face window: forward-and-low directions carry no hair
-      if (-dz > 0.42 && dy < 0.55) {
+      if (-dz > faceDz && dy < faceDy) {
         row.push(null);
         continue;
       }
@@ -386,14 +443,54 @@ export function buildFigureGeometry(a: FigureArchetype, lod: 0 | 1): BufferGeome
     REGION.skin,
     false,
   );
-  const headRy = 0.062 * H;
-  const headC = new Vector3(0, H - headRy * 1.06, czTop);
-  ellipsoid(acc, headC, 0.048 * H, headRy, 0.052 * H, spec.headW, spec.headH, REGION.skin, {
-    jaw: 0.32,
-    ...(spec.nose ? { nose: 0.01 * H } : {}),
-  });
-  if (spec.hairShell) {
-    hairShell(acc, headC, 0.048 * H, headRy, 0.052 * H, a.hairStyle, spec.headW, Math.max(4, Math.round(spec.headH * 0.6)));
+  // ADR 0020 vendored near tier: the LOD0 head/eyes are the offline Anny
+  // submeshes when present (bbox-centered in the payload — placed by
+  // top-of-head alignment so the archetype height stays authoritative);
+  // the procedural ellipsoid remains LOD1's head and the fallback.
+  const vf = lod === 0 ? VENDORED.get(a.name) : undefined;
+  const hairRows = Math.max(4, Math.round(spec.headH * 0.6));
+  if (vf) {
+    const hb = vf.head.bbox;
+    const off = new Vector3(0, H * 0.995 - hb[4], czTop);
+    acc.part(decodePart(vf.head), REGION.skin, null, off);
+    acc.part(decodePart(vf.eyes), REGION.eye, null, off);
+    if (spec.hairShell) {
+      // hair shell fitted to the vendored head's real bounds. The Anny
+      // head bbox includes chin and jaw, so the shell centers ABOVE the
+      // bbox centre (crown-focused) with a smaller face window — the old
+      // ellipsoid thresholds strip the hair to a mohawk band.
+      // full bbox radii: the 1.09 shell offset provides the clearance; any
+      // shrink sinks the shell inside the occipital bulge (skull pokes out)
+      const ry = (hb[4] - hb[1]) / 2;
+      const hc = new Vector3(
+        (hb[0] + hb[3]) / 2,
+        (hb[1] + hb[4]) / 2 + off.y + ((hb[4] - hb[1]) / 2) * 0.08,
+        (hb[2] + hb[5]) / 2 + czTop,
+      );
+      hairShell(
+        acc,
+        hc,
+        ((hb[3] - hb[0]) / 2) * 1.06,
+        ry,
+        ((hb[5] - hb[2]) / 2) * 1.02,
+        a.hairStyle,
+        spec.headW,
+        hairRows,
+        0.6,
+        0.3,
+        1.15,
+      );
+    }
+  } else {
+    const headRy = 0.062 * H;
+    const headC = new Vector3(0, H - headRy * 1.06, czTop);
+    ellipsoid(acc, headC, 0.048 * H, headRy, 0.052 * H, spec.headW, spec.headH, REGION.skin, {
+      jaw: 0.32,
+      ...(spec.nose ? { nose: 0.01 * H } : {}),
+    });
+    if (spec.hairShell) {
+      hairShell(acc, headC, 0.048 * H, headRy, 0.052 * H, a.hairStyle, spec.headW, hairRows);
+    }
   }
 
   // ---- arms (sleeved) --------------------------------------------------------
@@ -416,7 +513,27 @@ export function buildFigureGeometry(a: FigureArchetype, lod: 0 | 1): BufferGeome
   const E2 = S2.clone().addScaledVector(dirU2, upperLen);
   const W2 = E2.clone().addScaledVector(dirF2, foreLen);
   tube(acc, [S2, E2, W2], [0.042 * H * bw, 0.036 * H, 0.023 * H], spec.armRadial, REGION.robe, !spec.hands);
-  if (spec.hands) {
+  if (vf) {
+    // vendored Anny hands: wrist-centered in the payload; align the rest
+    // forearm axis to this figure's own arm-chain direction and tuck the
+    // wrist end just inside the sleeve cuff. Rest-pose OPEN hands are the
+    // recorded slice-1 simplification (finger grip posing comes later).
+    // Engine raised arm is the figure's RIGHT (+x local) — hand.R.
+    const place = (
+      part: VendoredPart,
+      axis: readonly [number, number, number],
+      wrist: Vector3,
+      dir: Vector3,
+    ): void => {
+      const q = new Quaternion().setFromUnitVectors(
+        new Vector3(axis[0], axis[1], axis[2]).normalize(),
+        dir,
+      );
+      acc.part(decodePart(part), REGION.skin, q, wrist.clone().addScaledVector(dir, 0.012 * H));
+    };
+    place(vf.handR, vf.forearmAxisR, W, dirF);
+    place(vf.handL, vf.forearmAxisL, W2, dirF2);
+  } else if (spec.hands) {
     // the hand sits BEYOND the sleeve cuff (cuff 0.023H, hand ~0.029H tall)
     // or the cuff swallows it whole — GPU-review finding, first crowd pass
     const handR = 0.024 * H;
@@ -473,7 +590,8 @@ export function bakeRegionColors(geo: BufferGeometry, warm01 = 0.5, skin01 = 0.5
   const frond: readonly number[] = [0.31, 0.604, 0.235];
   for (let i = 0; i < n; i++) {
     const r = region.getX(i);
-    const c = r < 0.5 ? robe : r < 1.5 ? skin : r < 2.5 ? hair : frond;
+    const c =
+      r < 0.5 ? robe : r < 1.5 ? skin : r < 2.5 ? hair : r < 3.5 ? frond : EYE_ALBEDO;
     colors[i * 3] = c[0];
     colors[i * 3 + 1] = c[1];
     colors[i * 3 + 2] = c[2];

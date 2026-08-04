@@ -82,6 +82,7 @@ import { captureImpostor } from '../vegetation/Impostors';
 import {
   CROWD_EMISSIVE,
   CROWD_LOD,
+  EYE_ALBEDO,
   FIGURE_ARCHETYPES,
   HAIR_GRAY,
   HAIR_RAMP,
@@ -135,13 +136,25 @@ function ramp3(
   return acc;
 }
 
-/** region select chain: robe / skin / hair / frond */
-function byRegion<T extends NF | NV3>(region: NF, robe: T, skin: T, hair: T, frond: T): T {
+/** region select chain: robe / skin / hair / frond / eye (ADR 0020 heads) */
+function byRegion<T extends NF | NV3>(
+  region: NF,
+  robe: T,
+  skin: T,
+  hair: T,
+  frond: T,
+  eye: T,
+): T {
   return region
     .lessThan(0.5)
     .select(
       robe,
-      region.lessThan(1.5).select(skin, region.lessThan(2.5).select(hair, frond)),
+      region
+        .lessThan(1.5)
+        .select(
+          skin,
+          region.lessThan(2.5).select(hair, region.lessThan(3.5).select(frond, eye)),
+        ),
     ) as T;
 }
 
@@ -232,7 +245,8 @@ function figureMaterial(
   ) as unknown as NV3;
   const frondJit = slotHash(slot, 13).mul(0.25).add(0.85) as unknown as NF;
   const frond = vec3(0.31, 0.604, 0.235).mul(frondJit) as unknown as NV3;
-  const albedo = byRegion<NV3>(region, robe, skin, hair, frond);
+  const eye = vec3(EYE_ALBEDO[0], EYE_ALBEDO[1], EYE_ALBEDO[2]) as unknown as NV3;
+  const albedo = byRegion<NV3>(region, robe, skin, hair, frond, eye);
 
   m.roughnessNode = byRegion<NF>(
     region,
@@ -240,6 +254,7 @@ function figureMaterial(
     float(0.48) as unknown as NF,
     float(0.6) as unknown as NF,
     float(0.55) as unknown as NF,
+    float(0.28) as unknown as NF, // eyes read wet
   );
   // faint per-region self-light (Pillar B — no black peppering at range);
   // every constant under the 1.5 bloom line, probe-asserted
@@ -249,6 +264,7 @@ function figureMaterial(
     float(CROWD_EMISSIVE.skin) as unknown as NF,
     float(CROWD_EMISSIVE.hair) as unknown as NF,
     float(CROWD_EMISSIVE.frond) as unknown as NF,
+    float(CROWD_EMISSIVE.eye) as unknown as NF,
   );
   m.emissiveNode = albedo.mul(eK) as unknown as NV3;
 

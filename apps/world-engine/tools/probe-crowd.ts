@@ -98,6 +98,7 @@ c.check('A2 model invariants: weights, palettes, bloom worst case', inv.ok, inv.
 
 // ---- B: generator ---------------------------------------------------------------
 
+// lod0 carries the vendored eye region (4) too — asserted separately in E
 const REGIONS = [0, 1, 2, 3];
 let tris0Max = 0;
 let tris1Max = 0;
@@ -272,6 +273,73 @@ c.check(
     }
   }
   c.check('D1 impostor-capture bake: per-vertex albedo present and in gamut', ok);
+}
+
+// ---- E: the ADR 0020 vendored module ----------------------------------------------
+
+const { FIGURES_VENDORED } = await import('../src/nj/figuresVendored.gen');
+{
+  const p = FIGURES_VENDORED.provenance;
+  const required = ['generator', 'adr', 'source', 'topology', 'annyVersion', 'generated', 'determinism'];
+  const missing = required.filter((k) => !p[k] || p[k].trim().length === 0);
+  c.check(
+    'E1 vendored provenance header complete; anny topology only (ADR 0020 rule 2)',
+    missing.length === 0 &&
+      p.topology.includes('anny') &&
+      /smplx.*(banned|non-commercial)/i.test(p.topology) &&
+      p.source.includes('CC0'),
+    missing.length ? `missing ${missing.join(',')}` : `anny ${p.annyVersion}, generated ${p.generated}`,
+  );
+}
+
+{
+  const decode = (s: string): Uint8Array => {
+    const bin = atob(s);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  };
+  let ok = FIGURES_VENDORED.figures.length === V;
+  let detail = `${FIGURES_VENDORED.figures.length} figures`;
+  const names = new Set(FIGURES_VENDORED.figures.map((f) => f.name));
+  for (const a of FIGURE_ARCHETYPES) {
+    if (!names.has(a.name)) {
+      ok = false;
+      detail = `archetype ${a.name} missing from the vendored set`;
+    }
+  }
+  for (const f of FIGURES_VENDORED.figures) {
+    const parts = [
+      ['head', f.head, 2400],
+      ['eyes', f.eyes, 400],
+      ['handL', f.handL, 240],
+      ['handR', f.handR, 240],
+    ] as const;
+    for (const [label, part, ceil] of parts) {
+      const pos = decode(part.pos);
+      const idx = decode(part.idx);
+      const posOk = pos.length === part.vertCount * 12;
+      const idxOk = idx.length === part.triCount * 6;
+      const bboxOk =
+        part.bbox[0] < part.bbox[3] && part.bbox[1] < part.bbox[4] && part.bbox[2] < part.bbox[5];
+      if (!(posOk && idxOk && part.triCount <= ceil && part.vertCount < 65536 && bboxOk)) {
+        ok = false;
+        detail = `${f.name}.${label}: pos ${posOk}, idx ${idxOk}, tris ${part.triCount}<=${ceil}, bbox ${bboxOk}`;
+      }
+    }
+  }
+  c.check('E2 vendored parts decode consistently and stay under their ceilings', ok, detail);
+}
+
+{
+  // the vendored eye region actually reaches the built LOD0 geometry
+  const g = buildFigureGeometry(FIGURE_ARCHETYPES[0], 0);
+  const region = g.getAttribute('aregion');
+  let hasEye = false;
+  for (let i = 0; i < region.count && !hasEye; i++) {
+    if (region.getX(i) === 4) hasEye = true;
+  }
+  c.check('E3 LOD0 geometry carries the vendored eye region', hasEye);
 }
 
 c.finish();
