@@ -304,6 +304,46 @@ class Pool {
   }
 }
 
+/**
+ * World AABB of a campus solid — structurally identical to Temple.ts's
+ * TempleAabb, deliberately: the campus reuses templeCollide's solids-generic
+ * resolvers (wrapMoveWithTempleCollision / wrapGroundProbeWithTempleFloors),
+ * so the two content sites share ONE collision semantics.
+ */
+export interface DwellingAabb {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+  z0: number;
+  z1: number;
+}
+
+/**
+ * Record a pool's instances as world AABBs — the Temple `solidBox` idiom
+ * one level up: the SAME Inst record that builds each instance matrix is
+ * the collider, so the set cannot desync from the geometry. Kit parts are
+ * base-anchored unit boxes/prisms scaled per instance; yaw is 0 or ±π/2
+ * throughout the campus, so the box swaps extents rather than rotating.
+ * `halfScale` covers the one non-unit kit part (the well cylinder,
+ * radius 1.25 at scale 1).
+ */
+function poolSolids(pool: Pool, out: DwellingAabb[], halfScale = 0.5): void {
+  for (const it of pool.items) {
+    const swap = Math.abs(Math.sin(it.yaw)) > 0.5;
+    const hx = (swap ? it.sz : it.sx) * halfScale;
+    const hz = (swap ? it.sx : it.sz) * halfScale;
+    out.push({
+      x0: it.x - hx,
+      x1: it.x + hx,
+      y0: it.y,
+      y1: it.y + it.sy,
+      z0: it.z - hz,
+      z1: it.z + hz,
+    });
+  }
+}
+
 function bake(
   geo: BufferGeometry,
   mat: MeshStandardNodeMaterial,
@@ -565,7 +605,9 @@ function buildFarBlock(cx: number, cz: number, seed: number, grid: Float32Array,
 export interface DwellingsDeps {
   hf: Heightfield | null;
   gi: ProbeGI | null;
-  renderer: Renderer;
+  /** null = headless probe context: the far grid falls back to flat
+   *  PLATEAU_Y instead of the GPU far-macro evaluation */
+  renderer: Renderer | null;
 }
 
 export interface DwellingsResult {
@@ -577,6 +619,16 @@ export interface DwellingsResult {
    * the heightfield mirror, where `heightAtCpu` clamps.
    */
   farGroundAt: (x: number, z: number) => number | null;
+  /**
+   * World AABBs of everything a walker should collide with or stand on
+   * (the temple "collider set IS the geometry" idiom): house bodies and
+   * corner houses, their roofs, gate posts, court wells, and the Levites'
+   * podium slabs. Excluded as filigree: door/window frames, glow panes and
+   * door leaves (recessed inside solid walls), and the hedges (soft
+   * vegetation — the walker brushes through, matching the meadow grass).
+   * Consumed by templeCollide's solids-generic wraps in NewJerusalemScene.
+   */
+  solids: readonly DwellingAabb[];
 }
 
 /** Temple plinth footprint (world m) — from templeModel/Temple.ts plinth pad. */
@@ -596,8 +648,12 @@ export async function buildDwellings(deps: DwellingsDeps): Promise<DwellingsResu
   const group = new Group();
   group.name = 'dwelling-campus';
 
-  const grid = hf ? await evalFarGrid(renderer, hf) : new Float32Array(FARGRID_RX * FARGRID_RZ).fill(PLATEAU_Y);
+  const grid =
+    hf && renderer
+      ? await evalFarGrid(renderer, hf)
+      : new Float32Array(FARGRID_RX * FARGRID_RZ).fill(PLATEAU_Y);
   const ground = (x: number, z: number): number => (hf ? hf.heightAtCpu(x, z) : PLATEAU_Y);
+  const solids: DwellingAabb[] = [];
 
   // shared kit geometries + material pools
   const bodyGeo = baseBox();
@@ -676,6 +732,14 @@ export async function buildDwellings(deps: DwellingsDeps): Promise<DwellingsResu
         nearBlocks++;
       }
     }
+    // collider set = the same Inst records the matrices bake from. Roofs
+    // are included so a walker set down on a house stands on the ridge
+    // plane instead of sinking into the prism from a body-top floor claim.
+    for (const p of kit.body) poolSolids(p, solids);
+    for (const p of kit.gable) poolSolids(p, solids);
+    for (const p of kit.hip) poolSolids(p, solids);
+    poolSolids(kit.post, solids);
+    poolSolids(kit.well, solids, 1.25); // cylinder radius 1.25 at scale 1
     const chunk = new Group();
     chunk.name = `priests-band-${c0 / CHUNK_COLS}`;
     kit.body.forEach((p, i) => {
@@ -730,6 +794,9 @@ export async function buildDwellings(deps: DwellingsDeps): Promise<DwellingsResu
         farBlocks++;
       }
     }
+    poolSolids(kit.podium, solids);
+    for (const p of kit.body) poolSolids(p, solids);
+    for (const p of kit.gable) poolSolids(p, solids);
     const chunk = new Group();
     chunk.name = `levites-band-${c0 / FAR_CHUNK_COLS}`;
     const pod = bake(podiumGeo, stoneMat, kit.podium, false);
@@ -748,7 +815,7 @@ export async function buildDwellings(deps: DwellingsDeps): Promise<DwellingsResu
 
   // eslint-disable-next-line no-console
   console.info(
-    `[dwellings] priests ${nearBlocks} blocks / ${nearHouses} houses; levites ${farBlocks} podium blocks`,
+    `[dwellings] priests ${nearBlocks} blocks / ${nearHouses} houses; levites ${farBlocks} podium blocks; ${solids.length} collision solids`,
   );
 
   const farGroundAt = (x: number, z: number): number | null => {
@@ -761,5 +828,5 @@ export async function buildDwellings(deps: DwellingsDeps): Promise<DwellingsResu
     return farGridAt(grid, x, z) - FAR_SHELL_SINK;
   };
 
-  return { group, farGroundAt };
+  return { group, farGroundAt, solids };
 }

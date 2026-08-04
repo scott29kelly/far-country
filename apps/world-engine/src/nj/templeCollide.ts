@@ -29,6 +29,11 @@
  * cityCollide), which is what makes the outer court, the inner terrace, and
  * the house platform real pavements rather than places to wade through.
  *
+ * The resolvers are generic over any recorded solids list — the DWELLING
+ * CAMPUS (Dwellings.ts, the other half of the same debt) wraps these exact
+ * functions over its own record-at-build AABBs, so both content sites share
+ * one collision semantics and one probe-tested resolver.
+ *
  * Pure module: no three.js, no DOM — CPU-probe testable.
  */
 

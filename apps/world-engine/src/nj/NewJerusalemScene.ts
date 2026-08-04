@@ -223,6 +223,25 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
         return { ground: far, water: far - 2 };
       };
     }
+
+    // Campus collision + floors (the dwellings half of the "dwellings/temple
+    // collision and floors" debt): the SAME solids-generic resolvers the
+    // temple installs below, over the AABBs buildDwellings records from its
+    // own instance data — a walker stops at house walls, passes the block
+    // gate gaps, and stands on the Levites' podium slabs. Wrapped over the
+    // far-ground wrap so podium floors stack on the shell surface.
+    if (dwellings.solids.length > 0) {
+      ctx.hooks.moveProbe = wrapMoveWithTempleCollision(
+        ctx.hooks.moveProbe,
+        dwellings.solids,
+      );
+      if (ctx.hooks.groundProbe) {
+        ctx.hooks.groundProbe = wrapGroundProbeWithTempleFloors(
+          ctx.hooks.groundProbe,
+          dwellings.solids,
+        );
+      }
+    }
   }
 
   // The inhabitants (roadmap M3.6): the great multitude on the plaza and
