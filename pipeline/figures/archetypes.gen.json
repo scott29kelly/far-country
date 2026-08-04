@@ -1,0 +1,65 @@
+{
+  "generated": "tools/export-archetypes.ts — DO NOT EDIT; regenerate from figureModel.ts",
+  "archetypes": [
+    {
+      "name": "adult-tall",
+      "height": 1.82,
+      "buildW": 1.06,
+      "stoop": 0,
+      "armLift": 0.9,
+      "hairStyle": 0,
+      "grayBias": 0.06,
+      "foldSeed": 11
+    },
+    {
+      "name": "adult-broad",
+      "height": 1.74,
+      "buildW": 1.16,
+      "stoop": 0.05,
+      "armLift": 0.55,
+      "hairStyle": 0,
+      "grayBias": 0.1,
+      "foldSeed": 23
+    },
+    {
+      "name": "adult-slender",
+      "height": 1.68,
+      "buildW": 0.92,
+      "stoop": 0,
+      "armLift": 0.75,
+      "hairStyle": 1,
+      "grayBias": 0.05,
+      "foldSeed": 37
+    },
+    {
+      "name": "elder",
+      "height": 1.62,
+      "buildW": 1,
+      "stoop": 0.35,
+      "armLift": 0.4,
+      "hairStyle": 2,
+      "grayBias": 0.75,
+      "foldSeed": 41
+    },
+    {
+      "name": "youth",
+      "height": 1.5,
+      "buildW": 0.88,
+      "stoop": 0,
+      "armLift": 1,
+      "hairStyle": 1,
+      "grayBias": 0,
+      "foldSeed": 53
+    },
+    {
+      "name": "child",
+      "height": 1.22,
+      "buildW": 0.85,
+      "stoop": 0,
+      "armLift": 1,
+      "hairStyle": 0,
+      "grayBias": 0,
+      "foldSeed": 67
+    }
+  ]
+}

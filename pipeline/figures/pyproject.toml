@@ -1,0 +1,29 @@
+[project]
+name = "far-country-figures"
+version = "0.1.0"
+description = "Offline seeded figure generation for the great multitude's near tier (ADR 0020 - the Anny path). Generates, never runs at runtime; output is vendored into apps/world-engine."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "../../LICENSE" }
+authors = [{ name = "Scott Kelly" }]
+dependencies = [
+    # Anny parametric human body model - code Apache-2.0, assets CC0
+    # (MakeHuman-derived, artist-authored). ADR 0020 rule 2: only the
+    # default "anny" topology may be used; the smplx interop mode is
+    # non-commercial and banned from this repo.
+    "anny",
+    # plain CPU torch suffices for one-shot generation (no warp-lang -
+    # optional upstream, fiddly on Windows, not needed at our batch sizes)
+    "torch",
+    "numpy",
+    # mesh utilities for submesh extraction / normals / decimation
+    "trimesh",
+    "warp-lang>=1.16.0",
+    "fast-simplification>=0.1.13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.ruff]
+line-length = 96
