@@ -197,16 +197,19 @@ placeholders are gone.
   R0 → R1 → impostor band down the south gallery), appended after the nine
   core framings; `?shot=` now accepts indices past 9 (`core/Params.ts`),
   digit keys unchanged, probe-framings extended to the full set.
-- **GATED remainder (the ONE decision Scott owns, still unanswered):** the
-  near-ring photoreal tier — true photoreal faces/skin/hair. Today's LOD0
-  is the honest runtime-procedural ceiling: real human proportions, pose
-  and diversity, but featureless faces (a nose hint, no eyes/mouth). The
-  question: **in-engine procedural only, or vendored offline-generated
-  assets** (the posture already contemplated for the audio layer)? Under
-  "procedural" the near tier means sculpting faces in code (slow, capped
-  quality); under "vendored" the generator's archetypes become the
-  mid/far LODs beneath swapped-in generated near meshes. Steps 1-2 serve
-  either answer, as planned.
+- **GATE ANSWERED (Scott, 2026-08-04): vendored offline-generated assets.**
+  The near-ring photoreal tier (true photoreal faces/skin/hair) will be
+  built from anonymous figure assets generated OFFLINE and vendored into
+  the repo — the audio-layer posture. The seeded generator's archetypes
+  stay as the mid/far LODs and the diversity source of truth; the near
+  ring swaps in vendored meshes keyed to the same archetype + parameter
+  axes. The implementation is a dedicated session and must OPEN with an
+  ADR fixing the generation-recipe guards (ADR 0019 rule 2 anonymity as a
+  property of the recipe; provenance notes on every vendored asset). Full
+  answer record: `docs/plans/procedural-asset-authoring.md` §8 item 5.
+  Until that session lands, LOD0 stays the honest runtime-procedural
+  ceiling: real human proportions, pose and diversity, featureless faces
+  (a nose hint, no eyes/mouth).
 
 **(2026-08-02) M3.6 ATTACK PLAN (recorded; steps 1-2 executed 2026-08-03,
 see the entry above) — the ADR 0019 photorealistic-multitude rebuild.** Sized during this session; it is a

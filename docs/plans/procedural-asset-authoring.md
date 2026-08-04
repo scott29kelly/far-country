@@ -442,3 +442,23 @@ hardware.
    RENDERING-DECISIONS #10 precedent (the processional ascent: uncited,
    unpickable) remains correct for modules that are interpretive *all the way
    down* — it is the degenerate case of this rule, not a different rule.
+
+5. *(asked 2026-08-03, with the ADR 0019 crowd rebuild)* **The multitude's
+   near-ring photoreal tier: in-engine procedural only, or vendored
+   offline-generated assets?** Faces/skin/hair at true photoreal quality are
+   not honestly reachable as runtime-procedural geometry; the crowd LOD
+   infrastructure and the seeded figure generator were built fork-independent
+   (STATUS.md 2026-08-03) so either answer could land on them.
+
+   **ANSWERED 2026-08-04: vendored offline-generated assets.** The same
+   posture already adopted for the audio layer (generate offline, vendor the
+   output into the repo; nothing generated at runtime, nothing fetched at
+   runtime). Consequences: the seeded generator's archetypes remain the
+   mid/far LODs and the identity/diversity source of truth; the near ring
+   swaps in vendored anonymous photoreal figure assets keyed to the same
+   archetype + parameter axes. The implementation session must open with an
+   ADR fixing the pipeline's guards — ADR 0019 rule 2 (synthetic, anonymous,
+   no real-person likeness) becomes a property of the *generation recipe*,
+   and the vendored assets carry provenance notes the way the audio posture
+   requires. That ADR is the ADR 0017/0019 class: what keeps generated
+   detail from asserting anything the text does not.
