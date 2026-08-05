@@ -85,6 +85,9 @@ Rationale: [`docs/adr/0002-tech-stack.md`](docs/adr/0002-tech-stack.md).
   target that Repos folder explicitly (e.g. `cd C:\Users\scott\Documents\Repos`
   before `git clone`), never the terminal's default location. If the right
   destination is unclear, ask Scott where he wants it before giving the command.
+- When giving Scott any prompt, handoff, or similar copy/paste artifact,
+  always deliver ONE complete revised version he can paste as-is — never an
+  addendum like "add this line to the top of the previous one."
 - Prefer editing existing docs over creating new ones unless the plan explicitly calls for a new file.
 - ADRs are append-only — never edit a `Status: Accepted` ADR in place; supersede it with a new one.
 - Commit messages: present tense, what changed and why (one line summary, blank line, body).
