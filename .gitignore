@@ -49,6 +49,7 @@ data/canonical.sqlite-shm
 data/exports/
 data/raw/
 data/cache/
+pipeline/figures/.cache/
 
 # Logs
 *.log
