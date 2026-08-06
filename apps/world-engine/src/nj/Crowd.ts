@@ -31,7 +31,17 @@
  * figureModel.CROWD_EMISSIVE, probe-asserted.
  */
 
-import { Frustum, Group, Matrix4, Mesh, Vector3, Vector4 } from 'three';
+import {
+  ClampToEdgeWrapping,
+  Frustum,
+  Group,
+  Matrix4,
+  Mesh,
+  SRGBColorSpace,
+  Texture,
+  Vector3,
+  Vector4,
+} from 'three';
 import type { PerspectiveCamera } from 'three';
 import {
   IndirectStorageBufferAttribute,
@@ -60,10 +70,12 @@ import {
   positionLocal,
   positionWorld,
   storage,
+  texture,
   time,
   uint,
   uniform,
   uniformArray,
+  vec2,
   vec3,
   vec4,
 } from 'three/tsl';
@@ -91,6 +103,7 @@ import {
   type FigureArchetype,
 } from './figureModel';
 import { bakeRegionColors, buildFigureGeometry } from './FigureMesh';
+import { FIGURES_VENDORED } from './figuresVendored.gen';
 import { SWAY, multitudePlacements } from './populationModel';
 import { NJ_SCALE } from './rimModel';
 
@@ -166,6 +179,43 @@ interface FigureBind {
   groupBase: number;
 }
 
+/** the decoded ADR 0020 skin atlas + its per-tile normalization means */
+interface SkinAtlasTex {
+  tex: Texture;
+  /** LINEAR mean rgb per tile, dark -> pale (tileMeansLinear) */
+  means: Vector3[];
+  tiles: number;
+}
+
+/**
+ * Decode the vendored 2x2 skin-diffuse atlas (base64 JPEG) into a sampler
+ * texture. Browser-only (createImageBitmap); the CPU probes never build
+ * materials, so node imports of this module stay decode-free.
+ */
+async function skinAtlasTexture(): Promise<SkinAtlasTex | null> {
+  const sa = FIGURES_VENDORED.skinAtlas;
+  if (!sa || typeof createImageBitmap === 'undefined') return null;
+  const b = atob(sa.jpegB64);
+  const bytes = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i);
+  const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/jpeg' }));
+  const tex = new Texture(bitmap);
+  // vendored UVs are OBJ-convention (v = 0 at the bottom) — three's flipY
+  // default matches; clamp because the atlas tiles must never bleed across
+  tex.flipY = true;
+  tex.colorSpace = SRGBColorSpace;
+  tex.wrapS = ClampToEdgeWrapping;
+  tex.wrapT = ClampToEdgeWrapping;
+  tex.generateMipmaps = true;
+  tex.anisotropy = 4;
+  tex.needsUpdate = true;
+  return {
+    tex,
+    means: sa.tileMeansLinear.map((m) => new Vector3(m[0], m[1], m[2])),
+    tiles: sa.tiles,
+  };
+}
+
 /**
  * One material renders one archetype's whole figure at one ring: compacted
  * indirect instancing (yaw + width + posture lean + idle sway) and
@@ -176,6 +226,7 @@ function figureMaterial(
   arch: FigureArchetype,
   fade: RingFade,
   gi: ProbeGI | null,
+  skinAtlas: SkinAtlasTex | null,
 ): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
   m.metalness = 0;
@@ -234,7 +285,26 @@ function figureMaterial(
   // ---- per-region identity ---------------------------------------------------
   const warm = C.z.mul(0.4) as unknown as NF;
   const robe = vec3(1.0, warm.mul(-0.06).add(1.0), warm.mul(-0.16).add(1.0)) as unknown as NV3;
-  const skin = ramp3(SKIN_RAMP, C.x as unknown as NF);
+  const skinRamp = ramp3(SKIN_RAMP, C.x as unknown as NF);
+  let skin = skinRamp;
+  if (skinAtlas) {
+    // ADR 0020 slice 2: vendored parts carry real hm08 UVs; skin01 keys
+    // the atlas tile (dark -> pale, matching the ramp direction) and the
+    // texel is normalized by the tile's linear mean, so SKIN_RAMP keeps
+    // owning each figure's AVERAGE tone — tile switches never pop, and the
+    // sentinel-UV procedural skin (neck, LOD1) matches by construction.
+    const auv = attribute('auv', 'vec2') as unknown as NV3;
+    const tile = C.x.mul(skinAtlas.tiles).floor().clamp(0, skinAtlas.tiles - 1) as unknown as NF;
+    const tileUv = vec2(
+      auv.x.mul(0.5).add(tile.mod(2).mul(0.5)),
+      auv.y.mul(0.5).add(tile.div(2).floor().mul(0.5)),
+    );
+    const texel = texture(skinAtlas.tex, tileUv as unknown as NV3).rgb as unknown as NV3;
+    const meansU = uniformArray(skinAtlas.means);
+    const mean = meansU.element(tile.toInt()) as unknown as NV3;
+    const textured = texel.mul(skinRamp.div(mean.max(vec3(1e-3)) as unknown as NV3).clamp(0, 4)) as unknown as NV3;
+    skin = auv.x.greaterThanEqual(0).select(textured, skinRamp) as unknown as NV3;
+  }
   const grayK = float(arch.grayBias).mul(
     slotHash(slot, 53).mul(0.6).add(0.4),
   ) as unknown as NF;
@@ -288,6 +358,10 @@ export async function buildCrowd(opts: {
   const S = NJ_SCALE;
   const group = new Group();
   group.name = 'multitude';
+
+  // the ADR 0020 slice-2 skin atlas — one texture shared by every ring
+  // material (one material per LOD tier; variety rides per-instance params)
+  const skinAtlas = await skinAtlasTexture();
 
   // ---- instance data (CPU once — the transform set is static) ---------------
   const placements = multitudePlacements();
@@ -399,6 +473,7 @@ export async function buildCrowd(opts: {
         arch,
         fadeR0,
         gi,
+        skinAtlas,
       ),
       2 * v,
       true,
@@ -410,6 +485,7 @@ export async function buildCrowd(opts: {
         arch,
         fadeR1,
         gi,
+        skinAtlas,
       ),
       2 * v + 1,
       true,

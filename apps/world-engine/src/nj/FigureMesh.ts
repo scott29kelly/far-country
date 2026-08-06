@@ -48,9 +48,10 @@ function decodeB64(s: string): Uint8Array {
   return u;
 }
 
-function decodePart(p: VendoredPart): { pos: Float32Array; idx: Uint16Array } {
+function decodePart(p: VendoredPart): { pos: Float32Array; uv: Float32Array; idx: Uint16Array } {
   return {
     pos: new Float32Array(decodeB64(p.pos).buffer),
+    uv: new Float32Array(decodeB64(p.uv).buffer),
     idx: new Uint16Array(decodeB64(p.idx).buffer),
   };
 }
@@ -110,12 +111,17 @@ function mulberry32(seed: number): () => number {
 class MeshAcc {
   pos: number[] = [];
   region: number[] = [];
+  uv: number[] = [];
   idx: number[] = [];
 
   vert(x: number, y: number, z: number, region: number): number {
     const i = this.pos.length / 3;
     this.pos.push(x, y, z);
     this.region.push(region);
+    // sentinel: procedural vertices carry no skin texel — the crowd
+    // material falls back to the plain SKIN_RAMP tone (which equals the
+    // textured average by construction, tileMeansLinear normalization)
+    this.uv.push(-1, -1);
     return i;
   }
 
@@ -129,7 +135,7 @@ class MeshAcc {
 
   /** append a decoded vendored part, rotated then offset into figure space */
   part(
-    p: { pos: Float32Array; idx: Uint16Array },
+    p: { pos: Float32Array; uv: Float32Array; idx: Uint16Array },
     region: number,
     rot: Quaternion | null,
     off: Vector3,
@@ -142,6 +148,7 @@ class MeshAcc {
       this.pos.push(v.x + off.x, v.y + off.y, v.z + off.z);
       this.region.push(region);
     }
+    for (let i = 0; i < p.uv.length; i += 2) this.uv.push(p.uv[i], p.uv[i + 1]);
     for (let i = 0; i < p.idx.length; i++) this.idx.push(base + p.idx[i]);
   }
 
@@ -149,6 +156,7 @@ class MeshAcc {
     const g = new BufferGeometry();
     g.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3));
     g.setAttribute('aregion', new BufferAttribute(new Float32Array(this.region), 1));
+    g.setAttribute('auv', new BufferAttribute(new Float32Array(this.uv), 2));
     g.setIndex(this.idx);
     g.computeVertexNormals();
     return g;

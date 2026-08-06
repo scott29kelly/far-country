@@ -322,13 +322,85 @@ const { FIGURES_VENDORED } = await import('../src/nj/figuresVendored.gen');
       const idxOk = idx.length === part.triCount * 6;
       const bboxOk =
         part.bbox[0] < part.bbox[3] && part.bbox[1] < part.bbox[4] && part.bbox[2] < part.bbox[5];
-      if (!(posOk && idxOk && part.triCount <= ceil && part.vertCount < 65536 && bboxOk)) {
+      // slice 2: every part carries per-vertex hm08 UVs, all inside [0,1]
+      const uvBytes = decode(part.uv);
+      const uv = new Float32Array(uvBytes.buffer, uvBytes.byteOffset, uvBytes.length / 4);
+      let uvOk = uvBytes.length === part.vertCount * 8;
+      for (let i = 0; i < uv.length && uvOk; i++) {
+        if (!(uv[i] >= 0 && uv[i] <= 1.0001)) uvOk = false;
+      }
+      if (!(posOk && idxOk && uvOk && part.triCount <= ceil && part.vertCount < 65536 && bboxOk)) {
         ok = false;
-        detail = `${f.name}.${label}: pos ${posOk}, idx ${idxOk}, tris ${part.triCount}<=${ceil}, bbox ${bboxOk}`;
+        detail = `${f.name}.${label}: pos ${posOk}, idx ${idxOk}, uv ${uvOk}, tris ${part.triCount}<=${ceil}, bbox ${bboxOk}`;
       }
     }
   }
   c.check('E2 vendored parts decode consistently and stay under their ceilings', ok, detail);
+}
+
+{
+  // E4: the slice-2 skin atlas — CC0 provenance pinned and hash-recorded,
+  // tile plan matching the material's tile = floor(skin01 * tiles) key,
+  // means ordered dark -> pale (the SKIN_RAMP direction), JPEG payload
+  // honest (magic bytes) and under a bundle-weight ceiling.
+  const sa = FIGURES_VENDORED.skinAtlas;
+  const decode = (s: string): Uint8Array => {
+    const bin = atob(s);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  };
+  const jpeg = decode(sa.jpegB64);
+  const magicOk = jpeg[0] === 0xff && jpeg[1] === 0xd8 && jpeg[2] === 0xff;
+  const sizeOk = jpeg.length <= 400 * 1024;
+  const planOk =
+    sa.tiles === 4 &&
+    sa.res === 2048 &&
+    sa.tileOrder.length === sa.tiles &&
+    sa.tileMeansLinear.length === sa.tiles &&
+    sa.tileMeansLinear.every((m) => m.length === 3 && m.every((x) => x > 0 && x <= 1));
+  const lum = sa.tileMeansLinear.map((m) => 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]);
+  const orderOk = lum.every((l, i) => i === 0 || l >= lum[i - 1]);
+  const provOk =
+    /^[0-9a-f]{40}$/.test(sa.sourceCommit) &&
+    sa.sources.length === sa.tiles &&
+    sa.sources.every((s) => /^[0-9a-f]{64}$/.test(s.sha256)) &&
+    /CC0/.test(FIGURES_VENDORED.provenance.skinSource ?? '');
+  c.check(
+    'E4 skin atlas: pinned CC0 provenance, dark->pale tile plan, honest JPEG payload',
+    magicOk && sizeOk && planOk && orderOk && provOk,
+    `jpeg ${(jpeg.length / 1024).toFixed(0)} KB, tiles ${sa.tileOrder.join(', ')}`,
+  );
+}
+
+{
+  // E5: the built LOD0 geometry carries 'auv' — vendored vertices with real
+  // UVs (exactly the vendored part vertex counts), procedural vertices with
+  // the -1 sentinel the material's ramp fallback keys on.
+  let ok = true;
+  let detail = '';
+  for (let v = 0; v < V && ok; v++) {
+    const f = FIGURES_VENDORED.figures.find((x) => x.name === FIGURE_ARCHETYPES[v].name);
+    if (!f) continue;
+    const g = buildFigureGeometry(FIGURE_ARCHETYPES[v], 0);
+    const auv = g.getAttribute('auv');
+    if (!auv) {
+      ok = false;
+      detail = `${FIGURE_ARCHETYPES[v].name}: no auv attribute`;
+      break;
+    }
+    let real = 0;
+    for (let i = 0; i < auv.count; i++) {
+      const u = auv.getX(i);
+      if (u >= 0) real++;
+    }
+    const want = f.head.vertCount + f.eyes.vertCount + f.handL.vertCount + f.handR.vertCount;
+    if (real !== want) {
+      ok = false;
+      detail = `${FIGURE_ARCHETYPES[v].name}: ${real} textured verts, want ${want}`;
+    }
+  }
+  c.check('E5 LOD0 auv: vendored verts textured, procedural verts sentinel', ok, detail);
 }
 
 {

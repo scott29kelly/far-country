@@ -138,6 +138,53 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-05) ANNY SLICE 2 BUILT — the near tier wears real skin: vendored
+CC0 MakeHuman diffuse textures, sampled through decimation-surviving UVs.**
+The slice-1 "honest remainder" (real geometry under toy shading) is closed
+for albedo; hair styling and grip posing remain.
+
+- **Investigation verdict:** anny ships NO textures — only geometry, the
+  hm08 UV layout, and Blender node-trees. The textures come from the
+  MakeHuman project itself: `makehumancommunity/makehuman-assets`
+  (explicitly released CC0 in September 2020, copyright holders named in
+  every file header; painted system skins, no scan data — passes ADR
+  0020's anonymity-by-construction test). Four diffuses (young light/dark
+  × male/female) download at a pinned commit, sha256-verified against
+  their Git-LFS pointers, into a gitignored cache.
+- **UV export:** the anny mesh carries face-varying UVs (21k coords on
+  13.7k verts), so `generate.py` splits vertices at UV seams FIRST, then
+  replays `fast_simplification`'s collapses to map original vertices (and
+  their UVs) onto the simplified parts — every part still lands its
+  ceiling (heads 2,400, hands ≤ 240). Every `VendoredPart` now carries a
+  `uv` payload.
+- **Atlas plan:** one 2048² 2×2 JPEG atlas (285 KB), tiles ordered
+  dark → pale to match SKIN_RAMP's direction, per-tile LINEAR means
+  measured over head-sampled texels (backgrounds can't skew them). The
+  nape "neutral texel" idea died honestly: dark-skin napes carry painted
+  hair shadow — so procedural skin carries a −1 sentinel UV instead and
+  keeps the plain ramp.
+- **Material (one per tier, ADR 0020 rule 4):** `skin01` keys the tile
+  (`floor(skin01·4)`) and the texel is normalized by the tile's linear
+  mean before multiplying by SKIN_RAMP — the authored ramp keeps owning
+  each figure's AVERAGE tone, so tile switches never pop and the
+  sentinel-UV neck/LOD1 matches the textured head by construction. The
+  atlas decodes browser-side only (`createImageBitmap`); CPU probes never
+  build materials.
+- **Probes:** E2 asserts per-part UV payloads in [0,1]; new E4 pins the
+  atlas provenance (commit + per-file sha256, CC0 note), the dark→pale
+  tile order, JPEG magic and a 400 KB payload ceiling; new E5 accounts
+  every LOD0 vertex as textured-vendored or sentinel-procedural. Full
+  battery (10 probes) ALL PASS; tsc clean; bundle 2.06 MB (gzip 955 KB).
+- **Hardware review** (`shots/wip/anny5/`): ?shot=10 shows textured
+  skin at arm's length — the painted hairline at the nape confirms UV
+  orientation end-to-end; skin tones vary across the assembly; the
+  ?shot=11 LOD run shows no tone seam at the 30 m ring boundary (the
+  mean-normalization contract at work); near framing holds 24 fps.
+  **Honest remainder:** hair shells still read short/receding under flat
+  light (styling verdict is Scott's — shells vs vendored CC0 hair
+  meshes); hands are open rest-pose (grip posing is the next slice);
+  eye fronts stay flat dark albedo (no iris claim at crowd range).
+
 **(2026-08-04, later) ANNY NEAR TIER SLICE 1 BUILT — the ADR 0020 vendored
 heads and hands are live in the crowd's near ring.** ADR 0020 (new) fixes
 the generation-recipe guards Scott's authoring answer required; the

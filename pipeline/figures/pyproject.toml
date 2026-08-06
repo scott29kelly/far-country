@@ -12,14 +12,17 @@ dependencies = [
     # default "anny" topology may be used; the smplx interop mode is
     # non-commercial and banned from this repo.
     "anny",
-    # plain CPU torch suffices for one-shot generation (no warp-lang -
-    # optional upstream, fiddly on Windows, not needed at our batch sizes)
+    # plain CPU torch suffices for one-shot generation
     "torch",
     "numpy",
     # mesh utilities for submesh extraction / normals / decimation
     "trimesh",
+    # required by anny 0.5's import chain (installs clean on Windows)
     "warp-lang>=1.16.0",
     "fast-simplification>=0.1.13",
+    # skin-atlas assembly (slice 2): decode/downscale/pack the CC0
+    # MakeHuman skin diffuses and encode the vendored JPEG atlas
+    "pillow>=10",
 ]
 
 [project.optional-dependencies]
