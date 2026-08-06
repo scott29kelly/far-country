@@ -18,6 +18,17 @@
  * towers are art direction; window glow renders Ezek 40:16's windows within
  * the base-tier bloom contract (< 1.5 luminance).
  *
+ * Court dressing (the CITY-QUALITY-BAR walking-range pass, temple half): the
+ * outer court carries Ezekiel's own LOWER PAVEMENT — a pavement "all around
+ * the court" whose breadth answers the gates' length (Ezek 40:17-18) —
+ * rendered as a pale border frame on the court slab, with the THIRTY
+ * chambers the same verse counts standing on it, flanking the three gates
+ * (count cited, dimensions in INTERP). Every big horizontal (plinth, court,
+ * terrace, house platform) takes a world-space slab-joint paving material
+ * (the city terraces' pavingDetail idiom at 1:1 scale), and the terrace lip
+ * and altar take kerb/apron border courses — border-and-field, not a bare
+ * slab at eye level.
+ *
  * The survey's own east-west arithmetic closes at 500 cubits (gate 50 +
  * court 100 + gate 50 + inner court 100 + house 100 + yard/building 100 —
  * Ezek 40:15, 19, 47; 41:13; 42:16-20) and this build inherits it exactly.
@@ -40,13 +51,24 @@ import {
   Vector3,
 } from 'three';
 import { IrradianceNode, MeshStandardNodeMaterial } from 'three/webgpu';
-import { normalWorld, positionWorld, vec3 } from 'three/tsl';
+import {
+  cameraPosition,
+  float,
+  floor as tslFloor,
+  fract,
+  max as tslMax,
+  mix,
+  normalWorld,
+  positionWorld,
+  smoothstep,
+  vec3,
+} from 'three/tsl';
 
 import type { ProbeGI } from '../gpu/passes/ProbeGI';
-import type { NV3 } from '../gpu/TSLTypes';
+import type { NF, NV3 } from '../gpu/TSLTypes';
 import type { Heightfield } from '../world/Heightfield';
 import { PLATEAU_Y } from './rimModel';
-import { INTERP, TEMPLE_SITE, count, meters } from './templeModel';
+import { INTERP, LONG_CUBIT_M, TEMPLE_SITE, count, meters } from './templeModel';
 
 const SAND = new Color(0.4, 0.225, 0.14); // warm red sandstone (USER-REFS #5)
 const SAND_DARK = new Color(0.32, 0.165, 0.1);
@@ -69,6 +91,44 @@ function stoneMaterial(gi: ProbeGI | null, color: Color, rough = 0.85): MeshStan
   m.metalness = 0;
   patchGI(m, gi);
   return m;
+}
+
+/**
+ * Slab-joint articulation for the compound's pavements — the city terraces'
+ * pavingDetail idiom (CityMassing.ts) at the temple's 1:1 world scale. A
+ * floor is looked ALONG, so its near read comes from centimetre joints and
+ * per-slab tone, not modeled relief (Pillar A's 0.3 m reveal clause is
+ * written for walls you look ACROSS). World-space, so the grid stays put
+ * under a walking camera; masked to up-facing surfaces so terrace risers and
+ * slab edges stay clean stone; faded with distance before the fixed-width
+ * grid can alias into TRAA shimmer.
+ */
+function pavingDetail(m: MeshStandardNodeMaterial, base: Color, pitch: number): void {
+  const p = positionWorld.xz.div(pitch);
+  const g = fract(p) as unknown as { x: NF; y: NF };
+  const dx = g.x.sub(0.5).abs() as unknown as NF;
+  const dz = g.y.sub(0.5).abs() as unknown as NF;
+  // 0 across a slab face, 1 in the joint
+  const joint = smoothstep(0.465, 0.5, tslMax(dx, dz) as unknown as NF) as unknown as NF;
+  // per-slab tone: a cheap hash of the slab's integer cell
+  const cell = tslFloor(p) as unknown as { x: NF; y: NF };
+  const h = fract(
+    cell.x
+      .mul(0.1031)
+      .add(cell.y.mul(0.1741))
+      .add(cell.x.mul(cell.y).mul(0.0973))
+      .sin()
+      .mul(43758.5453),
+  ) as unknown as NF;
+  const tone = h.mul(0.12).add(0.94) as unknown as NF;
+  const near = positionWorld.distance(cameraPosition) as unknown as NF;
+  const fade = smoothstep(170, 55, near) as unknown as NF;
+  const up = smoothstep(0.55, 0.8, normalWorld.y as unknown as NF) as unknown as NF;
+  const k = fade.mul(up) as unknown as NF;
+  const j = joint.mul(k) as unknown as NF;
+  m.colorNode = vec3(base.r, base.g, base.b)
+    .mul(mix(float(1.0), tone, k) as unknown as NF)
+    .mul(mix(float(1.0), float(0.68), j) as unknown as NF) as unknown as NV3;
 }
 
 function glowMaterial(k: number): MeshStandardNodeMaterial {
@@ -277,10 +337,21 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   const trim = stoneMaterial(gi, TRIM, 0.7);
   const glow = glowMaterial(1.25);
   const glowSoft = glowMaterial(0.85);
+  // pavement materials: the field is coursed sandstone on a three-cubit slab
+  // grid; the pale border (Ezek 40:17-18's lower pavement, the altar apron,
+  // the thresholds) courses tighter, so border and field read as different
+  // work even where the tones sit close
+  const pavedField = stoneMaterial(gi, SAND);
+  pavingDetail(pavedField, SAND, 3 * LONG_CUBIT_M);
+  const PALE = new Color().copy(TRIM).lerp(SAND, 0.25);
+  const pavedPale = stoneMaterial(gi, PALE, 0.8);
+  pavingDetail(pavedPale, PALE, 2 * LONG_CUBIT_M);
+  const pavedPlinth = stoneMaterial(gi, SAND_DARK, 0.9);
+  pavingDetail(pavedPlinth, SAND_DARK, 3 * LONG_CUBIT_M);
 
   // ---------------------------------------------------------------- plinth
   const plinthPad = half + INTERP.plinthMargin;
-  solidBox(g, solids, sandDark, plinthPad * 2, 7, plinthPad * 2, c.x, plinthTop - 3.5, c.z);
+  solidBox(g, solids, pavedPlinth, plinthPad * 2, 7, plinthPad * 2, c.x, plinthTop - 3.5, c.z);
 
   // ------------------------------------------------- perimeter wall + towers
   // three gate gaps (east, north, south — no west gate, Ezek 42:15-20's
@@ -339,10 +410,28 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   const innerRise = count('ezt-inner-gate-steps') * INTERP.stepRise;
   const courtTop = y0 + outerRise;
   const slabHalf = half - wallT;
-  solidBox(g, solids, sand, slabHalf * 2, outerRise, slabHalf * 2, c.x, y0 + outerRise / 2, c.z);
-  solidBox(g, solids, sandDark, wallT, outerRise, gateW, c.x + half - wallT / 2, y0 + outerRise / 2, c.z);
-  solidBox(g, solids, sandDark, gateW, outerRise, wallT, c.x, y0 + outerRise / 2, c.z - (half - wallT / 2));
-  solidBox(g, solids, sandDark, gateW, outerRise, wallT, c.x, y0 + outerRise / 2, c.z + (half - wallT / 2));
+  solidBox(g, solids, pavedField, slabHalf * 2, outerRise, slabHalf * 2, c.x, y0 + outerRise / 2, c.z);
+  solidBox(g, solids, pavedPale, wallT, outerRise, gateW, c.x + half - wallT / 2, y0 + outerRise / 2, c.z);
+  solidBox(g, solids, pavedPale, gateW, outerRise, wallT, c.x, y0 + outerRise / 2, c.z - (half - wallT / 2));
+  solidBox(g, solids, pavedPale, gateW, outerRise, wallT, c.x, y0 + outerRise / 2, c.z + (half - wallT / 2));
+
+  // ------------------------------------------------------- the lower pavement
+  // Ezek 40:17-18: "a pavement, all around the court ... the pavement ran
+  // along the side of the gates, corresponding to the length of the gates.
+  // This was the lower pavement." Rendered as a pale border frame lying on
+  // the court slab, its breadth the gates' 50 cubits — border-and-field, the
+  // same profile logic as the city's pavementCourses. The 5 cm lip is render
+  // articulation far under STEP_OVER; recorded, so feet stand ON the
+  // pavement rather than 5 cm inside it. (The frame's west run is largely
+  // hidden beneath the inner terrace — kept, because the verse says all
+  // around, and its two corner reaches show.)
+  const paveB = meters('ezt-gate-length');
+  const lip = 0.05;
+  const bandY = courtTop + lip / 2;
+  solidBox(g, solids, pavedPale, paveB, lip, slabHalf * 2, c.x + slabHalf - paveB / 2, bandY, c.z);
+  solidBox(g, solids, pavedPale, paveB, lip, slabHalf * 2, c.x - slabHalf + paveB / 2, bandY, c.z);
+  solidBox(g, solids, pavedPale, slabHalf * 2 - 2 * paveB, lip, paveB, c.x, bandY, c.z - slabHalf + paveB / 2);
+  solidBox(g, solids, pavedPale, slabHalf * 2 - 2 * paveB, lip, paveB, c.x, bandY, c.z + slabHalf - paveB / 2);
 
   // --------------------------------------------------------- outer gatehouses
   // 50 x 25 cu tower-gatehouses projecting inward from the wall line
@@ -363,7 +452,7 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   solidBox(
     g,
     solids,
-    sand,
+    pavedField,
     terrW,
     innerRise,
     terrD,
@@ -427,6 +516,10 @@ export function buildTemple(deps: TempleDeps): TempleResult {
       c.z,
     );
   }
+  // a pale paving apron squares the altar off from the terrace field
+  // (border-and-field: the terrace's most important station gets its
+  // boundary stated; breadth is art direction)
+  solidBox(g, solids, pavedPale, baseSide + 5, 0.04, baseSide + 5, c.x, terrTop + 0.02, c.z);
 
   // ---------------------------------------------------------- house platform
   // the house band occupies x -26.25..-78.75 (100 cu, Ezek 41:13); its
@@ -436,7 +529,7 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   const px0 = px1 - houseL; // -78.75
   const padW = houseL + 6;
   const padD = houseW + 2 * meters('ezt-free-space-breadth') + 6;
-  solidBox(g, solids, sand, padW, platformH, padD, c.x + (px0 + px1) / 2, terrTop + platformH / 2, c.z);
+  solidBox(g, solids, pavedField, padW, platformH, padD, c.x + (px0 + px1) / 2, terrTop + platformH / 2, c.z);
   const padTop = terrTop + platformH;
   const houseSteps = count('ezt-house-steps');
   for (let i = 0; i < houseSteps; i++) {
@@ -678,6 +771,80 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   flight(c.x + innerSide, c.z, 1, 0, courtTop, innerSteps);
   flight(c.x, c.z - terrD / 2, 0, -1, courtTop, innerSteps);
   flight(c.x, c.z + terrD / 2, 0, 1, courtTop, innerSteps);
+
+  // --------------------------------------------- court chambers (Ezek 40:17)
+  // "and thirty chambers faced the pavement" — the COUNT is cited (clear
+  // tier, ezt-outer-court-chambers); their placement flanks the three gates
+  // along the lower pavement (Ezek 40:18 runs the pavement alongside the
+  // gates), their dimensions are interpretive (INTERP.courtChamber*,
+  // RENDERING-DECISIONS #7). Six flank runs (two per gated side); bodies are
+  // massing (solidPut), the warm door panes and trim caps are filigree.
+  const chamberM: Matrix4[] = [];
+  const doorM: Matrix4[] = [];
+  {
+    const totalCh = count('ezt-outer-court-chambers');
+    const perFlank = Math.floor(totalCh / 6);
+    let extras = totalCh - perFlank * 6;
+    const chW = INTERP.courtChamberFront;
+    const chD = INTERP.courtChamberDepth;
+    const chH = INTERP.courtChamberHeight;
+    const a0 = gateW / 2 + 2.5; // clear of the projecting gatehouse
+    const a1 = half - INTERP.towerSide - 2; // clear of the corner tower
+    const backOff = slabHalf - 0.2 - chD / 2; // backs near the wall inner face
+    // side normals: east +x, north -z, south +z (no chambers on the solid
+    // west wall — the pavement Ezekiel walks runs by the gates)
+    for (const [ux, uz] of [
+      [1, 0],
+      [0, -1],
+      [0, 1],
+    ] as const) {
+      for (const s of [-1, 1] as const) {
+        const n = perFlank + (extras > 0 ? (extras--, 1) : 0);
+        for (let i = 0; i < n; i++) {
+          const a = s * (a0 + ((i + 0.5) * (a1 - a0)) / n);
+          const x = c.x + ux * backOff + (ux !== 0 ? 0 : a);
+          const z = c.z + uz * backOff + (uz !== 0 ? 0 : a);
+          const w = ux !== 0 ? chD : chW;
+          const d = ux !== 0 ? chW : chD;
+          solidPut(chamberM, w, chH, d, x, courtTop + lip + chH / 2, z);
+          put(
+            doorM,
+            ux !== 0 ? 0.08 : 1.15,
+            2.0,
+            ux !== 0 ? 1.15 : 0.08,
+            x - ux * (chD / 2 + 0.04),
+            courtTop + lip + 1.0,
+            z - uz * (chD / 2 + 0.04),
+          );
+          put(capM, w + 0.35, 0.14, d + 0.35, x, courtTop + lip + chH + 0.07, z);
+        }
+      }
+    }
+  }
+
+  // ------------------------------------------------------- terrace lip kerb
+  // a raised trim course stating the inner terrace's edge (border-and-field
+  // on the terrace, matching the pavement frame below), broken at the three
+  // inner flights — filigree, the stair-cap class
+  {
+    const kerbT = 0.24;
+    const kerbH = 0.16;
+    const gap = gateOpen / 2 + INTERP.stairCheekT + 0.6; // clear of a flight
+    const ky = terrTop + kerbH / 2;
+    const eX = c.x + terrX1 - kerbT / 2;
+    for (const s of [-1, 1] as const) {
+      // east edge, two runs flanking the east flight
+      const len = terrD / 2 - gap;
+      put(capM, kerbT, kerbH, len, eX, ky, c.z + s * (gap + len / 2));
+      // north/south edges, two runs each flanking their flights
+      const zE = c.z + s * (terrD / 2 - kerbT / 2);
+      const wLen = -gap - (terrX0 + 0.3); // west run: terrX0 .. -gap
+      put(capM, wLen, kerbH, kerbT, c.x + terrX0 + 0.3 + wLen / 2, ky, zE);
+      const eLen = terrX1 - 0.3 - gap; // east run: gap .. terrX1
+      put(capM, eLen, kerbH, kerbT, c.x + gap + eLen / 2, ky, zE);
+    }
+  }
+
   const inst = (mats: Matrix4[], m: MeshStandardNodeMaterial, shadow: boolean): void => {
     const im = new InstancedMesh(new BoxGeometry(1, 1, 1), m, mats.length);
     mats.forEach((mm, i) => im.setMatrixAt(i, mm));
@@ -690,6 +857,8 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   inst(cheekM, sandDark, true);
   inst(capM, trim, true);
   inst(noseM, trim, false);
+  inst(chamberM, sand, true);
+  inst(doorM, glowSoft, false);
 
   return { group: g, solids };
 }
