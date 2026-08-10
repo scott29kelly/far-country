@@ -33,6 +33,8 @@ import {
   cityTierBottoms,
 } from './cityModel';
 import { NJ_CONFIG, NJ_SCALE } from './config';
+import { PLATEAU_Y } from './rimModel';
+import { INTERP, TEMPLE_SITE, count } from './templeModel';
 
 /** Eye height above a resolved floor, world meters (FlyCamera's EYE_HEIGHT). */
 const EYE_M = 1.7;
@@ -231,6 +233,69 @@ export const CROWD_FRAMINGS: readonly CityFraming[] = [
   },
 ];
 
+/**
+ * Temple-review annex: the compound is world-scale (1:1 m) at TEMPLE_SITE,
+ * so its local coordinates are derived by dividing the world layout numbers
+ * through NJ_SCALE — the same owner tables (templeModel) the builder and
+ * collider consume, so a re-sited or re-tuned compound carries these along.
+ *
+ * Height hints: `ground` anchors re-resolve against the live composed probe
+ * (which includes the temple floors), so the authored hint only has to land
+ * within the y-aware claim window of the intended pavement. The compound's
+ * CPU court heights are derived from PLATEAU_Y + the counted-flight
+ * arithmetic (what buildTemple computes with no heightfield); REF_PLAZA_Y is
+ * the representative plaza line probe-framings pins (the live value drifts
+ * by centimetres, far inside the claim window).
+ */
+const T_X = TEMPLE_SITE.x / NJ_SCALE;
+const T_Z = TEMPLE_SITE.z / NJ_SCALE;
+const REF_PLAZA_Y = 483.85;
+const T_COURT_Y = PLATEAU_Y + 0.8 + count('ezt-outer-gate-steps') * INTERP.stepRise;
+const T_TERR_Y = T_COURT_Y + count('ezt-inner-gate-steps') * INTERP.stepRise;
+/** world metres above the temple's CPU court level -> local-unit y hint */
+const tl = (worldY: number): number => (worldY - REF_PLAZA_Y) / NJ_SCALE;
+
+export const TEMPLE_FRAMINGS: readonly CityFraming[] = [
+  {
+    id: 'temple-outer-court',
+    name: 'Temple outer court',
+    tests:
+      'Pillar A on the compound HORIZONTAL — the lower pavement and its thirty chambers (Ezek 40:17-18) and the coursed court field at walking range',
+    anchor: 'ground',
+    // standing on the lower pavement just inside the east gate, off the gate
+    // axis so the gatehouse does not fill the frame; looking WSW across the
+    // court field toward the inner terrace, altar and house beyond
+    p: [T_X + 97 / NJ_SCALE, tl(T_COURT_Y + 2), T_Z + 28 / NJ_SCALE],
+    lookAt: [T_X - 30 / NJ_SCALE, tl(T_COURT_Y + 1), T_Z - 10 / NJ_SCALE],
+    fov: 60,
+  },
+  {
+    id: 'temple-lower-pavement',
+    name: 'Temple lower pavement',
+    tests:
+      'The Ezek 40:17-18 floor CLOSE — standing on the lower pavement, its tighter coursing underfoot, the chamber row receding along the wall',
+    anchor: 'ground',
+    // on the band well south of the east gate, sighting north along it: the
+    // chamber row recedes on the right (three fronts before the gatehouse
+    // crosses mid-frame) instead of the camera standing past all but one
+    p: [T_X + 115 / NJ_SCALE, tl(T_COURT_Y + 2), T_Z + 78 / NJ_SCALE],
+    lookAt: [T_X + 122 / NJ_SCALE, tl(T_COURT_Y + 1), T_Z - 90 / NJ_SCALE],
+    fov: 60,
+  },
+  {
+    id: 'temple-inner-court',
+    name: 'Temple inner court',
+    tests:
+      'Pillars A/C on the altar terrace — terrace paving and lip kerb, the altar apron, and the house front closing the frame',
+    anchor: 'ground',
+    // on the terrace north-east of the altar, clear of its eastward steps,
+    // looking south-west past the altar to the house vestibule
+    p: [T_X + 30 / NJ_SCALE, tl(T_TERR_Y + 2), T_Z - 20 / NJ_SCALE],
+    lookAt: [T_X - 26 / NJ_SCALE, tl(T_TERR_Y + 4), T_Z],
+    fov: 60,
+  },
+];
+
 export interface ResolvedFraming {
   id: string;
   name: string;
@@ -296,9 +361,12 @@ export function resolveFraming(
   };
 }
 
-/** The whole set — nine core + the crowd annex, resolved against a built
- *  scene's plaza line and probe. Order is load-bearing: indices 0..8 are the
- *  digit-key core, the annex follows. */
+/** The whole set — nine core + the crowd annex + the temple annex, resolved
+ *  against a built scene's plaza line and probe. Order is load-bearing:
+ *  indices 0..8 are the digit-key core, the annexes follow in publication
+ *  order so `?shot=10..` stays stable as annexes are appended. */
 export function resolveCityFramings(plazaTopY: number, groundAt?: GroundAt): ResolvedFraming[] {
-  return [...CITY_FRAMINGS, ...CROWD_FRAMINGS].map((f) => resolveFraming(f, plazaTopY, groundAt));
+  return [...CITY_FRAMINGS, ...CROWD_FRAMINGS, ...TEMPLE_FRAMINGS].map((f) =>
+    resolveFraming(f, plazaTopY, groundAt),
+  );
 }

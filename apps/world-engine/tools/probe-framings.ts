@@ -19,15 +19,30 @@ import { NJ_SCALE } from '../src/nj/config';
 import {
   CITY_FRAMINGS,
   CROWD_FRAMINGS,
+  TEMPLE_FRAMINGS,
   resolveCityFramings,
   resolveFraming,
 } from '../src/nj/reviewFramings';
+import { PLATEAU_Y } from '../src/nj/rimModel';
+import { TEMPLE_SITE, meters } from '../src/nj/templeModel';
 import { makeChecker } from './check';
 
+// buildTemple pulls three/webgpu, which expects a window at import time —
+// the probe-templecollide/-dwellingscollide shim, applied before the dynamic
+// import below (static imports above are all pure modules)
+Object.defineProperty(globalThis, 'window', {
+  value: { location: { search: '?scene=newjerusalem' }, addEventListener() {} },
+  configurable: true,
+});
+const { buildTemple } = await import('../src/nj/Temple');
+const { wrapGroundProbeWithTempleFloors } = await import('../src/nj/templeCollide');
+
 /** every framing the resolver publishes: the digit-key core + the crowd
- *  annex (M3.6 / ADR 0019) — annex framings obey every core contract except
- *  digit-key reachability, which is A5's core-only claim */
-const ALL_FRAMINGS = [...CITY_FRAMINGS, ...CROWD_FRAMINGS];
+ *  annex (M3.6 / ADR 0019) + the temple annex — annex framings obey every
+ *  core contract except digit-key reachability, which is A5's core-only
+ *  claim, and E1's city-footprint aim, which the temple annex replaces with
+ *  its own compound-footprint aim (E1b) */
+const ALL_FRAMINGS = [...CITY_FRAMINGS, ...CROWD_FRAMINGS, ...TEMPLE_FRAMINGS];
 
 const c = makeChecker();
 
@@ -38,15 +53,28 @@ const PLATEAU_GROUND = PLAZA_Y - 2.8;
 
 /**
  * A stand-in for the scene's composed probe: flat plateau terrain, no water,
- * wrapped with the REAL `wrapGroundProbeWithCityFloors`. Using the real
- * wrapper (rather than a mirrored floor lookup) is the point — it exercises
- * the same y-aware stacked-pavement claim the walker gets, so a framing whose
- * standing-level hint is wrong fails here instead of in a screenshot.
+ * wrapped with the REAL `wrapGroundProbeWithCityFloors` AND the REAL temple
+ * floors over the REAL recorded solids. Using the real wrappers (rather than
+ * a mirrored floor lookup) is the point — it exercises the same y-aware
+ * stacked-pavement claim the walker gets, so a framing whose standing-level
+ * hint is wrong fails here instead of in a screenshot. The stand-in terrain
+ * is PLATEAU_Y near the temple (what buildTemple seats on with no
+ * heightfield — probe-templecollide's convention) and the city's
+ * representative plateau elsewhere.
  */
-const groundAt = wrapGroundProbeWithCityFloors(
-  () => ({ ground: PLATEAU_GROUND, water: PLATEAU_GROUND - 50 }),
-  PLAZA_Y,
-  NJ_SCALE,
+const nearTemple = (x: number, z: number): boolean =>
+  Math.abs(x - TEMPLE_SITE.x) < 500 && Math.abs(z - TEMPLE_SITE.z) < 500;
+const temple = buildTemple({ hf: null, gi: null });
+const groundAt = wrapGroundProbeWithTempleFloors(
+  wrapGroundProbeWithCityFloors(
+    (x: number, z: number) => ({
+      ground: nearTemple(x, z) ? PLATEAU_Y : PLATEAU_GROUND,
+      water: PLATEAU_GROUND - 50,
+    }),
+    PLAZA_Y,
+    NJ_SCALE,
+  ),
+  temple.solids,
 );
 
 const resolved = resolveCityFramings(PLAZA_Y, groundAt);
@@ -73,6 +101,11 @@ c.check(
   'A6 the crowd annex resolves AFTER the core (?shot=1..9 semantics stable)',
   resolved.length === ALL_FRAMINGS.length &&
     resolved.slice(0, CITY_FRAMINGS.length).every((r, i) => r.id === CITY_FRAMINGS[i].id),
+);
+c.check(
+  'A7 annex publication order is crowd then temple (?shot=10.. stays stable)',
+  resolved[CITY_FRAMINGS.length]?.id === CROWD_FRAMINGS[0]?.id &&
+    resolved[CITY_FRAMINGS.length + CROWD_FRAMINGS.length]?.id === TEMPLE_FRAMINGS[0]?.id,
 );
 
 // B — resolution is total and finite
@@ -195,9 +228,11 @@ c.check(
   c.check('D5 aiming upward derives positive pitch', up.pose.pitch > 0);
 }
 
-// E — every framing actually points at the city. A framing that has drifted
-//     off the subject is the specific failure this file exists to prevent.
-for (const f of ALL_FRAMINGS) {
+// E — every framing actually points at its subject. A framing that has
+//     drifted off the subject is the specific failure this file exists to
+//     prevent. City/crowd framings aim inside the city footprint; the temple
+//     annex aims inside the compound's precinct instead.
+for (const f of [...CITY_FRAMINGS, ...CROWD_FRAMINGS]) {
   c.check(
     `E1 ${f.id}: aims within the city footprint and below the crown`,
     Math.max(Math.abs(f.lookAt[0]), Math.abs(f.lookAt[2])) <= CITY_HALF + 8 &&
@@ -205,6 +240,22 @@ for (const f of ALL_FRAMINGS) {
       f.lookAt[1] <= CITY_SUMMIT_Y + 8,
     `lookAt ${f.lookAt.join(',')}`,
   );
+}
+{
+  // the compound is 1:1 world scale, so its local footprint is the precinct
+  // side over NJ_SCALE — derived through the same resolver the builder uses
+  const tHalfL = meters('ezt-precinct-side') / 2 / NJ_SCALE;
+  const tX = TEMPLE_SITE.x / NJ_SCALE;
+  const tZ = TEMPLE_SITE.z / NJ_SCALE;
+  for (const f of TEMPLE_FRAMINGS) {
+    c.check(
+      `E1b ${f.id}: aims within the temple precinct at court height`,
+      Math.max(Math.abs(f.lookAt[0] - tX), Math.abs(f.lookAt[2] - tZ)) <= tHalfL + 1 &&
+        f.lookAt[1] >= -8 &&
+        f.lookAt[1] <= 8,
+      `lookAt ${f.lookAt.join(',')}`,
+    );
+  }
 }
 
 // F — the set covers the bar rather than nine views of one thing.

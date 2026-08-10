@@ -60,6 +60,15 @@ export const INTERP = {
   towerSide: 8,
   towerH: 10.5,
   merlonH: 0.9,
+  /**
+   * outer-court chambers: Ezek 40:17 counts THIRTY on the pavement (the
+   * count is the cited part, ezt-outer-court-chambers); their individual
+   * dimensions are not given — frontage/depth in whole cubits, height kept
+   * under the one-reed perimeter wall's crenellation line
+   */
+  courtChamberFront: 10 * LONG_CUBIT_M,
+  courtChamberDepth: 8 * LONG_CUBIT_M,
+  courtChamberHeight: 2.7,
   /** plinth seating the literal-scale compound on the rolling meadow */
   plinthMargin: 4,
 } as const;
