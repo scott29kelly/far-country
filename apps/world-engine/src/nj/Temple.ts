@@ -273,6 +273,34 @@ function gatehouse(
   cor.position.set(0, h + 0.25, 0);
   cor.castShadow = true;
   gh.add(cor);
+  // flank dressing — the 26 m side faces are the tallest planes a walker
+  // stands beside, and they were single unbroken boxes (Pillar A). String
+  // courses at the lintel line and below the cornice, corner pilaster
+  // strips, and a row of narrow glowing slits: Ezek 40:16's windows are IN
+  // the gates ("windows all around inside"), so the slits are the cited
+  // window row, the courses/pilasters the same art-direction class as the
+  // merlons. All filigree (proud < 0.1 m — no solids).
+  for (const s of [-1, 1] as const) {
+    const fz = s * (width / 2 + 0.045);
+    for (const cy of [openH, h - 0.7] as const) {
+      const sc = new Mesh(new BoxGeometry(depth - 0.3, 0.28, 0.09), trim);
+      sc.position.set(0, cy, fz);
+      sc.castShadow = true;
+      gh.add(sc);
+    }
+    for (const e of [-1, 1] as const) {
+      const pil = new Mesh(new BoxGeometry(0.5, h * 0.97, 0.1), sand);
+      pil.position.set(e * (depth / 2 - 0.55), (h * 0.97) / 2, fz);
+      pil.castShadow = true;
+      gh.add(pil);
+    }
+    for (let i = 0; i < 4; i++) {
+      const wx = -depth / 2 + 5 + (i * (depth - 10)) / 3;
+      const slit = new Mesh(new BoxGeometry(0.5, 1.7, 0.08), glow);
+      slit.position.set(wx, h * 0.6, fz);
+      gh.add(slit);
+    }
+  }
   g.add(gh);
 }
 

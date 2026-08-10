@@ -275,9 +275,10 @@ export const TEMPLE_FRAMINGS: readonly CityFraming[] = [
     tests:
       'The Ezek 40:17-18 floor CLOSE — standing on the lower pavement, its tighter coursing underfoot, the chamber row receding along the wall',
     anchor: 'ground',
-    // on the band south of the east gate, sighting north along it: chambers
-    // ahead on the right, the east gatehouse crossing mid-frame
-    p: [T_X + 115 / NJ_SCALE, tl(T_COURT_Y + 2), T_Z + 40 / NJ_SCALE],
+    // on the band well south of the east gate, sighting north along it: the
+    // chamber row recedes on the right (three fronts before the gatehouse
+    // crosses mid-frame) instead of the camera standing past all but one
+    p: [T_X + 115 / NJ_SCALE, tl(T_COURT_Y + 2), T_Z + 78 / NJ_SCALE],
     lookAt: [T_X + 122 / NJ_SCALE, tl(T_COURT_Y + 1), T_Z - 90 / NJ_SCALE],
     fov: 60,
   },

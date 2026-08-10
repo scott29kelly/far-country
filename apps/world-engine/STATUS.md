@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-02)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-05)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,51 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-08-05, later) TEMPLE COURTS DRESSED AT WALKING RANGE — the Ezek
+40:17-18 lower pavement, its thirty chambers, and slab-joint paving close
+the temple half of the CITY-QUALITY-BAR walking-range item.** The raised
+courts (2026-08-02) had doubled the bare pavement seen at eye level; every
+big horizontal was a single flat sand plane.
+
+- **pavingDetail (Temple.ts):** the city terraces' world-space slab-joint
+  material at the compound's 1:1 scale — joint grooves + per-slab tone on
+  a three-cubit grid, masked to up-facing surfaces (terrace risers stay
+  clean), distance-faded before the analytic grid can alias under TRAA.
+  On the plinth, outer court, inner terrace and house platform; a tighter
+  two-cubit pale variant carries the border work.
+- **The LOWER PAVEMENT (Ezek 40:17-18):** a pale border frame ringing the
+  outer court, breadth = the gates' 50 cubits (40:18's correspondence),
+  recorded as solids so feet stand ON it (5 cm lip, far under STEP_OVER).
+  Gate thresholds join it in the same pale coursing.
+- **THIRTY chambers (Ezek 40:17,** `ezt-outer-court-chambers`, tier
+  `clear` **— previously dead data):** six flank runs beside the three
+  gates, count-derived placement; bodies recorded massing (solidPut),
+  warm door panes + trim caps filigree; dims interpretive
+  (INTERP.courtChamber*, RENDERING-DECISIONS #7 point 7).
+- **Border-and-field statements:** pale apron squaring the altar off the
+  terrace; trim kerb along the terrace lip, broken at the three inner
+  flights.
+- **Gatehouse flank dressing:** the 26 m side faces were single unbroken
+  planes beside a walker — now string courses at lintel/cornice lines,
+  corner pilaster strips, and a row of glowing slits rendering Ezek
+  40:16's in-gate windows (bloom contract intact).
+- **Temple review-framing annex (?shot=12-14):** temple-outer-court,
+  temple-lower-pavement, temple-inner-court in reviewFramings.ts, local
+  coords derived from templeModel through NJ_SCALE; probe-framings builds
+  the real temple (headless) into its stand-in probe and pins annex
+  order (A7) and compound-footprint aim (E1b).
+- **Verified:** tsc clean; full CPU battery ALL PASS (probe-templecollide
+  unchanged — T5/T6 sample the field, walk paths run the gate rows);
+  hardware stills `shots/wip/templecourt/` (Intel Xe-LPG, 14-24 fps at
+  1600×900, 14-21 M tris). Capture note: a machine reboot cleared a
+  persistent "createBuffer ... too large ... mappedAtCreation" boot
+  failure that hit BOTH worktrees' toolchains — transient GPU/browser
+  process state, not a code or Playwright-version issue.
+- **Honest remainder:** the compound is still monotone warm sandstone by
+  identity (USER-REFS #5) — tone separation relies on the pale trim
+  family; chamber door panes read dark in daylight; Scott's subjective
+  pass owed on the whole compound.
 
 **(2026-08-05) ANNY SLICE 2 BUILT — the near tier wears real skin: vendored
 CC0 MakeHuman diffuse textures, sampled through decimation-surviving UVs.**

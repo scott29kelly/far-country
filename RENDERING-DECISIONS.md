@@ -395,17 +395,34 @@ Both reasons point the same direction, so the engine's default terrain is used a
      text gives the counts; the riser stays point 3's ~0.22 m, and the
      ~0.45 m tread depth, parapet cheeks with pale caps, and tread nosing
      bands are interpretive stair dressing in point 4's posture.
+  7. **(Added 2026-08-05) The lower pavement and its thirty chambers
+     render; their dressing splits grounded from interpretive:** Ezek
+     40:17–18's pavement "all around" the outer court renders as a pale
+     border frame whose breadth is the gates' 50 cubits (40:18's
+     correspondence), and the THIRTY chambers the verse counts stand on it
+     (`ezt-outer-court-chambers`, tier `clear`). The count and pavement
+     breadth are grounded; chamber dimensions (10×8 cubits, 2.7 m tall —
+     `INTERP.courtChamber*`), their gate-flanking placement, the slab-joint
+     paving material on every court surface, the altar's pale apron, the
+     terrace lip kerb, and the gatehouse-flank string courses/pilasters are
+     interpretive dressing in point 4's posture. The gatehouse flank
+     window slits render 40:16's windows in the gates ("windows all
+     around inside"), within the base-tier bloom contract.
 
 ### What is grounded vs. a rendering choice
 
 - **Grounded:** every dimension in `measurements.json` (plans of gates,
   courts, house, chambers, west building, precinct, altar — Ezek 40:5–47;
   40:48–41:15; 42:1–20; 43:13–17), gate/steps counts, eastward altar steps
-  (43:17), three outer + three inner gates (E/N/S; none on the west).
+  (43:17), three outer + three inner gates (E/N/S; none on the west), the
+  lower pavement ringing the outer court at the gates' breadth (40:17–18),
+  the thirty court chambers' count (40:17), gate windows (40:16).
 - **Rendering choice:** house/gatehouse heights, step risers and tread
   depth, the stair parapet dressing, red-sandstone palette, crenellations
-  and corner towers, window glow intensity, and the plinth that seats the
-  literal-scale compound on the rolling meadow.
+  and corner towers, window glow intensity, the plinth that seats the
+  literal-scale compound on the rolling meadow, court-chamber dimensions
+  and placement, the slab-joint paving grids, altar apron, terrace kerb,
+  and gatehouse flank courses/pilasters.
 
 ### Governing sources
 
