@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-05)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-10)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,45 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-08-10) ANNY SLICE 3 BUILT — the near tier's hands hold what they
+carry: the frond hand grips, the hanging hand relaxes, and the slice-1/2
+wrist-anchor offset is corrected.** The rest-pose open hand was the last
+recorded slice-1 simplification on the vendored tier.
+
+- **Fingers-only authored curls** (`pipeline/figures/src/generate.py`):
+  right hand (the engine's raised, frond-holding arm) closes to a loose
+  grip — fingers 2-5 curled 0.9/1.1/0.6 rad about the geometric knuckle
+  axis, thumb wrapped 0.55/0.65/0.45 about a knuckle/finger-dir blend —
+  middle-tip-to-palm 13.1 cm → 5.3 cm, channel wide enough for the
+  ~1.2 cm rachis. Left hand takes a relaxed natural curl (0.35/0.45/0.25).
+  Axes derive per archetype from the rig's own rest bone ends via the
+  model's `local-ref` pose parameterization; the wrist and every other
+  bone stay identity, so wrist-centering, rest forearm axes, head export
+  and the atlas measurement are all untouched by construction.
+- **Anchor-frame correction:** anny's forward() output is ROOT-NORMALIZED
+  — vertices sit a constant rigid offset (~6.9 cm at adult scale) from
+  the raw `rest_bone_heads` slices 1-2 centered hands on. Wrist centers
+  now read from the posed-identity `bone_heads` (the vertices' own
+  frame); hands seat visibly correctly at the cuffs on hardware.
+- **Supply-chain event, absorbed:** the upstream
+  `makehumancommunity/makehuman-assets` GitHub repo VANISHED (API 404,
+  discovered this session) — the exact failure ADR 0020's
+  vendor-the-inputs posture anticipated. The four CC0 skin sources
+  (sha256-verified against their LFS pointers while upstream existed) are
+  now committed at `pipeline/figures/vendor/skins/` (~15.5 MB, CC0
+  redistributes freely; README records provenance); `fetch_skin` reads
+  vendor-first against hashes PINNED in the generator, network is a
+  last resort. Regeneration is self-contained forever.
+- **Verified:** regeneration ceilings hold (head 2400, hands ≤ 240, eyes
+  140; module 795 KB); tsc clean; probe-crowd ALL PASS (provenance E1
+  with the updated poseNote/skinSource, decode/ceilings E2, atlas E4,
+  auv E5, eye region E3); hardware `shots/wip/anny6/` — grip closes
+  around the frond base at arm's length (grip-zoom), hanging hand curls
+  naturally at the cuff (relax-zoom), ?shot=11 LOD run seamless.
+- **Honest remainder:** hair styling verdict (Scott's: tune shells vs
+  vendor CC0 hair meshes), baked-animation crowds (ADR 0020 rule 5),
+  flat dark eye albedo, M4.4 dynamism, Scott's subjective pass.
 
 **(2026-08-05, later) TEMPLE COURTS DRESSED AT WALKING RANGE — the Ezek
 40:17-18 lower pavement, its thirty chambers, and slab-joint paving close

@@ -20,11 +20,24 @@ UVs survive decimation by splitting vertices at UV seams first, then
 replaying fast_simplification's collapses to map original vertices (and
 their UVs) onto the simplified set.
 
-No skeleton posing happens here (slice 1): hands are exported centered at
-their wrist bone and the engine aligns them to its own procedural arm
-chains; the head is exported centered at its bounding-box center and placed
-by top-of-head alignment. Rest-pose open hands are a recorded slice-1
-simplification (finger grip posing is a later slice).
+Slice 3 poses the FINGERS (and only the fingers): the right hand — the
+engine's raised, frond-holding arm — closes into a loose grip (fingers
+curled about the geometric knuckle axis, thumb wrapped toward the index),
+and the left hand takes a relaxed natural curl instead of the stiff open
+rest pose. The wrist and every other bone stay at rest, so the engine's
+wrist-centered placement and recorded rest forearm axes are untouched.
+Curl axes are derived from each archetype's own bone geometry (knuckle
+line + middle-finger direction), not from rig frame conventions, via the
+model's "local-ref" pose parameterization (per-bone deltas expressed in
+the reference frame).
+
+Anchor-frame note (slice-3 correction): the model's forward() output is
+ROOT-NORMALIZED — vertices and posed bone ends sit a constant rigid
+offset (~6.9 cm) from the raw `rest_bone_heads` arrays. Slices 1-2
+centered hands on the raw rest wrist, baking that offset into the
+payload; wrist centers now come from the posed-identity `bone_heads`,
+the same frame the vertices live in. Axis DIRECTIONS are unaffected
+(the offset is a pure translation).
 
 Provenance (ADR 0020 rules 2-3): Anny code Apache-2.0, assets CC0
 (MakeHuman-derived, artist-authored — anonymity by construction; the skin
@@ -72,14 +85,34 @@ HAND_TRIS = 240
 # makehumancommunity/makehuman-assets — "This asset was explicitly released
 # as CC0 in september 2020" (header of every file); painted system skins,
 # not scans — the same anonymity-by-construction test the geometry passes.
+#
+# VENDORED 2026-08-10: the upstream GitHub repo disappeared (API 404 — the
+# exact failure ADR 0020's vendor-the-inputs posture exists for). The four
+# source PNGs, sha256-verified against their LFS pointers while upstream was
+# still up (slice 2, 2026-08-05), now live in vendor/skins/ as committed CC0
+# data; the hashes below are the pinned source of truth and the network path
+# is a last resort kept for the record.
 MH_ASSETS_REPO = "makehumancommunity/makehuman-assets"
 MH_ASSETS_COMMIT = "8cf9645b975a98eea056b140df11a1d278da0d10"
-SKIN_TEXTURES = [
-    "base/skins/textures/young_lightskinned_female_diffuse.png",
-    "base/skins/textures/young_lightskinned_male_diffuse.png",
-    "base/skins/textures/young_darkskinned_female_diffuse.png",
-    "base/skins/textures/young_darkskinned_male_diffuse.png",
+SKIN_TEXTURES: list[tuple[str, str]] = [
+    (
+        "base/skins/textures/young_lightskinned_female_diffuse.png",
+        "b2a6ac8cd4f9febdb447368e29c76cd68410bb66e46d9dcfa2d5f75126eea8fc",
+    ),
+    (
+        "base/skins/textures/young_lightskinned_male_diffuse.png",
+        "862a26e335e958b70534cb5f0d7c47ef30ab148a56c42b3e9da969cf76f12963",
+    ),
+    (
+        "base/skins/textures/young_darkskinned_female_diffuse.png",
+        "96aa4a96b247fc90d371587bb88e6ae3bfc77e83f5126f17e6bbb713aa200470",
+    ),
+    (
+        "base/skins/textures/young_darkskinned_male_diffuse.png",
+        "e3f0dbb634e4c68561338f0087f7a122444e84ec56df102212f1222aa12e4d50",
+    ),
 ]
+VENDOR_SKINS = ROOT / "vendor" / "skins"
 ATLAS_TILE = 1024  # per-skin tile resolution (sources are 2048)
 ATLAS_JPEG_QUALITY = 80
 
@@ -117,6 +150,60 @@ def phenotypes_for(arch: dict) -> dict[str, float]:
     p["height"] = float(min(max((arch["height"] - 1.3) / 0.7, 0.05), 0.95))
     p["proportions"] = 0.5
     return p
+
+
+# ---- slice 3: authored finger curls -------------------------------------------
+# Angles in radians per segment (proximal, middle, distal). GRIP closes the
+# frond hand into a loose fist (channel wide enough for the engine's ~1.2 cm
+# rachis); RELAX is a natural hanging-hand curl. Authored constants — no RNG.
+GRIP_FINGERS = (0.9, 1.1, 0.6)
+GRIP_THUMB = (0.55, 0.65, 0.45)
+RELAX_FINGERS = (0.35, 0.45, 0.25)
+RELAX_THUMB = (0.2, 0.25, 0.15)
+
+
+def rotmat(axis: np.ndarray, angle: float) -> np.ndarray:
+    a = axis / np.linalg.norm(axis)
+    c, s = np.cos(angle), np.sin(angle)
+    x, y, z = a
+    return np.array(
+        [
+            [c + x * x * (1 - c), x * y * (1 - c) - z * s, x * z * (1 - c) + y * s],
+            [y * x * (1 - c) + z * s, c + y * y * (1 - c), y * z * (1 - c) - x * s],
+            [z * x * (1 - c) - y * s, z * y * (1 - c) + x * s, c + z * z * (1 - c)],
+        ]
+    )
+
+
+def hand_pose(
+    P: np.ndarray,
+    bone: dict[str, int],
+    heads: np.ndarray,
+    tails: np.ndarray,
+    side: str,
+    fingers: tuple[float, float, float],
+    thumb: tuple[float, float, float],
+) -> None:
+    """Write finger-curl rotations for one hand into pose tensor P (J,4,4).
+
+    Axes are geometric, derived per archetype from the rig's own rest bone
+    ends (directions are frame-shift invariant): fingers flex about the
+    knuckle line (finger2-1 -> finger5-1), the thumb wraps about a blend of
+    the middle-finger direction and the knuckle line. The curl sign flips
+    with handedness; -1 closes the right hand toward its palm (verified
+    numerically: middle-tip-to-palm 13.1 cm -> 5.3 cm at GRIP angles).
+    """
+    sign = -1.0 if side == "R" else 1.0
+    k = heads[bone[f"finger5-1.{side}"]] - heads[bone[f"finger2-1.{side}"]]
+    k = k / np.linalg.norm(k)
+    f = tails[bone[f"finger3-1.{side}"]] - heads[bone[f"finger3-1.{side}"]]
+    f = f / np.linalg.norm(f)
+    for fi in (2, 3, 4, 5):
+        for seg, ang in zip((1, 2, 3), fingers):
+            P[bone[f"finger{fi}-{seg}.{side}"], :3, :3] = rotmat(k * sign, ang)
+    t_axis = f - sign * 0.4 * k
+    for seg, ang in zip((1, 2, 3), thumb):
+        P[bone[f"finger1-{seg}.{side}"], :3, :3] = rotmat(t_axis, ang)
 
 
 def triangulate(quads: np.ndarray) -> np.ndarray:
@@ -186,37 +273,34 @@ def srgb_to_linear(c: np.ndarray) -> np.ndarray:
     return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
 
 
-def fetch_skin(path: str) -> tuple[Image.Image, dict]:
-    """Download one LFS-stored texture at the pinned commit, sha256-verified
-    against its LFS pointer. Cached in .cache/skins/ (gitignored)."""
+def fetch_skin(path: str, oid: str) -> tuple[Image.Image, dict]:
+    """Load one skin texture, sha256-verified against the PINNED hash.
+
+    Order: the committed vendor copy (vendor/skins/ — canonical since the
+    upstream repo vanished, 2026-08-10), then the legacy download cache,
+    then — for the record only — the original network path, which requires
+    upstream to exist again."""
     name = path.rsplit("/", 1)[-1]
-    pointer_url = (
-        f"https://raw.githubusercontent.com/{MH_ASSETS_REPO}/{MH_ASSETS_COMMIT}/{path}"
-    )
-    with urllib.request.urlopen(pointer_url) as r:
-        pointer = r.read().decode("ascii")
-    oid = next(
-        line.split("sha256:")[1] for line in pointer.splitlines() if "sha256:" in line
-    )
-    CACHE.mkdir(parents=True, exist_ok=True)
-    cached = CACHE / name
     data: bytes | None = None
-    if cached.exists():
-        data = cached.read_bytes()
-        if hashlib.sha256(data).hexdigest() != oid:
-            data = None
+    for candidate in (VENDOR_SKINS / name, CACHE / name):
+        if candidate.exists():
+            raw = candidate.read_bytes()
+            if hashlib.sha256(raw).hexdigest() == oid:
+                data = raw
+                break
     if data is None:
         media_url = (
             f"https://media.githubusercontent.com/media/{MH_ASSETS_REPO}/"
             f"{MH_ASSETS_COMMIT}/{path}"
         )
-        print(f"  downloading {name} ...")
+        print(f"  vendor/cache miss — downloading {name} ...")
         with urllib.request.urlopen(media_url) as r:
             data = r.read()
         got = hashlib.sha256(data).hexdigest()
         if got != oid:
             raise RuntimeError(f"sha256 mismatch for {name}: {got} != {oid}")
-        cached.write_bytes(data)
+        CACHE.mkdir(parents=True, exist_ok=True)
+        (CACHE / name).write_bytes(data)
     img = Image.open(io.BytesIO(data)).convert("RGB")
     return img, {"path": path, "sha256": oid, "bytes": len(data)}
 
@@ -226,7 +310,7 @@ def build_skin_atlas(head_uvs: np.ndarray) -> dict:
     SKIN_RAMP's deep -> pale direction, so tile = floor(skin01 * 4) agrees
     with the ramp), means measured in LINEAR space over the texels the head
     actually samples (backgrounds and body regions must not skew them)."""
-    loaded = [fetch_skin(p) for p in SKIN_TEXTURES]
+    loaded = [fetch_skin(p, oid) for p, oid in SKIN_TEXTURES]
 
     def head_mean_linear(img: Image.Image) -> np.ndarray:
         w, h = img.size
@@ -309,12 +393,29 @@ def main() -> None:
     skin_atlas: dict | None = None
     for arch in archetypes:
         ph = phenotypes_for(arch)
+        ph_kwargs = {k: torch.tensor([v], dtype=torch.float64) for k, v in ph.items()}
+        # pass 1 (rest): this archetype's rig rest bone ends, for the curl
+        # axes — directions only, so the raw-rest frame is fine here
+        with torch.no_grad():
+            rest = model.forward(phenotype_kwargs=ph_kwargs)
+        rest_heads = rest["rest_bone_heads"][0].numpy()
+        rest_tails = rest["rest_bone_tails"][0].numpy()
+        pose = np.tile(np.eye(4), (len(model.bone_labels), 1, 1))
+        hand_pose(pose, bone, rest_heads, rest_tails, "R", GRIP_FINGERS, GRIP_THUMB)
+        hand_pose(pose, bone, rest_heads, rest_tails, "L", RELAX_FINGERS, RELAX_THUMB)
+        # pass 2 (posed): fingers curled, everything else identity; bone_heads
+        # come back in the SAME root-normalized frame as the vertices (the
+        # slice-3 anchor correction), with the wrist verified unmoved by the
+        # finger-only pose
         with torch.no_grad():
             out = model.forward(
-                phenotype_kwargs={k: torch.tensor([v], dtype=torch.float64) for k, v in ph.items()}
+                pose_parameters=torch.tensor(pose[None], dtype=torch.float64),
+                phenotype_kwargs=ph_kwargs,
+                pose_parameterization="local-ref",
+                return_bone_ends=True,
             )
         verts_raw = out["vertices"][0].numpy()
-        heads_raw = out["rest_bone_heads"][0].numpy()
+        heads_raw = out["bone_heads"][0].numpy()
 
         verts = convert(verts_raw)[split_to_vert]
         bone_heads = convert(heads_raw)
@@ -372,14 +473,21 @@ def main() -> None:
         "source": "Anny (github.com/naver/anny) — code Apache-2.0, assets CC0 1.0 (MakeHuman-derived, artist-authored)",
         "skinSource": (
             f"github.com/{MH_ASSETS_REPO} @ {MH_ASSETS_COMMIT[:12]} — MakeHuman system "
-            "skins, explicitly released CC0 (Sept 2020); painted textures, no scan data"
+            "skins, explicitly released CC0 (Sept 2020); painted textures, no scan data. "
+            "Upstream repo vanished from GitHub 2026-08-10; the sha256-verified sources "
+            "are vendored at pipeline/figures/vendor/skins/ (CC0 redistributes freely)"
         ),
         "topology": "anny (default) — the smplx interop mode is non-commercial and banned",
         "annyVersion": metadata.version("anny"),
         "torchVersion": metadata.version("torch"),
         "generated": datetime.date.today().isoformat(),
         "determinism": "phenotypes derive from archetypes.gen.json (exported from figureModel.ts); no RNG",
-        "poseNote": "rest pose; hands wrist-centered with rest forearm axis recorded; open-hand grip is a recorded slice-1 simplification",
+        "poseNote": (
+            "slice 3: fingers-only authored curls — right hand grips (frond hand), "
+            "left hand relaxed; wrist and all other bones rest, so wrist-centering and "
+            "rest forearm axes hold; anchors read from the root-normalized posed frame "
+            "(fixes the slice-1/2 constant wrist offset)"
+        ),
         "frame": "engine Y-up, figure faces -Z (converted from MakeHuman Z-up/-Y)",
         "uvNote": "per-vertex UVs (MakeHuman hm08 layout, v=0 at bottom); seams split before decimation",
     }
