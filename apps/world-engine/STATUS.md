@@ -138,6 +138,35 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-10, later) WORSHIP-IDLE HEAD ARTICULATION — the animation track's
+first increment, procedural by Scott's call (no downloads).** The crowd's
+heads now carry slow reverent gaze drift (yaw, ±0.07 rad over ~18 s) and
+smaller incommensurate nods (pitch, ±0.05 rad), per-figure phase and
+amplitude, layered on the settled body sway.
+
+- **Mechanism:** shader-analytic rigid rotation of the head volume about
+  the neck pivot in `figureMaterial` — linearized Δ = θ·(axis × r), exact
+  enough at ≤ 0.07 rad; no matrices, no textures, ZERO CPU per-instance
+  work (ADR 0020's performance intent; the baked-to-texture machinery
+  stays reserved for future full-body skeletal motion, M4.4 pilgrimage).
+  The blend weight — a y band starting above the robe neckline (0.87 →
+  0.91 ×H) times an |x| falloff (full inside 0.1·H, zero past 0.16·H) —
+  is what keeps the raised wrist (~0.22·H), frond and robe untouched;
+  hair and eyes ride the head automatically (both live inside the band).
+  Both rings run it, so the 30 m LOD handoff never freezes a moving head;
+  impostors beyond 160 m stay static (sub-pixel there).
+- **Model + guard:** constants in `figureModel.HEAD_IDLE`;
+  `figureModelInvariants()` (probe-crowd A2) bounds them — amplitudes
+  reverent, speed slower than the body sway, band above the neckline,
+  falloff clear of the wrist.
+- **Hardware verification** (`shots/wip/headidle/`): two `--nofreeze`
+  shots ~15 s of shader time apart; the near figure's head visibly
+  rotates relative to its shoulders (head-region pixel delta 6.0 vs
+  3.5–3.8 TRAA/cloud baseline), collar stays seamless, hands/frond show
+  only the pre-existing sway. Full battery (10 probes) ALL PASS; tsc
+  clean. Freeze-mode stills (`?freeze=1`) are unchanged, so cityshots
+  and probes stay deterministic.
+
 **(2026-08-10) ANNY SLICE 3 BUILT — the near tier's hands hold what they
 carry: the frond hand grips, the hanging hand relaxes, and the slice-1/2
 wrist-anchor offset is corrected.** The rest-pose open hand was the last
