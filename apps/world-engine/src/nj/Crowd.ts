@@ -98,6 +98,7 @@ import {
   FIGURE_ARCHETYPES,
   HAIR_GRAY,
   HAIR_RAMP,
+  HEAD_IDLE,
   SKIN_RAMP,
   figureParams,
   type FigureArchetype,
@@ -258,9 +259,54 @@ function figureMaterial(
     .sin()
     .mul(SWAY.palmTip)
     .mul(frondFac) as unknown as NF;
-  const lx = positionLocal.x.mul(lw).add(figureSway(slot).mul(hFac)).add(flutter);
-  const ly = positionLocal.y.mul(A.w);
-  const lz = positionLocal.z.mul(lw);
+  // worship-idle head articulation (figureModel.HEAD_IDLE): shader-analytic
+  // small-angle rotation of the head volume about the neck pivot — gaze
+  // drift (yaw) + slower nods (pitch), per-slot phase/amplitude. The blend
+  // weight (a y band above the neckline × an |x| falloff) is what keeps the
+  // raised wrist, frond and robe untouched; linearized Δ = θ·(axis × r) is
+  // exact enough at ≤ 0.07 rad and needs no matrix. Both rings run it, so
+  // the 30 m LOD handoff never freezes a moving head.
+  const hIdle = HEAD_IDLE;
+  const czTop = -arch.stoop * 0.09 * arch.height;
+  const rIx = positionLocal.x as unknown as NF;
+  const rIy = positionLocal.y.sub(hIdle.pivotY * arch.height) as unknown as NF;
+  const rIz = positionLocal.z.sub(czTop) as unknown as NF;
+  const wBand = positionLocal.y
+    .sub(hIdle.blendLo * arch.height)
+    .div((hIdle.blendHi - hIdle.blendLo) * arch.height)
+    .clamp(0, 1) as unknown as NF;
+  const wSide = float(1)
+    .sub(
+      positionLocal.x
+        .abs()
+        .sub(hIdle.xInner * arch.height)
+        .div((hIdle.xOuter - hIdle.xInner) * arch.height)
+        .clamp(0, 1),
+    ) as unknown as NF;
+  const wHead = wBand.mul(wSide) as unknown as NF;
+  const idleAmp = slotHash(slot, 67).mul(0.5).add(0.5) as unknown as NF;
+  const thYaw = time
+    .mul(hIdle.speed)
+    .add(slotHash(slot, 59).mul(Math.PI * 2))
+    .sin()
+    .mul(hIdle.yawAmp)
+    .mul(idleAmp)
+    .mul(wHead) as unknown as NF;
+  const thPitch = time
+    .mul(hIdle.speed * hIdle.pitchSpeedFactor)
+    .add(slotHash(slot, 61).mul(Math.PI * 2))
+    .sin()
+    .mul(hIdle.pitchAmp)
+    .mul(idleAmp)
+    .mul(wHead) as unknown as NF;
+  // yaw about +Y: Δ = θy·(rz, 0, −rx);  pitch about +X: Δ = θp·(0, −rz, ry)
+  const ix = positionLocal.x.add(thYaw.mul(rIz));
+  const iy = positionLocal.y.add(thPitch.mul(rIz.negate()));
+  const iz = positionLocal.z.add(thYaw.mul(rIx.negate())).add(thPitch.mul(rIy));
+
+  const lx = ix.mul(lw).add(figureSway(slot).mul(hFac)).add(flutter);
+  const ly = iy.mul(A.w);
+  const lz = iz.mul(lw);
   const rx = lx.mul(c).add(lz.mul(s));
   const rz = lz.mul(c).sub(lx.mul(s));
   // posture lean as shear (keeps feet planted) — placement tilts, damped

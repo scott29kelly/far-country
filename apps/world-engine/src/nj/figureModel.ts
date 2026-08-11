@@ -137,6 +137,38 @@ export const HAIR_RAMP: readonly (readonly [number, number, number])[] = [
 /** silver/white the grayBias pulls toward */
 export const HAIR_GRAY: readonly [number, number, number] = [0.55, 0.55, 0.57];
 
+/**
+ * Worship-idle HEAD articulation (the animation track's first increment,
+ * chosen 2026-08-10: procedural, no downloads). Shader-analytic rigid
+ * motion of the head volume about the neck pivot — slow gaze drift (yaw)
+ * and smaller nods (pitch), per-figure phase/amplitude — layered on the
+ * settled body sway. Runs in the vertex shader with ZERO CPU per-instance
+ * work (ADR 0020's performance intent); the baked-to-texture machinery
+ * stays reserved for future full-body skeletal motion (M4.4 pilgrimage).
+ * All spatial constants are fractions of archetype height; the blend band
+ * starts just above the robe neckline (NECK_T 0.865 in FigureMesh) and the
+ * |x| falloff excludes the raised wrist (|x| ≈ 0.22·H) entirely.
+ */
+export const HEAD_IDLE = {
+  /** yaw (gaze drift) amplitude, radians — reverent, not restless */
+  yawAmp: 0.07,
+  /** pitch (nod) amplitude, radians */
+  pitchAmp: 0.05,
+  /** sine angular speed, rad/s — slower than SWAY.speed (0.9): a gaze
+   *  settles over ~18 s, it does not tick */
+  speed: 0.35,
+  /** pitch runs incommensurate to yaw so the motion never loops visibly */
+  pitchSpeedFactor: 0.63,
+  /** neck pivot height, ×height */
+  pivotY: 0.88,
+  /** blend-in band (×height): weight 0 at lo (the neckline), 1 at hi */
+  blendLo: 0.87,
+  blendHi: 0.91,
+  /** |x| falloff (×height): full weight inside, 0 beyond (raised wrist) */
+  xInner: 0.1,
+  xOuter: 0.16,
+} as const;
+
 /** robe albedo at warm01 extremes: white pulled toward warm ivory —
  *  the pre-ADR-0019 warm-tone variation, kept */
 export function robeAlbedo(warm01: number): [number, number, number] {
@@ -254,5 +286,26 @@ export function figureModelInvariants(): { ok: boolean; detail: string } {
   if (worst >= 1.5) {
     return { ok: false, detail: `emissive luminance ${worst.toFixed(3)} crosses bloom 1.5` };
   }
-  return { ok: true, detail: `weights 1.0, palettes in gamut, worst emissive ${worst.toFixed(3)}` };
+  const hi = HEAD_IDLE;
+  const idleOk =
+    hi.yawAmp > 0 &&
+    hi.yawAmp <= 0.12 &&
+    hi.pitchAmp > 0 &&
+    hi.pitchAmp <= 0.1 &&
+    hi.speed > 0 &&
+    hi.speed < 0.9 && // slower than the body sway — a gaze, not a tick
+    hi.blendLo >= 0.86 && // band starts above the robe neckline (0.865)
+    hi.blendHi > hi.blendLo &&
+    hi.xInner >= 0.06 && // the head half-width (~0.05·H) keeps full weight
+    hi.xOuter > hi.xInner &&
+    hi.xOuter <= 0.2 && // the raised wrist (~0.22·H) stays untouched
+    hi.pivotY > hi.blendLo &&
+    hi.pivotY < 1;
+  if (!idleOk) {
+    return { ok: false, detail: 'HEAD_IDLE constants out of reverent bounds' };
+  }
+  return {
+    ok: true,
+    detail: `weights 1.0, palettes in gamut, worst emissive ${worst.toFixed(3)}, head idle bounded`,
+  };
 }
