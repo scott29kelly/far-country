@@ -25,11 +25,21 @@ interface LaunchRecipe {
  *    SwiftShader fallback answers requestAdapter() under --enable-unsafe-webgpu.
  *    It renders the real pipeline in software: correct pixels, ~100x slower.
  */
+/**
+ * Dual-GPU Windows laptops: Chrome IGNORES WebGPU's powerPreference on
+ * Windows (crbug.com/369219127) and defaults to the OS-assigned adapter —
+ * the power-saving iGPU. This switch forces the discrete GPU at the process
+ * level (observed 2026-08-13: intel/xe-lpg vs nvidia on Scott's Legion —
+ * every GPU-bound boot bake and capture runs several times faster).
+ * Harmless on single-GPU machines and headless runners.
+ */
+const FORCE_DGPU = '--force_high_performance_gpu';
+
 const CANDIDATES: LaunchRecipe[] = [
-  { headless: true, channel: 'chromium', args: [] },
-  { headless: true, channel: 'chromium', args: ['--enable-unsafe-webgpu'] },
-  { headless: false, args: [] },
-  { headless: true, args: ['--enable-unsafe-webgpu'] },
+  { headless: true, channel: 'chromium', args: [FORCE_DGPU] },
+  { headless: true, channel: 'chromium', args: [FORCE_DGPU, '--enable-unsafe-webgpu'] },
+  { headless: false, args: [FORCE_DGPU] },
+  { headless: true, args: [FORCE_DGPU, '--enable-unsafe-webgpu'] },
 ];
 
 /**
