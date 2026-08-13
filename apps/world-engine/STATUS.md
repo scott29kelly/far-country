@@ -138,6 +138,48 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-12) VENDORED CC0 HAIR — Scott's hair verdict executed: the
+MakeHuman system hair meshes replace the procedural shells at LOD0.** The
+shells' short/receding read is gone; six distinct real hairstyles now span
+the archetypes (short01/short04/long01/short02/bob01/short03, honoring
+each archetype's hairStyle class), ramp-colored with the existing
+per-figure hair palette and grayBias.
+
+- **Source + provenance:** the MakeHuman SYSTEM hair styles from the
+  project's own CC0 asset pack (`makehuman_system_assets_cc0.zip`,
+  files2.makehumancommunity.org — the surviving canonical channel now the
+  GitHub assets repo is gone; every mhclo carries the explicit Sept-2020
+  CC0 release header). The six styles' obj+mhclo+mhmat sources are
+  vendored at `pipeline/figures/vendor/hair/` (2.1 MB, committed) with
+  per-file sha256 in the module provenance. Artist-authored meshes, no
+  scan data — the ADR 0020 anonymity test.
+- **Fit (two-stage, the honest lesson):** the raw OBJs sit wherever the
+  artist left them (short01's sculpt floats a decimetre above the crown;
+  long01's below it) — the mhclo per-vertex binding is the authoritative
+  fit. Stage 1 seats each hair on the DEFAULT 19,158-vert base.obj via
+  its mhclo (weighted triples + reference-scaled offsets; base.obj ships
+  inside the anny package, so this is offline). Stage 2 is an affine
+  default-head-box -> archetype-head-box map (crowns aligned, centers
+  aligned), landing in the same part-local space as the head — the engine
+  places hair with the head's own offset and it rides the head-idle
+  rotation band. Frame: asset space is Y-up face +Z (nose-vertex check) —
+  a 180-degree Y rotation into the engine.
+- **Budget:** each hair decimates to <= 800 tris (probe-crowd E2 ceiling;
+  worst LOD0 figure stays under tris0Max 6500, C1 under the 2.2 M
+  budget). LOD1 keeps the procedural shell; the 30 m dither handoff shows
+  no visible pop (?shot=11). Hair UVs are a 0.5 filler — the crowd
+  material colors hair by ramp, never by texture.
+- **Hardware review** (`shots/wip/hair1/`): ?shot=10 near figures wear
+  real haircuts (crown coverage, nape hairlines); long01 drapes over the
+  robe's shoulders without visible clipping at walking range; 24 fps
+  held. Full battery ALL PASS; tsc clean; bundle 2.19 MB (gzip 1.02 MB).
+- **Spotty-internet note:** the 267 MB pack download corrupted once —
+  TWO background resume loops appended to the same file concurrently
+  (302 MB > content-length, no central directory). Lesson recorded: one
+  writer per file; gate on exact content-length + `unzip -t` before use.
+  The zip stays in the gitignored cache; only the used sources are
+  committed.
+
 **(2026-08-10, later) WORSHIP-IDLE HEAD ARTICULATION — the animation track's
 first increment, procedural by Scott's call (no downloads).** The crowd's
 heads now carry slow reverent gaze drift (yaw, ±0.07 rad over ~18 s) and
