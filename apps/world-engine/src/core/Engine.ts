@@ -79,12 +79,25 @@ export class Engine {
     const renderer = new WebGPURenderer({
       antialias: false,
       trackTimestamp: true,
+      // dual-GPU laptops: without this the renderer's OWN adapter request
+      // (separate from the Diagnostics probe, which already asks) defaults to
+      // the power-saving iGPU — every GPU-bound boot bake then runs on the
+      // slow chip. Keep probe and renderer asking for the same thing.
+      powerPreference: 'high-performance',
       requiredLimits: hooks.diag ? buildRequiredLimits(hooks.diag) : {},
     });
     await renderer.init();
     // fail-loud: surface WebGPU validation errors (otherwise: silent black frames)
     const device = (renderer.backend as unknown as { device?: GPUDevice }).device;
     if (device) {
+      // log the adapter the RENDERER actually got — it requests its own,
+      // separate from the Diagnostics probe, and on dual-GPU laptops the two
+      // can disagree; this line is the ground truth for "which chip runs us"
+      const info = (device as GPUDevice & { adapterInfo?: GPUAdapterInfo }).adapterInfo;
+      if (info) {
+        // eslint-disable-next-line no-console
+        console.log(`[laas] renderer adapter: ${info.vendor} / ${info.architecture}`);
+      }
       let reported = 0;
       device.onuncapturederror = (e: GPUUncapturedErrorEvent): void => {
         if (reported++ < 8) {

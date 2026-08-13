@@ -95,9 +95,31 @@ async function boot(): Promise<void> {
     params,
     seed,
     hooks,
-    progress: (p, msg) => bootUI.set(0.1 + p * 0.85, msg),
+    // stage timing: attribute wall time to the stage that just FINISHED when
+    // the next one begins (counter-bearing messages like "eroding 5/100"
+    // collapse to one stage via the digit-normalized key)
+    progress: (() => {
+      let lastAt = performance.now();
+      let lastKey = '';
+      let lastMsg = 'scene build start';
+      return (p: number, msg: string) => {
+        const key = msg.replace(/[\d/²]+/g, '#');
+        if (key !== lastKey) {
+          const now = performance.now();
+          // eslint-disable-next-line no-console
+          console.log(`[laas] boot +${((now - lastAt) / 1000).toFixed(2)}s  ${lastMsg}`);
+          lastAt = now;
+          lastKey = key;
+          lastMsg = msg;
+        }
+        bootUI.set(0.1 + p * 0.85, msg);
+      };
+    })(),
   };
+  const buildT0 = performance.now();
   await buildScene(params.scene, ctx);
+  // eslint-disable-next-line no-console
+  console.log(`[laas] scene build total ${((performance.now() - buildT0) / 1000).toFixed(2)}s`);
 
   // terrain probe first — walk mode + fly soft-collision depend on it
   if (hooks.groundProbe) fly.groundProbe = hooks.groundProbe;
