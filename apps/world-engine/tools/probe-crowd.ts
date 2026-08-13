@@ -314,6 +314,7 @@ const { FIGURES_VENDORED } = await import('../src/nj/figuresVendored.gen');
       ['eyes', f.eyes, 400],
       ['handL', f.handL, 240],
       ['handR', f.handR, 240],
+      ['hair', f.hair, 800],
     ] as const;
     for (const [label, part, ceil] of parts) {
       const pos = decode(part.pos);
@@ -394,7 +395,12 @@ const { FIGURES_VENDORED } = await import('../src/nj/figuresVendored.gen');
       const u = auv.getX(i);
       if (u >= 0) real++;
     }
-    const want = f.head.vertCount + f.eyes.vertCount + f.handL.vertCount + f.handR.vertCount;
+    const want =
+      f.head.vertCount +
+      f.eyes.vertCount +
+      f.handL.vertCount +
+      f.handR.vertCount +
+      f.hair.vertCount;
     if (real !== want) {
       ok = false;
       detail = `${FIGURE_ARCHETYPES[v].name}: ${real} textured verts, want ${want}`;

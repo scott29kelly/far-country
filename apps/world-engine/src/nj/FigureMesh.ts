@@ -462,7 +462,13 @@ export function buildFigureGeometry(a: FigureArchetype, lod: 0 | 1): BufferGeome
     const off = new Vector3(0, H * 0.995 - hb[4], czTop);
     acc.part(decodePart(vf.head), REGION.skin, null, off);
     acc.part(decodePart(vf.eyes), REGION.eye, null, off);
-    if (spec.hairShell) {
+    if (vf.hair && spec.hairShell) {
+      // vendored CC0 system hair (Scott's verdict 2026-08-12): fitted
+      // offline to this head's bounds in the same part-local space, so it
+      // shares the head's offset — and rides the head-idle rotation band.
+      // Ramp-colored via REGION.hair; the shell remains LOD1's hair.
+      acc.part(decodePart(vf.hair), REGION.hair, null, off);
+    } else if (spec.hairShell) {
       // hair shell fitted to the vendored head's real bounds. The Anny
       // head bbox includes chin and jaw, so the shell centers ABOVE the
       // bbox centre (crown-focused) with a smaller face window — the old
