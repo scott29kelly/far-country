@@ -358,6 +358,208 @@ def build_skin_atlas(head_uvs: np.ndarray) -> dict:
     }
 
 
+# ---- hair (Scott's verdict 2026-08-12: vendored CC0 meshes over shells) --------
+# Source: the MakeHuman SYSTEM hair styles, from the project's own CC0 asset
+# pack (the GitHub assets repo is gone — the pack zip is the surviving
+# canonical channel). Chosen styles are vendored under vendor/hair/ as
+# committed CC0 data, one per archetype, honoring the archetype's hairStyle
+# class (0 short cap / 1 shoulder-length / 2 cropped) with visible variety
+# across the six.
+HAIR_PACK_URL = (
+    "https://files2.makehumancommunity.org/asset_packs/makehuman_system_assets/"
+    "makehuman_system_assets_cc0.zip"
+)
+HAIR_PACK_ZIP = ROOT / ".cache" / "makehuman_system_assets_cc0.zip"
+VENDOR_HAIR = ROOT / "vendor" / "hair"
+HAIR_TRIS = 800
+# archetype name -> system hair style (class in parentheses, from
+# figureModel.FIGURE_ARCHETYPES.hairStyle)
+HAIR_FOR = {
+    "adult-tall": "short01",  # (0) short cap
+    "adult-broad": "short04",  # (0) short cap
+    "adult-slender": "long01",  # (1) shoulder-length
+    "elder": "short02",  # (2) cropped
+    "youth": "bob01",  # (1) shoulder-length bob
+    "child": "short03",  # (0) short cap
+}
+# the hair OBJs are authored around the base mesh's head in MakeHuman's
+# asset frame: Y-up decimetres, face +Z (nose-vertex check 2026-08-12:
+# midline head-band vertex (0, 6.91, 1.68)) -> engine face -Z is a 180-deg
+# rotation about Y: (x, y, z) -> (-x, y, -z). Winding preserved.
+HAIR_AXIS = np.array([[-1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, -1.0]])
+# neck cut for the SOURCE head box in base.obj decimetres (head top 8.5):
+# matches the anny 'head' segmentation's anatomical range closely enough
+# for an affine hair fit (validated by the fit report at generation time)
+OBJ_NECK_Y = 6.3
+
+
+def parse_obj(path: Path) -> tuple[np.ndarray, np.ndarray]:
+    """OBJ vertices + triangles (polygon fan triangulation, winding kept)."""
+    vs: list[list[float]] = []
+    tris: list[list[int]] = []
+    with open(path) as f:
+        for line in f:
+            if line.startswith("v "):
+                vs.append([float(x) for x in line.split()[1:4]])
+            elif line.startswith("f "):
+                ids = [int(tok.split("/")[0]) - 1 for tok in line.split()[1:]]
+                for k in range(1, len(ids) - 1):
+                    tris.append([ids[0], ids[k], ids[k + 1]])
+    return np.array(vs), np.array(tris, dtype=np.int64)
+
+
+def vendored_hair_files(style: str) -> tuple[Path, list[dict]]:
+    """Ensure vendor/hair/<style>/ holds the style's mhclo+obj (+license),
+    extracting from the cached CC0 pack zip on first use. Returns the obj
+    path and per-file provenance (path + sha256)."""
+    import zipfile
+
+    dest = VENDOR_HAIR / style
+    if not dest.exists() or not any(dest.glob("*.obj")):
+        if not HAIR_PACK_ZIP.exists():
+            raise RuntimeError(
+                f"vendor/hair/{style} missing and the pack zip is not cached; "
+                f"download {HAIR_PACK_URL} to {HAIR_PACK_ZIP}"
+            )
+        dest.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(HAIR_PACK_ZIP) as z:
+            members = [
+                n
+                for n in z.namelist()
+                if f"/{style}/" in f"/{n}"
+                and n.lower().endswith((".mhclo", ".obj", ".mhmat", ".txt", ".license"))
+                and "hair" in n.lower()
+                and not n.endswith("/")
+            ]
+            if not members:
+                raise RuntimeError(f"style {style} not found in the pack zip")
+            for m in members:
+                (dest / Path(m).name).write_bytes(z.read(m))
+    if len(sorted(dest.glob("*.obj"))) != 1 or len(sorted(dest.glob("*.mhclo"))) != 1:
+        raise RuntimeError(f"expected exactly one obj + one mhclo in {dest}")
+    prov = [
+        {
+            "path": f"vendor/hair/{style}/{p.name}",
+            "sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
+        }
+        for p in sorted(dest.iterdir())
+        if p.is_file()
+    ]
+    return dest, prov
+
+
+def base_mesh_raw() -> np.ndarray:
+    """All 19,158 base.obj vertices, RAW MakeHuman asset frame — the mesh
+    every mhclo binding indexes into."""
+    base_dir = Path(anny.__file__).parent / "data" / "mpfb2"
+    vs: list[list[float]] = []
+    with open(base_dir / "3dobjs" / "base.obj") as f:
+        for line in f:
+            if line.startswith("v "):
+                vs.append([float(x) for x in line.split()[1:4]])
+    return np.array(vs)
+
+
+def base_head_box(base_raw: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """The DEFAULT head box (engine-oriented axes) — the SOURCE side of the
+    per-archetype affine hair fit."""
+    base_dir = Path(anny.__file__).parent / "data" / "mpfb2"
+    V = base_raw @ HAIR_AXIS.T
+    groups = json.loads((base_dir / "mesh_metadata" / "basemesh_vertex_groups.json").read_text())
+
+    def flat(g: list) -> list[int]:
+        out: list[int] = []
+        for e in g:
+            if isinstance(e, list):
+                out.extend(range(e[0], e[1] + 1))
+            else:
+                out.append(e)
+        return out
+
+    body = V[flat(groups["body"])]
+    head = body[body[:, 1] >= OBJ_NECK_Y]
+    return head.min(axis=0), head.max(axis=0)
+
+
+def mhclo_fit(mhclo: Path, base_raw: np.ndarray) -> np.ndarray:
+    """Seat a hair mesh on the DEFAULT base mesh via its mhclo binding —
+    the authoritative fit (the raw OBJs sit wherever the artist left them:
+    short01's sculpt floats a decimetre above the crown, long01's below it).
+
+    Each clothes vertex is either an exact base-vertex bind (one index) or
+    a weighted triple with an offset; offsets scale by the x/y/z reference
+    factors ([i1, i2, recorded distance] header lines — ~1.0 on the default
+    mesh the distances were recorded on). Frame: raw MakeHuman asset space,
+    same as base.obj."""
+    verts: list[np.ndarray] = []
+    scales = np.ones(3)
+    axis_of = {"x_scale": 0, "y_scale": 1, "z_scale": 2}
+    in_verts = False
+    with open(mhclo) as f:
+        for line in f:
+            tok = line.split()
+            if not tok or tok[0].startswith("#"):
+                continue
+            if tok[0] in axis_of and len(tok) == 4:
+                a = axis_of[tok[0]]
+                i1, i2, dist = int(tok[1]), int(tok[2]), float(tok[3])
+                scales[a] = abs(base_raw[i1, a] - base_raw[i2, a]) / dist
+                continue
+            if tok[0] == "verts":
+                in_verts = True
+                continue
+            if tok[0] == "delete_verts":
+                break
+            if not in_verts:
+                continue
+            try:  # keyword lines (e.g. "material x.mhmat") may follow "verts"
+                float(tok[0])
+            except ValueError:
+                continue
+            if len(tok) == 1:
+                verts.append(base_raw[int(tok[0])].copy())
+            elif len(tok) >= 9:
+                i = [int(t) for t in tok[0:3]]
+                w = np.array([float(t) for t in tok[3:6]])
+                off = np.array([float(t) for t in tok[6:9]])
+                verts.append(w @ base_raw[i] + off * scales)
+            else:
+                raise RuntimeError(f"unrecognized mhclo vertex line: {line.strip()}")
+    return np.array(verts)
+
+
+def fit_hair(
+    hair_dir: Path,
+    base_raw: np.ndarray,
+    src_box: tuple[np.ndarray, np.ndarray],
+    head_lo: np.ndarray,
+    head_hi: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Two-stage hair fit onto one archetype's head (part-local metres):
+    (1) mhclo-seat the hair on the default base mesh — exact; (2) affine
+    default-head-box -> this head's bbox, x/z centers aligned, crowns (y
+    tops) aligned. A few mm of anatomical slack in stage 2 is fine for
+    hair — far tighter than the shell it replaces."""
+    obj = next(iter(sorted(hair_dir.glob("*.obj"))))
+    mhclo = next(iter(sorted(hair_dir.glob("*.mhclo"))))
+    obj_v, ht = parse_obj(obj)
+    hv = mhclo_fit(mhclo, base_raw)
+    if hv.shape[0] != obj_v.shape[0]:
+        raise RuntimeError(
+            f"{mhclo.name}: {hv.shape[0]} bound verts vs {obj_v.shape[0]} obj verts"
+        )
+    hv = hv @ HAIR_AXIS.T
+    lo, hi = src_box
+    scale = (head_hi - head_lo) / (hi - lo)
+    out = np.empty_like(hv)
+    for a in range(3):
+        if a == 1:  # crowns align
+            out[:, a] = head_hi[a] - (hi[a] - hv[:, a]) * scale[a]
+        else:  # centers align
+            out[:, a] = (hv[:, a] - (lo[a] + hi[a]) / 2) * scale[a] + (head_lo[a] + head_hi[a]) / 2
+    return out, ht
+
+
 def main() -> None:
     arch_file = json.loads((ROOT / "archetypes.gen.json").read_text())
     archetypes = arch_file["archetypes"]
@@ -391,6 +593,9 @@ def main() -> None:
 
     figures = []
     skin_atlas: dict | None = None
+    base_raw = base_mesh_raw()
+    hair_src_box = base_head_box(base_raw)
+    hair_sources: dict[str, list[dict]] = {}
     for arch in archetypes:
         ph = phenotypes_for(arch)
         ph_kwargs = {k: torch.tensor([v], dtype=torch.float64) for k, v in ph.items()}
@@ -448,6 +653,17 @@ def main() -> None:
             # construction.
             skin_atlas = build_skin_atlas(head_c_uv)
 
+        # vendored hair: fit the archetype's system style onto THIS head's
+        # part-local bounds (same space the head part ships in, so the
+        # engine places hair with the head's own offset)
+        style = HAIR_FOR[arch["name"]]
+        hair_dir, hair_prov = vendored_hair_files(style)
+        hair_sources[style] = hair_prov
+        head_lo = (head_c_v.min(axis=0) - head_center) * s
+        head_hi = (head_c_v.max(axis=0) - head_center) * s
+        hv, ht = fit_hair(hair_dir, base_raw, hair_src_box, head_lo, head_hi)
+        hv, huv, ht = decimate(hv, np.full((hv.shape[0], 2), 0.5), ht, HAIR_TRIS)
+
         fig = {
             "name": arch["name"],
             "phenotypes": {k: round(float(v), 4) for k, v in ph.items()},
@@ -457,6 +673,8 @@ def main() -> None:
             "eyes": part(eye_mask, 10_000, head_center),  # tiny; never decimated
             "handL": part(handl_mask, HAND_TRIS, wrist_l),
             "handR": part(handr_mask, HAND_TRIS, wrist_r),
+            "hair": pack_part(hv, huv, ht),
+            "hairStyle": style,
             "forearmAxisL": [round(float(x), 5) for x in fore_l],
             "forearmAxisR": [round(float(x), 5) for x in fore_r],
         }
@@ -464,7 +682,9 @@ def main() -> None:
         print(
             f"[{arch['name']}] body {body_h:.3f} m (x{s:.3f}) "
             f"head {fig['head']['triCount']} tris, eyes {fig['eyes']['triCount']}, "
-            f"hands {fig['handL']['triCount']}/{fig['handR']['triCount']}"
+            f"hands {fig['handL']['triCount']}/{fig['handR']['triCount']}, "
+            f"hair {style} {fig['hair']['triCount']} tris "
+            f"(fit y {hv[:, 1].min():+.3f}..{hv[:, 1].max():+.3f} vs head {head_lo[1]:+.3f}..{head_hi[1]:+.3f})"
         )
 
     provenance = {
@@ -490,6 +710,15 @@ def main() -> None:
         ),
         "frame": "engine Y-up, figure faces -Z (converted from MakeHuman Z-up/-Y)",
         "uvNote": "per-vertex UVs (MakeHuman hm08 layout, v=0 at bottom); seams split before decimation",
+        "hairSource": (
+            "MakeHuman system hair (CC0 asset pack, files2.makehumancommunity.org "
+            "asset_packs/makehuman_system_assets) — artist-authored, no scan data; "
+            "sources vendored at pipeline/figures/vendor/hair/ (Scott's verdict "
+            "2026-08-12: vendored meshes replace the procedural shells at LOD0); "
+            "affine head fit, decimated to <= 800 tris; hair UVs are a 0.5 filler "
+            "(the crowd material colors hair by ramp, never by texture)"
+        ),
+        "hairFiles": json.dumps(hair_sources, sort_keys=True),
     }
 
     parts_ts = json.dumps(
@@ -545,6 +774,10 @@ def main() -> None:
         "  eyes: VendoredPart;\n"
         "  handL: VendoredPart;\n"
         "  handR: VendoredPart;\n"
+        "  /** fitted CC0 system hair (part-local like head; ramp-colored,\n"
+        "   *  uv is a 0.5 filler) */\n"
+        "  hair: VendoredPart;\n"
+        "  hairStyle: string;\n"
         "  forearmAxisL: [number, number, number];\n"
         "  forearmAxisR: [number, number, number];\n"
         "}\n\n"
