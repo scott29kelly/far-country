@@ -75,8 +75,9 @@ function hostMaterial(layer: 'core' | 'halo'): MeshStandardNodeMaterial {
 
 export interface PopulationBuild {
   group: Group;
-  /** per-frame crowd compute (cull + indirect); hosts are shader-time only */
-  update(renderer: Renderer, camera: PerspectiveCamera): void;
+  /** per-frame crowd compute (cull + indirect); hosts are shader-time only.
+   *  worldTime (engine freezable clock) drives the crowd worship cycles. */
+  update(renderer: Renderer, camera: PerspectiveCamera, worldTime: number): void;
   /** HUD stats from the crowd's throttled counter readback */
   counterSnapshot(): Record<string, number>;
 }
@@ -126,7 +127,7 @@ export async function buildPopulation(opts: {
 
   return {
     group,
-    update: (r, camera) => crowd.update(r, camera),
+    update: (r, camera, worldTime) => crowd.update(r, camera, worldTime),
     counterSnapshot: () => crowd.counterSnapshot(),
   };
 }

@@ -169,6 +169,125 @@ export const HEAD_IDLE = {
   xOuter: 0.16,
 } as const;
 
+/**
+ * Worship motion cycles (M4.4 increment 1, Scott's scope call 2026-08-13):
+ * whole-crowd reverent posture cycles — bow (torso pitch at the waist),
+ * kneel (the body lowers, the floor-length robe compresses and pools; no
+ * legs are modeled or needed), and a slight extra lift of the raised frond
+ * arm. Same architecture as HEAD_IDLE: authored channel CURVES sampled in
+ * the vertex shader with zero CPU per-instance work — the full
+ * skeleton-bake machinery stays reserved for pilgrimage locomotion.
+ *
+ * The curve below is ONE closed cycle (channels start and end at 0);
+ * per-figure slot hashes choose mode (stand / bow / kneel), phase and
+ * period, so the assembly reads as thousands of individuals in unhurried
+ * worship, never a drill team. Amplitude fades to zero approaching the
+ * impostor ring (the far captures are standing figures — the fade is what
+ * keeps the 160 m handoff pop-free). Driven by the engine's freezable
+ * world-time clock, so ?freeze=1 stills are pose-deterministic.
+ */
+export const WORSHIP = {
+  /** cycle period bounds, seconds — per-slot jitter picks within */
+  periodMin: 36,
+  periodMax: 64,
+  /** mode shares (cumulative thresholds on a slot hash): kneelers, bowers,
+   *  the rest remain standing (their channels stay zero) */
+  modeKneel: 0.34,
+  modeBow: 0.32,
+  /** channel ceilings */
+  bowAmp: 0.3, // rad — torso pitch, a deliberate bow, not a collapse
+  kneelDrop: 0.26, // ×height — vertical drop of the upper body at full kneel
+  kneelFlare: 0.14, // robe radial flare toward the hem as it pools
+  armAmp: 0.07, // rad — extra lift of the raised (frond) arm
+  /** kneel compression line (×height): below compresses, above translates */
+  hipT: 0.48,
+  /** bow blend band (×height): weight 0 below lo, 1 above hi; band sits
+   *  ABOVE the kneel line so the two deforms compose cleanly */
+  bowLo: 0.5,
+  bowHi: 0.64,
+  bowPivotY: 0.54,
+  /** raised-arm |x| mask (×height): 0 inside (torso), 1 beyond (arm+frond);
+   *  outer stays under the wrist (~0.22·H) so the grip itself translates */
+  armXIn: 0.14,
+  armXOut: 0.19,
+  /** worship amplitude fades over this camera-distance band (metres),
+   *  reaching 0 before the static impostor ring at CROWD_LOD.r1Far */
+  distFadeLo: 115,
+  distFadeHi: 150,
+  /** curve table resolution (samples per cycle, shared with the shader) */
+  samples: 64,
+} as const;
+
+/** one authored worship cycle — per-channel keyframes over t ∈ [0,1],
+ *  smoothstep-interpolated; a closed loop (0 at both ends) */
+const WORSHIP_KEYS = {
+  bow: [
+    [0, 0],
+    [0.14, 0],
+    [0.24, 1],
+    [0.3, 1],
+    [0.4, 0.35],
+    [0.7, 0.35],
+    [0.8, 0.15],
+    [0.9, 0],
+    [1, 0],
+  ],
+  kneel: [
+    [0, 0],
+    [0.26, 0],
+    [0.4, 1],
+    [0.72, 1],
+    [0.84, 0],
+    [1, 0],
+  ],
+  arm: [
+    [0, 0],
+    [0.2, 0],
+    [0.35, 1],
+    [0.55, 0.4],
+    [0.7, 1],
+    [0.88, 0],
+    [1, 0],
+  ],
+} as const;
+
+/** smoothstep-interpolated piecewise profile (the FigureMesh profileAt
+ *  idiom — trivial duplication, shared-table style) */
+function keysAt(pts: readonly (readonly [number, number])[], t: number): number {
+  if (t <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++) {
+    if (t <= pts[i][0]) {
+      const [t0, v0] = pts[i - 1];
+      const [t1, v1] = pts[i];
+      const f = (t - t0) / (t1 - t0);
+      const s = f * f * (3 - 2 * f);
+      return v0 + (v1 - v0) * s;
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+
+/** worship channels at cycle position t01 — CPU mirror of the shader's
+ *  baked-table lookup (probe-testable) */
+export function worshipAt(t01: number): { bow: number; kneel: number; arm: number } {
+  const t = Math.min(Math.max(t01, 0), 1);
+  return {
+    bow: keysAt(WORSHIP_KEYS.bow, t),
+    kneel: keysAt(WORSHIP_KEYS.kneel, t),
+    arm: keysAt(WORSHIP_KEYS.arm, t),
+  };
+}
+
+/** the baked curve table the crowd material uploads (vec3 per sample) */
+export function worshipCurveSamples(): [number, number, number][] {
+  const out: [number, number, number][] = [];
+  for (let i = 0; i < WORSHIP.samples; i++) {
+    const c = worshipAt(i / (WORSHIP.samples - 1));
+    out.push([c.bow, c.kneel, c.arm]);
+  }
+  return out;
+}
+
 /** robe albedo at warm01 extremes: white pulled toward warm ivory —
  *  the pre-ADR-0019 warm-tone variation, kept */
 export function robeAlbedo(warm01: number): [number, number, number] {
@@ -304,8 +423,52 @@ export function figureModelInvariants(): { ok: boolean; detail: string } {
   if (!idleOk) {
     return { ok: false, detail: 'HEAD_IDLE constants out of reverent bounds' };
   }
+  const w = WORSHIP;
+  const worshipOk =
+    w.periodMin >= 20 && // unhurried — a cycle is a devotion, not a rep
+    w.periodMax > w.periodMin &&
+    w.periodMax <= 120 &&
+    w.modeKneel > 0 &&
+    w.modeBow > 0 &&
+    w.modeKneel + w.modeBow < 1 && // a standing share always remains
+    w.bowAmp > 0 &&
+    w.bowAmp <= 0.45 && // a bow, never a collapse
+    w.kneelDrop > 0 &&
+    w.kneelDrop < w.hipT && // hem compression stays positive-scale
+    w.kneelFlare >= 0 &&
+    w.kneelFlare <= 0.25 &&
+    w.armAmp > 0 &&
+    w.armAmp <= 0.12 &&
+    w.hipT > 0.3 &&
+    w.bowLo >= w.hipT && // bow band above the kneel line — deforms compose
+    w.bowHi > w.bowLo &&
+    w.bowPivotY > w.hipT &&
+    w.bowPivotY < w.bowHi &&
+    w.armXIn >= 0.12 && // torso (chest ≈ 0.13·H·bw) keeps ~zero weight
+    w.armXOut > w.armXIn &&
+    w.armXOut <= 0.2 && // the wrist/grip (~0.22·H) translates rigidly
+    w.distFadeLo > CROWD_LOD.r0Far && // the near ring worships at full amp
+    w.distFadeHi > w.distFadeLo &&
+    w.distFadeHi <= CROWD_LOD.r1Far - CROWD_LOD.band1 / 2 && // 0 before impostors
+    w.samples >= 16;
+  if (!worshipOk) {
+    return { ok: false, detail: 'WORSHIP constants out of reverent bounds' };
+  }
+  // the authored cycle must CLOSE (channels 0 at both ends) and stay in [0,1]
+  for (const t of [0, 1]) {
+    const c = worshipAt(t);
+    if (Math.abs(c.bow) > 1e-6 || Math.abs(c.kneel) > 1e-6 || Math.abs(c.arm) > 1e-6) {
+      return { ok: false, detail: `worship cycle does not close at t=${t}` };
+    }
+  }
+  for (let i = 0; i < 256; i++) {
+    const c = worshipAt(i / 255);
+    if ([c.bow, c.kneel, c.arm].some((v) => v < 0 || v > 1)) {
+      return { ok: false, detail: `worship channel out of [0,1] at t=${(i / 255).toFixed(3)}` };
+    }
+  }
   return {
     ok: true,
-    detail: `weights 1.0, palettes in gamut, worst emissive ${worst.toFixed(3)}, head idle bounded`,
+    detail: `weights 1.0, palettes in gamut, worst emissive ${worst.toFixed(3)}, head idle bounded, worship cycle closed`,
   };
 }

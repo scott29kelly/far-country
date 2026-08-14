@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-10)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-13)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,49 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-08-13) M4.4 INCREMENT 1 — WORSHIP MOTION CYCLES (Scott's scope
+call): the multitude bows, kneels and lifts the frond arm in slow
+per-figure cycles.** Architecture = the HEAD_IDLE idiom scaled up:
+authored channel CURVES (not a skeleton bake — that stays reserved for
+pilgrimage locomotion), evaluated per-vertex in the crowd vertex shader
+with zero CPU per-instance work and zero new geometry.
+
+- **Model (`figureModel.WORSHIP` + `worshipAt`/`worshipCurveSamples`):**
+  one closed authored cycle (stand → bow → kneel hold → rise), three
+  channels (bow rad, kneel 0-1, arm rad), smoothstep keyframes, sampled
+  to a 64-entry vec3 table. Slot hashes pick mode (34% kneel / 32% bow /
+  34% stand), phase and period (36-64 s) — thousands of individuals, no
+  drill team. All bounds probe-asserted in `figureModelInvariants`
+  (A2: closure, [0,1] range, reverent amplitude caps, band ordering).
+- **Deform (`Crowd.figureMaterial`):** kneel = piecewise-linear y remap
+  (upper body translates down 0.26·H; robe below the 0.48·H hip line
+  compresses toward the planted hem + pools with a 0.14 radial flare);
+  bow = band-blended real sin/cos rotation about the kneel-following
+  waist pivot (angle ramps 0.5-0.64·H so the spine curves, no hinge
+  crease) with matching normal rotation; arm = linearized +Z rotation at
+  the shoulder masked to |x| 0.14-0.19·H (arm + frond move together,
+  wrist untouched by the mask outer). Deforms compose AFTER head-idle,
+  BEFORE width/sway/yaw/lean. Both rings run identical math (30 m
+  handoff clean); worship amplitude fades to 0 over 115-150 m so the
+  static impostor ring never pops a kneeling figure upright at 160 m.
+- **Clock:** a `runiform` crowd-time fed from `Engine.worldTime` via
+  `population.update(..., worldTime)` — the first shader motion on the
+  freezable clock, so `?freeze=1` stills are POSE-deterministic (sway/
+  flutter stay on TSL `time`; `shot-sway-pair.ts` semantics unchanged).
+- **Verified (iGPU — RTX was in Code 43 error state this session):**
+  probe battery ALL PASS (A2 now asserts worship bounds), tsc clean;
+  `shots/wip/worship1/` — freeze still shows scattered kneelers mid-hold
+  (phase spread ⇒ frozen cycle positions), motionA/B (nofreeze, settle
+  40 vs 400) pixel-diff shows whole-figure kneel/rise ghosting + the
+  arm-lift double image on worshipers while standers/statics stay dark.
+  ~21 fps at shot 10 on the iGPU, crowd tris unchanged (no new geometry).
+- **Deliberate simplifications (recorded):** kneel compression and arm
+  lift skip normal correction (cloth at crowd range; bow rotates
+  normals properly). Far-ring impostor stays the standing capture — the
+  distance fade is the honest reconciliation until a kneeling capture
+  variant earns its atlas space. Entity-pick/assembly volumes untouched
+  (figures never leave their footprint; max forward reach ≈ 0.11·H).
 
 **(2026-08-12) VENDORED CC0 HAIR — Scott's hair verdict executed: the
 MakeHuman system hair meshes replace the procedural shells at LOD0.** The

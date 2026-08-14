@@ -255,8 +255,8 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   if (stages.has('population')) {
     const population = await buildPopulation({ gi, plazaTopY, renderer: engine.renderer });
     engine.scene.add(population.group);
-    engine.onUpdate(() => {
-      population.update(engine.renderer, engine.camera);
+    engine.onUpdate((_dt, worldTime) => {
+      population.update(engine.renderer, engine.camera, worldTime);
       Object.assign(engine.stats.counters, population.counterSnapshot());
     });
   }

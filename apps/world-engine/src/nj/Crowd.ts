@@ -100,7 +100,9 @@ import {
   HAIR_RAMP,
   HEAD_IDLE,
   SKIN_RAMP,
+  WORSHIP,
   figureParams,
+  worshipCurveSamples,
   type FigureArchetype,
 } from './figureModel';
 import { bakeRegionColors, buildFigureGeometry } from './FigureMesh';
@@ -114,10 +116,20 @@ const GROUPS = 2 * V + 1;
 
 export interface CrowdBuild {
   group: Group;
-  /** per-frame compute: frustum uniforms + cull + indirect */
-  update(renderer: Renderer, camera: PerspectiveCamera): void;
+  /** per-frame compute: frustum uniforms + cull + indirect. worldTime is
+   *  the engine's freezable clock — it drives the worship cycles, so
+   *  ?freeze=1 stills are pose-deterministic (unlike the TSL time sway). */
+  update(renderer: Renderer, camera: PerspectiveCamera, worldTime: number): void;
   /** HUD stats (throttled async readback) */
   counterSnapshot(): Record<string, number>;
+}
+
+/** the worship-cycle shader inputs shared by every ring material */
+interface WorshipBind {
+  /** baked channel curve (figureModel.worshipCurveSamples) */
+  curveU: ReturnType<typeof uniformArray>;
+  /** engine worldTime, render-group uniform (freezable, once per frame) */
+  crowdTime: ReturnType<typeof runiform>;
 }
 
 /** figure idle sway — the settled reverent-motion idiom (populationModel
@@ -228,6 +240,7 @@ function figureMaterial(
   fade: RingFade,
   gi: ProbeGI | null,
   skinAtlas: SkinAtlasTex | null,
+  worship: WorshipBind,
 ): MeshStandardNodeMaterial {
   const m = new MeshStandardNodeMaterial();
   m.metalness = 0;
@@ -239,6 +252,7 @@ function figureMaterial(
   const C = bind.bufC.element(slot) as unknown as NV4;
 
   const region = attribute('aregion', 'float') as unknown as NF;
+  const dist = A.xyz.sub(vegViewPos as unknown as NV3).length() as unknown as NF;
 
   // ---- instance transform: scale (uniform + lateral width), yaw, lean ------
   const c = B.x.cos();
@@ -304,23 +318,102 @@ function figureMaterial(
   const iy = positionLocal.y.add(thPitch.mul(rIz.negate()));
   const iz = positionLocal.z.add(thYaw.mul(rIx.negate())).add(thPitch.mul(rIy));
 
-  const lx = ix.mul(lw).add(figureSway(slot).mul(hFac)).add(flutter);
-  const ly = iy.mul(A.w);
-  const lz = iz.mul(lw);
+  // ---- worship motion cycles (figureModel.WORSHIP — M4.4 increment 1) ------
+  // Per-slot mode/phase/period pick a place in the authored closed cycle;
+  // the baked channel curve is sampled with linear filtering; amplitude
+  // fades to 0 across [distFadeLo, distFadeHi] so the static impostor ring
+  // beyond r1Far never pops a kneeling figure upright at the handoff.
+  // Clocked by crowdTime (engine worldTime): ?freeze=1 freezes the pose.
+  const ws = WORSHIP;
+  const H = arch.height;
+  const modeH = slotHash(slot, 71) as unknown as NF;
+  const sKneel = modeH.lessThan(ws.modeKneel).select(float(1), float(0)) as unknown as NF;
+  const sBow = modeH
+    .lessThan(ws.modeKneel + ws.modeBow)
+    .select(float(1), float(0)) as unknown as NF;
+  const period = slotHash(slot, 79)
+    .mul(ws.periodMax - ws.periodMin)
+    .add(ws.periodMin) as unknown as NF;
+  const t01 = (worship.crowdTime as unknown as NF)
+    .div(period)
+    .add(slotHash(slot, 73))
+    .fract() as unknown as NF;
+  const distFade = float(1)
+    .sub(dist.sub(ws.distFadeLo).div(ws.distFadeHi - ws.distFadeLo).clamp(0, 1)) as unknown as NF;
+  const fIdx = t01.mul(ws.samples - 1).clamp(0, ws.samples - 1.001) as unknown as NF;
+  const i0 = fIdx.floor().toInt() as unknown as NI;
+  const cv = mix(
+    worship.curveU.element(i0) as unknown as NV3,
+    worship.curveU.element(i0.add(int(1))) as unknown as NV3,
+    fIdx.fract(),
+  ) as unknown as NV3;
+  const bowTh = cv.x.mul(sBow).mul(distFade).mul(ws.bowAmp) as unknown as NF;
+  const kneel = cv.y.mul(sKneel).mul(distFade) as unknown as NF;
+  const armTh = cv.z.mul(sBow).mul(distFade).mul(ws.armAmp) as unknown as NF;
+
+  // kneel: upper body translates down kneelDrop·H; below the hip line the
+  // robe compresses toward the pavement (hem stays planted) and flares as
+  // the cloth pools. Piecewise-linear in y, continuous at the hip line.
+  const hipY = ws.hipT * H;
+  const ky = iy
+    .lessThan(hipY)
+    .select(iy.mul(float(1).sub(kneel.mul(ws.kneelDrop / ws.hipT))), iy.sub(kneel.mul(ws.kneelDrop * H)));
+  const kFlare = kneel
+    .mul(ws.kneelFlare)
+    .mul(float(1).sub(iy.div(hipY)).clamp(0, 1))
+    .add(1) as unknown as NF;
+  const kx = ix.mul(kFlare);
+  const kz = iz.mul(kFlare);
+
+  // bow: torso pitch about +X at the (kneel-following) waist pivot; the
+  // per-vertex angle ramps across [bowLo, bowHi] so the spine CURVES —
+  // a band-blended rotation, not a hinge crease. Real sin/cos (0.3 rad is
+  // past the small-angle regime the head idle lives in).
+  const pivY = float(ws.bowPivotY * H).sub(kneel.mul(ws.kneelDrop * H)) as unknown as NF;
+  const bowW = iy
+    .sub(ws.bowLo * H)
+    .div((ws.bowHi - ws.bowLo) * H)
+    .clamp(0, 1)
+    .mul(bowTh) as unknown as NF;
+  const cb = bowW.cos() as unknown as NF;
+  const sb = bowW.sin() as unknown as NF;
+  const dy = ky.sub(pivY) as unknown as NF;
+  const dz = kz.sub(czTop) as unknown as NF;
+  const by = pivY.add(dy.mul(cb)).add(dz.mul(sb));
+  const bz = float(czTop).add(dz.mul(cb)).sub(dy.mul(sb));
+
+  // raised-arm lift: linearized rotation about +Z at the shoulder, masked
+  // to |x| beyond the torso (arm + frond move together; the shoulder end
+  // stays anchored so the sleeve bends, not shears)
+  const armW = positionLocal.x
+    .sub(ws.armXIn * H)
+    .div((ws.armXOut - ws.armXIn) * H)
+    .clamp(0, 1)
+    .mul(armTh) as unknown as NF;
+  const shXc = 0.115 * H * arch.buildW + 0.01 * H;
+  const ax = kx.add(armW.mul(positionLocal.y.sub(0.8 * H).negate()));
+  const ay = by.add(armW.mul(positionLocal.x.sub(shXc)));
+
+  const lx = ax.mul(lw).add(figureSway(slot).mul(hFac)).add(flutter);
+  const ly = ay.mul(A.w);
+  const lz = bz.mul(lw);
   const rx = lx.mul(c).add(lz.mul(s));
   const rz = lz.mul(c).sub(lx.mul(s));
   // posture lean as shear (keeps feet planted) — placement tilts, damped
   const px = rx.add(B.y.mul(ly));
   const pz = rz.add(B.z.mul(ly));
   const wpos = vec3(px, ly, pz).add(A.xyz);
-  const dist = A.xyz.sub(vegViewPos as unknown as NV3).length() as unknown as NF;
 
-  // normals rotate with the yaw (the instanceVeg mechanism)
+  // normals: the bow re-tilts the torso band (same per-vertex rotation as
+  // the positions — kneel compression and the tiny arm lift skip normal
+  // correction, cloth at crowd range), then yaw rotates (instanceVeg)
   m.positionNode = Fn(() => {
+    const nby = normalLocal.y.mul(cb).add(normalLocal.z.mul(sb));
+    const nbz = normalLocal.z.mul(cb).sub(normalLocal.y.mul(sb));
     const n = vec3(
-      normalLocal.x.mul(c).add(normalLocal.z.mul(s)),
-      normalLocal.y,
-      normalLocal.z.mul(c).sub(normalLocal.x.mul(s)),
+      normalLocal.x.mul(c).add(nbz.mul(s)),
+      nby,
+      nbz.mul(c).sub(normalLocal.x.mul(s)),
     ).toVar();
     normalLocal.assign(n);
     return wpos;
@@ -408,6 +501,13 @@ export async function buildCrowd(opts: {
   // the ADR 0020 slice-2 skin atlas — one texture shared by every ring
   // material (one material per LOD tier; variety rides per-instance params)
   const skinAtlas = await skinAtlasTexture();
+
+  // worship cycles (M4.4): ONE baked channel-curve table + one freezable
+  // clock, shared by every ring material — the skinAtlas sharing pattern
+  const worship: WorshipBind = {
+    curveU: uniformArray(worshipCurveSamples().map(([b, k, a]) => new Vector3(b, k, a))),
+    crowdTime: runiform(float(0)),
+  };
 
   // ---- instance data (CPU once — the transform set is static) ---------------
   const placements = multitudePlacements();
@@ -520,6 +620,7 @@ export async function buildCrowd(opts: {
         fadeR0,
         gi,
         skinAtlas,
+        worship,
       ),
       2 * v,
       true,
@@ -532,6 +633,7 @@ export async function buildCrowd(opts: {
         fadeR1,
         gi,
         skinAtlas,
+        worship,
       ),
       2 * v + 1,
       true,
@@ -700,7 +802,8 @@ export async function buildCrowd(opts: {
 
   return {
     group,
-    update(r: Renderer, camera: PerspectiveCamera): void {
+    update(r: Renderer, camera: PerspectiveCamera, worldTime: number): void {
+      (worship.crowdTime as unknown as { value: number }).value = worldTime;
       camU.value.copy(camera.position);
       updateVegViewPos(camera);
       projView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
