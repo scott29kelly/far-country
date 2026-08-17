@@ -1352,6 +1352,146 @@ twenty-four elders stay OMITTED per ADR 0011 rule 4.
   multitude on the crown (deliberate — the sea of glass stays clear
   before the throne); nations/pilgrimage dynamism is M4.4, not this pass.
 
+**(2026-07-18, later-5) GAMEPAD NAVIGATION BUILT — browser Gamepad API
+into FlyCamera; Xbox pad primary, Switch pad best-effort.** The camera
+rig now takes a controller (Scott's preference — sticks are friendlier
+than WASD for a non-gamer): new `src/core/GamepadInput.ts` polls
+`navigator.getGamepads()` (the API is poll-only; Chrome exposes a pad
+only after its first button press) and shapes raw state into a per-frame
+snapshot — radial deadzone 0.15, linear move / expo (t²) steer curves,
+analog triggers, rising-edge buttons. FlyCamera stays the ONE movement
+owner: its update() polls the snapshot and feeds the SAME movement/
+steer/mode paths the keyboard and mouse use — no second controller.
+
+- Layout (Chrome "standard" mapping = Xbox/XInput over USB or Bluetooth
+  on Windows 11): left stick move (analog magnitude scales speed, ground
+  and fly), right stick steer at 1.2/0.9 rad/s full deflection —
+  deliberately UNDER the mouse-edge rates, and expo makes small
+  deflections gentler still; RT/LT fly up/down (analog, 0.08 idle
+  threshold); RB/LB the existing ]/[ stepped speeds; Start or Y = the V
+  walk/fly toggle; B = Escape-equivalent (cancels cruise directly, then
+  replays a real Escape keydown/keyup so the EntityHud card and nav
+  panel react without FlyCamera knowing them — replay guarded for Node
+  probes); A = jump. Stick-back cancels cruise (S parity); stick/A/Start
+  count as movement intent and skip a cinematic like the keyboard set.
+  Pads reporting a nonstandard mapping (Switch pads over Bluetooth
+  often do) get the same layout best-effort — sticks on axes 0-3 are
+  near universal — with a one-time console warning; every axis/button
+  read is index-guarded so short arrays can't crash.
+- Exact-placement semantics preserved: the radial deadzone zeroes a pad
+  resting on the desk (setPose/bookmarks/probes hold poses bit-exact
+  with a drifting pad live), and edges are consumed even while input is
+  disabled or a cinematic runs, so a press never fires stale after the
+  arrival hands control back. NavigationState gains a `gamepad` flag;
+  NavigationUI's mode pill shows "… | PAD | N NAV" while a pad is
+  exposed and the N panel help gains a pad legend.
+- VERIFIED: new `tools/probe-gamepad.ts` (CPU, walkfling idiom — REAL
+  FlyCamera + REAL GamepadInput, injected fake Gamepad; probes may
+  inject `flyCamera.gamepad.source`) 28/28 — deadzone placement, expo
+  ratio, analog fly/walk pace ratios, trigger threshold, edge-only
+  speed steps, Start/Y toggle + ground snap, B/stick-back cruise
+  cancel, A jump, disabled stale-edge discipline, cinematic skip,
+  nonstandard fallback, gamepad flag lifecycle. LIVE-VERIFIED too:
+  `tools/probe-gamepad-live.ts` (real Chromium/WebGPU boot, navigator.
+  getGamepads overridden pre-boot by a page-controlled fake — proves the
+  production seam: default source, rAF loop, PAD pill) 6/6 — pill
+  appears/clears with pad exposure, stick flew 21.4 m/s-worth, steer
+  measured 1.21 rad/s live, RB stepped 24→60; takes `--port` so worktree
+  sessions never probe another checkout's :5173. Full battery:
+  navigation 11/11, walkfling 8/8, wallcollide 19/19, cityfloors 11/11,
+  arrival 11/11, tsc clean, vite build clean. Engine re-vendored into
+  apps/web/public/laas. Real-hardware feel pass still owed (Scott-only;
+  steer rates and curves are the first knobs if it feels off —
+  PAD_YAW_RATE/PAD_PITCH_RATE in FlyCamera, curves in GamepadInput).
+
+**(2026-07-22) FIRST REAL-PAD SESSION — GameSir works (X360 mode over
+USB-C after a factory reset); UX triage pass landed.** The controller
+saga's root cause: out of the box the pad talked through its 2.4G
+dongle's keyboard/media endpoints (stick moved the Windows cursor, the
+X360 endpoint enumerated but stayed MUTE — proven by a PowerShell
+XInputGetState listener + a PnP-diff recorder; the dongle composite is
+VID_3537 PID_1098, the wired pad PID_100F/PID_2106 depending on mode).
+A paperclip reset + wired USB-C brought it up as "Xbox 360 Controller
+for Windows (STANDARD GAMEPAD)" — Chrome standard mapping, everything
+binds as designed. Scott's first-session feedback then drove fixes:
+(1) pad input now claims steering for 1.5 s past last use — mouse-steer
+no longer drags the view toward a parked cursor mid-stick (probe P1/P2,
+real mousemove-handler shim); (2) a controller guide overlay auto-shows
+on first pad activation, View button (b8, new `help` edge — probe Q)
+toggles it, Escape/click closes (live L11/L12); (3) ?padtest=1 gains a
+close button; (4) launchWebGPU takes a probeBase so live probes work
+against non-:5173 dev servers. Batteries: probe-gamepad 31/31,
+probe-gamepad-live 12/12, navigation/walkfling/wallcollide/cityfloors/
+arrival all PASS, tsc + build clean, re-vendored. Field notes: his
+laptop iGPU runs the NJ scene ~6 fps — `?preset=low` is the mitigation;
+a wheel-drained fly speed (1 m/s) masqueraded as "buttons do nothing"
+(RB/] recovers); worktree dev servers need apps/web/public/data copied
+in (untracked files — the entity card 404s without them). Follow-up
+(same day, Scott-reported + self-diagnosed): with the cursor parked at
+the BOTTOM of the canvas, fly-mode pitch kept dragging to the ground —
+presence-based mouse-steer is the designed mouse-only feel but is
+hostile with a pad in hand. Rule now: with a pad CONNECTED the mouse
+steers only while MOVING (500 ms motion window, MOUSE_ACTIVE_HOLD_MS);
+without a pad the classic parked-cursor ease is untouched. Probes:
+P1-P4 (pad-active suppression / parked-never-steers / moving-mouse
+reclaims / no-pad classic intact) — probe-gamepad 33/33; live 12/12;
+probe-mousesteer (real browser, no pad) ALL PASS incl. the bottom-edge
+pitch case, now takes --port like the other live probes. Round 2 (same
+night, Scott's design): D-pad is now the legible control — UP=fly,
+DOWN=walk, RIGHT/LEFT=speed steps (edges; probes R1-R4 + live L13/L14);
+the controls overlay STAYS until dismissed (auto-hide was too short to
+learn from) with rewritten copy putting the D-pad first. And the
+underground-jitter bug he hit pressing A: ROOT-CAUSED as the
+landing-dip camera spring — one Euler step per frame has eigenvalue
+-1.75 at the engine's 0.1 s dt cap (sign-flipping divergence at low
+fps; his iGPU runs 6-12 fps). The spring now integrates at a fixed
+1/120 s substep — probe S1/S2 jump at dt=0.1: composed camera dips
+6 cm (the designed thump) and settles, pre-fix it dove metres under.
+probe-gamepad 39/39; live 14/14 (L3 threshold loosened with a comment:
+fly distance integrates SIM time under the dt cap, so GPU contention
+shrinks wall-clock distance — it is a does-it-move check, not a speed
+benchmark). Remaining subjective: steer-rate feel verdict, overlay
+copy tuning.
+
+**(2026-07-20) GAMEPAD DIAGNOSTIC `?padtest=1` — hardware is now
+self-identifying instead of guessed.** Scott's pad is a **GameSir Nova 2
+Lite** (not the Xbox pad the build targeted). Physical layout is
+Xbox-style (A bottom / B right / X left / Y top), so the existing
+bindings are right IF Windows exposes it as XInput. The risk is
+transport-dependent, not layout-dependent: GameSir's own Windows doc
+ties the LED colour to the CONNECTION METHOD (blue = Bluetooth,
+green = 2.4G receiver), and an xpadneo report (issue #608) has the Nova
+2 Lite arriving over Bluetooth on international firmware as a plain
+generic HID gamepad — which on Windows means DirectInput, i.e. Chrome
+`mapping: ""` with shuffled indices and triggers possibly on AXES.
+Wired USB-C or the bundled 2.4G receiver is the reliable XInput path.
+
+Rather than hand-write a remap from a model name, `src/debug/PadTest.ts`
+(dev-only, `?padtest=1`, dead-code-eliminated from the public bundle —
+VERIFIED by grepping dist for `padtest`/`GAMEPAD DIAGNOSTIC`/`pt-verdict`,
+same contract as EditPanel) reads the truth off the attached hardware:
+Chrome's id/mapping/axes/buttons live, the SHAPED values GamepadInput
+produces beside them (so a stick the deadzone is eating is
+distinguishable from a dead stick), plus a guided CAPTURE that walks
+A/B/Y/Start/LB/RB/LT/RT, records which index each actually lands on —
+detecting axis-triggers by baseline deviation — and emits a JSON remap
+report. It polls its OWN GamepadInput instance: poll() consumes rising
+edges, so sharing FlyCamera's would eat the camera's presses.
+
+Also hardened `GamepadInput.poll()`: it now prefers a `standard`-mapping
+pad over any other connected device, falling back to the first connected
+one. Multi-platform pads and their receivers can expose a second
+generic-HID entry in a LOWER slot than the real XInput device, and slot
+order is not quality order. VERIFIED: probe-gamepad 28/28 (adds O1/O2 —
+standard pad wins over a lower-slot generic sibling; a lone nonstandard
+pad is still driven), probe-gamepad-live 10/10 (adds L7-L10 — panel
+mounts, standard verdict, guided capture records A/B/Y on b0/b1/b3,
+nonstandard mapping flagged not silently accepted). Full battery green;
+panel capture shots/wip/padtest-panel.png. STILL OWED: Scott's real-pad
+run — if capture shows nonstandard indices, the remap table goes into
+GamepadInput behind a mapping check.
+
+
 **(2026-07-18) VIEWPORT-RESIZE "Destroyed texture" RACE ROOT-CAUSED AND
 FIXED — the uncommitted resizeprobe investigation closed.** Resizing the
 browser window with the NJ scene up raised Dawn validation errors

@@ -44,6 +44,10 @@ export class NavigationUI {
   private readonly targetRows: TargetRow[] = [];
   private open = false;
   private acc = 0;
+  /** pad controls overlay — auto-shown once on first pad activation; the
+   *  pad's View button (or Escape/click) toggles it after that */
+  private padHelp: HTMLDivElement | null = null;
+  private padHelpShown = false;
 
   constructor(engine: Engine, fly: FlyCamera, hooks: LaasHooks) {
     this.engine = engine;
@@ -70,7 +74,7 @@ export class NavigationUI {
       '<section><h2>Travel speed</h2><div class="nav-speed"></div></section>',
       '<section><h2>World map</h2><canvas class="nav-map" width="600" height="360" tabindex="0" aria-label="World map. Click to fly above a location."></canvas><p class="nav-map-note">Click anywhere to fly safely above that location.</p></section>',
       '<section><h2>Quick travel</h2><div class="nav-targets"></div></section>',
-      '<div class="nav-help"><strong>Move</strong> WASD · <strong>Look</strong> point mouse · <strong>Boost</strong> Shift · <strong>Jump</strong> Space<br><strong>Fly up/down</strong> Space / Ctrl · <strong>Speed</strong> [ / ] or wheel · <strong>Cruise</strong> C · <strong>Walk/Fly</strong> V<br><strong>Mute</strong> M · <strong>Controls card</strong> H</div>',
+      '<div class="nav-help"><strong>Move</strong> WASD · <strong>Look</strong> point mouse · <strong>Boost</strong> Shift · <strong>Jump</strong> Space<br><strong>Fly up/down</strong> Space / Ctrl · <strong>Speed</strong> [ / ] or wheel · <strong>Cruise</strong> C · <strong>Walk/Fly</strong> V<br><strong>Mute</strong> M · <strong>Controls card</strong> H<br><strong>Pad</strong> sticks move/look · D-pad &#9650; fly &#9660; walk &#9654;&#9664; speed · RT/LT rise/descend · B dismiss · View guide</div>',
     ].join('');
     document.body.appendChild(this.panel);
     const navContext = this.required<HTMLSpanElement>('.nav-context');
@@ -115,7 +119,13 @@ export class NavigationUI {
         this.setOpen(!this.open);
       } else if (event.code === 'Escape' && this.open) {
         this.setOpen(false);
+      } else if (event.code === 'Escape') {
+        this.setPadHelp(false);
       }
+    });
+    // pad View button (FlyCamera dispatches) toggles the controls overlay
+    window.addEventListener('laas-pad-help', () => {
+      this.setPadHelp(this.padHelp === null || this.padHelp.hidden);
     });
 
     this.fly.subscribeNavigation((state) => this.renderState(state));
@@ -143,16 +153,59 @@ export class NavigationUI {
     if (open) this.drawMap();
   }
 
+  /** show/hide the pad controls overlay (lazy-built) */
+  private setPadHelp(show: boolean): void {
+    if (!show) {
+      if (this.padHelp) this.padHelp.hidden = true;
+      return;
+    }
+    if (!this.padHelp) {
+      const el = document.createElement('div');
+      el.id = 'pad-help';
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', 'Controller guide');
+      el.innerHTML = [
+        '<strong>CONTROLLER</strong>',
+        '<div class="ph-grid">',
+        '  <span>Left stick</span><em>move</em>',
+        '  <span>Right stick</span><em>look around</em>',
+        '  <span>D-pad &#9650;</span><em><b>FLY</b></em>',
+        '  <span>D-pad &#9660;</span><em><b>WALK</b></em>',
+        '  <span>D-pad &#9654; / &#9664;</span><em>faster / slower</em>',
+        '  <span>RT / LT</span><em>rise / descend (flying)</em>',
+        '  <span>A</span><em>jump (walking)</em>',
+        '  <span>B</span><em>dismiss info card</em>',
+        '  <span>Y or Start</span><em>also switches walk/fly</em>',
+        '  <span>View</span><em>show / hide this guide</em>',
+        '</div>',
+        '<small>stays open until you close it — click, or press View</small>',
+      ].join('');
+      el.addEventListener('click', () => this.setPadHelp(false));
+      document.body.appendChild(el);
+      this.padHelp = el;
+    }
+    this.padHelp.hidden = false;
+  }
+
   private renderState(state: NavigationState): void {
     this.walkButton.dataset.active = String(state.mode === 'walk');
     this.flyButton.dataset.active = String(state.mode === 'fly');
+    // first pad activation: surface the controls guide — it stays until the
+    // user closes it (View/click/Escape); an auto-hide proved too short to
+    // actually learn the bindings from
+    if (state.gamepad && !this.padHelpShown) {
+      this.padHelpShown = true;
+      this.setPadHelp(true);
+    }
     const speed = state.mode === 'walk'
       ? `${state.walkScale}x  ${(WALK_METERS_PER_SECOND * state.walkScale).toFixed(1)} m/s`
       : `${Math.round(state.flySpeed)} m/s`;
     this.speedValue.textContent = speed;
     this.cruiseButton.textContent = state.cruise ? 'Cruise on' : 'Cruise off';
     this.cruiseButton.dataset.active = String(state.cruise);
-    this.toggle.textContent = `${state.mode.toUpperCase()}  ${state.mode === 'walk' ? `${state.walkScale}x` : `${Math.round(state.flySpeed)} m/s`}  |  N NAV`;
+    // PAD appears once Chrome exposes a controller (first button press)
+    const pad = state.gamepad ? 'PAD  |  ' : '';
+    this.toggle.textContent = `${state.mode.toUpperCase()}  ${state.mode === 'walk' ? `${state.walkScale}x` : `${Math.round(state.flySpeed)} m/s`}  |  ${pad}N NAV`;
   }
 
   private renderPosition(): void {
@@ -314,8 +367,15 @@ export class NavigationUI {
       .nav-distance { flex:none; color:#dbc987; font:10px ui-monospace,Menlo,monospace; }
       .nav-help { margin-top:16px; border-top:1px solid rgba(255,255,255,.09); padding-top:11px; color:#8f948b; font-size:10px; line-height:1.65; }
       .nav-help strong { color:#c8c5b7; font-weight:600; }
+      #pad-help { position:fixed; left:50%; top:14%; transform:translateX(-50%); z-index:1200; width:min(330px,calc(100vw - 24px)); box-sizing:border-box; border:1px solid rgba(226,211,161,.45); border-radius:14px; padding:16px 18px; color:#eee9d7; background:linear-gradient(160deg,rgba(10,15,13,.95),rgba(18,25,20,.93)); box-shadow:0 18px 60px rgba(0,0,0,.5); backdrop-filter:blur(14px); font:13px/1.5 system-ui,sans-serif; cursor:pointer; }
+      #pad-help strong { display:block; margin-bottom:10px; color:#f4efd9; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:.14em; }
+      #pad-help .ph-grid { display:grid; grid-template-columns:auto 1fr; gap:5px 14px; }
+      #pad-help .ph-grid span { color:#dbc987; font:700 11px/1.5 ui-monospace,Menlo,monospace; white-space:nowrap; }
+      #pad-help .ph-grid em { font-style:normal; color:#ddd9c8; }
+      #pad-help .ph-grid em b { color:#fff8dd; }
+      #pad-help small { display:block; margin-top:11px; color:#8f948b; font-size:10px; }
       @media (max-width:600px) { #nav-panel { top:5px; right:5px; width:calc(100vw - 10px); max-height:calc(100vh - 10px); } .nav-toggle { top:7px; right:7px; } }
-      @media (prefers-reduced-motion:reduce) { .nav-toggle, #nav-panel { backdrop-filter:none; } }
+      @media (prefers-reduced-motion:reduce) { .nav-toggle, #nav-panel, #pad-help { backdrop-filter:none; } }
     `;
     document.head.appendChild(style);
   }
