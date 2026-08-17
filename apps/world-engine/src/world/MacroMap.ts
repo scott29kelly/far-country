@@ -110,6 +110,13 @@ export interface MacroParams {
   off: Record<'warp' | 'ridge' | 'hills' | 'karst' | 'detail' | 'hard' | 'far', [number, number]>;
   /** scene-authored plateau (ADR 0015); absent for the wild demo scenes */
   plateau?: PlateauParams;
+  /**
+   * optional SECOND alpine massif (scene-authored — the wild-ring variants):
+   * merged into tAlp as a max, so ridges/hardness/biomes treat both ranges
+   * identically. JS-guarded like `plateau` — scenes that never set it compile
+   * bit-identical kernels.
+   */
+  alp2?: { c: [number, number]; r: number };
 }
 
 function jit(rng: Rng, base: [number, number], amount: number): [number, number] {
@@ -256,7 +263,11 @@ export interface ZoneMasks {
 export function zoneMasks(p: NV2, mp: MacroParams): ZoneMasks {
   const o = mp.off;
   const dAlp = p.sub(vec2(mp.alpC[0], mp.alpC[1])).length();
-  const tAlp = pow(falloff(dAlp, mp.alpR), 1.2);
+  let tAlp = pow(falloff(dAlp, mp.alpR), 1.2);
+  if (mp.alp2) {
+    const d2 = p.sub(vec2(mp.alp2.c[0], mp.alp2.c[1])).length();
+    tAlp = max(tAlp, pow(falloff(d2, mp.alp2.r), 1.2));
+  }
   const dLake = p.sub(vec2(mp.lakeC[0], mp.lakeC[1])).length();
   const tLake = falloff(dLake, mp.lakeR);
   const kw = vec2(

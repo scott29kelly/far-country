@@ -49,6 +49,7 @@ import {
 } from './templeCollide';
 import { TEMPLE_SITE } from './templeModel';
 import { buildTreesOfLife } from './TreesOfLife';
+import { applyWildRing, parseWildRing } from './wildRing';
 
 export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   const { engine, params } = ctx;
@@ -82,7 +83,13 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // inside the far shell; the city + approach + the south rim's whole cliff
   // band sit inside the detailed ring. Geometry constants live in
   // rimModel.ts, shared with the CPU rim scanner so they cannot drift.
+  // ?wildring=1|2|3 — MOCK wilderness variants for the walkable band south
+  // of the mesa rim (wildRing.ts). Absent = current look. Dev-only until
+  // Scott picks a variant; do not wire one permanently before that.
+  const wildring = parseWildRing(new URLSearchParams(window.location.search));
+
   ctx.macroPatch = (mp) => {
+    if (wildring !== null) applyWildRing(mp, wildring);
     mp.plateau = {
       c: [RIM.cx, RIM.cz],
       half: [RIM.hx, RIM.hz],
