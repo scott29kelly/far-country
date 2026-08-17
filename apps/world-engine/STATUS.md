@@ -3347,3 +3347,17 @@ split view, ground-clamped camera helper, silhouette/tiling gate + DELTA.md.
   `__name` helper around named function expressions inside page.evaluate
   callbacks → ReferenceError in the page; pass big instrumented blocks as
   STRING evaluates (tools/probe-pointerlock.ts documents the pattern).
+- TSL warning hygiene (2026-08-17): a NodeMaterial on a positions-only
+  geometry that touches ANY normal path — even a vertex-stage
+  `normalLocal.assign()` that immediately overwrites it — builds the
+  attribute node first and warns "Vertex attribute 'normal' not found"
+  at first pipeline compile. Route analytic normals through a varying +
+  `mat.normalNode = transformNormalToView(...)` instead (CanopyShell), or
+  pin a constant normalNode on depth-only casters (ShadowProxy). Culprit
+  hunting: `?geoaudit=1` lists scene geometries missing normals;
+  tools/probe-warnstack.ts captures real JS stacks for stackless three
+  warnings. Companion: the boot bakes overflowed the 2048-slot GPU
+  timestamp-query pool (WebGPUTimestampQueryPool warning) because nothing
+  resolves queries before the frame loop — main.ts now flips
+  backend.trackTimestamp off for buildScene and back on after (boot pass
+  timings were never consumed).
