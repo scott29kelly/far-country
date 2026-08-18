@@ -178,11 +178,12 @@ to a lake at LAKE_LEVEL, and a snowy backdrop range beyond the SW edge
   shoot-batch.sh / redo-batch.sh there (aerial shot with `--cov 0`;
   `shoot.ts` forwards `--wildring N` as a page param). Scene build ~53 s
   on the RTX; probe-wildwater ALL DRY where it must be, tsc clean.
-- **Not done yet (wire-in follow-ups):** seed-jitter for the wired anchor
-  set (mock numbers are fixed so the shipped look matches the reviewed
-  stills — jitter is a Scott call), erosion-iteration check at the higher
-  relief, RimFalls waterfall-site re-scan review, full probe battery,
-  engine re-vendor into apps/web.
+- **Re-vendored:** index-DIlph3YL.js — /world-preview serves canyonlands
+  on the next deploy. **Not done yet (wire-in follow-ups):** seed-jitter
+  for the wired anchor set (mock numbers are fixed so the shipped look
+  matches the reviewed stills — jitter is a Scott call), erosion-iteration
+  check at the higher relief, RimFalls waterfall-site re-scan review, full
+  probe battery.
 
 **(2026-08-13) M4.4 INCREMENT 1 — WORSHIP MOTION CYCLES (Scott's scope
 call): the multitude bows, kneels and lifts the frond arm in slow
