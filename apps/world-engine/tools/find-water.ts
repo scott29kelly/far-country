@@ -3,7 +3,7 @@
  * shallow wet cells (caustic band) with a dry bank a few meters away to
  * stand on. Prints candidate `--x --z --yaw` shot args, best first.
  *
- *   npx tsx tools/find-water.ts [--seed 1] [--top 12] [--minDepth 0.08]
+ *   npx tsx tools/find-water.ts [--scene world] [--seed 1] [--top 12] [--minDepth 0.08]
  */
 
 import { launchWebGPU, laasUrl } from './launch';
@@ -23,6 +23,7 @@ async function main(): Promise<void> {
     const i = args.indexOf(`--${k}`);
     return i >= 0 ? (args[i + 1] ?? d) : d;
   };
+  const scene = get('scene', 'world');
   const seed = Number(get('seed', '1'));
   const top = Number(get('top', '12'));
   const minDepth = Number(get('minDepth', '0.08'));
@@ -31,7 +32,7 @@ async function main(): Promise<void> {
   const { browser } = await launchWebGPU();
   const page = await browser.newPage({ viewport: { width: 320, height: 200 } });
   page.on('pageerror', (err) => console.error('[pageerror]', err.message));
-  await page.goto(laasUrl({ scene: 'world', seed, width: 320, height: 200 }), {
+  await page.goto(laasUrl({ scene, seed, width: 320, height: 200 }), {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForFunction(
