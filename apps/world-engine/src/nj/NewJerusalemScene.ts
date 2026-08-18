@@ -427,6 +427,32 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
       pose: groundPose(375, -5225, Math.PI / 4),
       mode: 'walk',
     },
+    // --- the wilderness south of the rim (wildRing.ts canyonlands) --------
+    // Illustrative new-earth landscape, not cited content (scene header).
+    {
+      id: 'canyon-floor',
+      name: 'River canyon floor',
+      detail: 'Illustrative wilderness; the river gorge below the mesa rim',
+      citation: 'Rev 21:1 (new earth)',
+      pose: groundPose(500, 5450, -1.45, 0.05),
+      mode: 'walk',
+    },
+    {
+      id: 'karst-ravines',
+      name: 'Karst tower ravines',
+      detail: 'Illustrative wilderness; tower-walled ravine country',
+      citation: 'Rev 21:1 (new earth)',
+      pose: { p: [1400, 900, 5100], yaw: -2.0, pitch: -0.35 },
+      mode: 'fly',
+    },
+    {
+      id: 'wilderness-lake',
+      name: 'Wilderness lake',
+      detail: 'Illustrative wilderness; the canyon river’s lake',
+      citation: 'Rev 21:1 (new earth)',
+      pose: groundPose(-1600, 5430, 1.77, 0.02),
+      mode: 'walk',
+    },
   ];
   ctx.hooks.navigationMap = {
     title: 'New Jerusalem',
@@ -434,7 +460,8 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     minX: -7000,
     maxX: 7000,
     minZ: -11000,
-    maxZ: 5200,
+    // south bound includes the walkable wilderness band (z 4400-6144)
+    maxZ: 6100,
     safeFlyY: (x, z) => {
       const fallback = hf?.heightAtCpu(x, z) ?? plazaTopY;
       const sample = navigationProbe?.(x, z, summitClearY) ?? {
