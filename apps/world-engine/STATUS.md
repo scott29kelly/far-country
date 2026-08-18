@@ -174,10 +174,13 @@ to a lake at LAKE_LEVEL, and a snowy backdrop range beyond the SW edge
   (2372,5058); dolines) — the trib is now a dendritic ravine net with a
   vertex pinned ON each trap (the ±100 m spline warp dodges anything
   further than ~130 m from a segment — pin, don't approach) and floors
-  descending to the main-canyon junction. Remaining water is natural-
-  reading and ≤17 m: foothill dale ponds outside the karst mask (where
-  the trib cannot carve, tribInfl = tKarst^0.5), the designed west lake,
-  and small doline ponds. (The legacy `?wildring=0` terrain reports
+  descending to the main-canyon junction. The east foothill dale ponds
+  (outside the karst mask, where the trib cannot carve — tribInfl =
+  tKarst^0.5) were then drained on Scott's second call by serpentining
+  the MAIN valley's upper course through every pond lobe (floors below
+  the pond bottoms; the first reach became a 420→256 cascade gorge).
+  Remaining band water: the designed west lake (9.4 m) and three ≤9 m
+  doline ponds. (The legacy `?wildring=0` terrain reports
   a huge raw-fill W column at the city W edge in these mirrors — rendered
   water was never affected; not investigated further, path is now legacy.)
 - **Review artifacts:** `shots/wip/wildring/` — v{0-3}-{gate,rim,aerial,

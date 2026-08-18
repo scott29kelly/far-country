@@ -39,10 +39,12 @@
  * the ±100 m spline warp cannot miss them), with floors descending to the
  * main-canyon junction — the traps drain to the river instead of ponding,
  * and the tower cliffs along the net become ravine walls (ravineKeep).
- * KEPT as landscape character: the designed west lake, the foothill dale
- * ponds east of the karst (13-17 m, e.g. ~(5230, 5280) and (3812, 5154) —
- * both outside the karst mask, where the trib cannot carve and the ponds
- * read as ordinary mountain lakes), and 2-3 small (≤10 m) doline ponds.
+ * The foothill dale ponds east of the karst (~(5230, 5280) and (3812,
+ * 5154), 13-17 m) are drained too (Scott's second call): they sit outside
+ * the karst mask where the trib cannot carve (tribInfl = tKarst^0.5), so
+ * the MAIN valley's upper course is routed through both dales instead —
+ * vertices pinned on each pond, floors below the pond bottoms. KEPT: the
+ * designed west lake and a few small (≤10 m) doline ponds.
  * tools/probe-wildwater.ts lists every band pocket if this needs revisiting.
  *
  * Anchors are FIXED numbers (no seed jitter): the wired look must match the
@@ -153,9 +155,16 @@ export function applyWildRing(mp: MacroParams, v: WildRingVariant): void {
     ];
     mp.tribFloors = [320, 268, 263, 258, 250, 244, 238, 234, 212, 186];
     mp.tribWidth = 150;
+    // upper course serpentines through the east foothill dale complex,
+    // pinning every pond lobe (surfaces 269-286, bottoms ~258-273) with
+    // floors below the bottoms — the first reach is a cascade gorge from
+    // the 420 m heights
     mp.valley = [
-      [5900, 5800],
-      [4300, 5450],
+      [6100, 5450],
+      [5444, 5106],
+      [5210, 5500],
+      [4400, 5230],
+      [3812, 5154],
       [2900, 5300],
       [1300, 5350],
       [-500, 5450],
@@ -163,7 +172,7 @@ export function applyWildRing(mp: MacroParams, v: WildRingVariant): void {
       [-4000, 5700],
       [-6800, 5900],
     ];
-    mp.valleyFloors = [420, 310, 240, 186, 162, 141, 130, 116];
+    mp.valleyFloors = [420, 256, 248, 242, 236, 230, 186, 162, 141, 130, 116];
     mp.valleyWidth = 260;
     mp.lakeC = [-2200, 5550];
     mp.lakeR = 400;
