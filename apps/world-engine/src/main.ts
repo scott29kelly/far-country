@@ -116,8 +116,17 @@ async function boot(): Promise<void> {
       };
     })(),
   };
+  // pause GPU timestamp-query allocation for the build: the boot bakes run
+  // hundreds of passes before the frame loop's first resolveTimestampsAsync,
+  // overflowing the 2048-query pool (the WebGPUTimestampQueryPool warning).
+  // Their timings are never consumed — the profiler only reads frame-loop
+  // passes — so allocation simply stays off until the loop takes over.
+  const backendTs = engine.renderer.backend as unknown as { trackTimestamp?: boolean };
+  const hadTs = backendTs.trackTimestamp === true;
+  if (hadTs) backendTs.trackTimestamp = false;
   const buildT0 = performance.now();
   await buildScene(params.scene, ctx);
+  if (hadTs) backendTs.trackTimestamp = true;
   // eslint-disable-next-line no-console
   console.log(`[laas] scene build total ${((performance.now() - buildT0) / 1000).toFixed(2)}s`);
 
@@ -178,6 +187,31 @@ async function boot(): Promise<void> {
   // eslint-disable-next-line no-console
   console.log('[laas] ready');
 
+  // ?geoaudit=1 — diagnostic: list scene geometries missing a 'normal'
+  // attribute (the source of the TSL missing-attribute warning class)
+  if (q.get('geoaudit') === '1') {
+    const missing: string[] = [];
+    engine.scene.traverse((o) => {
+      const g = (o as unknown as { geometry?: import('three').BufferGeometry }).geometry;
+      if (g && !g.getAttribute('normal')) {
+        const chain: string[] = [];
+        let p: import('three').Object3D | null = o;
+        while (p) {
+          chain.unshift(p.name || p.type);
+          p = p.parent;
+        }
+        const mat = (o as unknown as { material?: { constructor: { name: string } } }).material;
+        const attrs = Object.keys(g.attributes).join(',');
+        const verts = g.getAttribute('position')?.count ?? 0;
+        missing.push(
+          `${chain.join('/')} [${o.type}] mat=${mat?.constructor.name ?? '?'} attrs=${attrs} verts=${verts}`,
+        );
+      }
+    });
+    // eslint-disable-next-line no-console
+    console.log(`[laas] geoaudit: ${missing.length} missing-normal geometries\n${missing.join('\n')}`);
+  }
+
   // the arrival: audio resolves into the meadow bed; the camera alights onto
   // the spawn while the boot overlay's staged dissolve reveals the world.
   // Wall-clock pacing (never dt); any input skips straight to the ground.
@@ -204,6 +238,15 @@ async function boot(): Promise<void> {
   if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('edit') === '1') {
     const { initEditPanel } = await import('./debug/EditPanel');
     initEditPanel(engine, params, hooks);
+  }
+
+  // dev-only gamepad diagnostic (?padtest=1) — same dead-code-elimination
+  // contract as the edit panel. Multi-platform pads report different ids,
+  // mappings and button indices per mode/transport; this reads the truth off
+  // the attached hardware instead of guessing from the model name.
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('padtest') === '1') {
+    const { initPadTest } = await import('./debug/PadTest');
+    initPadTest(engine);
   }
 }
 

@@ -13,7 +13,7 @@
 
 import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
-import { positionLocal, vec2, vec3 } from 'three/tsl';
+import { positionLocal, transformNormalToView, vec2, vec3 } from 'three/tsl';
 import type { Heightfield } from './Heightfield';
 import { WORLD_SIZE } from './WorldConst';
 
@@ -55,6 +55,10 @@ export function buildTerrainShadowProxy(hf: Heightfield): Mesh {
   );
   mat.positionNode = lifted;
   (mat as unknown as { castShadowPositionNode: unknown }).castShadowPositionNode = lifted;
+  // the grid ships positions only; pin the normal node so the standard
+  // material never builds normalLocal against the missing attribute (TSL
+  // warning). The value is irrelevant — this mesh exists for depth only.
+  mat.normalNode = transformNormalToView(vec3(0, 1, 0));
   mat.colorWrite = false;
   mat.depthWrite = false;
   mat.depthTest = false;

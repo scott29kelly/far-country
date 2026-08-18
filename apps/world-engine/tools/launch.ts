@@ -55,7 +55,7 @@ function systemChromium(): string | undefined {
 const CACHE_PATH = '.cache/webgpu-flags.json';
 const PROBE_BASE = 'http://localhost:5173';
 
-async function probeRecipe(recipe: LaunchRecipe): Promise<Browser | null> {
+async function probeRecipe(recipe: LaunchRecipe, probeBase: string): Promise<Browser | null> {
   let browser: Browser | null = null;
   try {
     const launchOpts: Parameters<typeof chromium.launch>[0] = {
@@ -67,7 +67,7 @@ async function probeRecipe(recipe: LaunchRecipe): Promise<Browser | null> {
     browser = await chromium.launch(launchOpts);
     const page = await browser.newPage();
     // any path on the dev server works — we only need the secure localhost origin
-    await page.goto(`${PROBE_BASE}/__webgpu_probe__`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${probeBase}/__webgpu_probe__`, { waitUntil: 'domcontentloaded' });
     const ok = await page.evaluate(async () => {
       const gpu = (navigator as { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
       if (!gpu) return false;
@@ -84,11 +84,15 @@ async function probeRecipe(recipe: LaunchRecipe): Promise<Browser | null> {
   }
 }
 
-export async function launchWebGPU(): Promise<{ browser: Browser; recipe: LaunchRecipe }> {
+/** `probeBase` — dev-server origin for the secure-context probe; tools running
+ *  against a non-default port (worktree sessions) pass their own. */
+export async function launchWebGPU(
+  probeBase: string = PROBE_BASE,
+): Promise<{ browser: Browser; recipe: LaunchRecipe }> {
   // cached recipe first
   try {
     const cached = JSON.parse(readFileSync(CACHE_PATH, 'utf8')) as LaunchRecipe;
-    const browser = await probeRecipe(cached);
+    const browser = await probeRecipe(cached, probeBase);
     if (browser) return { browser, recipe: cached };
   } catch {
     /* no cache yet */
@@ -101,7 +105,7 @@ export async function launchWebGPU(): Promise<{ browser: Browser; recipe: Launch
     sys ? [r, { ...r, channel: undefined, executablePath: sys }] : [r],
   );
   for (const recipe of recipes) {
-    const browser = await probeRecipe(recipe);
+    const browser = await probeRecipe(recipe, probeBase);
     if (browser) {
       mkdirSync('.cache', { recursive: true });
       writeFileSync(CACHE_PATH, JSON.stringify(recipe, null, 2));
@@ -112,8 +116,8 @@ export async function launchWebGPU(): Promise<{ browser: Browser; recipe: Launch
     }
   }
   throw new Error(
-    'No Chromium launch recipe produced a WebGPU adapter (requires dev server on :5173 for the secure-context probe). ' +
-      `Tried channel:chromium headless and headed${sys ? `, and ${sys}` : ''}.`,
+    `No Chromium launch recipe produced a WebGPU adapter (requires a dev server at ${probeBase} ` +
+      `for the secure-context probe). Tried channel:chromium headless and headed${sys ? `, and ${sys}` : ''}.`,
   );
 }
 

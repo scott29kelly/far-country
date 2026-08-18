@@ -20,11 +20,11 @@ import {
   float,
   interleavedGradientNoise,
   mix,
-  normalLocal,
   positionLocal,
   positionWorld,
   screenCoordinate,
   smoothstep,
+  transformNormalToView,
   varying,
   vec2,
   vec3,
@@ -91,14 +91,26 @@ export function buildCanopyShell(
 
   mat.positionNode = Fn(() => {
     const p = vec2(positionLocal.x, positionLocal.z);
-    const e = float(WORLD_SIZE / GRID);
     const y0 = shellY(p).toVar();
-    const yx = shellY(p.add(vec2(e, 0))).toVar();
-    const yz = shellY(p.add(vec2(0, e))).toVar();
-    const nrm = vec3(y0.sub(yx), e, y0.sub(yz)).normalize().toVar();
-    normalLocal.assign(nrm);
     return vec3(positionLocal.x, y0, positionLocal.z);
   })();
+
+  // analytic canopy-top normal, carried by a vertex-stage varying into the
+  // material's normal node. The grid ships positions ONLY: assigning
+  // normalLocal (the old path) forced three to build the normal attribute
+  // node first, which warned "attribute not found" on every boot — the
+  // varying + normalNode route never touches the attribute, keeps the
+  // height sampling in the vertex stage, and lands in the same normalView.
+  const pN = vec2(positionLocal.x, positionLocal.z);
+  const eN = float(WORLD_SIZE / GRID);
+  const nrmV = varying(
+    vec3(
+      shellY(pN).sub(shellY(pN.add(vec2(eN, 0)))),
+      eN,
+      shellY(pN).sub(shellY(pN.add(vec2(0, eN)))),
+    ),
+  ) as unknown as NV3;
+  mat.normalNode = transformNormalToView(nrmV.normalize() as never);
 
   // foliage palette by coverage + macro noise; translucency for the low sun
   const cov = canopyAt(canopyTex, positionWorld.xz);
