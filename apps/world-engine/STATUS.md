@@ -166,11 +166,18 @@ to a lake at LAKE_LEVEL, and a snowy backdrop range beyond the SW edge
   tAlp as a max) for variant 2 — JS-guarded like `plateau`, so scenes that
   never set it compile bit-identical kernels.
 - **Hydrology verified (`tools/probe-wildwater.ts`, new):** per-region
-  water sampling. Flat core + approach lawn dry; spawn pond = the authored
-  8.75 m basin; band water at the designed lake. KNOWN TRAIT: the karst
-  traps a ~39 m cenote-style pocket lake at (2330, 5730), surface ≈ 514 m
-  — kept deliberately; route a trib branch through the pocket to drain it
-  if it ever reads as flooding. (The legacy `?wildring=0` terrain reports
+  water sampling + a per-pocket band listing (256 m buckets — one deep
+  trap otherwise hides every other behind the region max). Flat core +
+  approach lawn dry; spawn pond = the authored 8.75 m basin. KARST TRAPS
+  DRAINED (Scott's call): the karst walls trapped cenote-class lakes
+  (~39 m at (2330,5730) surface 514 — above the plateau top; ~28 m at
+  (2372,5058); dolines) — the trib is now a dendritic ravine net with a
+  vertex pinned ON each trap (the ±100 m spline warp dodges anything
+  further than ~130 m from a segment — pin, don't approach) and floors
+  descending to the main-canyon junction. Remaining water is natural-
+  reading and ≤17 m: foothill dale ponds outside the karst mask (where
+  the trib cannot carve, tribInfl = tKarst^0.5), the designed west lake,
+  and small doline ponds. (The legacy `?wildring=0` terrain reports
   a huge raw-fill W column at the city W edge in these mirrors — rendered
   water was never affected; not investigated further, path is now legacy.)
 - **Review artifacts:** `shots/wip/wildring/` — v{0-3}-{gate,rim,aerial,

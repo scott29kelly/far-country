@@ -88,12 +88,54 @@ async function main(): Promise<void> {
     return out;
   });
 
+  // distinct pockets in the wild band: bucket wet cells on a 256 m grid and
+  // report each bucket's deepest cell, deepest bucket first — one trapped
+  // lake can otherwise hide every other one behind the single region max
+  const pockets = await page.evaluate(() => {
+    (globalThis as unknown as { __name?: unknown }).__name ??= (t: unknown): unknown => t;
+    const dbg = (window as unknown as {
+      __laasDbg?: { engine?: { heightfield?: unknown } };
+    }).__laasDbg;
+    const hf = dbg?.engine?.heightfield as {
+      heightAtCpu(x: number, z: number): number;
+      waterYAtCpu(x: number, z: number): number;
+    };
+    if (!hf) return [] as { x: number; z: number; depth: number; waterY: number; cells: number }[];
+    const buckets = new Map<string, { x: number; z: number; depth: number; waterY: number; cells: number }>();
+    for (let z = 4650; z <= 6100; z += 24) {
+      for (let x = -6100; x <= 6100; x += 24) {
+        const w = hf.waterYAtCpu(x, z);
+        const d = w - hf.heightAtCpu(x, z);
+        if (d <= 0.5) continue;
+        const key = `${Math.round(x / 256)},${Math.round(z / 256)}`;
+        const b = buckets.get(key);
+        if (!b) buckets.set(key, { x, z, depth: d, waterY: w, cells: 1 });
+        else {
+          b.cells++;
+          if (d > b.depth) {
+            b.depth = d;
+            b.x = x;
+            b.z = z;
+            b.waterY = w;
+          }
+        }
+      }
+    }
+    return [...buckets.values()].sort((a, b) => b.depth - a.depth).slice(0, 10);
+  });
+
   console.log(`[wildwater] wildring=${wildring ?? 'off'} seed=${seed}`);
   for (const r of reports) {
     const pct = ((100 * r.wet) / r.cells).toFixed(1);
     console.log(
       `  ${r.name}: wet ${r.wet}/${r.cells} (${pct}%) maxDepth ${r.maxDepth.toFixed(2)} m` +
         (r.wet ? ` at (${r.at[0]}, ${r.at[1]}) waterY ${r.maxWaterY.toFixed(1)}` : ''),
+    );
+  }
+  console.log('  band pockets (256 m buckets, deepest cell each):');
+  for (const p of pockets) {
+    console.log(
+      `    (${p.x}, ${p.z}) depth ${p.depth.toFixed(1)} m waterY ${p.waterY.toFixed(1)} cells ${p.cells}`,
     );
   }
   await browser.close();

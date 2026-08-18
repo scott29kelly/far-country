@@ -31,10 +31,19 @@
  * tilt term drains the band toward the spine; lakes sit at floor ≈ 141
  * (LAKE_LEVEL 142) so shore cosmetics keyed to that level engage.
  *
- * KNOWN TRAIT (v3, surfaced at the pick): the karst walls trap a ~39 m deep
- * pocket lake at (2330, 5730), surface ≈ 514 m — kept deliberately as a
- * cenote-style karst lake nested in the towers. Drain it by routing a trib
- * branch through that pocket if it ever reads as flooding.
+ * DRAINED (Scott's call after the pick): the karst walls trapped deep
+ * pocket lakes — a ~39 m one at (2330, 5730) (surface ≈ 514 m, ABOVE the
+ * plateau top) and a ~28 m slot at (2372, 5058) at the talus seam, plus a
+ * doline pond at (1940, 5778). The tributary is routed as a dendritic
+ * ravine net THROUGH each trap (vertices on or straddling every pocket, so
+ * the ±100 m spline warp cannot miss them), with floors descending to the
+ * main-canyon junction — the traps drain to the river instead of ponding,
+ * and the tower cliffs along the net become ravine walls (ravineKeep).
+ * KEPT as landscape character: the designed west lake, the foothill dale
+ * ponds east of the karst (13-17 m, e.g. ~(5230, 5280) and (3812, 5154) —
+ * both outside the karst mask, where the trib cannot carve and the ponds
+ * read as ordinary mountain lakes), and 2-3 small (≤10 m) doline ponds.
+ * tools/probe-wildwater.ts lists every band pocket if this needs revisiting.
  *
  * Anchors are FIXED numbers (no seed jitter): the wired look must match the
  * stills the pick was made from.
@@ -129,13 +138,20 @@ export function applyWildRing(mp: MacroParams, v: WildRingVariant): void {
     mp.karstC = [2500, 5600];
     mp.karstR = 1150;
     mp.karstRot = 0.55;
+    // dendritic ravine net threading every karst trap pocket — see header
     mp.trib = [
       [3800, 6100],
       [3000, 5750],
-      [2300, 5450],
+      [2600, 5880],
+      [2500, 5750],
+      [2250, 5690],
+      [2340, 5070],
+      [2050, 5450],
+      [1940, 5778],
+      [1700, 5500],
       [1300, 5350],
     ];
-    mp.tribFloors = [320, 268, 222, 186];
+    mp.tribFloors = [320, 268, 263, 258, 250, 244, 238, 234, 212, 186];
     mp.tribWidth = 150;
     mp.valley = [
       [5900, 5800],
