@@ -127,7 +127,7 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
       9 bookmarks, 90s flythrough, full battery, final two-frame test, self-score rubric.
 - [ ] **Tier 3** — only after battery passes (see spec §11).
 
-## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-13)
+## New Jerusalem scene (`src/nj/`) — content track status (updated 2026-08-17)
 
 > This engine's phase checklist above tracks the **terrain/vegetation systems**
 > (PROJECT_LAAS_v2.md). The **biblical content** built on top of it
@@ -137,6 +137,52 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > section is the source-of-truth inventory for that track specifically — kept
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
+
+**(2026-08-17) WILD-RING TERRAIN — CANYONLANDS WIRED AS DEFAULT (Scott's
+pick from a 3-variant, 5-framing still review).** The walkable wilderness
+south of the mesa rim now has real relief: karst tablelands (base 380 m)
+with tower-walled ravines, a narrow river canyon running west through them
+to a lake at LAKE_LEVEL, and a snowy backdrop range beyond the SW edge
+(terrain.maxH 482 → 1119).
+
+- **Root cause fixed (`src/nj/wildRing.ts`):** makeMacroParams authors
+  anchors in 4 km coordinates; on the NJ scene's 12.3 km domain they all
+  landed under the plateau override, leaving the band base-hills-only.
+  `applyWildRing` (in NewJerusalemScene's macroPatch) swaps in anchor sets
+  authored for the band. Default = variant 3; `?wildring=1` (alpine crown)
+  and `?wildring=2` (twin ranges + gorge) keep the reviewed candidates
+  bootable for A/B; `?wildring=0` = legacy base hills. GOTCHA fixed inline:
+  `Number(null) === 0`, so the absent-param case must be tested before
+  coercion or a bare URL boots the legacy look.
+- **Geometry reality (documented in wildRing.ts):** the Allotment footprint
+  (RIM: x ±7600, z −11200..+4400) overruns the ±6144 detailed domain on
+  N/E/W — the walkable wilderness is the SOUTHERN BAND, z≈4400 (lip) →
+  6144 (edge), full 12.3 km wide (≈ the whole ?scene=world domain in
+  area). Massifs centered at/beyond the south edge continue seamlessly
+  into the analytic far shell (same mp, same math). Valley spines stay
+  z ≥ 5250 to clear the talus blend; every spline exits the west edge
+  through its lake (the closed-basin drainage law).
+- **MacroParams gains optional `alp2`** (second alpine massif, merged into
+  tAlp as a max) for variant 2 — JS-guarded like `plateau`, so scenes that
+  never set it compile bit-identical kernels.
+- **Hydrology verified (`tools/probe-wildwater.ts`, new):** per-region
+  water sampling. Flat core + approach lawn dry; spawn pond = the authored
+  8.75 m basin; band water at the designed lake. KNOWN TRAIT: the karst
+  traps a ~39 m cenote-style pocket lake at (2330, 5730), surface ≈ 514 m
+  — kept deliberately; route a trib branch through the pocket to drain it
+  if it ever reads as flooding. (The legacy `?wildring=0` terrain reports
+  a huge raw-fill W column at the city W edge in these mirrors — rendered
+  water was never affected; not investigated further, path is now legacy.)
+- **Review artifacts:** `shots/wip/wildring/` — v{0-3}-{gate,rim,aerial,
+  valley,lake}.png + sheet-*.png 2×2 grids; cams recorded in
+  shoot-batch.sh / redo-batch.sh there (aerial shot with `--cov 0`;
+  `shoot.ts` forwards `--wildring N` as a page param). Scene build ~53 s
+  on the RTX; probe-wildwater ALL DRY where it must be, tsc clean.
+- **Not done yet (wire-in follow-ups):** seed-jitter for the wired anchor
+  set (mock numbers are fixed so the shipped look matches the reviewed
+  stills — jitter is a Scott call), erosion-iteration check at the higher
+  relief, RimFalls waterfall-site re-scan review, full probe battery,
+  engine re-vendor into apps/web.
 
 **(2026-08-13) M4.4 INCREMENT 1 — WORSHIP MOTION CYCLES (Scott's scope
 call): the multitude bows, kneels and lifts the frond arm in slow

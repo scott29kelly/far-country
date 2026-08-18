@@ -83,13 +83,13 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
   // inside the far shell; the city + approach + the south rim's whole cliff
   // band sit inside the detailed ring. Geometry constants live in
   // rimModel.ts, shared with the CPU rim scanner so they cannot drift.
-  // ?wildring=1|2|3 — MOCK wilderness variants for the walkable band south
-  // of the mesa rim (wildRing.ts). Absent = current look. Dev-only until
-  // Scott picks a variant; do not wire one permanently before that.
+  // The walkable wilderness south of the mesa rim (wildRing.ts): canyonlands
+  // by default (Scott's pick, 2026-08-17); ?wildring=1|2 boot the other
+  // reviewed candidates, ?wildring=0 the pre-variant base hills.
   const wildring = parseWildRing(new URLSearchParams(window.location.search));
 
   ctx.macroPatch = (mp) => {
-    if (wildring !== null) applyWildRing(mp, wildring);
+    applyWildRing(mp, wildring);
     mp.plateau = {
       c: [RIM.cx, RIM.cz],
       half: [RIM.hx, RIM.hz],

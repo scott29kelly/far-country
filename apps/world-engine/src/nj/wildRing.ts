@@ -1,11 +1,17 @@
 /**
- * Wild-ring terrain variants (?wildring=1|2|3) — MOCKS for Scott's pick.
+ * Wild-ring terrain — the walkable wilderness south of the Holy Allotment.
  *
- * WHY: makeMacroParams() authors its anchors in the wild demo scenes' 4 km
- * coordinates. The New Jerusalem scene runs a 12.3 km domain, so those
- * anchors all land inside ~±2.6 km — under the Holy Allotment plateau, which
- * composites LAST and overrides them. The walkable wild land beyond the mesa
- * rim is left with base hills only (~480 m maxH vs the world scene's ~1860).
+ * DEFAULT: variant 3 "canyonlands" (Scott's pick, 2026-08-17, from the
+ * five-framing still review in shots/wip/wildring/). `?wildring=1|2` keep
+ * the other candidates bootable for A/B; `?wildring=0` restores the
+ * pre-variant look (base hills only).
+ *
+ * WHY THIS EXISTS: makeMacroParams() authors its anchors in the wild demo
+ * scenes' 4 km coordinates. The New Jerusalem scene runs a 12.3 km domain,
+ * so those anchors all land inside ~±2.6 km — under the Holy Allotment
+ * plateau, which composites LAST and overrides them. The walkable wild land
+ * beyond the mesa rim was left with base hills only (~480 m maxH vs the
+ * world scene's ~1860).
  *
  * GEOMETRY REALITY (rimModel.ts, ADR 0015): the Allotment footprint spans
  * x ±7600, z −11200..+4400 — it overruns the ±6144 detailed domain on the
@@ -25,17 +31,27 @@
  * tilt term drains the band toward the spine; lakes sit at floor ≈ 141
  * (LAKE_LEVEL 142) so shore cosmetics keyed to that level engage.
  *
- * Applied inside NewJerusalemScene's macroPatch. No ?wildring → untouched
- * current look. DO NOT wire a variant permanently until Scott picks.
+ * KNOWN TRAIT (v3, surfaced at the pick): the karst walls trap a ~39 m deep
+ * pocket lake at (2330, 5730), surface ≈ 514 m — kept deliberately as a
+ * cenote-style karst lake nested in the towers. Drain it by routing a trib
+ * branch through that pocket if it ever reads as flooding.
+ *
+ * Anchors are FIXED numbers (no seed jitter): the wired look must match the
+ * stills the pick was made from.
  */
 
 import type { MacroParams } from '../world/MacroMap';
 
-export type WildRingVariant = 1 | 2 | 3;
+export type WildRingVariant = 0 | 1 | 2 | 3;
 
-export function parseWildRing(q: URLSearchParams): WildRingVariant | null {
-  const n = Number(q.get('wildring'));
-  return n === 1 || n === 2 || n === 3 ? n : null;
+/** Absent/invalid ?wildring → the wired default (3, canyonlands).
+ *  NOTE Number(null) === 0: the absent case must be tested BEFORE coercion
+ *  or a bare URL silently boots the legacy look. */
+export function parseWildRing(q: URLSearchParams): WildRingVariant {
+  const raw = q.get('wildring');
+  if (raw === null) return 3;
+  const n = Number(raw);
+  return n === 0 || n === 1 || n === 2 || n === 3 ? n : 3;
 }
 
 /** Park the karst zone (and its tributary) far outside the domain: its mask
@@ -54,6 +70,9 @@ function parkKarst(mp: MacroParams): void {
 }
 
 export function applyWildRing(mp: MacroParams, v: WildRingVariant): void {
+  if (v === 0) {
+    return; // pre-variant look: anchors stay under the plateau override
+  }
   if (v === 1) {
     // ---- 1 "ALPINE CROWN" ---------------------------------------------------
     // One grand massif SE beyond the world edge (peaks ~1600-1850 m at the
