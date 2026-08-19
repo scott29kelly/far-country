@@ -13,7 +13,35 @@ disposable). Content wishes are LOGGED FOR SCOTT here, never built.
 
 Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
 
-- (rounds land here)
+1. Rock faces have no mid-frequency structure — one pale plaster value
+   under uniform speckle; refs carry stacked strata bands (hue+value),
+   dark varnish streaks running DOWN faces, and talus a value step apart
+   from the cliff. Worst: valley + lake stills. [r0 critic; measured:
+   wall midtones near-achromatic, structure incoherent]
+2. Light reads noon-neutral, not the stated 17:00 — lit midtones R/B
+   ≈ 1.11 (should push well warmer under a low sun), shadows short,
+   no violet-gray fill. [r0 critic; measured]
+3. Water never reflects the scene — gate channel one repeated sparkle
+   tile + blown glare; band lakes flat near-black, no sky sheen, no wet
+   margin. [r0 critic]
+4. Haze is a milky neutral blanket — no hue shift with depth (warm lit
+   faces → blue-violet shadow air → pink horizon in the Shafer ref).
+   [r0 critic]
+5. Clouds/snow "marshmallow" — no gray cloud undersides (Trail Ridge ref
+   bases are two stops darker), snow shows repeating dimples, snow-rock
+   transition smears. [r0 critic]
+6. Artifacts: vertical sky seam at exact half-width in gate cam
+   (FC-0011, predates GA-3); aerial shows marbled swirls + checkerboard
+   patch tiling at altitude. [r0 critic + measured]
+
+Round-0 critic verdict: "a stranger would not hesitate" — the plaster
+rock, noon light, and dead lakes each give it away alone.
+
+Round plan from r0: light is the foundation every material read depends
+on (Phase-2 lesson below: albedo work is invisible until exposure/light
+is right; Claude-of-Duty: lighting = one owner, one sequential pass), so
+round 1 = atmosphere/light/tonemap owner alone (deltas 2, 4, 5-clouds,
+6-seam); round 2 = rock material + water builders under corrected light.
 
 Logged for Scott (content-gated critic wishes):
 

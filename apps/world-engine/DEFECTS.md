@@ -8,7 +8,22 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0011.
+THE NEXT FREE NUMBER IS FC-0012.
+
+## FC-0011 — a vertical seam splits the sky at exact screen centre in wilderness stills
+
+Believed: the five canonical wild-ring stills were clean (Scott picked the
+canyonlands variant from them). Measured (GA-3 round 0, 2026-08-19): the
+gate cam's sky carries a hard vertical value step at x ≈ 960 of 1920 —
+exact half-width — visible from y ≈ 200 to the horizon; column-mean
+luminance over rows 100-450 steps ~4/255 across two columns where the
+local gradient is ~0.5/255 per column. The SAME seam sits in the approved
+v3-gate.png from the 2026-08-17 pick review, so it predates GA-3 and was
+shipped in the approved look. The round-0 blind critic named it
+independently ("a hard vertical seam splits the sky"). Meaning: some
+screen-space pass has a half-width boundary (half-res cloud/froxel RTT or
+similar) leaking a tile edge into the composite. Owned by the GA-3
+atmosphere pass (round 1).
 
 ## FC-0001 — GA-1 census: 56 tools audited; the fleet measured well but could not fail well
 
