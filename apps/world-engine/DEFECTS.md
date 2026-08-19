@@ -8,7 +8,7 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0010.
+THE NEXT FREE NUMBER IS FC-0011.
 
 ## FC-0001 — GA-1 census: 56 tools audited; the fleet measured well but could not fail well
 
@@ -109,3 +109,36 @@ of cheapest deliberate breakages (with predictions to record BEFORE
 running) is in tools/AUDIT-2026-08-19.md. OPEN — needs a quiet dev-server
 window (deliberate scene breakage would hot-reload into any open tab);
 scheduled with Scott.
+
+## FC-0010 — the four FC-0005 vacuous-pass paths are closed
+
+Closes the OPEN tail of FC-0005 (the four concrete paths; the fleet-wide
+makeChecker migration remains a background chore, not a known defect).
+What landed (2026-08-19):
+- probe-visualkey: empty markers or vols now hits unmeasured() and exits 2
+  before any A/B/C check can pass on nothing; finish({ minChecks: 8 })
+  floors the roster (8 = A1-A4 + B1-B3 + C1).
+- probe-crowd E5: the `if (!f) continue` name-mismatch skip now counts
+  matches and fails E5 itself when matched !== V — its verdict no longer
+  leans on E2 happening to catch the same mismatch.
+- probe-entitypick: empty registry hits unmeasured() exit 2 before section
+  C can run zero checks; finish({ minChecks: 31 }) floors the roster
+  (31 = A4 + B15 + N6 + D5 + at least one C slug row).
+- find-water: a missing __laasDbg.engine.heightfield hook now returns null
+  from the page and exits 2 with an UNMEASURED line; a genuine zero-
+  candidate scan prints an explicit empty-result line and exits 0. A broken
+  probe and a dry world are no longer the same output.
+Verified healthy: `npm run battery` ALL 17 PASS after the change;
+probe-visualkey standalone ALL PASS (8 checks); find-water on newjerusalem
+printed the explicit empty-result line (hook present, scan ran).
+Observed refusing (safe here: these CPU probes import THIS worktree's src,
+the dev server serves a different worktree — no hot-reload risk):
+- keyMarkers mutated to return [] → visualkey UNMEASURED exit 2;
+- buildEntityPicks mutated to return [] → entitypick UNMEASURED exit 2;
+- 'adult-tall' renamed → E5 FAILs on its own ("only 5/6 archetypes
+  matched"), no longer sheltered by E2.
+All mutations reverted. NOT yet observed: find-water's hook-missing exit 2
+(needs a live page without the hook — folded into the FC-0009 battery).
+Noted in passing: find-water's scan window is ±2040 m, so on newjerusalem
+it cannot see the wilderness-band water at z 4400-6144 — a coverage
+limitation of the report tool, not a verdict bug.

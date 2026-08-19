@@ -380,9 +380,11 @@ const { FIGURES_VENDORED } = await import('../src/nj/figuresVendored.gen');
   // the -1 sentinel the material's ramp fallback keys on.
   let ok = true;
   let detail = '';
+  let matched = 0; // FC-0005: a name mismatch must fail HERE, not lean on E2
   for (let v = 0; v < V && ok; v++) {
     const f = FIGURES_VENDORED.figures.find((x) => x.name === FIGURE_ARCHETYPES[v].name);
     if (!f) continue;
+    matched++;
     const g = buildFigureGeometry(FIGURE_ARCHETYPES[v], 0);
     const auv = g.getAttribute('auv');
     if (!auv) {
@@ -405,6 +407,10 @@ const { FIGURES_VENDORED } = await import('../src/nj/figuresVendored.gen');
       ok = false;
       detail = `${FIGURE_ARCHETYPES[v].name}: ${real} textured verts, want ${want}`;
     }
+  }
+  if (ok && matched !== V) {
+    ok = false;
+    detail = `only ${matched}/${V} archetypes matched the vendored set by name`;
   }
   c.check('E5 LOD0 auv: vendored verts textured, procedural verts sentinel', ok, detail);
 }

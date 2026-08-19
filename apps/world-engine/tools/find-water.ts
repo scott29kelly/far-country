@@ -53,7 +53,9 @@ async function main(): Promise<void> {
         heightAtCpu(x: number, z: number): number;
         waterYAtCpu(x: number, z: number): number;
       };
-      if (!hf) return [] as Cand[];
+      // FC-0005: a missing hook must be distinguishable from a dry world —
+      // null here becomes UNMEASURED exit 2 below, never a silent empty.
+      if (!hf) return null;
       const out: Cand[] = [];
       const STEP = 6;
       const HALF = 2040;
@@ -128,7 +130,20 @@ async function main(): Promise<void> {
     { minDepth, maxDepth },
   );
 
-  for (const c of (cands as Cand[]).slice(0, top)) {
+  if (cands === null) {
+    console.error(
+      '[find-water] UNMEASURED — __laasDbg.engine.heightfield hook missing; nothing was scanned',
+    );
+    await browser.close();
+    process.exit(2);
+  }
+  const picks = (cands as Cand[]).slice(0, top);
+  if (picks.length === 0) {
+    console.log(
+      `[find-water] scan ran, zero candidates in depth [${minDepth}, ${maxDepth}] — an empty result, not a failed scan`,
+    );
+  }
+  for (const c of picks) {
     console.log(
       `--x ${c.x} --z ${c.z} --yaw ${c.yaw}  # depth ${c.depth}m wet ${c.wet} level ${c.level}m`,
     );

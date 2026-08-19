@@ -44,6 +44,14 @@ const flat = (): number => GROUND;
 const markers = keyMarkers(PLAZA_Y, flat);
 const vols = buildEntityPicks(PLAZA_Y, flat);
 
+// FC-0005 guard: on an empty marker or registry set, A1-A4/B1/C1 all pass
+// vacuously (0===0, every() on [], zero loop iterations). Nothing to measure
+// is UNMEASURED, never a pass.
+if (markers.length === 0 || vols.length === 0) {
+  c.unmeasured('fixture', `markers=${markers.length} vols=${vols.length} — nothing to measure`);
+  c.finish();
+}
+
 // ---- A: coverage -----------------------------------------------------------
 const markerSlugs = new Set(markers.map((m) => m.slug));
 const pickSlugs = new Set(vols.map((v) => v.slug));
@@ -148,4 +156,5 @@ for (const slug of markerSlugs) {
 }
 c.check('C1 every marked slug has a named export with valid-tier claims', dataOk, dataMsg);
 
-c.finish();
+// 8 = A1-A4 + B1-B3 + C1, the probe's full fixed roster
+c.finish({ minChecks: 8 });

@@ -46,6 +46,13 @@ const GROUND = 460;
 const flat = (): number => GROUND;
 const vols = buildEntityPicks(PLAZA_Y, flat);
 
+// FC-0005 guard: an empty registry would make section C run zero checks and
+// pass vacuously. Nothing to measure is UNMEASURED, never a pass.
+if (vols.length === 0) {
+  c.unmeasured('fixture', 'buildEntityPicks returned zero volumes — nothing to measure');
+  c.finish();
+}
+
 // ---- A: table shape --------------------------------------------------------
 const gateVols = vols.filter((v) => v.slug === 'gates-of-pearl');
 c.check(
@@ -263,4 +270,5 @@ c.check(
   formatCitation({ source_type: 'secondary', secondary_work: '4Q554' }) === '4Q554',
 );
 
-c.finish();
+// 31 = A(4) + B(15) + N(6) + D(5) fixed checks + at least one C slug row
+c.finish({ minChecks: 31 });

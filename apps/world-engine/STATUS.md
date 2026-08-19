@@ -138,6 +138,20 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-19, later) FC-0005 TAIL CLOSED (FC-0010) — the four vacuous-pass
+paths are gone and were watched refusing.** probe-visualkey and
+probe-entitypick exit UNMEASURED (2) on empty fixtures and floor their
+check counts (minChecks 8 / 31, derivations commented); probe-crowd E5
+fails itself on an archetype-name mismatch instead of `continue`-skipping
+behind E2; find-water distinguishes hook-missing (UNMEASURED exit 2) from
+a genuine zero-candidate scan (explicit line, exit 0). Evidence: battery
+ALL 17 PASS post-change; three CPU-side mutations (empty keyMarkers, empty
+buildEntityPicks, renamed archetype) each observed refusing, then reverted
+— run from a worktree the dev server does not serve, so nothing hot-reloaded.
+find-water's hook-missing refusal is still unobserved (FC-0009 scope).
+Noted: find-water scans ±2040 m and cannot see the band water at z
+4400-6144 on newjerusalem. Detail: DEFECTS.md FC-0010.
+
 **(2026-08-19) GA-1 INSTRUMENT HARDENING — the probe fleet can now fail.**
 Per the gauntlet adoption plan (docs/plans/gauntlet-adoption-far-country.md,
 Scott-approved; doctrine in docs/research/2026-08-19-*.md §4), a full audit
