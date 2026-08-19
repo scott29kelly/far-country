@@ -102,6 +102,10 @@ export class PostStack {
     this.syncCamera = (): void => {
       frameU.value = (frameU.value + 1) % 1024;
       camera.updateMatrixWorld(); // compose pending pose mutations NOW
+      // altitude-aware sky panorama (GA-3 r4): re-bakes the sky-view LUT when
+      // the camera climbs/descends past Atmosphere's dead band — the horizon
+      // from 3.4 km must not look like the horizon from 350 m
+      atmosphere.trackCamera(camera.position.y);
       uPrevView.value.copy(firstSync ? camera.matrixWorldInverse : uView.value);
       uPrevProj.value.copy(firstSync ? camera.projectionMatrix : uProj.value);
       firstSync = false;

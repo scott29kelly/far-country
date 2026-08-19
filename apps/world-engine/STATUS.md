@@ -138,7 +138,31 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-19, latest) GA-3 RUNNING — first Gauntlet Loop, wilderness
+**(2026-08-19, latest) GA-3 SHIPPED — Scott called the stop after round
+4 ("Things are looking awesome"); folded to main with a re-vendored
+engine bundle.** Round 4 (three builders): layer-parallel beds + crack
+micro-shadow (an exact fall-line correction was tried and REJECTED —
+fingerprints curved flanks; documented in TerrainMaterial), altitude-
+aware sky-view LUT + ozone floor (the aerial cam's brown horizon wall)
++ the haze band's dir.y=0 color seam fixed, near-field crown volume/
+two-lobe translucency/grass contact (engine landmine documented: vdata
+in lighting-context slots = garbage), and FC-0017 — the "triangular
+smudge" wedges were the far-vista shell chording above the canyon;
+shell verts now sink to their neighborhood minimum. FC-0018 corrects
+round 3: the falls-e339 grass rectangles are crown-shadow proxy BOX
+shadows (Forests.ts) — OPEN, needs a proxy softness pass. The verify
+branch merged (probe-rimfalls, given R1-R3 verdicts + watched refusing
+first); battery is now 18 members. Axes CLOSED by instrument: water
+reflectivity (the plunge-pool ref's own water/sky ratio brackets ours)
+and falls polish (the reference set has NO waterfall image — bar gap
+logged for Scott). Open for a future round: crown proxy boxes
+(FC-0018), ring corner waste (FC-0017 residual), snow dimples, city
+lattice moiré from altitude, wet-margin terrain darkening, distant
+river threads (wet-bed paint), DISP vertical grooves on walls
+(FC-0012 residual). Run log: docs/DELTA.md GA-3 section; stills:
+shots/wip/ga3/ (rounds 0-4 + per-builder work dirs, local only).
+
+**(2026-08-19) GA-3 launched — first Gauntlet Loop, wilderness
 band (rounds 0-3 landed).** Branch claude/ga3-gauntlet-wilderness-launch-
 6425c6 from e074053. Mechanics per the plan appendix: fixed round cams
 (tools/ga3-cams.sh — five canonical + three RimFalls cams pinned from a

@@ -8,7 +8,45 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0017.
+THE NEXT FREE NUMBER IS FC-0019.
+
+## FC-0017 — the far-vista shell chorded ABOVE the wild-ring canyon, rendering giant false wedges
+
+Believed (round 2-3 critics): a "huge diagonal darkening / unlit polygon"
+and "triangular blur smudges" on the band cliffs were shadows or haze
+artifacts. Measured (GA-3 round 4, two independent ablation chains): the
+wedges survive every weather/shadow/froxel ablation; magenta-painting
+the far shell showed the whole wedge, its straight break line, AND the
+valley-floor z-fight puddles are the far-vista RingGeometry (inner edge
+~5855 m) — the falls/lake cams sit at radius ~6.1 km, INSIDE the ring's
+annulus, and a ~230x194 m flat shell triangle chording across the
+canyon's concave relief interpolates ABOVE the true surface (the flat
+-9 m sink assumed convex-ish ground).
+Resolution (2026-08-19): each interior shell vertex sinks to the MINIMUM
+baked height over a 13-sample neighborhood covering its triangle span,
+minus 14 m, faded by edgeBlend so the beyond-the-edge vista is
+bit-identical (TerrainTiles.ts). No chord can ride above terrain its
+endpoints sampled. Verified: wedge and streak-veils gone at the falls/
+lake cams, no seam gap at the aerial or valley cams, GPU median neutral
+to slightly faster. OPEN RESIDUAL: the honest fix is clipping the ring
+to the square detail domain (~40% of ring triangles now waste vertices
+underground in the corners).
+
+## FC-0018 — the "grass rectangles" are crown-shadow proxy boxes; the round-3 diagnosis was wrong
+
+Corrects the round-3 reading logged in docs/DELTA.md item 16(c) ("a
+splat/moisture/zone-mask sampling artifact") — that diagnosis ablated
+weather and the terrain proxy but never the VEGETATION caster list.
+Measured (GA-3 round 4): ?ablate=casters removes the axis-aligned dark
+patches by the lone tree at falls-e339; they are the crown-shadow proxy
+POOL BOXES (Forests.ts CROWN_SHADOW_DENSITY) casting blocky ground
+shadows. Related true fix landed in passing: biomeTex is NEAREST-
+filtered (its header wrongly said LINEAR — corrected) and its fetch uv
+is now fbm-warped so 3 m texel class edges dissolve.
+OPEN: softening/shaping the crown proxy boxes is a vegetation-caster
+task (Forests.ts owner); a second contributor may remain at forest
+edges. Generalises to: "proven not X" is only as good as the ablation
+list — enumerate every caster class before ruling shadows out.
 
 ## FC-0014 — the terrain shadow proxy cast kilometre-scale false shadows on the rim face
 

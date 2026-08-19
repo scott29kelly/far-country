@@ -69,7 +69,12 @@ import {
   vec3,
 } from 'three/tsl';
 import { canopyAt, cellHash, cellHash2 } from '../gpu/passes/Scatter';
-import { grassTranslucency, rockMaterial } from '../render/VegMaterials';
+import {
+  grassClumpValue,
+  grassContactRamp,
+  grassTranslucency,
+  rockMaterial,
+} from '../render/VegMaterials';
 import { depthPrepassTwin } from '../render/VegPrepass';
 import { gustAt, windContext, windExposure, windU } from '../render/Wind';
 import type { NB, NF, NI, NU, NV2, NV3, NV4 } from '../gpu/TSLTypes';
@@ -955,14 +960,29 @@ export class GroundRing {
       albedo = mix(albedo, fresh, zG.park.mul(0.55)) as unknown as NV3;
       albedo = mix(albedo, dry, zG.lane.mul(0.5)) as unknown as NV3;
     }
-    mat.colorNode = varying(
-      albedo as unknown as Parameters<typeof varying>[0],
-    ) as unknown as typeof mat.colorNode;
+    // GA3 r4 contact shading (helpers + derivation in VegMaterials.ts):
+    // per-clump value jitter so neighboring clumps separate at walk
+    // distance, then a blade-base contact ramp on the fragment side.
+    // Applied before the emissive hoist so darker clumps also glow less.
+    albedo = grassClumpValue(
+      albedo,
+      cellHash(wc, bind.salt ^ 0x2b2b),
+    ) as unknown as NV3;
+    const distV = varying(
+      dist as unknown as Parameters<typeof varying>[0],
+    ) as unknown as NF;
+    mat.colorNode = (
+      varying(
+        albedo as unknown as Parameters<typeof varying>[0],
+      ) as unknown as NV3
+    ).mul(grassContactRamp(t, distV)) as unknown as typeof mat.colorNode;
     mat.emissiveNode = varying(
       grassTranslucency(albedo, t) as unknown as Parameters<typeof varying>[0],
     ) as unknown as typeof mat.emissiveNode;
+    // deeper indirect floor at the base (was 0.45): with the albedo contact
+    // ramp carrying direct light, this carries the sky term the same way
     mat.aoNode = varying(
-      smoothstep(0.0, 0.55, t).mul(0.55).add(0.45) as unknown as Parameters<typeof varying>[0],
+      smoothstep(0.0, 0.55, t).mul(0.68).add(0.32) as unknown as Parameters<typeof varying>[0],
     ) as unknown as typeof mat.aoNode;
     mat.roughness = 0.88;
     mat.metalness = 0;

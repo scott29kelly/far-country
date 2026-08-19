@@ -33,7 +33,7 @@ import {
   fetchInstance,
   type InstanceBinding,
 } from './VegInstance';
-import { foliageSunShadowRelief } from './VegMaterials';
+import { foliageSunShadowRelief, foliageTranslucency } from './VegMaterials';
 
 /** unit quad geometry shared by all impostor draws (x,y ∈ −1..1) */
 export function impostorQuad(): PlaneGeometry {
@@ -119,6 +119,14 @@ export function impostorRuntimeMaterial(
     n.z.mul(cs.x).sub(n.x.mul(cs.y)),
   );
   mat.normalNode = transformNormalToView(nW as never);
+  // translucency parity with the card crowns (GA3 r4): the cards' glow was
+  // strengthened, and impostors previously had NO transmission term — the
+  // 460 m ring handoff would have stepped visibly. Same model, k slightly
+  // under the cards' 0.13 because the card emissive also carries the tintF
+  // value factor (≈0.8 mean) that the raw atlas albedo lacks.
+  mat.emissiveNode = (mat.colorNode as unknown as NV3).mul(
+    foliageTranslucency(vec3(1, 1, 1) as unknown as NV3, 0.1),
+  ) as unknown as typeof mat.emissiveNode;
   // impostors sit INSIDE their own crown shadow proxy (the impostor band's
   // only caster) — same sun-shell relief as the card crowns, using the
   // captured crown-surface normal (see foliageSunShadowRelief derivation)

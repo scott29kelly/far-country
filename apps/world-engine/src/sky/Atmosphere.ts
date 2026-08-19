@@ -84,7 +84,18 @@ const betaO = vec3(...BETA_O);
 function densities(h: NF): { dr: NF; dm: NF; doz: NF } {
   const dr = exp(h.div(-HR));
   const dm = exp(h.div(-HM));
-  const doz = max(0, float(1).sub(h.sub(25).abs().div(15)));
+  // stratospheric tent (Bruneton 10–25–40 km) + a boundary-layer floor.
+  // GA-3 r4: with ozone zero below 10 km, a near-horizontal ray from flight
+  // altitude runs ~180 km of pure rayleigh+mie — blue extinguishes, green
+  // survives, and the whole horizon band graded GREEN-grey (measured
+  // G > R and G > B in the aerial band). Real horizon bands stay pink-blue
+  // because Chappuis-band ozone absorbs green-red along exactly these long
+  // grazing paths. Floor 0.32·exp(−h/6): τ_G ≈ 0.09 over a 180 km grazing
+  // path (kills the green hump) but < 0.006 on any vertical path — zenith
+  // and mid-elevation sky are untouched, as is the sun disc (~40 km path).
+  const doz = max(0, float(1).sub(h.sub(25).abs().div(15))).max(
+    exp(h.div(-6)).mul(0.32),
+  );
   return { dr, dm, doz };
 }
 
@@ -152,6 +163,19 @@ export class Atmosphere {
    * per-frame auto-exposure cannot undo (exposure only rescales brightness).
    */
   readonly aerialClarity = uniform(0);
+  /**
+   * Sky-view LUT ray origin altitude (km above ground). GA-3 round 4: the LUT
+   * was baked at a FIXED 350 m — from the aerial cam at 3.4 km every
+   * below-horizon direction still marched the full boundary-layer mie soup
+   * (dm at 350 m = 0.75 vs 0.06 at 3.4 km), so the whole horizon band read as
+   * one murky brown wall ("no sky — murky brown-grey gradient", r3 critic).
+   * trackCamera() re-bakes the panorama when the camera climbs/descends past
+   * a threshold; at altitude the horizon grades physically — thin blue air
+   * above, a warm sunlit veil pooling low — because the ray origin now sits
+   * above the dense layer instead of inside it.
+   */
+  private readonly camAltKm = uniform(0.35);
+  private lastBakedAltKm = 0.35;
   private renderer: Renderer | null = null;
   private skyCompute: ComputeNode | null = null;
 
@@ -159,7 +183,20 @@ export class Atmosphere {
     this.transmittanceLUT = this.makeLUT(T_W, T_H);
     this.multiScatterLUT = this.makeLUT(MS_RES, MS_RES);
     this.skyViewLUT = this.makeLUT(SV_W, SV_H);
+    // tuning/ablation overrides (house ?fog=/?cov= idiom): ?afog=N sets the
+    // boundary-layer haze K, ?aclar=N the clarity lerp — ?aclar=1 nulls the
+    // whole aerial term (T=1), the bisect probe for "is this wash aerial?"
+    // Baked into the graph as constants at build time (aerial() runs after
+    // the scene pins the uniforms, so a .value write here would be clobbered).
+    const q = new URLSearchParams(window.location.search);
+    const afog = Number(q.get('afog') ?? NaN);
+    const aclar = Number(q.get('aclar') ?? NaN);
+    if (Number.isFinite(afog)) this.afogOverride = afog;
+    if (Number.isFinite(aclar)) this.aclarOverride = aclar;
   }
+
+  private afogOverride: number | null = null;
+  private aclarOverride: number | null = null;
 
   private makeLUT(w: number, h: number): StorageTexture {
     const t = new StorageTexture(w, h);
@@ -299,10 +336,16 @@ export class Atmosphere {
       const az = u.mul(2 * Math.PI).sub(Math.PI).add(sunAz);
       const dir = vec3(cos(elev).mul(cos(az)), sin(elev), cos(elev).mul(sin(az)));
 
-      const r = float(RG + 0.35);
+      // ray origin at the CAMERA's altitude (see camAltKm above). Clamped so
+      // the origin never dips into the ground row of the transmittance LUT.
+      const r = float(RG).add(clamp(this.camAltKm as unknown as NF, 0.05, 60));
       const mu = dir.y;
       const dGround = distToGround(r, mu);
       const dTop = distToTop(r, mu);
+      // path cap 180 km: long near-horizon paths saturate toward source-
+      // function white (tried 320 at altitude — the whole band bleached to
+      // grey; 180 keeps the horizon veil WARM-BLUE and graded, and the
+      // truncation error hides under the ground/terrain silhouette anyway)
       const dEnd = dGround.greaterThan(0).select(dGround, dTop).min(180);
 
       const sunDirN = this.sunDir.normalize();
@@ -354,6 +397,25 @@ export class Atmosphere {
     if (this.renderer && this.skyCompute) {
       await this.renderer.computeAsync(this.skyCompute);
     }
+  }
+
+  /**
+   * Per-frame altitude tracking (called by the post stack with the scene
+   * camera): re-bake the sky-view panorama when the camera has climbed or
+   * descended enough to change what the horizon looks like. Threshold is
+   * RELATIVE (12%) with a 40 m floor: at walk height (300–500 m) it never
+   * fires during normal play; a flight to the aerial vantage re-bakes a
+   * handful of times on the way up. The bake itself is 192×108×40 steps —
+   * far below one shadow cascade, safe to run inline on a frame.
+   */
+  trackCamera(altM: number): void {
+    if (!this.renderer || !this.skyCompute) return;
+    const altKm = Math.min(60, Math.max(0.05, altM / 1000));
+    const dead = Math.max(0.04, this.lastBakedAltKm * 0.12);
+    if (Math.abs(altKm - this.lastBakedAltKm) < dead) return;
+    this.camAltKm.value = altKm;
+    this.lastBakedAltKm = altKm;
+    this.renderer.compute(this.skyCompute);
   }
 
   /** sample the sky-view LUT for an arbitrary world direction */
@@ -411,15 +473,51 @@ export class Atmosphere {
       exp(y0.negate()).mul(distKm),
       exp(y0.negate()).sub(exp(y1.negate())).div(dy).mul(distKm),
     );
-    const tauF = integ.mul(this.aerialFogK as unknown as NF).max(0);
+    const fogKNode =
+      this.afogOverride !== null ? float(this.afogOverride) : (this.aerialFogK as unknown as NF);
+    const tauF = integ.mul(fogKNode).max(0);
 
-    const Tphys = vexp3(tauR.add(tauM).add(tauF).negate());
     // scene clarity lerps transmittance toward 1 (de-haze); 0 keeps the full
     // physical haze. Applied per-scene so the city can read through clear air.
-    const T = Tphys.add(vec3(1).sub(Tphys).mul(this.aerialClarity as unknown as NF));
-    const sky = this.skyColor(viewDir);
+    const clarNode =
+      this.aclarOverride !== null
+        ? float(this.aclarOverride)
+        : (this.aerialClarity as unknown as NF);
+    // In-scatter tint: sample the sky-view LUT at a HORIZON-CLAMPED direction,
+    // never below it. GA-3 round 4: below-horizon LUT texels hold the distant-
+    // land radiance (the marched brown-warm ground band) — feeding that back
+    // as the haze color meant every downward ray tinted terrain toward mud,
+    // and the tint JUMPED color exactly at the screen's horizon line, printing
+    // the "horizontal veil that starts and stops abruptly" the critic flagged
+    // (proven by ?aclar=1: veil band + the near-forest brown wash both vanish).
+    // 0.015 rad ≈ 0.9° above horizon: the warmest legitimate sky the LUT has —
+    // haze now grades smoothly with the reference's warm horizon light and
+    // cools upward with elevation instead of switching source texture.
+    const hazeDir = vec3(viewDir.x, viewDir.y.max(0.015), viewDir.z).normalize();
+    const sky = this.skyColor(hazeDir);
+
+    // GA-3 r4 — the fog is COMPOSITED SEPARATELY with its own, dimmer source.
+    // The old single-T formulation gave the boundary-layer mist the same
+    // in-scatter radiance as the km-scale atmosphere: the full near-horizon
+    // sky ring. That ring is 10–20× brighter than shaded foliage, so even the
+    // 2–3% wash a few hundred meters of mist produces dragged every dark
+    // crown toward glowing tan (?afog=0 turned the forest green again). A
+    // real ground-hugging parcel can't SEE the horizon ring — terrain blocks
+    // it; its illumination is the upper sky dome plus the sun-warmed veil.
+    // Source model: mix(zenith, horizon-sky, 0.45) ≈ hemispheric mean of the
+    // dome as seen from inside the boundary layer — roughly half the horizon
+    // ring's radiance and cooler, so short-range mist DESATURATES instead of
+    // glowing, while 5–15 km paths still pool into the references' warm veil.
+    const Ta = vexp3(tauR.add(tauM).negate());
+    const TaC = Ta.add(vec3(1).sub(Ta).mul(clarNode));
+    const TfPhys = exp(tauF.negate());
+    const Tf = TfPhys.add(float(1).sub(TfPhys).mul(clarNode));
+    const fogSky = mix(this.skyColor(vec3(0, 1, 0)), sky, 0.45);
+    // near-to-far compositing: mist first (it hugs the ground between the
+    // camera and the fragment), then the clean-air atmosphere over the result
+    const fogged = color.mul(Tf).add(fogSky.mul(float(1).sub(Tf)));
     // per-channel energy exchange: blue extinguishes first → haze reads blue
-    return color.mul(T).add(sky.mul(vec3(1).sub(T)));
+    return fogged.mul(TaC).add(sky.mul(vec3(1).sub(TaC)));
   }
 
   /** CPU transmittance toward the sun at ground level (for light color) */
@@ -437,7 +535,12 @@ export class Atmosphere {
       const h = Math.max(0, rx - RG);
       const drD = Math.exp(-h / HR);
       const dmD = Math.exp(-h / HM);
-      const dozD = Math.max(0, 1 - Math.abs(h - 25) / 15);
+      // keep the CPU sun-transmittance in lockstep with the GPU densities()
+      // (boundary-layer ozone floor — see densities() derivation)
+      const dozD = Math.max(
+        Math.max(0, 1 - Math.abs(h - 25) / 15),
+        0.32 * Math.exp(-h / 6),
+      );
       for (let c = 0; c < 3; c++) {
         tau[c] =
           (tau[c] as number) +

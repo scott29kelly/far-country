@@ -112,21 +112,38 @@ buy a one-second pause", rest still identified instantly):
 Ranked deltas, round-3 critique additions (r3 critic; each claim
 MEASURED by the lead before acceptance — three were part-refuted):
 
-17. Fine strata tilt diagonally with the r3 phase warp where real
-    bedding stays layer-parallel; crack/jointing micro-shadow weak
-    near-field. VERIFIED by crop (vertical varnish present and good;
-    the bed tilt is the real kernel of the critic's complaint). [r3]
-18. Aerial cam has no sky — murky brown-gray horizon gradient at
-    altitude, no cloud form or blue (was delta 10, now the aerial
-    frame's dominant failure). Plus moiré on the city lattice from
-    altitude (GA-4 artifact class, logged). [r1+r3 critics]
-19. Haze reads as a band with hard start/stop edges on mountains, and
-    lake/falls-w3561 carry large straight-edged triangular blur wedges
-    where terrain detail smears out — rendering artifacts, not weather.
-    DIAGNOSE first. [r3 critic]
-20. Near-field vegetation: no crown self-shadow or backlit translucent
-    edges at the low sun; grass an even carpet without contact
-    shadowing. [r3 critic]
+17. ~~Strata tilt / weak joint shadows~~ → FIXED r4: bed-warp vertical
+    decorrelation cut ~5x (beds drape together, residual tilt ≤ ~2°),
+    tilt-free cadence breathing at member boundaries, near-black crack
+    cores with brightened lips, varnish column coherence shortened so
+    tilt never accumulates. (An exact fall-line correction was tried
+    and REJECTED — it fingerprints curved flanks; documented in code.)
+18. ~~Aerial cam has no sky~~ → FIXED r4: the sky-view LUT was baked at
+    a fixed 350 m origin (from 3400 m every below-horizon ray marched
+    boundary-layer mie soup = the brown wall) — origin is now a camera-
+    altitude uniform with a re-bake dead band; plus a boundary-layer
+    ozone floor kills the green horizon hump. Moiré on the city lattice
+    from altitude stays open (GA-4 artifact class). [r1+r3]
+19. ~~Haze band edges + triangular wedges~~ → FIXED r4, two root causes:
+    (a) Atmosphere.aerial()'s in-scatter color jumped at dir.y=0 (LUT
+    below-horizon land radiance = the band edge) — now horizon-clamped;
+    boundary fog re-sourced from the upper dome (was the 10-20x
+    brighter horizon ring, which browned near forests). (b) The wedges
+    were never weather: FC-0017, the far-vista shell chording above the
+    canyon — shell verts now sink to their neighborhood minimum. [r3]
+20. ~~Near-field vegetation flat~~ → FIXED r4: interior-occlusion
+    darkening on crown cores (volumes, not card piles), two-lobe
+    translucency (the old pow-5 lobe was zero at 45°+ off-axis) with
+    impostor/shell parity, backlit warm rim fringe, grass per-clump
+    value jitter + contact ramp. An engine landmine (vdata in lighting-
+    context slots = garbage) is documented in code. [r3 critic]
+21. OPEN (r4 finding, FC-0018): the falls-e339 "grass rectangles" are
+    crown-shadow proxy BOX shadows (Forests.ts) — the r3 "splat
+    artifact" diagnosis was wrong (its ablation list missed the veg
+    casters). Needs a proxy shape/softness pass by a Forests.ts owner.
+22. OPEN (r4 residual): the far-shell ring still wastes ~40% of its
+    triangles underground in the corners — the honest fix is clipping
+    the ring to the square detail domain.
 
 Claims REFUTED by measurement, closed without action (instrument beats
 prose after two fix rounds on the same axis):

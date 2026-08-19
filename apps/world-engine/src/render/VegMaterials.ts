@@ -50,18 +50,67 @@ export function updateSunUniforms(sun: DirectionalLight): void {
  * Back-lit transmission glow: light through the blade toward a camera that
  * faces the sun. Thin-surface approximation; modest k since it is not
  * shadow-gated yet (full gating with Phase-5/6 light queries).
+ *
+ * GA3 r4: two-lobe phase function. The original pow-5-only lobe measured ≈0
+ * whenever the sun sits more than ~45° off the view axis — at the NJ rim
+ * framings (T=17 sun ~80° west of the south-facing view) foliage carried NO
+ * transmission at all (r3 critic: "no translucent bright edges where the low
+ * sun comes through"). A wide pow-2 wing at lower amplitude keeps a real
+ * forward-scatter term alive at cross-lit angles; looking into the sun the
+ * tight core still dominates, so the head-on glow is not doubled.
  */
 function translucency(albedo: NV3, k: number): NV3 {
   const viewDir = positionWorld.sub(cameraPosition).normalize();
   const toward = clamp(viewDir.dot(vec3(sunU.dir).negate()), 0, 1);
-  const glow = toward.pow(5).mul(sunU.intensity).mul(k);
+  const glow = toward
+    .pow(5)
+    .mul(0.7)
+    .add(toward.mul(toward).mul(0.45))
+    .mul(sunU.intensity)
+    .mul(k);
   const sunCol = sunU.color as unknown as NV3;
   return albedo.mul(sunCol).mul(glow).mul(vec3(0.9, 1.05, 0.55));
+}
+
+/**
+ * Exported variant for the impostor band and the canopy shell: the SAME
+ * transmission model as the card crowns, so the R2-card → impostor (460 m)
+ * and impostor → shell (620 m) handoffs keep one continuous glow level.
+ * Before r4 the impostors had NO translucency term — strengthening the card
+ * glow alone would have stamped a visible seam at every ring boundary.
+ */
+export function foliageTranslucency(albedo: NV3, k: number): NV3 {
+  return translucency(albedo, k);
 }
 
 /** grass variant: transmission strengthens toward the blade tip */
 export function grassTranslucency(albedo: NV3, tipT: NF): NV3 {
   return translucency(albedo, 0.09).mul(tipT);
+}
+
+/**
+ * GA3 r4 grass contact shading (critic: "the grass beneath is an even carpet
+ * with no blade texture or shadowing at contact points"). Two terms, both
+ * consumed by GroundRing.grassMaterial (the NJ meadow path):
+ *
+ * - `grassClumpValue`: per-clump value jitter (±18%) from the instance-cell
+ *   hash. The existing patch-scale (1.6 m) dryness drift is too coarse to
+ *   read at walk distance — individual clumps must differ from their
+ *   neighbors for the sward to carry texture.
+ * - `grassContactRamp`: value darkening toward the blade BASE, applied to
+ *   albedo (not aoNode) so it survives direct sun — the occlusion at a real
+ *   sward's contact points is mutual blade shadowing, which kills direct
+ *   light too. Fades out over 130→230 m: the far super-tufts hand off to
+ *   the terrain splat at 265 m and the splat has no contact term, so the
+ *   handoff must keep the r3-verified matched value.
+ */
+export function grassClumpValue(albedo: NV3, clumpHash: NF): NV3 {
+  return albedo.mul(clumpHash.mul(0.36).add(0.82));
+}
+
+export function grassContactRamp(tipT: NF, dist: NF): NF {
+  const ramp = smoothstep(-0.05, 0.62, tipT).mul(0.52).add(0.48);
+  return mix(ramp, float(1), smoothstep(130, 230, dist));
 }
 
 function vdata(): NV4 {
@@ -102,6 +151,12 @@ export function foliageSunShadowRelief(
 ): void {
   const n = shellNormal ?? (normalWorld as unknown as NV3);
   const facing = n.normalize().dot(vec3(sunU.dir) as unknown as NV3);
+  // NOTE (r4 attempt, reverted): gating this lift by a crown-depth shellness
+  // chain (varying/mix of vdata.w) turned every card crown beige — nodes
+  // built from explicit varyings resolve to garbage inside the
+  // receivedShadowNode lighting context (shots/wip/ga3/work-veg4/ab-*).
+  // Keep this Fn attribute-free (normalWorld only, the proven r3 form);
+  // interior occlusion lives in colorNode/aoNode instead (card material).
   (mat as unknown as { receivedShadowNode: unknown }).receivedShadowNode = Fn(
     (args: unknown) => {
       const shadow = (args as NF[])[0] as NF;
@@ -110,6 +165,28 @@ export function foliageSunShadowRelief(
       return mix(shadow, float(1), lift);
     },
   );
+  // backlit fringe (r4, the honest part of the "translucent bright edges"
+  // ask): a sun-shell fragment seen edge-on IS the thin rim where the low
+  // sun grazes through the crown silhouette — emissive add of the sun color
+  // on (1−|N·V|)^6 × a hard sun-facing gate. pow-6 because crown-sphere-bent
+  // normals put a BROAD ring of every crown near the silhouette — a soft
+  // pow-3 fringe painted whole sun-side crown halves warm-beige.
+  const base = mat.colorNode as unknown as NV3 | null;
+  if (base) {
+    const viewDir = cameraPosition.sub(positionWorld).normalize();
+    const rimK = float(1)
+      .sub(n.normalize().dot(viewDir).abs())
+      .pow(6)
+      .mul(smoothstep(0.3, 0.85, facing))
+      .mul(sunU.intensity)
+      .mul(0.06 * k);
+    const rimE = base
+      .mul(sunU.color as unknown as NV3)
+      .mul(vec3(1.1, 1.0, 0.62))
+      .mul(rimK) as unknown as NV3;
+    const prevE = mat.emissiveNode as unknown as NV3 | null;
+    mat.emissiveNode = (prevE ? prevE.add(rimE) : rimE) as unknown as typeof mat.emissiveNode;
+  }
   // warm forward-scatter on the sun shell: leaves transmit + inter-reflect
   // the low warm sun, so lit crown sides skew golden at 17:00 (plateau refs)
   // while shade shells keep the cool ambient green — scaled by the same k
@@ -331,8 +408,11 @@ export function foliageMaterial(p: FoliageMatParams): MeshStandardNodeMaterial {
     tinted as unknown as Parameters<typeof varying>[0],
   ) as unknown as typeof mat.colorNode;
   mat.emissiveNode = varying(
-    translucency(tinted as unknown as NV3, 0.032) as unknown as Parameters<typeof varying>[0],
+    translucency(tinted as unknown as NV3, 0.055) as unknown as Parameters<typeof varying>[0],
   ) as unknown as typeof mat.emissiveNode;
+  // NO aoNode: vdata-derived values in lighting-context slots blow out to
+  // beige on the instanced foliage materials (see foliageCardMaterial /
+  // relief notes) — the interior read comes from the tinted-albedo d.w ramp.
   mat.roughness = 0.8; // real leaves keep a little sheen, far less than default
   mat.metalness = 0;
   mat.side = DoubleSide;
@@ -354,21 +434,49 @@ export function foliageCardMaterial(
   const d = vdata();
   const t = texture(atlas, uv() as never) as unknown as NV4;
   const albedo = t.rgb.mul(t.rgb); // sqrt-encoded at capture
+  // interior/far handling (r4): every crown-depth term below fades out by
+  // ~420 m — R2 crowns are a few dozen px there and the impostor band they
+  // hand off to (460 m) has no vdata, so the far aggregate value must stay
+  // the r3-verified one. Near, the terms are what make a crown read as a
+  // volume instead of a card pile.
+  const camDistV = varying(
+    positionWorld.sub(cameraPosition).length() as unknown as Parameters<typeof varying>[0],
+  ) as unknown as NF;
+  const farK = smoothstep(220, 420, camDistV);
   // vertex-stage hoist (Phase 7 perf): hueShift is LINEAR in its base color
   // (per-channel factor) and vdata is flat per card — fold hue + age into
   // one varying factor and multiply the atlas read by it per fragment.
   // Translucency glow likewise (view/sun terms are smooth at card scale).
+  // r4 deepens the crown-core value ramp (vdata.w) on top of the existing
+  // age term: core cards drop to ~0.3× shell instead of 0.59× — the WHOLE
+  // interior-occlusion term (no aoNode half, see the note below).
+  const deepen = varying(
+    smoothstep(0.35, 0.95, d.w).mul(0.5).add(0.5) as unknown as Parameters<typeof varying>[0],
+  ) as unknown as NF;
   const tintF = varying(
     hueShift(vec3(1, 1, 1), d.x, p.color.hueVar * 0.8).mul(
       d.w.mul(0.75).add(0.25),
     ) as unknown as Parameters<typeof varying>[0],
   ) as unknown as NV3;
-  mat.colorNode = albedo.mul(tintF);
-  mat.emissiveNode = albedo.mul(
-    varying(
-      translucency(tintF, 0.06) as unknown as Parameters<typeof varying>[0],
-    ) as unknown as NV3,
-  );
+  mat.colorNode = albedo.mul(tintF).mul(mix(deepen, float(1), farK));
+  // NO aoNode here: on these instanced card materials ANY vdata-derived
+  // value in a lighting-context slot (aoNode, or a receivedShadowNode gate)
+  // resolves to garbage and blows the ambient term out to warm beige —
+  // verified by bisection, shots/wip/ga3/work-veg4/ab-*.png. The interior
+  // occlusion therefore lives entirely in the colorNode `deepen` term above
+  // (colorNode chains with the same varyings are proven safe).
+  // edge-thinness gate on the transmission (r4): alpha near the cutout edge
+  // = optically thin foliage — those fragments carry ~3× the old glow while
+  // solid card centers keep ~the old level (0.13×0.55 ≈ 0.07 ≈ old 0.06),
+  // so backlit crowns read as glowing RIMS, not uniformly emissive blobs.
+  const thin = float(1).sub(smoothstep(0.4, 0.85, t.w));
+  mat.emissiveNode = albedo
+    .mul(
+      varying(
+        translucency(tintF, 0.13) as unknown as Parameters<typeof varying>[0],
+      ) as unknown as NV3,
+    )
+    .mul(thin.mul(0.9).add(0.55));
   // edge-on fade: a card whose plane is parallel to the view ray shows as a
   // bare dark sheet at close range (DELTA #5 — they read as floating slabs).
   // Fade those out within ~70 m; cross-plane cards keep crown coverage via
@@ -393,7 +501,10 @@ export function foliageCardMaterial(
   mat.metalness = 0;
   mat.side = DoubleSide;
   // R1/R2 crowns are shadowed almost entirely by the solid crown proxies —
-  // full-strength sun-shell relief or they flatten to one dark green
+  // full-strength sun-shell relief or they flatten to one dark green.
+  // (Interior occlusion lives in the `deepen` term above — gating the
+  // shadow lift itself by a shellness varying broke in the lighting context,
+  // see the relief derivation.)
   foliageSunShadowRelief(mat, 0.75);
   return mat;
 }

@@ -31,7 +31,7 @@ import {
 } from 'three/tsl';
 import { canopyAt, cellHash2 } from '../gpu/passes/Scatter';
 import { fbm3 } from '../gpu/noise/NoiseTSL';
-import { grassTranslucency } from '../render/VegMaterials';
+import { foliageTranslucency } from '../render/VegMaterials';
 import type { NF, NV2, NV3 } from '../gpu/TSLTypes';
 import type { Heightfield } from './Heightfield';
 import { WORLD_SIZE } from './WorldConst';
@@ -147,7 +147,11 @@ export function buildCanopyShell(
     );
     return albedo;
   })();
-  mat.emissiveNode = grassTranslucency(albedo, float(0.5)).mul(0.5);
+  // r4: share the foliage transmission model (the impostors it dithers in
+  // behind gained a real translucency term — the old grass-variant glow at
+  // quarter strength would have stepped at the 620 m band). Slightly under
+  // the impostors' 0.1: the aggregate shell is optically thick.
+  mat.emissiveNode = foliageTranslucency(albedo, 0.06);
   mat.roughness = 0.85;
   mat.metalness = 0;
 

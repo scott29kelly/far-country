@@ -341,10 +341,31 @@ export class TerrainTiles {
       1,
     );
     // sit well below the tile mesh inside the world (coarse far tiles deviate
-    // several meters — the shell poked through and showed far-mode shading)
-    const farH = mix(baked, farMacro.height, edgeBlend).sub(
-      mix(float(9), float(2.5), edgeBlend),
-    );
+    // several meters — the shell poked through and showed far-mode shading).
+    // GA-3 round 4: a constant −9 m sink is NOT enough — the ring's
+    // ~240×290 m triangles CHORD across concave relief (the wild-ring
+    // canyon), interpolating ABOVE the true surface: giant smooth
+    // straight-edged wedges in front of the detailed cliffs (w3561 "talus
+    // apron", proven by magenta-painting the shell; the sky owner's bisect
+    // found the same for the white streak-veils). Fix: each interior
+    // vertex sinks to the MINIMUM baked height over a neighborhood that
+    // covers its triangle span (13 nearest-reads at ≤184 m spacing +
+    // bilinear center), minus a margin — no chord between two vertices can
+    // then ride above terrain either endpoint has sampled. Applied to the
+    // baked (interior) branch only and faded out by edgeBlend, so the
+    // analytic vista beyond the world edge is bit-identical; the seam band
+    // keeps hugging the terrain from below. Walkable terrain, collision
+    // and detailed-domain silhouettes untouched (backdrop mesh only).
+    let minBaked = baked;
+    const sinkOffsets: ReadonlyArray<readonly [number, number]> = [
+      [170, 0], [-170, 0], [0, 170], [0, -170],
+      [184, 184], [-184, 184], [184, -184], [-184, -184],
+      [90, 0], [-90, 0], [0, 90], [0, -90],
+    ];
+    for (const [ox, oz] of sinkOffsets) {
+      minBaked = minBaked.min(hf.sampleHeightNearest(fxz.add(vec2(ox, oz))));
+    }
+    const farH = mix(minBaked.sub(14), farMacro.height.sub(2.5), edgeBlend);
     farMat.positionNode = vec3(fxz.x, farH, fxz.y);
     // analytic per-vertex normal (no baked maps beyond the world edge):
     // finite-difference the far macro height, interpolated via varying

@@ -26,10 +26,20 @@
  * warmer/paler; band contrast is distance-blended (ultrafine lamination near,
  * reduced fine-bed contrast far).
  *
+ * GA-3 round 4: the fine-strata warp loses its vertical gradient (bed
+ * TILT) but keeps lateral wander, so beds stay layer-parallel on benched
+ * faces; varnish columns get shorter vertical coherence so their residual
+ * geometric tilt never accumulates into long diagonals; crack slots get
+ * near-black cores with lit lips at near/mid range; the NEAREST-filtered
+ * biome fetch is warped to dissolve its texel rectangles; slope-keyed
+ * class thresholds are jittered so talus/rock transitions stop tracking
+ * straight geometric creases; scree gains block/joint/lichen octaves.
+ *
  * PERF: all repeated noise comes from the baked NoiseBake textures (was ~35
- * live noise evaluations per pixel ≈ 52 ms/frame; now ~26 filtered fetches).
- * Gradient channels are pre-derived, so bump/ridge detail is one fetch
- * instead of four finite-difference evaluations.
+ * live noise evaluations per pixel ≈ 52 ms/frame; now ~27 filtered fetches —
+ * round 4 added one, the biome-uv warp). Gradient channels are pre-derived,
+ * so bump/ridge detail is one fetch instead of four finite-difference
+ * evaluations.
  */
 
 import type { StorageTexture } from 'three/webgpu';
@@ -61,7 +71,8 @@ import { cropRows, cropTint, zoneField, type ZoneNodes } from '../world/ZoneFiel
 export interface TerrainShadingInputs {
   /** rgba16f: xyz world normal, w slope */
   normalTex: StorageTexture;
-  /** rgba8: biomeId/8, snow, vegDensity, rockExposure (LINEAR-filtered) */
+  /** rgba8: biomeId/8, snow, vegDensity, rockExposure (NEAREST-filtered —
+   *  the fetch below warps its uv to hide the hard texel edges) */
   biomeTex: StorageTexture;
   /** rgba16f at sim res: moisture, flowStrength, riverDepth, W */
   fieldsTex: StorageTexture;
@@ -141,11 +152,30 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   const ns = inp.baseNormalSlope ?? texture(inp.normalTex, uv);
   const baseNormal = ns.xyz.normalize().toVar();
   const slope = ns.w.toVar();
-  const bio = texture(inp.biomeTex, uv);
+  // GA-3 round 4 — the biome classification texture is NEAREST-filtered
+  // (BiomeSnow.ts), so vegDensity/rockExposure step at whole ~3 m texels:
+  // the grass splat showed axis-aligned dark/pale RECTANGLES (round-3
+  // falls-e339 frame bottom; ablation proved them not shadows). The class
+  // channels are soft masks — sub-texel accuracy is meaningless — so the
+  // fetch coordinate is warped ±~2.5 m by a low-frequency fbm gradient
+  // (one baked fetch, gives a vec2) plus ±0.7 m of per-pixel hash dither:
+  // texel edges dissolve into organic ragged boundaries. normalTex and
+  // fieldsTex (linear-filtered) keep the exact uv.
+  const bioWarp = texture(inp.noiseA, wxz.div(9 * PERIOD_FBM)).zw.mul(1.6);
+  const bioJit = vec2(
+    hash12(wxz.mul(4.13)).sub(0.5),
+    hash12(wxz.mul(3.71).add(17.9)).sub(0.5),
+  ).mul(1.4);
+  const bio = texture(inp.biomeTex, uvFromWorld(wxz.add(bioWarp).add(bioJit)));
   const fields = texture(inp.fieldsTex, uv);
   // Beyond the world edge the baked maps clamp to their last texel row and
   // SMEAR it radially across the vista shell (pale streaks). Cross-fade to
   // procedural estimates outside the domain (far shell only).
+  // (GA-3 round 4 note: the w3561 "smooth dark talus apron" was the far
+  // shell itself — its ring triangles chorded above the wild-ring canyon
+  // and wore these baked valley-floor classes as a smeared skin. Fixed at
+  // the source in TerrainTiles with a neighborhood-min vertex sink; no
+  // material-side gating needed here.)
   const outsideK = inp.far
     ? smoothstep(
         WORLD_HALF * 0.96,
@@ -174,19 +204,50 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   const wallDiag = wxz.x.add(wxz.y).mul(0.7071); // 45° axis — 1-D wall abscissa
   const wallP = vec2(wallDiag, h);
   const steepK = smoothstep(0.5, 0.85, slope).toVar();
-  const detailP = mix(wxz, wallP, steepK).toVar();
+  // GA-3 round 4 — wall-abscissa DEGENERACY fallback (w3561 "smooth dark
+  // smear" apron): on a face whose strike runs along (1,−1) (NE/SW-facing),
+  // x+z is constant along strike, so every wall-domain field varies only
+  // with elevation and the detail collapses into a 1-D smear. diagAlign =
+  // (nx+nz)²/(nx²+nz²) measures it: 2 = fully degenerate, 0 = ideal.
+  // Near-degenerate steep faces fall back to ground-style XZ sampling —
+  // on the 40–55° aprons where this occurs, XZ foreshortening reads as
+  // gravity-sorted downslope talus streaking, which is the right look
+  // anyway. S/N/E/W-facing walls (the whole karst band) are untouched.
+  const nSum = baseNormal.x.add(baseNormal.z);
+  const nxz2 = baseNormal.x
+    .mul(baseNormal.x)
+    .add(baseNormal.z.mul(baseNormal.z));
+  const degK = smoothstep(1.45, 1.85, nSum.mul(nSum).div(nxz2.max(1e-5))).toVar();
+  const steepKd = steepK.mul(degK.oneMinus()).toVar();
+  const detailP = mix(wxz, wallP, steepKd).toVar();
   /** map a 2-D detail gradient into world space: ground = XZ plane, wall =
    *  (diagonal, up) plane — same blend as detailP so shading matches color */
   const gradVec = (g: NV2): NV3 =>
     mix(
       vec3(g.x, 0, g.y),
       vec3(g.x.mul(0.7071), g.y, g.x.mul(0.7071)),
-      steepK,
+      steepKd,
     );
   // camera distance — used by the color octaves for detail-frequency LOD
   // (GA-3 round-3 critique: "detail frequency is identical near and far")
   // and later by the normal-domain far synthesis.
   const camDist = wp.sub(cameraPosition).length().toVar();
+
+  // GA-3 round 4, ATTEMPTED AND REJECTED — a fall-line-corrected abscissa
+  // wallU = wallDiag + 0.7071(nx+nz)·ny/(1−ny²)·h (it exactly cancels the
+  // depth-with-height drift that tilts wallDiag-keyed fields ~25–30° on
+  // benched faces; the derivation is in the work-rock4 session notes). It
+  // is exact on PLANAR walls, but the correction term's lever arm is
+  // absolute elevation: wherever the normal varies (every curved canyon
+  // flank) the h-coupling swamps the abscissa and ALL wall fields curl
+  // into elevation-contour fingerprints (work-rock4/valley-noveg v1+v2 vs
+  // -CONTROL). Slope-gating only moves the artifact into the gate band
+  // (coef·h sweeps hundreds of meters of abscissa across a terrace lip).
+  // Conclusion: bed tilt is fixed in the WARP terms below — the beds' base
+  // phase is pure elevation and needs no coordinate surgery; the varnish
+  // columns keep their modest geometric tilt on axis-facing benches and
+  // get SHORTER VERTICAL COHERENCE instead, so the tilt never accumulates
+  // into a long legible diagonal.
 
   // ---------- macro variation (2–50 m breakup — tiling killer) ----------------
   const macroA = val(43.7);
@@ -210,6 +271,18 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   // 0.36-span compression left the whole wall one value — the refs (wingate,
   // white-rim) step much wider, so the span is opened to 0.5.
   const warpJit = valS(27, 0.91, 0.07).toVar(); // shared band jitter warp
+  // GA-3 round 4 — class-boundary jitter: the w3561 landslide apron met the
+  // bedded wall along a RAZOR-STRAIGHT slope isoline (a geometric crease)
+  // that critics kept reading as an artifact. All slope-keyed CLASS
+  // thresholds (rock/scree weights, varnish face gate) now see slope
+  // through ±~0.07 of 11–27 m noise (both fields already fetched), so
+  // material transitions wander organically along straight creases.
+  // Color-only: collision, silhouettes and the steepK sampling domain are
+  // untouched.
+  const slopeJ = slope
+    .add(warpJit.mul(0.045))
+    .add(macroB.sub(0.5).mul(0.06))
+    .toVar();
   const strataPhase = h
     .mul(0.028)
     .add(valS(74, 0.11, 0.83).mul(3.6))
@@ -241,16 +314,36 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   //      wall instead of running unbroken across the frame;
   //   c) lane drift ×3 (0.004→0.012/m) — the band SEQUENCE itself now
   //      reshuffles every ~80 m of wall, not every ~250 m.
+  // GA-3 round 4 (lead verified: the warp tilted fine beds into DIAGONAL
+  // stripes; real bedding stays layer-parallel — benched-strata ref). Bed
+  // TILT is the warp's gradient along the visible up-the-face direction:
+  // its h-lane decorrelated adjacent beds (shear), and its wallDiag phase
+  // drifts with height on any benched face (climbing also advances the
+  // horizontal position). Lateral phase wander is fine — beds may DRAPE,
+  // they must not FAN. Fixes, same fetch count:
+  //   • warp vertical decorrelation cut 0.016 → 0.003/m lane — adjacent
+  //     beds wander TOGETHER;
+  //   • warp amp/freq 2.8→2.0 / 0.01→0.005 — the benched-slope phase
+  //     drift falls ~3×, capping residual tilt at ~2°;
+  //   • the lost spacing wander is restored TILT-FREE by an h-only squeeze
+  //     borrowed from the member field below (zero extra fetches): bed
+  //     cadence breathes ±~20% at member boundaries, which is where real
+  //     sections change bed thickness.
   const strataLane = wallDiag.mul(0.012).add(7.3);
-  const bedWarp = band(wallDiag.mul(0.01), h.mul(0.016).add(3.7))
+  const bedWarp = band(wallDiag.mul(0.005), h.mul(0.003).add(3.7))
     .sub(0.5)
-    .mul(2.8);
+    .mul(2.0);
   const bedPersist = band(wallDiag.mul(0.006), h.mul(0.004).add(11.9));
+  // member fields hoisted above the fine strata (also used for hue stepping
+  // below) so the squeeze term can reuse them
+  const memberLane = valS(800, 0.07, 0.93).toVar();
+  const memberP = band(h.mul(0.04), memberLane.mul(1.1).add(9.3));
   const strataFineP = h
     .mul(0.24) // ~4 m base cadence per wingate-cliffs ref
     .add(valS(74, 0.11, 0.83).mul(0.9)) // gentle dip undulation
     .add(warpJit.mul(0.35))
-    .add(bedWarp);
+    .add(bedWarp)
+    .add(memberP.sub(0.5).mul(0.8)); // h-only spacing squeeze (no tilt)
   const strataFine = band(strataFineP, strataLane);
   // detail-frequency LOD (critique: "frequency identical near and far") —
   // past ~600 m the 4 m beds compress toward 2–3 px stripes and read as
@@ -273,8 +366,7 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   }
   // stratigraphic members: every ~25 m of section alternates warm ochre and
   // cool gray-blue — benched-strata ref shows HUE stepping, not just value
-  const memberLane = valS(800, 0.07, 0.93).toVar();
-  const memberP = band(h.mul(0.04), memberLane.mul(1.1).add(9.3));
+  // (memberLane/memberP hoisted above the fine strata, round 4)
   const memberK = zm.tKarst.mul(0.55).add(0.4);
   rockCol = mix(
     rockCol,
@@ -307,9 +399,18 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   //     hue range without leaving the palette;
   //   • coverage threshold dropped so varnish visibly OWNS panels of the
   //     face rather than accenting them.
+  // round 4: the wide/mid columns were the most legible diagonals in the
+  // round-3 falls shots — the wallDiag abscissa tilts them ~25–30° on
+  // axis-facing benches, and their long vertical coherence (200 m / 70 m
+  // lanes) let the tilt accumulate across a whole terrace. Coordinate
+  // surgery failed (see the wallU note above), so the coherence is
+  // shortened instead: lane drift 0.005→0.011 and 0.014→0.03 breaks the
+  // sheets into ~90 m / ~35 m segments — each segment still reads as
+  // down-wall drainage, but a fresh segment restarts before the drift
+  // becomes a legible diagonal.
   const varnPatch = band(wallDiag.mul(0.045), h.mul(0.018).add(43.1));
-  const varnColW = band(wallDiag.mul(0.03), h.mul(0.005).add(61.7));
-  const varnColM = band(wallDiag.mul(0.11), h.mul(0.014).add(29.3));
+  const varnColW = band(wallDiag.mul(0.03), h.mul(0.011).add(61.7));
+  const varnColM = band(wallDiag.mul(0.11), h.mul(0.03).add(29.3));
   const varnStreak = band(wallDiag.mul(0.55), h.mul(0.03).add(17.7));
   // seep-intensity field. Averaging [0,1] noises collapses variance (stdev
   // ~0.15 around 0.5), which is why early round-3 passes never reached the
@@ -331,8 +432,11 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
     .mul(1.5)
     .add(0.5)
     .toVar();
-  const faceGate = smoothstep(0.55, 0.9, slope) // faces, not benches
+  const faceGate = smoothstep(0.55, 0.9, slopeJ) // faces, not benches (slopeJ: round-4 boundary jitter)
     .mul(zm.tAlp.mul(0.5).oneMinus()) // alpine massif keeps its own palette
+    // degenerate-abscissa faces (round 4): the column fields are 1-D there
+    // and would print fake HORIZONTAL varnish — fade them out with degK
+    .mul(degK.mul(0.75).oneMinus())
     .toVar();
   const varnWash = smoothstep(0.38, 0.58, varnField).mul(faceGate);
   const varnMid = smoothstep(0.5, 0.68, varnField).mul(faceGate);
@@ -357,6 +461,23 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   const joint = smoothstep(0.46, 0.64, jTex.a);
   rockCol = rockCol.mul(jTex.z.mul(0.3).add(0.85)); // per-block value drift
   rockCol = mix(rockCol, rockCol.mul(0.5), joint.mul(0.65)); // fracture shadow
+  // GA-3 round 4 — crack micro-shadow (critic: refs show "crisp dark
+  // fracture lines… near-black crack shadows to bright lit faces within a
+  // few pixels"; ours read soft). Same jTex fetch, ALU only:
+  //   • crackCore — a tight window at the top of the F1 web (0.60–0.72 vs
+  //     the broad 0.46–0.64 shadow band) drops to ~0.2× albedo: the
+  //     near-black slot at the fracture itself;
+  //   • crackLip — the band just OUTSIDE the core brightens ~1.15×: the
+  //     lit fracture edge that produces the few-pixel value swing;
+  //   • both fade past mid-range (~700 m) — deeper slots at distance are
+  //     subpixel and would alias into pepper noise.
+  const crackNear = smoothstep(700, 180, camDist).toVar();
+  const crackCore = smoothstep(0.6, 0.72, jTex.a);
+  const crackLip = smoothstep(0.44, 0.55, jTex.a).mul(
+    smoothstep(0.63, 0.53, jTex.a),
+  );
+  rockCol = mix(rockCol, rockCol.mul(0.2), crackCore.mul(crackNear).mul(0.85));
+  rockCol = rockCol.mul(crackLip.mul(crackNear).mul(0.15).add(1));
   // lichen/weathering: dark macro splotches on long-exposed faces
   const lichen = smoothstep(0.6, 0.85, val(23.7, 0.53, 0.27));
   rockCol = mix(rockCol, rockCol.mul(0.62), lichen.mul(0.5));
@@ -369,13 +490,22 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   // stop is pushed warmer/paler (buff → warm pink-buff, +0.07 value) and a
   // coarse fan mottle (macroB) is layered on so the apron reads as loose
   // shed material against the bedded wall, not the same texture continued.
+  // round 4 (w3561 critique: the apron read as a "smooth dark smear") —
+  // scree carried only TWO octaves (meso + macroB fan mottle) while rock
+  // carries four. Loose talus is shed BLOCKS, so it borrows the jointing
+  // fetch: per-block tone drift + a light fracture web (cobble gaps), plus
+  // the lichen splotch field for long-exposure staining. All reused
+  // fetches; the matching normal-domain crease share is added at jointAmp.
   const scree = mix(
     vec3(0.4, 0.375, 0.34),
     vec3(0.565, 0.485, 0.375),
     zm.tKarst,
   )
     .mul(meso.mul(0.35).add(0.78))
-    .mul(macroB.mul(0.22).add(0.89));
+    .mul(macroB.mul(0.22).add(0.89))
+    .mul(jTex.z.mul(0.26).add(0.87)) // per-block tone drift
+    .mul(joint.mul(0.28).oneMinus()) // cobble-gap shadow web
+    .mul(lichen.mul(0.22).oneMinus()); // weathering stains
   const soil = mix(vec3(0.155, 0.12, 0.085), vec3(0.24, 0.195, 0.135), meso).mul(
     micro.mul(0.2).add(0.9),
   );
@@ -424,11 +554,14 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   );
 
   // ---------- class weights ------------------------------------------------------
-  const rockW = smoothstep(0.62, 1.15, slope).max(rockExposure.mul(0.85)).toVar();
-  const screeW = smoothstep(0.42, 0.62, slope)
-    .mul(smoothstep(1.15, 0.7, slope))
+  // slopeJ (round 4): jittered slope so class transitions never track a
+  // straight geometric crease — see slopeJ derivation above
+  const rockW = smoothstep(0.62, 1.15, slopeJ).max(rockExposure.mul(0.85)).toVar();
+  const screeW = smoothstep(0.42, 0.62, slopeJ)
+    .mul(smoothstep(1.15, 0.7, slopeJ))
     .mul(smoothstep(380, 700, h))
-    .mul(rockW.oneMinus());
+    .mul(rockW.oneMinus())
+    .toVar();
   const grassW = smoothstep(0.5, 0.22, slope)
     .mul(vegDensity)
     .mul(zm.tKarst.mul(0.5).oneMinus())
@@ -560,7 +693,16 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   // lives in the wall-blended domain, so gradVec maps it (÷13.6 world units,
   // ×2 range factor as everywhere).
   const jg = jTex.xy.div(13.6).mul(2);
-  const jointAmp = steepK.mul(rockW).mul(snowW.oneMinus()).mul(0.5);
+  // round 4: crease amp +70% at near/mid range (paired with the crackCore
+  // albedo slots — the crack must SHADE, not just tint), and the talus
+  // apron (screeW, steepK≈0 there) now gets a reduced crease share so shed
+  // fans read as blocky debris instead of a smooth smear (w3561 critique).
+  const jointAmp = steepKd
+    .mul(rockW)
+    .mul(crackNear.mul(0.7).add(1))
+    .add(screeW.mul(0.3))
+    .mul(snowW.oneMinus())
+    .mul(0.5);
   nrm = nrm.add(gradVec(jg).mul(jointAmp)).normalize();
 
   if (!inp.far) {
@@ -592,7 +734,9 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
     // at one frequency and drowns the strata/varnish octaves — fade it to a
     // floor well before the farK crag synthesis takes over
     const bumpDist = smoothstep(550, 130, camDist).mul(0.65).add(0.35);
-    const bumpAmp = mix(float(0.25), float(0.62), rockW)
+    // round 4: scree shares most of the rock bump — loose talus is at
+    // least as rough as the wall it shed from (w3561 smooth-apron read)
+    const bumpAmp = mix(float(0.25), float(0.62), rockW.max(screeW.mul(0.8)))
       .mul(snowW.mul(0.7).oneMinus())
       .mul(varnK.mul(0.5).oneMinus())
       .mul(bumpDist)
