@@ -109,6 +109,45 @@ buy a one-second pause", rest still identified instantly):
     (splat/moisture/zone-mask sampling artifact) — terrain/veg owner,
     next round. [r2 critic + r3 bisect]
 
+Ranked deltas, round-3 critique additions (r3 critic; each claim
+MEASURED by the lead before acceptance — three were part-refuted):
+
+17. Fine strata tilt diagonally with the r3 phase warp where real
+    bedding stays layer-parallel; crack/jointing micro-shadow weak
+    near-field. VERIFIED by crop (vertical varnish present and good;
+    the bed tilt is the real kernel of the critic's complaint). [r3]
+18. Aerial cam has no sky — murky brown-gray horizon gradient at
+    altitude, no cloud form or blue (was delta 10, now the aerial
+    frame's dominant failure). Plus moiré on the city lattice from
+    altitude (GA-4 artifact class, logged). [r1+r3 critics]
+19. Haze reads as a band with hard start/stop edges on mountains, and
+    lake/falls-w3561 carry large straight-edged triangular blur wedges
+    where terrain detail smears out — rendering artifacts, not weather.
+    DIAGNOSE first. [r3 critic]
+20. Near-field vegetation: no crown self-shadow or backlit translucent
+    edges at the low sun; grass an even carpet without contact
+    shadowing. [r3 critic]
+
+Claims REFUTED by measurement, closed without action (instrument beats
+prose after two fix rounds on the same axis):
+- "Channel sparkle constant scale to horizon / no perspective falloff":
+  sparkle stdev measured 15.8 near → 8.4 far on round3/gate.png; far
+  channel is BRIGHTER than the sky band above it (ratio 1.42).
+- "Lakes flat matte navy, must mirror sky": the plunge-pool REFERENCE
+  photo's still water measures 0.16-0.3 of its sky brightness; our west
+  lake sits at 0.35 — within the photographic range of the approved
+  bar. Water reflectivity is CLOSED per the reference-derived ratio; a
+  bright specular margin rim (the one ref-supported residual) is
+  optional later polish.
+- Falls critiques (three escalating rounds): the reference set contains
+  NO waterfall photograph — there is no bar to judge ribbons against.
+  Falls polish STOPS until Scott approves a falls reference (logged
+  below); the r2-r3 ribbon work stands.
+
+Logged for Scott (additional): the GA-2 reference set has no waterfall
+image — critics improvise their own falls bar each round. Adding one
+PD/CC0 falls photo would be a logged swap per SOURCES.md rules.
+
 Critic misread, noted not actioned: the aerial "repeated rectangular
 patch grid with hard seams" is the authored Allotment farmland north of
 the rim — approved content outside the band scope. If its seams bother
