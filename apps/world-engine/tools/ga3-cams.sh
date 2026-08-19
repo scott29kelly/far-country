@@ -5,8 +5,8 @@
 # review's redo-batch.sh (the FINAL coords the v3 verdict stills used);
 # rim/valley from shoot-batch.sh (never re-shot, so those coords stand).
 # Aerial takes --cov 0 (cloud cover off) per the original review.
-# Usage: sh cams.sh <round-dir>   e.g. sh cams.sh round0
-cd "$(dirname "$0")/../../.."
+# Usage (from apps/world-engine): sh tools/ga3-cams.sh <round-dir>
+cd "$(dirname "$0")/.."
 R="shots/wip/ga3/$1"
 mkdir -p "$R"
 npx tsx tools/shoot.ts --scene newjerusalem --cam "0,495,2900,3.1416,-0.05,60"    --out "$R/gate.png"
