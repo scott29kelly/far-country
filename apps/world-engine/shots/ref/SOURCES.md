@@ -44,7 +44,6 @@ STRUCTURE / ATMOSPHERE photography lives here.
 | --- | --- | --- | --- | --- |
 | gold-leaf-dome-wv-capitol.jpg | [Commons: gold-leaf dome, West Virginia Capitol (LCCN2015631769)](https://commons.wikimedia.org/wiki/File:The_gold-leaf_dome_of_the_West_Virginia_Capitol_in_Charleston_LCCN2015631769.tif) | Carol M. Highsmith (LoC) | Public domain | MATERIAL — real gold leaf in daylight: specular response, warmth |
 | quarried-white-marble-block.jpg | [Commons: freshly quarried white marble block (LCCN2015633932)](https://commons.wikimedia.org/wiki/File:A_frontloader_deposits_a_multi-ton,_freshly_quarried_block_of_white_marble_at_the_processing_facility_owned_by_Colorado_Stone_Quarries_in_the_aptly_named_town_of_Marble_in_Gunnison_County,_Colorado_LCCN2015633932.tif) | Carol M. Highsmith (LoC) | Public domain | MATERIAL — massive cut white stone: subsurface glow, saw faces |
-| weathered-marble-columns-outdoors.jpg | [Commons: Colorado-Yule marble columns (LCCN2015633767)](https://commons.wikimedia.org/wiki/File:Columns_of_marble_that_were_once_part_of_the_Colorado-Yule_Mining_Company%27s_thriving_processing_mill%27s_foundation_in_the_tiny_town_of_Marble_in_Colorado%27s_Crystal_River_Valley_still_stand_at_what_is_LCCN2015633767.tif) | Carol M. Highsmith (LoC) | Public domain | MATERIAL — white stone weathering outdoors, edge wear |
 
 ## sky/ — atmosphere at the fixed 17:00 light
 
@@ -58,6 +57,12 @@ Known gap: no dedicated desert cumulus/cloud reference — public-domain
 candidates were thin. The Trail Ridge image in plateau/ carries the best
 cloud form in the set. A cloud reference Scott likes can be added later as
 a logged swap.
+
+APPROVED by Scott 2026-08-19 (13 images): he reviewed the contact sheet,
+cut the weathered-marble-columns image (weak — small in frame beside a
+shack), and kept everything else including the flagged machinery and
+winter shots. This is the standing GA-3 bar; changes from here are logged
+swaps.
 
 Curation notes (2026-08-19 first pass): three initial picks were replaced
 after visual review — the original "Grand View Point (8971039797)" turned

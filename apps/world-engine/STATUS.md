@@ -138,6 +138,12 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-19, latest) GA-2 APPROVED.** Scott reviewed the contact sheet,
+cut the weathered-marble-columns image, kept the other 13 (flagged
+machinery/winter shots included). The bar is fixed; GA-3 is unblocked —
+its paste-ready prompt is in docs/plans/gauntlet-adoption-far-country.md,
+launch night is Scott's call.
+
 **(2026-08-19, later still) GA-2 REFERENCE SET DRAFTED — awaiting Scott's
 approval pass.** Scott approved the CC0-commit approach; 14 public-domain/
 CC0 photographs now live under shots/ref/ ({wilderness,plateau,
