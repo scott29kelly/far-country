@@ -48,9 +48,36 @@ is right; Claude-of-Duty: lighting = one owner, one sequential pass), so
 round 1 = atmosphere/light/tonemap owner alone (deltas 2, 4, 5-clouds,
 6-seam); round 2 = rock material + water builders under corrected light.
 
+Ranked deltas, round-1 critique additions:
+
+7. Waterfalls render as translucent glass rectangles — no white aeration,
+   no internal streak variation, no wet darkening of adjacent rock; the
+   plunge-pool ref shows opaque white turbulence + dark wet margin.
+   [r1 critic]
+8. Cloud undersides overcorrected in r1 — now charcoal/sooty near-black;
+   the Trail Ridge bar keeps bases soft gray-lavender, several stops
+   lighter. Re-tune belongs to the sequential atmosphere owner.
+   [r1 critic]
+9. Distant mountains shade like melted wax — smeared gradients, hard
+   polygon silhouettes, abrupt horizontal fog line at their base; refs
+   keep ridge detail inside the haze. [r1 critic]
+10. Aerial horizon haze is a flat mud-brown band, not a graded warm
+    veil. [r1 critic]
+
+Critic misread, noted not actioned: the aerial "repeated rectangular
+patch grid with hard seams" is the authored Allotment farmland north of
+the rim — approved content outside the band scope. If its seams bother
+Scott it is his call, not a gauntlet fix.
+
+Round-1 critic verdict: still no hesitation — best frame (valley) given
+away by the thatch wall texture and the sooty clouds.
+
 Logged for Scott (content-gated critic wishes):
 
-- (none yet)
+- Talus aprons of discrete rubble at cliff bases (new geometry) —
+  r1 critic, from the White Rim / Wingate refs.
+- Mist plumes at waterfall bases (new geometry/particles) — r1 critic,
+  from the plunge-pool ref.
 
 ## Phase 2 close (2026-06-11) — light/atmosphere/clouds/post vs Witcher golden frame
 
