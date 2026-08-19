@@ -15,7 +15,28 @@
  */
 
 import { RIM, RIM_CLIFF } from '../src/nj/rimModel';
+import { makeChecker } from './check';
 import { launchWebGPU, laasUrl } from './launch';
+
+/** DESIGN record — the canyonlands-default emergent site set. Provenance:
+ *  the 2026-08-18 verify-branch review and an independent 2026-08-19 GA-3
+ *  round-0 re-scan produced identical lips; these are emergent hydrology
+ *  outcomes (like probe-wildwater's DESIGN), so they cannot be imported
+ *  from an authored constant. Verdicts run only on the DEFAULT variant
+ *  and default seed; any --wildring/--seed override is report-only.
+ *  Pool water depth is deliberately NOT asserted (the CPU mirror reports
+ *  the pools dry — depth ≈ -2..-3 m — a standing observation, not a bar).
+ */
+const DESIGN = {
+  sites: [
+    { x: -1305, z: 4400 },
+    { x: 339, z: 4400 },
+    { x: -3561, z: 4400 },
+  ],
+  posTolM: 50, // half a scan cluster cell
+  dropMinM: 230, // recorded drops 244.1-252.3; ±~10 m of slack
+  dropMaxM: 270,
+};
 
 interface SiteReport {
   x: number;
@@ -138,9 +159,12 @@ async function main(): Promise<void> {
     { rim: RIM, cliff: RIM_CLIFF },
   );
 
+  const c = makeChecker();
   if (!result) {
-    console.error('[rimfalls] no heightfield debug handle — did the scene boot?');
-    process.exit(1);
+    // three-verdict contract: a missing hook is UNMEASURED, not FAIL
+    c.unmeasured('R0 heightfield debug handle', 'no __laasDbg heightfield — did the scene boot?');
+    c.finish();
+    return; // unreachable; narrows `result` for tsc
   }
 
   console.log(
@@ -163,6 +187,35 @@ async function main(): Promise<void> {
     console.log(`  dropped cluster (${d.x.toFixed(0)}, ${d.z.toFixed(0)}) score ${d.score.toFixed(1)}`);
   }
   await browser.close();
+
+  if (wildring === undefined && seed === 1) {
+    const sites = result.sites as SiteReport[];
+    c.check(
+      'R1 canyonlands default yields exactly the three designed sites',
+      sites.length === DESIGN.sites.length,
+      `got ${sites.length}`,
+    );
+    for (const ds of DESIGN.sites) {
+      const hit = sites.find(
+        (s) => Math.abs(s.x - ds.x) <= DESIGN.posTolM && Math.abs(s.z - ds.z) <= DESIGN.posTolM,
+      );
+      c.check(
+        `R2 site near (${ds.x}, ${ds.z})`,
+        hit !== undefined,
+        hit ? `lip (${hit.x.toFixed(0)}, ${hit.z.toFixed(0)})` : 'no cluster within tolerance',
+      );
+      if (hit) {
+        const drop = hit.topY - hit.footY;
+        c.check(
+          `R3 drop at (${ds.x}, ${ds.z}) within the recorded band`,
+          drop >= DESIGN.dropMinM && drop <= DESIGN.dropMaxM,
+          `${drop.toFixed(1)} m (band ${DESIGN.dropMinM}-${DESIGN.dropMaxM})`,
+        );
+      }
+    }
+    c.finish({ minChecks: 4 }); // R1 + three R2 rows at minimum
+  }
+  console.log('[rimfalls] non-default variant/seed — report only, no verdicts');
 }
 
 main().catch((e) => {

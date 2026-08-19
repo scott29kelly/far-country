@@ -29,9 +29,10 @@ interface Member {
 }
 
 // The 2026-08-18 thirteen (the verified-canyonlands record) plus the four
-// standing CPU contract probes from earlier STATUS battery enumerations.
-// When branch claude/canyonlands-polish-verify-ba702d merges, add
-// { name: 'rimfalls', kind: 'live' }.
+// standing CPU contract probes from earlier STATUS battery enumerations,
+// plus rimfalls (added 2026-08-19 when the verify branch merged — verdicts
+// R1-R3 were added first so it could FAIL; a bare report tool in the
+// manifest would be the FC-0002 defect class again).
 const MEMBERS: Member[] = [
   { name: 'stages', kind: 'cpu' },
   { name: 'navigation', kind: 'cpu' },
@@ -50,6 +51,7 @@ const MEMBERS: Member[] = [
   { name: 'gamepad-live', kind: 'live' },
   { name: 'mousesteer', kind: 'live' },
   { name: 'wildwater', kind: 'live' },
+  { name: 'rimfalls', kind: 'live' },
 ];
 
 const VERDICT = { 0: 'PASS', 1: 'FAIL', 2: 'UNMEASURED' } as Record<number, string>;
