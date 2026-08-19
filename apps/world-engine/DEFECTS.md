@@ -8,7 +8,44 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0012.
+THE NEXT FREE NUMBER IS FC-0014.
+
+## FC-0012 — terrain detail octaves collapse to vertical fibers on walls (XZ-plane sampling)
+
+Believed: the rock material had macro/meso/micro octaves per its header
+law, so walls were "textured". Measured (GA-3 rounds 0-1, two independent
+blind critics): every wall-dominant frame reads as "straw thatch / shag
+carpet — fine vertical hair-like strokes at a single constant scale";
+confirmed in code (round 2): every detail term (meso fbm, micro value
+noise, all bump gradients) samples the world XZ plane, so on a
+near-vertical face the pattern is constant along y and every octave
+degenerates into the same vertical striping. The octaves existed; the
+parameterization erased them exactly where rock shows most.
+Resolution (2026-08-19, GA-3 round 2): steep faces sample detail in a
+wall plane (45-degree horizontal diagonal x elevation) blended by slope,
+with gradients mapped through a matching helper (TerrainMaterial.ts).
+OPEN RESIDUAL: the vertex micro-displacement (DISP table, TerrainTiles)
+has the same XZ-column flaw — geometric wall grain is still vertical
+grooves; logged for a later round since it moves collision-adjacent
+geometry.
+
+## FC-0013 — the rim falls ribbons never reached their plunge pools
+
+Believed: RimFalls ribbons ran lip to pool (LIVE-VERIFIED at the M-era
+rim shots). Measured (GA-3 round 2): the rim face steps outward ~170 m
+over its ~260 m drop; the VERTICAL ribbon sheet stood at mid-face with
+its whole lower half buried inside the benches — every fall visibly
+ended at the first bench, and the plunge-pool churn sat unfed. The
+round-1 stills show it plainly once looked for; two critics called the
+falls "glass rectangles" without knowing half the sheet was underground.
+Meaning: the old verification was made against a steeper rim profile;
+the canyonlands re-profile (2026-08-17) changed the face geometry and
+nothing re-checked ribbon-vs-face intersection.
+Resolution (2026-08-19, GA-3 round 2): sheets lean along the benched
+face (YXZ euler from lip crest to pool edge) — same mesh, no new
+geometry; pool churn concentrates at the landing point (RimFalls.ts
+`impact`). Shading rebuilt in the same round (rope lanes, additive
+aeration, ragged margins, impact band — CrystalWater.ts).
 
 ## FC-0011 — a vertical seam splits the sky at exact screen centre in wilderness stills
 

@@ -256,9 +256,21 @@ export function waterMaterial(
       // wide knee — a hard threshold printed razor-edged reflection bands
       horizonVis.mulAssign(smoothstep(-16, 7, rayY.sub(hQ)));
     }
-    const wallAmb = gi
+    const wallAmbGi = gi
       ? (gi.irradiance(positionWorld, rdir).mul(0.65) as unknown as NV3)
       : (sky.mul(0.18) as unknown as NV3);
+    // GRAZING RESCUE (round-2 critic: far lakes read as flat matte sheets):
+    // a grazing reflected ray that fails BOTH the SSR march and the horizon
+    // test used to land in the flat probe field — but a real grazing ray
+    // that clips a far blocker still collects the bright aerial-haze band
+    // just above it (the plunge-pools ref keeps a sky sheen even ringed by
+    // rock). Blend a horizon-band sky sample in as the ray flattens: it
+    // varies with azimuth (warm toward the sun), so the sheet picks up a
+    // sun-ward gradient instead of one flat value. 0.06 ray height ≈ the
+    // haze band; 0.18→0.03 ramp spans "wall mirror" to "near-horizontal".
+    const horizonSky = atm.skyColor(vec3(rdir.x, float(0.06), rdir.z).normalize());
+    const grazing = smoothstep(0.18, 0.03, rdir.y);
+    const wallAmb = mix(wallAmbGi, horizonSky.mul(0.55) as unknown as NV3, grazing.mul(0.6));
     // ripple-jittered blend breaks the residual banding at the transition
     const vJit = n.x.add(n.z).mul(0.18);
     const fallback = mix(wallAmb, sky as unknown as NV3, horizonVis.add(vJit).clamp(0, 1));
@@ -296,7 +308,16 @@ export function waterMaterial(
   const varNorm = w2.mul(w2).add(w2.oneMinus().mul(w2.oneMinus())).sqrt();
   const fblend = mix(fA, fB, w2).sub(0.5).div(varNorm).add(0.5);
   const fDetail = mix(dA, dB, w2).sub(0.5).div(varNorm).add(0.5);
-  const foamPat = smoothstep(0.42, 0.85, fblend.mul(0.62).add(fDetail.mul(0.38)));
+  const foamPatNear = smoothstep(0.42, 0.85, fblend.mul(0.62).add(fDetail.mul(0.38)));
+  // DE-SPECKLE (round-2 critic: "uniform repeating sparkle at the same
+  // scale near and far"): one foam cell (~0.55·64 ≈ 35 m pattern, ~2 m
+  // features) drops under a pixel by a few hundred metres, and the
+  // thresholded pattern then aliases into fixed-contrast shimmer. Collapse
+  // the PATTERN toward its coverage mean with distance — aggregate
+  // whiteness (rapids, shore lines) survives, the speckle does not. 0.30 ≈
+  // the measured mean of the 0.42..0.85 smoothstep over the fbm channel;
+  // 90→650 m spans "features resolved" to "features fully sub-pixel".
+  const foamPat = mix(float(0.3), foamPatNear, smoothstep(650, 90, dist));
   const shoreFoam = smoothstep(0.16, 0.03, vDepth).mul(0.42);
   // rapids key on the DROP of the water surface along flow (a large calm
   // river has high strength but no whitewater — slope is what froths).
@@ -312,7 +333,17 @@ export function waterMaterial(
   // ---- compose --------------------------------------------------------------------
   mat.colorNode = vec3(0.74, 0.76, 0.74).mul(foam);
   mat.emissiveNode = mix(refr, skyRefl, fres).mul(foam.oneMinus());
-  mat.roughnessNode = mix(float(0.05), float(0.55), foam);
+  // SUN-PATH RECOVERY (round-2 critic: "no specular sun path even when the
+  // sun is in frame"): the ripple slopes come from a mip-mapped gradient
+  // texture, so past a few hundred metres they average to zero — far water
+  // went mirror-flat and the roughness-0.05 sun lobe missed every pixel.
+  // Fold the lost slope variance into microfacet roughness (Toksvig):
+  // Cox–Munk light-breeze rms slope is ~0.08–0.14 rad, and GGX α ≈ √2·σ
+  // puts perceptual roughness √α near 0.28 — reached where the mips have
+  // fully flattened the ripples (~600 m; onset past the 40 m detail ring).
+  // The scene sun (CSM-shadowed) then paints the glitter path for free.
+  const distRough = smoothstep(40, 600, dist).mul(0.23);
+  mat.roughnessNode = mix(float(0.05).add(distRough), float(0.55), foam);
   // shoreline feather: mm-deep water fades out over the bed. ALSO fade
   // steep surface RAMPS: the field dives ~2 m to the dry sentinel past
   // every shoreline — across a FLAT far beach seen edge-on that dive

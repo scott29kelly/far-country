@@ -129,20 +129,36 @@ export function buildRimFalls(
   g.name = 'rim-falls';
 
   for (const s of sites) {
-    const h = Math.max(30, s.topY - s.footY + 10);
     const w = 44;
     const yaw = Math.atan2(s.nx, s.nz); // +Z-facing plane → face outward
+
+    // LEAN the sheet along the benched face (round-2 fix): the face STEPS
+    // outward 170 m over its 260 m drop (RIM_CLIFF), so the old vertical
+    // plane at mid-face (0.45·face out) had its whole lower half buried
+    // inside the lower benches — every ribbon visibly ended at the first
+    // bench and never reached its plunge pool. Run the sheet straight from
+    // just outside the lip crest (6 m proud) down to the pool's wall-side
+    // edge (pool centre is face+60 out, R 26 → edge at face+34, +4 m of
+    // overlap into the water so the impact band sits ON the pool). The
+    // leaned sheet hugs the stepped rock the whole way — a sliding cascade,
+    // which is also what a benched face produces in the references.
+    const runM = RIM_CLIFF.face + 38 - 6; // lip crest → pool edge, m
+    const riseM = Math.max(30, s.topY + 6 - (s.footY + 0.2));
+    const h = Math.hypot(riseM, runM); // sheet length along the lean
+    const tilt = Math.atan2(runM, riseM); // from vertical, toward the wall
 
     const fall = new Mesh(
       new PlaneGeometry(w, h),
       crystalFallMaterialWorld(hf, atm, w, h, new Vector2(s.nx, s.nz)),
     );
     fall.geometry.translate(0, h / 2, 0); // origin at the ribbon bottom
-    // stand the sheet ~mid-face so it reads as pouring down the wall
-    const fx = s.x + s.nx * (RIM_CLIFF.face * 0.45);
-    const fz = s.z + s.nz * (RIM_CLIFF.face * 0.45);
-    fall.position.set(fx, s.footY - 4, fz);
-    fall.rotation.y = yaw;
+    const fx = s.x + s.nx * (RIM_CLIFF.face + 38);
+    const fz = s.z + s.nz * (RIM_CLIFF.face + 38);
+    fall.position.set(fx, s.footY + 0.2, fz);
+    // YXZ euler: yaw faces the sheet outward, then the X tilt leans it in
+    // the sheet's OWN frame (XYZ would tilt about the world X axis and
+    // skew every non-south site)
+    fall.rotation.set(-tilt, yaw, 0, 'YXZ');
     g.add(fall);
 
     // plunge pool at the foot: crystal surface over a dark rock bed
@@ -151,11 +167,18 @@ export function buildRimFalls(
     const pz = s.z + s.nz * (RIM_CLIFF.face + 60);
     const poolGeo = new CircleGeometry(poolR, 28);
     poolGeo.rotateX(-Math.PI / 2);
+    // churn concentrated on the wall side, where the ribbon lands: the
+    // plunge-pools reference reads as STILL water with a churned inlet —
+    // the old uniform foam 0.55 speckled the whole pool. Impact centre
+    // sits 0.65·R in from the pool centre toward the wall (the ribbon
+    // plane stands at mid-face, wall side of the pool); r 18 m lets the
+    // outer rim settle to crystal.
     const pool = new Mesh(
       poolGeo,
       crystalSurfaceMaterial(hf, atm, gi, {
         flow: new Vector2(s.nx, s.nz).multiplyScalar(1.1),
         foam: 0.55,
+        impact: { x: px - s.nx * (poolR * 0.65), z: pz - s.nz * (poolR * 0.65), r: 18 },
       }),
     );
     pool.position.set(px, s.footY + 0.55, pz);

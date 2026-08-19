@@ -11,8 +11,15 @@
  * bands for far-detail synthesis: ridged noise re-amplified in the normal
  * domain so distant mountains stay serrated (Pillar D).
  *
+ * Rock carries FOUR explicit octaves (GA-3 round-2 critique — one octave read
+ * as "straw thatch"): coarse member strata + hue members, few-meter fine
+ * strata with bench bevels, desert-varnish streak patches (albedo + sheen),
+ * and worley blocky jointing with crease shading. Steep faces sample detail
+ * in a wall plane (horizontal diagonal × elevation) instead of world XZ, or
+ * every octave collapses into vertical fibers on cliffs.
+ *
  * PERF: all repeated noise comes from the baked NoiseBake textures (was ~35
- * live noise evaluations per pixel ≈ 52 ms/frame; now ~14 filtered fetches).
+ * live noise evaluations per pixel ≈ 52 ms/frame; now ~21 filtered fetches).
  * Gradient channels are pre-derived, so bump/ridge detail is one fetch
  * instead of four finite-difference evaluations.
  */
@@ -36,6 +43,7 @@ import {
   PERIOD_FBM,
   PERIOD_RID,
   PERIOD_VAL,
+  PERIOD_WOR,
 } from '../gpu/passes/NoiseBake';
 import { sunU } from './VegMaterials';
 import { zoneMasks, type MacroParams } from '../world/MacroMap';
@@ -148,6 +156,26 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   const riverDepth = mix(fields.z, float(0), outsideK);
   const zm = zoneMasks(wxz, inp.mp);
 
+  // ---------- wall parameterization ------------------------------------------
+  // GA-3 round-2 critique root cause: every detail term sampled the world XZ
+  // plane, so on a near-vertical face the pattern is constant along y and all
+  // octaves collapse into fine vertical fibers at one scale ("straw thatch").
+  // Steep faces sample a wall plane instead — 45° horizontal diagonal as the
+  // abscissa, elevation as the ordinate — blended continuously by slope so
+  // the swap never pops. Ground keeps the original XZ domain bit-identical.
+  const wallDiag = wxz.x.add(wxz.y).mul(0.7071); // 45° axis — 1-D wall abscissa
+  const wallP = vec2(wallDiag, h);
+  const steepK = smoothstep(0.5, 0.85, slope).toVar();
+  const detailP = mix(wxz, wallP, steepK).toVar();
+  /** map a 2-D detail gradient into world space: ground = XZ plane, wall =
+   *  (diagonal, up) plane — same blend as detailP so shading matches color */
+  const gradVec = (g: NV2): NV3 =>
+    mix(
+      vec3(g.x, 0, g.y),
+      vec3(g.x.mul(0.7071), g.y, g.x.mul(0.7071)),
+      steepK,
+    );
+
   // ---------- macro variation (2–50 m breakup — tiling killer) ----------------
   const macroA = val(43.7);
   const macroB = val(11.3, 0.37, 0.61);
@@ -155,39 +183,105 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   const macroTint = macroMix.sub(0.5).mul(0.16); // ±8% value shift
 
   // ---------- meso/micro detail noise ------------------------------------------
-  const meso = inp.far ? float(0.5) : fbmV(1.45);
-  const micro = inp.far ? float(0.5) : val(0.19, 0.71, 0.13);
+  // sampled in the wall-blended domain so cliff meso reads as patches, not
+  // vertical strokes (near only — far swaps to far-detail synthesis)
+  const meso = inp.far
+    ? float(0.5)
+    : texture(inp.noiseA, detailP.div(1.45 * PERIOD_FBM)).y;
+  const micro = inp.far
+    ? float(0.5)
+    : texture(inp.noiseA, detailP.div(0.19 * PERIOD_VAL).add(vec2(0.71, 0.13))).x;
 
   // ---------- class palettes ----------------------------------------------------
-  // rock: subtle strata banding; warm rust in the alpine zone, pale gray in
-  // karst. Low contrast + heavy phase warp so it reads as geology, not zebra.
+  // rock octave 1/4 — COARSE strata: broad member-scale banding with heavy
+  // phase warp so it reads as geology, not zebra. Round-2 critique: the old
+  // 0.36-span compression left the whole wall one value — the refs (wingate,
+  // white-rim) step much wider, so the span is opened to 0.5.
+  const warpJit = valS(27, 0.91, 0.07).toVar(); // shared band jitter warp
   const strataPhase = h
     .mul(0.028)
     .add(valS(74, 0.11, 0.83).mul(3.6))
     .add(valS(540, 0.43, 0.29).mul(2.4))
-    .add(valS(27, 0.91, 0.07).mul(1.3)); // fine jitter fragments the bands
+    .add(warpJit.mul(1.3)); // fine jitter fragments the bands
   const strata = band(strataPhase, valS(610, 0.67, 0.41).mul(1.7).add(31.7))
-    .mul(0.36)
-    .add(0.3); // compress contrast — long smooth walls turn 'layer cake' fast
+    .mul(0.5)
+    .add(0.26);
   // reference peaks are DARK: gray-blue mass with rust faces catching light —
   // pale palettes washed the whole massif into cream at golden hour
   const alpRock = mix(vec3(0.16, 0.135, 0.125), vec3(0.38, 0.26, 0.18), strata);
-  const karstRock = mix(vec3(0.3, 0.3, 0.29), vec3(0.5, 0.48, 0.44), strata);
-  const genericRock = mix(vec3(0.26, 0.245, 0.225), vec3(0.42, 0.39, 0.35), strata);
+  // karst walls: old palette ran ~0.3→0.5 near-neutral gray ("pale oatmeal");
+  // wingate ref steps dark warm gray → pale buff, roughly 0.2→0.55 in value
+  // with a clear warm drift — kept gray-buff (verdant highland, not red-rock)
+  const karstRock = mix(vec3(0.17, 0.155, 0.135), vec3(0.52, 0.47, 0.4), strata);
+  const genericRock = mix(vec3(0.18, 0.165, 0.148), vec3(0.44, 0.4, 0.345), strata);
   let rockCol = mix(genericRock, karstRock, zm.tKarst);
   rockCol = mix(rockCol, alpRock, zm.tAlp.mul(0.85));
+  // rock octave 2/4 — FINE strata: value steps every few meters (wingate ref:
+  // discrete bands each ~2–6 m thick). Lane drifts slowly along the wall so
+  // bands stay laterally continuous but not infinite.
+  const strataLane = wallDiag.mul(0.004).add(7.3);
+  const strataFineP = h
+    .mul(0.24) // ~4 m per band feature per wingate-cliffs ref
+    .add(valS(74, 0.11, 0.83).mul(0.9)) // gentle dip undulation
+    .add(warpJit.mul(0.35));
+  const strataFine = band(strataFineP, strataLane);
+  // ×0.62–1.34 per band — haze in-scatter between camera and wall compresses
+  // contrast hard, so the albedo step must overshoot the ref's apparent step
+  rockCol = rockCol.mul(strataFine.mul(0.72).add(0.62));
+  // stratigraphic members: every ~25 m of section alternates warm ochre and
+  // cool gray-blue — benched-strata ref shows HUE stepping, not just value
+  const memberLane = valS(800, 0.07, 0.93).toVar();
+  const memberP = band(h.mul(0.04), memberLane.mul(1.1).add(9.3));
+  const memberK = zm.tKarst.mul(0.55).add(0.4);
+  rockCol = mix(
+    rockCol,
+    rockCol.mul(vec3(1.28, 1.02, 0.68)),
+    smoothstep(0.55, 0.75, memberP).mul(memberK),
+  );
+  rockCol = mix(
+    rockCol,
+    rockCol.mul(vec3(0.76, 0.85, 1.04)),
+    smoothstep(0.45, 0.28, memberP).mul(memberK.mul(0.85)),
+  );
   // iron-oxide bands: dark rust layers at noise-chosen elevations (refs show
   // strong hue layering on alpine faces)
-  const ironPhase = band(h.mul(0.011), valS(800, 0.07, 0.93).mul(1.3).add(57.3));
+  const ironPhase = band(h.mul(0.011), memberLane.mul(1.3).add(57.3));
   const ironBand = smoothstep(0.45, 0.62, ironPhase).mul(smoothstep(0.85, 0.62, ironPhase));
   rockCol = mix(rockCol, vec3(0.3, 0.18, 0.12), ironBand.mul(zm.tAlp.mul(0.6).add(0.12)));
+  // rock octave 3/4 — desert varnish (horseshoe-canyon / zion refs): dark
+  // mineral sheets running DOWN steep faces. A ~22 m patch field picks which
+  // panels are varnished; ~1.8 m streaks texture the inside. Both use a slow
+  // elevation lane so the shapes are vertically elongated (streaks descend).
+  const varnPatch = band(wallDiag.mul(0.045), h.mul(0.018).add(43.1));
+  const varnStreak = band(wallDiag.mul(0.55), h.mul(0.03).add(17.7));
+  const varnK = smoothstep(0.48, 0.7, varnPatch.mul(0.52).add(varnStreak.mul(0.48)))
+    .mul(smoothstep(0.55, 0.9, slope)) // varnish forms on faces, not benches
+    .mul(zm.tAlp.mul(0.5).oneMinus()) // alpine massif keeps its own palette
+    .toVar();
+  rockCol = mix(rockCol, vec3(0.09, 0.078, 0.068), varnK.mul(0.82));
+  // rock octave 4/4 — blocky jointing: worley F1 ridges are the fracture web
+  // (~3.4 m cells, wall domain); the SAME fetch's ridged channels give the
+  // per-block tone drift (13.6 m) and the crease gradient used in the normal
+  // section below. One fetch, three octave contributions.
+  const jTex = texture(inp.noiseB, detailP.div(3.4 * PERIOD_WOR)).toVar();
+  // F1 rises toward cell boundaries; the web sits ~0.45–0.7, corners higher
+  const joint = smoothstep(0.46, 0.64, jTex.a);
+  rockCol = rockCol.mul(jTex.z.mul(0.3).add(0.85)); // per-block value drift
+  rockCol = mix(rockCol, rockCol.mul(0.5), joint.mul(0.65)); // fracture shadow
   // lichen/weathering: dark macro splotches on long-exposed faces
   const lichen = smoothstep(0.6, 0.85, val(23.7, 0.53, 0.27));
   rockCol = mix(rockCol, rockCol.mul(0.62), lichen.mul(0.5));
   // cavity dirt: concave-ish micro band darkening
   rockCol = rockCol.mul(meso.mul(0.22).add(0.89)).mul(micro.mul(0.1).add(0.95));
 
-  const scree = vec3(0.36, 0.345, 0.325).mul(meso.mul(0.35).add(0.78));
+  // talus aprons sit a value step ABOVE the varnished cliff base they shed
+  // from (wingate ref: sunlit pink-buff fans against dark wall feet); karst
+  // aprons drift warm buff, elsewhere stays neutral
+  const scree = mix(
+    vec3(0.4, 0.375, 0.34),
+    vec3(0.49, 0.44, 0.365),
+    zm.tKarst,
+  ).mul(meso.mul(0.35).add(0.78));
   const soil = mix(vec3(0.155, 0.12, 0.085), vec3(0.24, 0.195, 0.135), meso).mul(
     micro.mul(0.2).add(0.9),
   );
@@ -337,30 +431,74 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   // pre-baked ridged gradient at 310 m features; ×44 ≈ the old ±22 m
   // finite-difference amplitude (×2: baked noise is [0,1], mx was [-1,1])
   const rg = ridG(310).mul(44 * 2);
+  // second, finer ridged octave: the single 310 m octave alone shaded distant
+  // relief as smooth undulation ("melted wax"); 85 m serration keeps ridge
+  // detail alive inside the haze. Amplitude scale-proportional (85/310 × 44).
+  const rg2 = ridG(85).mul(12 * 2);
   // crag synthesis belongs to ROCK faces — on smooth vegetated hills the
   // ridged gradient field printed parallel pale corrugation streaks
+  // moderate-slope term raised 0.08→0.15: the big rounded massifs sit in the
+  // 0.3–0.7 slope range, and at 0.08 they shaded as smooth wax in the haze
   const farAmp = smoothstep(0.5, 1.1, slope)
     .mul(0.4)
-    .add(smoothstep(0.32, 0.7, slope).mul(0.08))
+    .add(smoothstep(0.32, 0.7, slope).mul(0.15))
     .mul(farK);
   // never let detail flip the surface away from the sky
-  const perturbed = baseNormal.add(vec3(rg.x, 0, rg.y).mul(farAmp));
+  const perturbed = baseNormal
+    .add(vec3(rg.x, 0, rg.y).mul(farAmp))
+    .add(vec3(rg2.x, 0, rg2.y).mul(farAmp.mul(0.45)));
   let nrm: NV3 = vec3(perturbed.x, perturbed.y.max(0.1), perturbed.z).normalize();
 
+  // jointing creases (all ranges): the jTex ridged gradient at 13.6 m breaks
+  // walls into blocks whose fractures shade themselves — the critique's
+  // "blocky jointing whose fractures cast their own small shadows". Gradient
+  // lives in the wall-blended domain, so gradVec maps it (÷13.6 world units,
+  // ×2 range factor as everywhere).
+  const jg = jTex.xy.div(13.6).mul(2);
+  const jointAmp = steepK.mul(rockW).mul(snowW.oneMinus()).mul(0.5);
+  nrm = nrm.add(gradVec(jg).mul(jointAmp)).normalize();
+
   if (!inp.far) {
+    // strata bench bevels: forward-difference of the fine band along its
+    // phase (≈ elevation) tilts each band's normal up/down, so ledges catch
+    // the low sun and recesses shade — self-shadowing strata per wingate
+    // ref. One extra fetch. Phase step 0.4 ÷ 0.24 phase-per-m = d/dh.
+    const ledgeG = band(strataFineP.add(0.4), strataLane)
+      .sub(strataFine)
+      .div(0.4 / 0.24);
+    const ledgeAmp = steepK.mul(rockW).mul(farK.oneMinus()).mul(1.2);
+    nrm = nrm.add(vec3(0, ledgeG.mul(ledgeAmp), 0)).normalize();
+
     // meso + micro analytic bumps near camera, stronger on rock — baked fbm
-    // gradients at two scales (×2e ≈ old FD amplitudes, ×2 range factor)
-    const b1 = fbmG(1.45).mul(1.8 * 2);
-    const b2 = fbmG(0.19, 0.31, 0.77).mul(0.24 * 2);
-    const bumpAmp = mix(float(0.25), float(0.85), rockW)
+    // gradients at two scales (×2e ≈ old FD amplitudes, ×2 range factor),
+    // sampled in the wall-blended domain and mapped by gradVec so they read
+    // as grain patches on cliffs, not vertical fibers. Rock cap lowered
+    // 0.85→0.62 and varnish smooths — micro must not dominate the octaves.
+    const b1 = texture(inp.noiseA, detailP.div(1.45 * PERIOD_FBM))
+      .zw.div(1.45)
+      .mul(1.8 * 2);
+    const b2 = texture(
+      inp.noiseA,
+      detailP.div(0.19 * PERIOD_FBM).add(vec2(0.31, 0.77)),
+    )
+      .zw.div(0.19)
+      .mul(0.24 * 2);
+    // distance taper: at 200–900 m the 1.45 m bump renders as 2–3 px popcorn
+    // at one frequency and drowns the strata/varnish octaves — fade it to a
+    // floor well before the farK crag synthesis takes over
+    const bumpDist = smoothstep(550, 130, camDist).mul(0.65).add(0.35);
+    const bumpAmp = mix(float(0.25), float(0.62), rockW)
       .mul(snowW.mul(0.7).oneMinus())
+      .mul(varnK.mul(0.5).oneMinus())
+      .mul(bumpDist)
       .mul(farK.oneMinus());
     nrm = nrm
       .add(
-        vec3(
-          b1.x.mul(0.7).add(b2.x.mul(0.45)),
-          0,
-          b1.y.mul(0.7).add(b2.y.mul(0.45)),
+        gradVec(
+          vec2(
+            b1.x.mul(0.7).add(b2.x.mul(0.45)),
+            b1.y.mul(0.7).add(b2.y.mul(0.45)),
+          ),
         ).mul(bumpAmp),
       )
       .normalize();
@@ -392,8 +530,12 @@ export function buildTerrainShading(inp: TerrainShadingInputs): TerrainShading {
   }
 
   // ---------- roughness ---------------------------------------------------------------
+  // varnish sheen: the zion varnish ref shows glossy patches catching the sun
+  // against matte bare rock — the roughness drop is what splits the wall into
+  // the large glossy/matte patches the critique asked for
   const rough = mix(float(0.94), float(0.8), rockW)
     .sub(snowW.mul(0.32))
+    .sub(varnK.mul(rockW).mul(0.26))
     .sub(wet.mul(0.45))
     .clamp(0.25, 1);
 
