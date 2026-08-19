@@ -29,6 +29,13 @@ const KEYFRAMES: Keyframe[] = [
   // morning/noon — vibrant but neutral; cool shadows
   { t: 11, whiteBalance: [1.0, 1.0, 1.0], shadowTint: [0.92, 0.98, 1.06], shadowAmt: 0.28, highlightTint: [1.04, 1.01, 0.96], highlightAmt: 0.16, saturation: 1.13, contrast: 1.07 },
   { t: 15.5, whiteBalance: [1.01, 1.0, 0.99], shadowTint: [0.92, 0.98, 1.06], shadowAmt: 0.28, highlightTint: [1.05, 1.01, 0.95], highlightAmt: 0.18, saturation: 1.13, contrast: 1.07 },
+  // late afternoon — the NJ scene's pinned hour (NJ_CONFIG.look 17.0). GA-3
+  // round 1: an explicit keyframe so the scene hour isn't a weak 15.5→19
+  // lerp. Values sit ~2/3 of the way to the 19.0 golden frame, per the three
+  // 17:00 references (shots/ref/sky/): warm gold cast on lit surfaces
+  // (highlight tint), violet-gray shadow fill — G pulled below R and B in
+  // the shadow tint, where the old lerp gave cyan-blue.
+  { t: 17.0, whiteBalance: [1.06, 1.0, 0.93], shadowTint: [0.86, 0.9, 1.16], shadowAmt: 0.5, highlightTint: [1.18, 1.02, 0.84], highlightAmt: 0.42, saturation: 1.14, contrast: 1.08 },
   // golden — full teal–orange split per references
   { t: 19.0, whiteBalance: [1.09, 1.0, 0.9], shadowTint: [0.72, 0.91, 1.2], shadowAmt: 0.58, highlightTint: [1.22, 1.03, 0.8], highlightAmt: 0.5, saturation: 1.15, contrast: 1.1 },
   // dusk

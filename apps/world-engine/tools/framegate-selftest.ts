@@ -17,7 +17,16 @@ async function main(): Promise<void> {
   await mk('.tmp-white.png', { r: 255, g: 255, b: 255 });
   await mk('.tmp-flat.png', { r: 120, g: 90, b: 60 });
   await sharp({
-    create: { width: 64, height: 48, channels: 3, noise: { type: 'gaussian', mean: 128, sigma: 40 } },
+    // sharp's Create type requires `background` even when noise fills the
+    // frame (pre-existing typecheck break, fixed in passing GA-3 round 1);
+    // the value is irrelevant — gaussian noise overwrites every pixel.
+    create: {
+      width: 64,
+      height: 48,
+      channels: 3,
+      background: { r: 0, g: 0, b: 0 },
+      noise: { type: 'gaussian', mean: 128, sigma: 40 },
+    },
   })
     .png()
     .toFile('.tmp-noise.png');

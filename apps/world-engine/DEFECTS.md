@@ -24,6 +24,19 @@ independently ("a hard vertical seam splits the sky"). Meaning: some
 screen-space pass has a half-width boundary (half-res cloud/froxel RTT or
 similar) leaking a tile edge into the composite. Owned by the GA-3
 atmosphere pass (round 1).
+Resolution (2026-08-19, GA-3 round 1): NOT a screen-space tile edge — a
+WORLD-space seam that happens to project onto screen centre. The cloud
+march tiles its baked 3D noises with fract(worldPos/period) (base 3600 m,
+detail 420 m), but the mx worley/perlin bakes are not periodic, so every
+world plane x or z = k·period carries a hard density step; the gate cam
+sits at x = 0 with yaw exactly π, putting the x = 0 seam plane on the
+exact centre column. Proven by bisect: ablate=clouds dropped the step
+8.2 → 0.5/255 (cloudflat=1 likewise). Fixed in Clouds.ts: 8-corner
+low-edge crossfade makes both bakes exactly periodic (bake-time only,
+zero march cost) + RepeatWrapping on the noise samplers (clamp-to-edge
+kept a one-texel residual ~3/255). Post-fix gate capture: max centre-column
+step 1.9/255 inside cloud texture whose off-centre variation is 1.1-3.3/255
+— no step distinguishable from cloud content; clean-sky band 0.9/255.
 
 ## FC-0001 — GA-1 census: 56 tools audited; the fleet measured well but could not fail well
 

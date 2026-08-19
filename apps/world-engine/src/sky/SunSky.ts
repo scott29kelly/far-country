@@ -68,14 +68,34 @@ export class SunSky {
     await this.setTimeOfDay(this.timeOfDay);
   }
 
-  /** hours [0,24) → sun world direction (NE-mountain world: sun arcs S) */
+  /**
+   * hours [0,24) → sun world direction (world axes: +x east, +z south —
+   * NE-mountain world, sun arcs S).
+   *
+   * GA-3 round 1: the old stylized sine arc (daylight 5.4–20.6, peak
+   * 0.935 rad) put the 17:00 sun at 34.7° elevation — the round-0 critic
+   * measured "reads as 12:30" against the approved late-afternoon reference
+   * set (shots/ref/sky/, all Canyonlands evening shots). Replaced with the
+   * physical equinox solar path at the references' latitude (Canyonlands,
+   * 38.5° N; declination 0): sin(elev) = cos(lat)·cos(h), h the hour angle,
+   * azimuth A = atan2(sin h, cos h · sin lat) west of south. Daylight runs
+   * 6:00–18:00; noon peaks at 51.5°; 17:00 renders at 11.7° elevation,
+   * 80.5° west of south — the low raking warm sun the reference set was
+   * approved against.
+   */
   static sunDirection(t: number, out: Vector3): Vector3 {
-    const dayT = (t - 5.4) / (20.6 - 5.4); // 0..1 across daylight
-    const elev = Math.sin(Math.PI * Math.min(Math.max(dayT, 0.001), 0.999)) * 1.02 - 0.085;
-    const az = -0.6 + dayT * 2.4; // east → south → west sweep (radians)
+    const LAT = (38.5 * Math.PI) / 180; // Canyonlands reference latitude
+    const h = ((t - 12) * Math.PI) / 12; // hour angle: 0 at solar noon
+    const sinE = Math.cos(LAT) * Math.cos(h);
+    const elev = Math.asin(Math.min(Math.max(sinE, -1), 1));
+    // azimuth from south (+z), positive toward west (−x)
+    const az = Math.atan2(Math.sin(h), Math.cos(h) * Math.sin(LAT));
+    // night clamp kept from the old mapping: the atmosphere LUTs and the
+    // `above` fade in setTimeOfDay expect the dir to bottom out just below
+    // the horizon rather than swing under the world
     const y = Math.sin(Math.max(elev, -0.12));
     const c = Math.cos(Math.max(elev, -0.12));
-    out.set(c * Math.cos(az), y, c * Math.sin(az));
+    out.set(-Math.sin(az) * c, y, Math.cos(az) * c);
     return out.normalize();
   }
 

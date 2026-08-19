@@ -9,7 +9,7 @@
  *    material and the light shaft pass
  */
 
-import { HalfFloatType, RedFormat, Vector2 } from 'three';
+import { HalfFloatType, RedFormat, RepeatWrapping, Vector2 } from 'three';
 import type { Renderer } from 'three/webgpu';
 import { Storage3DTexture, StorageTexture } from 'three/webgpu';
 import {
@@ -94,6 +94,16 @@ export class Clouds {
     this.detailNoise = new Storage3DTexture(DETAIL_RES, DETAIL_RES, DETAIL_RES);
     this.detailNoise.type = HalfFloatType;
     this.detailNoise.format = RedFormat;
+    // FC-0011 (with the periodic bake in init): the march tiles these with
+    // fract(worldPos/period), so the sampler must wrap — under the default
+    // clamp-to-edge, texel N−1 never interpolates into texel 0 and the wrap
+    // plane keeps a one-texel step (measured ~3/255 residual at the gate
+    // cam's centre column after the content fix alone).
+    for (const t of [this.baseNoise, this.detailNoise]) {
+      t.wrapS = RepeatWrapping;
+      t.wrapT = RepeatWrapping;
+      t.wrapR = RepeatWrapping;
+    }
     this.shadowMap = new StorageTexture(SHADOW_RES, SHADOW_RES);
     this.shadowMap.type = HalfFloatType;
     this.shadowMap.generateMipmaps = false;
@@ -103,8 +113,48 @@ export class Clouds {
   }
 
   async init(renderer: Renderer): Promise<void> {
-    // --- base: perlin-worley remap (tileable enough via domain fract) --------
+    // Periodic-ization (FC-0011): the march samples these bakes with
+    // fract(worldPos / period), but the mx worley/perlin fields are NOT
+    // periodic — texel 0 ≠ texel N−1, so every world seam plane (x or z a
+    // multiple of 3600 m for base, 420 m for detail) printed a hard value
+    // step through the layer. The gate cam (x = 0, yaw exactly π) projects
+    // the x = 0 plane onto exact screen centre — the measured 4/255
+    // half-width sky seam (proven by ablate=clouds → step 8.2 → 0.5/255).
+    // Fix at BAKE time (zero march cost): 8-corner low-edge crossfade
+    //   g(p) = Σ n(p + corner)·Π w,  w = smoothstep(M, 0, u) for the +1 axis
+    // which makes g(0) = n(1) = g(1) exactly (periodic in all three axes)
+    // and leaves the field beyond the M = 12% margin band untouched.
+    const SEAM_M = 0.12;
+    const periodic = (p: NV3, n: (q: NV3) => NF): NF => {
+      const wx = smoothstep(SEAM_M, 0, p.x);
+      const wy = smoothstep(SEAM_M, 0, p.y);
+      const wz = smoothstep(SEAM_M, 0, p.z);
+      let sum: NF = float(0);
+      for (const ix of [0, 1] as const) {
+        for (const iy of [0, 1] as const) {
+          for (const iz of [0, 1] as const) {
+            const w = (ix ? wx : wx.oneMinus())
+              .mul(iy ? wy : wy.oneMinus())
+              .mul(iz ? wz : wz.oneMinus());
+            sum = sum.add(n(p.add(vec3(ix, iy, iz))).mul(w));
+          }
+        }
+      }
+      return sum;
+    };
+
+    // --- base: perlin-worley remap, periodic via the 8-corner crossfade ------
     const N = BASE_RES;
+    const basePwAt = (p: NV3): NF => {
+      const pw = p.mul(4);
+      const perlin = mx_fractal_noise_float(pw.mul(2), 4, 2.0, 0.55, 1).mul(0.5).add(0.5);
+      const w0 = float(1).sub(clamp(mx_worley_noise_float(pw, 1), 0, 1));
+      const w1 = float(1).sub(clamp(mx_worley_noise_float(pw.mul(2.03).add(19.7), 1), 0, 1));
+      const w2 = float(1).sub(clamp(mx_worley_noise_float(pw.mul(4.01).add(47.3), 1), 0, 1));
+      const wfbm = w0.mul(0.625).add(w1.mul(0.25)).add(w2.mul(0.125));
+      // remap perlin by worley (Schneider-style perlin-worley)
+      return clamp(perlin.sub(wfbm.oneMinus()).div(wfbm.max(1e-3)), 0, 1);
+    };
     const baseK = Fn(() => {
       const i = instanceIndex;
       If(i.greaterThanEqual(N * N * N), () => {
@@ -114,20 +164,18 @@ export class Clouds {
       const y = i.div(N).mod(N);
       const z = i.div(N * N);
       const p = vec3(float(x), float(y), float(z)).add(0.5).div(N);
-      const pw = p.mul(4);
-      const perlin = mx_fractal_noise_float(pw.mul(2), 4, 2.0, 0.55, 1).mul(0.5).add(0.5);
-      const w0 = float(1).sub(clamp(mx_worley_noise_float(pw, 1), 0, 1));
-      const w1 = float(1).sub(clamp(mx_worley_noise_float(pw.mul(2.03).add(19.7), 1), 0, 1));
-      const w2 = float(1).sub(clamp(mx_worley_noise_float(pw.mul(4.01).add(47.3), 1), 0, 1));
-      const wfbm = w0.mul(0.625).add(w1.mul(0.25)).add(w2.mul(0.125));
-      // remap perlin by worley (Schneider-style perlin-worley)
-      const pwv = clamp(perlin.sub(wfbm.oneMinus()).div(wfbm.max(1e-3)), 0, 1);
+      const pwv = periodic(p, basePwAt);
       textureStore(this.baseNoise, uvec3(x.toUint(), y.toUint(), z.toUint()), vec4(pwv, 0, 0, 1)).toWriteOnly();
     })().compute(N * N * N);
     baseK.setName('cloudBaseNoise');
     await renderer.computeAsync(baseK);
 
     const M = DETAIL_RES;
+    const detailAt = (p: NV3): NF => {
+      const w0 = float(1).sub(clamp(mx_worley_noise_float(p.mul(3), 1), 0, 1));
+      const w1 = float(1).sub(clamp(mx_worley_noise_float(p.mul(6.02).add(7.7), 1), 0, 1));
+      return w0.mul(0.65).add(w1.mul(0.35));
+    };
     const detailK = Fn(() => {
       const i = instanceIndex;
       If(i.greaterThanEqual(M * M * M), () => {
@@ -137,9 +185,7 @@ export class Clouds {
       const y = i.div(M).mod(M);
       const z = i.div(M * M);
       const p = vec3(float(x), float(y), float(z)).add(0.5).div(M);
-      const w0 = float(1).sub(clamp(mx_worley_noise_float(p.mul(3), 1), 0, 1));
-      const w1 = float(1).sub(clamp(mx_worley_noise_float(p.mul(6.02).add(7.7), 1), 0, 1));
-      const d = w0.mul(0.65).add(w1.mul(0.35));
+      const d = periodic(p, detailAt);
       textureStore(this.detailNoise, uvec3(x.toUint(), y.toUint(), z.toUint()), vec4(d, 0, 0, 1)).toWriteOnly();
     })().compute(M * M * M);
     detailK.setName('cloudDetailNoise');
@@ -311,8 +357,12 @@ export class Clouds {
         pow(float(1 + gg).sub(nu.mul(2 * g)), 1.5),
       );
     };
-    // isotropic floor ≈ multiple scattering (clouds are never phase-black)
-    const phase = hg(g1).mul(0.75).add(hg(g2).mul(0.25)).add(0.14);
+    // isotropic floor ≈ multiple scattering (clouds are never phase-black).
+    // 0.14 → 0.10: the flat floor was lifting self-shadowed bases toward
+    // their tops — the r0 critic's "uniformly white, no gray undersides"
+    // (Trail Ridge ref: bases ~two stops below tops). The base/top split
+    // itself comes from the ambient height ramp below.
+    const phase = hg(g1).mul(0.75).add(hg(g2).mul(0.25)).add(0.1);
     const sunT = this.atmosphere.sampleTransmittance(float(6360.35), clamp(sunDir.y, -1, 1));
 
     If(valid, () => {
@@ -327,7 +377,11 @@ export class Clouds {
             const lp = sp.add(sunDir.mul(ls * 165));
             lTau.addAssign(this.sampleDensity(lp, false).mul(165));
           }
-          const sunVis = exp(lTau.mul(-0.04));
+          // −0.04 → −0.055: deepen in-cloud sun occlusion so shadowed cores
+          // and bases separate from lit tops (Trail Ridge two-stop split);
+          // at the new low 17:00 sun the 3-step light march runs nearly
+          // horizontally through neighbouring mass, which this scales.
+          const sunVis = exp(lTau.mul(-0.055));
           const powder = float(1).sub(exp(dens.mul(-22)));
           // ambient sees less sky toward the cloud base
           const hn = clamp(
@@ -335,12 +389,20 @@ export class Clouds {
             0,
             1,
           );
-          // source radiance: sun (phase-weighted, self-occluded) + sky ambient
+          // source radiance: sun (phase-weighted, self-occluded) + sky ambient.
+          // Ambient height ramp 0.45+0.55·hn → 0.16+0.84·hn: a cloud base sees
+          // almost no sky dome (self-occluded from above), so bases must fall
+          // well below lit tops per the Trail Ridge reference (~two stops) —
+          // the old 0.45 floor held the whole underside within a quarter stop
+          // of the tops (measured r0: base/top 187/226). Ours lands ~1.3-1.5
+          // stops, deliberately short of the ref's two: Trail Ridge is a
+          // midday frame, and at this scene's low 17:00 sun real bases catch
+          // warm raking light — a full two-stop base would read overcast.
           const S = sunT
             .mul(sunVis)
             .mul(phase)
             .mul(SUN_E * 3.4)
-            .add(ambient.mul(hn.mul(0.55).add(0.45)).mul(0.38))
+            .add(ambient.mul(hn.mul(0.84).add(0.16)).mul(0.38))
             .mul(powder.mul(0.75).add(0.25));
           const stepT = exp(dens.mul(seg).mul(-0.052));
           light.addAssign(S.mul(trans).mul(float(1).sub(stepT)));
