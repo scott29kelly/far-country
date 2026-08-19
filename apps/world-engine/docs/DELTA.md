@@ -67,6 +67,37 @@ Ranked deltas, round-1 critique additions:
 10. Aerial horizon haze is a flat mud-brown band, not a graded warm
     veil. [r1 critic]
 
+Ranked deltas, round-2 critique additions (r2 critic; lake.png "might
+buy a one-second pause", rest still identified instantly):
+
+11. Clouds are now the #1 gap — sooty gray-to-near-black undersides
+    against bright blue, darkening RADIAL inside each puff (no lit-side/
+    shadow-side direction), reading as "smoke or ink drops in milk"; at
+    a 17:00 sun bases should be warm-tinted and lighter than midtones.
+    Supersedes delta 8. [r2 critic]
+12. Water, remaining bodies: gate channel repeating checkerboard caustic
+    with no sky mirror or Fresnel falloff; aerial ponds matte-black
+    inkblots (from altitude water mirrors sky); valley river matte
+    brown. The r2 lake fix itself reads close. [r2 critic]
+13. Falls ribbons still constant-width/constant-texture lip-to-base,
+    semi-transparent "ghost decal" letting strata show through — wants
+    streak acceleration, lip thinning, impact brightening, more body.
+    [r2 critic]
+14. Cliff banding too regular — evenly spaced horizontal striping
+    visibly tiles along the wall; vertical varnish/drainage streaks and
+    intra-face hue range still too weak vs the varnish refs; talus color
+    break weak. [r2 critic]
+15. Vegetation shading: crowns are identical dark-green cauliflowers
+    (no hue/value spread within or between crowns) and trees cast no
+    long shadows at 17:00 (rim meadow shadowless under trees); green
+    bench patches render as flat unlit decals with screen-door edges.
+    [r2 critic]
+16. A huge diagonal darkening with a perfectly straight edge crosses
+    the cliff in falls-w1305/w3561 (plus rectangular dark patches in
+    grass at falls-e339) — reads as an unlit polygon or projection
+    seam. DIAGNOSE before obeying (cloud shadow? CSM cascade? city
+    shadow?). [r2 critic]
+
 Critic misread, noted not actioned: the aerial "repeated rectangular
 patch grid with hard seams" is the authored Allotment farmland north of
 the rim — approved content outside the band scope. If its seams bother
