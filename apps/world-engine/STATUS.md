@@ -138,6 +138,18 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-19, later still) GA-2 REFERENCE SET DRAFTED — awaiting Scott's
+approval pass.** Scott approved the CC0-commit approach; 14 public-domain/
+CC0 photographs now live under shots/ref/ ({wilderness,plateau,
+city-material,sky}/, ~7 MB total, un-ignored in .gitignore), each
+license-verified through the Wikimedia Commons API at download time.
+Provenance + roles: shots/ref/SOURCES.md; Scott's concept renders are a
+manifest only (shots/ref/MOOD-REFS.md — MOOD refs never judge materials).
+Visual QA caught and replaced three bad picks (a painting sold as a vista,
+a forest trail, winter fog) — see SOURCES.md curation notes. Known gap: no
+dedicated desert-cloud reference. _contact.jpg is the review sheet. GA-3
+stays blocked until Scott approves the set.
+
 **(2026-08-19, later) FC-0005 TAIL CLOSED (FC-0010) — the four vacuous-pass
 paths are gone and were watched refusing.** probe-visualkey and
 probe-entitypick exit UNMEASURED (2) on empty fixtures and floor their

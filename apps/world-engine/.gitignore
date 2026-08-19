@@ -6,5 +6,7 @@ test-results/
 shots/*
 !shots/phase-*
 !shots/phase-*/**
+!shots/ref
+!shots/ref/**
 *.log
 .claude/
