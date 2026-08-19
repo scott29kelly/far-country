@@ -138,6 +138,40 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
+**(2026-08-19) GA-1 INSTRUMENT HARDENING — the probe fleet can now fail.**
+Per the gauntlet adoption plan (docs/plans/gauntlet-adoption-far-country.md,
+Scott-approved; doctrine in docs/research/2026-08-19-*.md §4), a full audit
+of tools/ (point-in-time record: tools/AUDIT-2026-08-19.md; findings logged
+in the NEW append-only apps/world-engine/DEFECTS.md, FC-0001..FC-0009):
+
+- **probe-wildwater grew verdicts (FC-0002)** — it previously had NO failure
+  path (report-only, exit 0 even with the hydrology hook missing). Now: W1-W3
+  generic invariants every variant/seed; W4-W8 designed canyonlands end state
+  (spawn pond, west-lake level/position, three dolines, no unexplained
+  pocket) on the default; hook-missing = UNMEASURED exit 2. Verified live:
+  ALL PASS (10 checks), measured values exactly on the design record.
+- **tools/battery.ts now exists (FC-0003)** — `npm run battery` was a dead
+  script pointing at a file that never existed; membership lived in prose.
+  The manifest (17 members: the 2026-08-18 thirteen + stages/navigation/
+  arrival/ascent) runs one at a time; MISSING = failure; exit 2 never counts
+  as pass; unreachable :5173 reports UNMEASURED rather than skipping.
+  Verified: ALL 17 MEMBERS PASS (~3 min wall). `--cpu` and `--only` flags.
+  ADD probe-rimfalls to the manifest when the verify branch merges.
+- **shoot.ts/cityshots.ts frame-content gate (FC-0004)** — captures were
+  never decoded; an all-black PNG passed. tools/framegate.ts (sharp
+  mean/stdev physical bounds, SUSPECT rename, SHOOT_ALLOW_BLANK=1 bypass)
+  now gates both; tools/framegate-selftest.ts is the kept negative control
+  (black/white/flat must REJECT, noise must ACCEPT — verified).
+- **check.ts three-verdict contract (FC-0005, partial)** — PASS/FAIL/
+  UNMEASURED with exit 0/1/2; zero checks ran = exit 2, never ALL PASS.
+  Long tail open: vacuous paths in probe-visualkey/crowd-E5/entitypick-C/
+  find-water still to migrate. probe-bootui's discarded verdict wired
+  (FC-0006).
+- **OPEN:** FC-0007 (~45 bare/mirror threshold literals, NJ_SCALE hardcode),
+  FC-0008 (probe-resize depends on Dawn's error wording), FC-0009 (the
+  mutation battery — per-probe breakage seed list in the audit file; needs
+  a quiet dev-server window, scheduled with Scott).
+
 **(2026-08-17) WILD-RING TERRAIN — CANYONLANDS WIRED AS DEFAULT (Scott's
 pick from a 3-variant, 5-framing still review).** The walkable wilderness
 south of the mesa rim now has real relief: karst tablelands (base 380 m)

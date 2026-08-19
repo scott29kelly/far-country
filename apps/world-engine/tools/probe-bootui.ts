@@ -71,6 +71,13 @@ async function main(): Promise<void> {
     `(() => { const b = document.getElementById('boot'); return b ? getComputedStyle(b).display === 'none' : true; })()`,
   );
   console.log(`[probe] overlay removed after ready: ${String(gone)}`);
+  // verdict is wired, not just logged (DEFECTS.md FC-0006): a rite that never
+  // dismisses is a boot regression, not a screenshot footnote
+  if (!gone) {
+    await browser.close();
+    console.error('[probe] FAIL — boot overlay still displayed after ready');
+    process.exit(1);
+  }
   // the rite hands off to the 5 s camera arrival ease — skip it with a
   // movement-intent key (the designed skip) so the final capture is the
   // landed spawn pose every run, not a random point of the descent

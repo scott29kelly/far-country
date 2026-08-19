@@ -10,6 +10,7 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { gateFrame } from './framegate';
 import { launchWebGPU, laasUrl } from './launch';
 
 interface Args {
@@ -171,6 +172,8 @@ async function main(): Promise<void> {
 
   mkdirSync(dirname(out), { recursive: true });
   await page.screenshot({ path: out });
+  // content gate — an intact PNG is not the same as a picture (framegate.ts)
+  const frameOk = await gateFrame(out, 'shoot');
 
   const stats = await page.evaluate(() => JSON.stringify(window.__laas.stats));
   console.log(`[stats] ${stats}`);
@@ -181,6 +184,10 @@ async function main(): Promise<void> {
   }
 
   await browser.close();
+  if (!frameOk) {
+    console.error(`[shoot] capture rejected by the frame-content gate`);
+    process.exit(1);
+  }
   console.log(`[shoot] wrote ${out}`);
 }
 

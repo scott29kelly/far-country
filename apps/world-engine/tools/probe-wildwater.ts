@@ -7,10 +7,54 @@
  * cell per region so a flooded plateau or a spilled lake is caught before
  * Scott reviews the stills.
  *
+ * Verdicts (added per DEFECTS.md FC-0002 — this probe previously had no
+ * failure path at all): generic safety invariants run on EVERY variant/seed;
+ * the designed-end-state checks run only on the shipped default (no
+ * --wildring, seed 1), whose expected values are the canyonlands design
+ * record. A missing hydrology hook is UNMEASURED (exit 2), never a pass.
+ *
  *   npx tsx tools/probe-wildwater.ts [--wildring 1] [--seed 1]
  */
 
+import { makeChecker } from './check';
 import { launchWebGPU, laasUrl } from './launch';
+
+/**
+ * Designed end state of the DEFAULT wild ring (canyonlands), verified against
+ * the live scene 2026-08-18 (13-probe battery; STATUS 2026-08-17 wild-ring
+ * entry). Positions are the authored macro anchors in src/nj/wildRing.ts
+ * (applyWildRing, default variant); depths/levels are the EMERGENT hydrology
+ * outcomes of those anchors under the drain law, so they cannot be imported
+ * from source — they are the recorded design outcome (provenance: control-
+ * derived, not measured-from-whatever-the-scene-currently-does: a change that
+ * moves them is a real hydrology change and MUST fail here until this record
+ * is deliberately updated alongside it).
+ *
+ * Tolerances: +-150..300 m position (sampling grids are 24-80 m; pocket
+ * buckets 256 m), +-1.5 m depth and +-2.5 m waterY (erosion/level jitter
+ * across boots stays well inside this; a refilled cenote-class trap is
+ * 3-6 m outside it).
+ */
+const DESIGN = {
+  spawnPond: { x: 1100, z: 3725, depth: 8.75 },
+  westLake: { x: -1870, z: 5550, depth: 9.36, waterY: 138.5 },
+  dolines: [
+    { x: 1316, z: 6042, depth: 9.0 },
+    { x: 1772, z: 5874, depth: 9.0 },
+    { x: 2804, z: 5898, depth: 7.9 },
+  ],
+  tol: { pos: 300, depth: 1.5, waterY: 2.5, pocketPos: 200 },
+  /** nothing anywhere may be deeper than this — the deepest authored water is
+   *  the west lake at 9.36 m; a karst trap refilled to cenote depth reads
+   *  12 m+ (the failure class the drain law exists to prevent) */
+  depthCeiling: 11,
+  /** lake lobes spill across several 256 m buckets; anything inside this
+   *  radius of the lake anchor at lake-level waterY is the lake itself */
+  lakeRadius: 900,
+} as const;
+
+const dist = (x: number, z: number, p: { x: number; z: number }): number =>
+  Math.hypot(x - p.x, z - p.z);
 
 interface RegionReport {
   name: string;
@@ -139,6 +183,89 @@ async function main(): Promise<void> {
     );
   }
   await browser.close();
+
+  // ---- verdicts -----------------------------------------------------------
+  const c = makeChecker();
+  if (reports.length === 0) {
+    c.unmeasured(
+      'hydrology hook',
+      '__laasDbg.engine.heightfield missing — hydrology cannot be sampled; a broken probe must not read as a dry world',
+    );
+    c.finish();
+  }
+  const region = (name: string): RegionReport | undefined =>
+    reports.find((r) => r.name.startsWith(name));
+  const flat = region('flat-core');
+  const lawn = region('approach lawn');
+  const meadow = region('spawn meadow');
+  const plateau = region('plateau top');
+  const band = region('wild band');
+
+  // generic safety invariants — every variant, every seed
+  c.check('W1 flat core dry', !!flat && flat.wet === 0, flat ? `wet ${flat.wet}` : 'region missing');
+  c.check('W2 approach lawn dry', !!lawn && lawn.wet === 0, lawn ? `wet ${lawn.wet}` : 'region missing');
+  c.check(
+    'W3 no cenote-class water anywhere',
+    reports.every((r) => r.maxDepth <= DESIGN.depthCeiling) &&
+      pockets.every((p) => p.depth <= DESIGN.depthCeiling),
+    `deepest region ${Math.max(...reports.map((r) => r.maxDepth)).toFixed(1)} m, ceiling ${DESIGN.depthCeiling} m`,
+  );
+
+  const isDefault = wildring === undefined && seed === 1;
+  if (!isDefault) {
+    console.log('[wildwater] non-default variant/seed — designed-end-state checks skipped');
+    c.finish({ minChecks: 3 });
+  }
+
+  // designed end state — shipped canyonlands only (see DESIGN provenance)
+  const { spawnPond, westLake, dolines, tol } = DESIGN;
+  c.check(
+    'W4 spawn pond authored',
+    !!meadow &&
+      Math.abs(meadow.maxDepth - spawnPond.depth) <= tol.depth &&
+      dist(meadow.at[0], meadow.at[1], spawnPond) <= tol.pos,
+    meadow ? `deepest ${meadow.maxDepth.toFixed(2)} m at (${meadow.at[0]}, ${meadow.at[1]})` : 'region missing',
+  );
+  c.check(
+    'W5 plateau water is the spawn pond only',
+    !!plateau && (plateau.wet === 0 || dist(plateau.at[0], plateau.at[1], spawnPond) <= tol.pos),
+    plateau ? `deepest at (${plateau.at[0]}, ${plateau.at[1]})` : 'region missing',
+  );
+  c.check(
+    'W6 west lake holds designed level',
+    !!band &&
+      Math.abs(band.maxDepth - westLake.depth) <= tol.depth &&
+      dist(band.at[0], band.at[1], westLake) <= tol.pos &&
+      Math.abs(band.maxWaterY - westLake.waterY) <= tol.waterY,
+    band
+      ? `deepest ${band.maxDepth.toFixed(2)} m at (${band.at[0]}, ${band.at[1]}) waterY ${band.maxWaterY.toFixed(1)}`
+      : 'region missing',
+  );
+  for (const [i, d] of dolines.entries()) {
+    const hit = pockets.find(
+      (p) => dist(p.x, p.z, d) <= tol.pocketPos && Math.abs(p.depth - d.depth) <= tol.depth,
+    );
+    c.check(
+      `W7.${i + 1} doline pond at (${d.x}, ${d.z})`,
+      !!hit,
+      hit ? `found ${hit.depth.toFixed(1)} m at (${hit.x}, ${hit.z})` : 'no matching pocket',
+    );
+  }
+  const unexplained = pockets.filter((p) => {
+    const isLake =
+      dist(p.x, p.z, westLake) <= DESIGN.lakeRadius &&
+      Math.abs(p.waterY - westLake.waterY) <= tol.waterY;
+    const isDoline = dolines.some((d) => dist(p.x, p.z, d) <= tol.pocketPos);
+    return !isLake && !isDoline;
+  });
+  c.check(
+    'W8 every band pocket is designed water',
+    unexplained.length === 0,
+    unexplained.length
+      ? `unexplained: ${unexplained.map((p) => `(${p.x}, ${p.z}) ${p.depth.toFixed(1)} m`).join('; ')}`
+      : `${pockets.length} pockets, all attributed`,
+  );
+  c.finish({ minChecks: 8 });
 }
 
 main().catch((e) => {

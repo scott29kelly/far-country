@@ -35,6 +35,7 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Page } from 'playwright';
+import { gateFrame } from './framegate';
 import { launchWebGPU, laasUrl } from './launch';
 
 interface Args {
@@ -95,6 +96,7 @@ async function main(): Promise<void> {
     }
 
     mkdirSync(dir, { recursive: true });
+    const suspects: string[] = [];
     const sheet: {
       id: string;
       name: string;
@@ -138,6 +140,7 @@ async function main(): Promise<void> {
         }
         const file = `${dir}/${f.id}.png`;
         await page.screenshot({ path: file });
+        if (!(await gateFrame(file, 'cityshots'))) suspects.push(f.id);
         const stats = await page.evaluate(() => {
           const s = window.__laas.stats;
           return s ? { fps: s.fps, drawCalls: s.drawCalls, triangles: s.triangles } : null;
@@ -156,6 +159,10 @@ async function main(): Promise<void> {
 
     writeFileSync(`${dir}/sheet.json`, JSON.stringify(sheet, null, 2));
     console.log(`[cityshots] ${sheet.length} framings, index at ${dir}/sheet.json`);
+    if (suspects.length > 0) {
+      console.error(`[cityshots] ${suspects.length} SUSPECT frame(s): ${suspects.join(', ')}`);
+      process.exitCode = 1;
+    }
   } finally {
     await browser.close();
   }
