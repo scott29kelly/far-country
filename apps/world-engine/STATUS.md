@@ -138,7 +138,35 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-19, latest) GA-2 APPROVED.** Scott reviewed the contact sheet,
+**(2026-08-19, latest) GA-3 RUNNING — first Gauntlet Loop, wilderness
+band (rounds 0-3 landed).** Branch claude/ga3-gauntlet-wilderness-launch-
+6425c6 from e074053. Mechanics per the plan appendix: fixed round cams
+(tools/ga3-cams.sh — five canonical + three RimFalls cams pinned from a
+fresh probe-rimfalls scan; committed to tools/ because the original
+wildring batch scripts were lost to the shots/ gitignore), fresh-context
+blind critic each round (standing brief tools/ga3-critic-prompt.md),
+claims measured before obeyed, battery ALL 17 PASS as the gate every
+round, ranked deltas in docs/DELTA.md (GA-3 section), evidence in
+DEFECTS.md, round stills + verdicts in shots/wip/ga3/progress.html
+(local). Landed: r1 atmosphere owner (physical 17:00 sun — the hour
+rendered a 34.7° elevation, now 11.7° at the refs' latitude; explicit
+ColorScript 17.0 keyframe; FC-0011 sky seam root-caused: non-periodic
+cloud noise bakes stepping at world x=0). r2 rock+water (FC-0012 wall
+thatch = XZ-plane sampling collapse, wall-plane domain added; FC-0013
+falls sheets buried in the benched face, now lean lip-to-pool). r3 four
+domains (FC-0014 ShadowProxy 24 m quads cast the straight-edge false
+cliff shadow — proxy verts min-eroded; FC-0015 crown shadow proxies
+flattened all foliage at the low sun — sun-shell shadow relief, vista
+caster fade 1000/1800; FC-0016 aerial ponds had no water fragments —
+7th clipmap level covers the domain; clouds rebuilt with multi-scatter
+direction + warm bases; varnish rebuilt as vertical column fields).
+Open per r2 critique: w3561 talus-wedge landform read, e339 grass
+rectangles (splat), snow dimples, wet-margin terrain darkening, distant
+river threads (wet-bed paint wish). Content-gated wishes logged for
+Scott in DELTA.md: talus rubble geometry, falls mist plumes. GA-3 ships
+src changes ⇒ re-vendor the engine bundle at ship time.
+
+**(2026-08-19) GA-2 APPROVED.** Scott reviewed the contact sheet,
 cut the weathered-marble-columns image, kept the other 13 (flagged
 machinery/winter shots included). The bar is fixed; GA-3 is unblocked —
 its paste-ready prompt is in docs/plans/gauntlet-adoption-far-country.md,
