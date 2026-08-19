@@ -13,19 +13,21 @@ disposable). Content wishes are LOGGED FOR SCOTT here, never built.
 
 Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
 
-1. Rock faces have no mid-frequency structure — one pale plaster value
-   under uniform speckle; refs carry stacked strata bands (hue+value),
-   dark varnish streaks running DOWN faces, and talus a value step apart
-   from the cliff. Worst: valley + lake stills. [r0 critic; measured:
-   wall midtones near-achromatic, structure incoherent]
+1. ~~Rock faces have no mid-frequency structure~~ → FIXED r2 (FC-0012):
+   all detail octaves sampled world-XZ and collapsed to vertical fibers
+   on walls; wall-plane sampling + widened warm strata + varnish
+   patches/streaks + block jointing + tamed micro. Await r2 critic
+   confirmation. [r0-r1 critics; root-caused in code]
 2. ~~Light reads noon-neutral, not the stated 17:00~~ → FIXED r1: the
    hour-to-sun mapping put 17.0 at 34.7° elevation; physical equinox path
    at the refs' 38.5° N renders 11.7°, plus an explicit 17.0 ColorScript
    keyframe (warm gold highlights, violet-gray shadows). Lit-wall R/B
    1.157 → 1.34-1.41 (owner + lead measured independently).
-3. Water never reflects the scene — gate channel one repeated sparkle
-   tile + blown glare; band lakes flat near-black, no sky sheen, no wet
-   margin. [r0 critic]
+3. ~~Water never reflects the scene~~ → FIXED r2: distance-grown
+   roughness paints a sun glitter path, horizon-band sky rescue at
+   grazing angles, sparkle/caustics fade with distance. Wet-margin
+   terrain darkening remains (terrain owner wish). Await r2 critic.
+   [r0-r1 critics]
 4. ~~Haze is a milky neutral blanket~~ → FIXED r1 by the physical low
    sun: warm horizon band toward the sun, blue-violet shadow air away.
    Re-judge under the r2 critic before closing for good.
@@ -50,10 +52,11 @@ round 1 = atmosphere/light/tonemap owner alone (deltas 2, 4, 5-clouds,
 
 Ranked deltas, round-1 critique additions:
 
-7. Waterfalls render as translucent glass rectangles — no white aeration,
-   no internal streak variation, no wet darkening of adjacent rock; the
-   plunge-pool ref shows opaque white turbulence + dark wet margin.
-   [r1 critic]
+7. ~~Waterfalls render as translucent glass rectangles~~ → FIXED r2
+   (FC-0013): the sheets' lower halves were buried inside the benched
+   face; now lean lip-to-pool, with rope lanes, additive aeration,
+   ragged margins, impact band. Wet darkening of adjacent rock remains
+   (terrain owner wish). Await r2 critic. [r1 critic]
 8. Cloud undersides overcorrected in r1 — now charcoal/sooty near-black;
    the Trail Ridge bar keeps bases soft gray-lavender, several stops
    lighter. Re-tune belongs to the sequential atmosphere owner.
