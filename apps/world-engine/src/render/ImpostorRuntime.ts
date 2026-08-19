@@ -26,13 +26,14 @@ import {
   vec4,
 } from 'three/tsl';
 import { IMPOSTOR_GRID, type ImpostorAtlas } from '../vegetation/Impostors';
-import type { NF, NV2, NV4 } from '../gpu/TSLTypes';
+import type { NF, NV2, NV3, NV4 } from '../gpu/TSLTypes';
 import {
   applyDitherFade,
   applyInstanceTint,
   fetchInstance,
   type InstanceBinding,
 } from './VegInstance';
+import { foliageSunShadowRelief } from './VegMaterials';
 
 /** unit quad geometry shared by all impostor draws (x,y ∈ −1..1) */
 export function impostorQuad(): PlaneGeometry {
@@ -118,6 +119,10 @@ export function impostorRuntimeMaterial(
     n.z.mul(cs.x).sub(n.x.mul(cs.y)),
   );
   mat.normalNode = transformNormalToView(nW as never);
+  // impostors sit INSIDE their own crown shadow proxy (the impostor band's
+  // only caster) — same sun-shell relief as the card crowns, using the
+  // captured crown-surface normal (see foliageSunShadowRelief derivation)
+  foliageSunShadowRelief(mat, 0.75, nW as unknown as NV3);
 
   const dist = A.xyz.sub(cameraPosition).length();
   if (bind.fade) applyDitherFade(mat, dist, bind.fade);

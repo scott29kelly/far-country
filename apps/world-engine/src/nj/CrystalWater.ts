@@ -190,21 +190,77 @@ export function crystalSurfaceMaterial(
     });
     const rdirUp = vec3(rdir.x, rdir.y.max(0.035), rdir.z).normalize() as unknown as NV3;
     const sky = atm.skyColor(rdirUp) as unknown as NV3;
-    const amb = gi
-      ? (gi.irradiance(positionWorld as unknown as NV3, rdir).mul(0.65) as unknown as NV3)
-      : (sky.mul(0.25) as unknown as NV3);
-    // misses looking DOWN the reflected ray (toward the city/banks) fall to
-    // ambient; upward rays clear to sky — no gorge-wall horizon test needed
-    const fallback = mix(amb, sky, smoothstep(-0.02, 0.22, rdir.y) as unknown as NF) as unknown as NV3;
+    // TERRAIN-HORIZON occlusion (round-3 critic: the approach channel showed
+    // "no sky mirror at grazing angle … no reflection of the mountains it
+    // points at" — and the ?cwdbg=4 probe measured ONE flat sky sample from
+    // near to far). The old fallback assumed "open plateau, no gorge", but
+    // the channel's grazing rays point at the southern massif kilometres
+    // away — far beyond the 18×28 m SSR march. March the heightfield along
+    // the ray at the WaterMaterial ranges extended to 550/1600 m so the
+    // massif profile is tested; each pixel's own azimuth then mirrors the
+    // real silhouette (dark under peaks, bright haze in the gaps). No
+    // canopy term: the plaza/meadow reaches are tree-sparse and this
+    // factory carries no canopy map.
+    const horizonVis = float(1).toVar();
+    for (const dRay of [9, 24, 65, 180, 550, 1600]) {
+      const q = positionWorld.xz.add(rdir.xz.mul(dRay)) as unknown as NV2;
+      const rayY = positionWorld.y.add(rdir.y.mul(dRay)) as unknown as NF;
+      const hQ = hf.sampleHeightNearest(q) as unknown as NF;
+      // wide knee — a hard threshold prints razor-edged reflection bands
+      horizonVis.mulAssign(smoothstep(-16, 7, rayY.sub(hQ)));
+    }
+    // probe ambient with a 10% sky floor (WaterMaterial derivation: L1
+    // probes can undershoot to ~0 and print ink; occluded water still sees
+    // ~10% sky via inter-reflection)
+    const wallAmbGi = gi
+      ? (gi
+          .irradiance(positionWorld as unknown as NV3, rdir)
+          .mul(0.65)
+          .max(sky.mul(0.1)) as unknown as NV3)
+      : (sky.mul(0.18) as unknown as NV3);
+    // GRAZING RESCUE (WaterMaterial derivation): an occluded grazing ray
+    // still collects the bright aerial-haze band just above its blocker —
+    // sampled per-azimuth so the sheet grades warm toward the sun.
+    const horizonSky = atm.skyColor(
+      vec3(rdir.x, float(0.06), rdir.z).normalize() as unknown as NV3,
+    ) as unknown as NV3;
+    const grazing = smoothstep(0.35, 0.05, rdir.y) as unknown as NF;
+    const wallAmb = mix(
+      wallAmbGi,
+      horizonSky.mul(0.55) as unknown as NV3,
+      grazing.mul(0.6) as unknown as NF,
+    ) as unknown as NV3;
+    // ripple-jittered blend breaks residual banding at the transition
+    const vJit = n.x.add(n.z).mul(0.18) as unknown as NF;
+    const fallback = mix(
+      wallAmb,
+      sky,
+      horizonVis.add(vJit).clamp(0, 1) as unknown as NF,
+    ) as unknown as NV3;
     const e = hitUv.sub(0.5).abs().mul(2);
     const edgeFade = smoothstep(1.0, 0.82, e.x.max(e.y));
     const scene = (viewportSharedTexture(hitUv as unknown as NV2) as unknown as NV4).rgb;
-    return mix(fallback, scene as unknown as NV3, hit.mul(edgeFade) as unknown as NF) as unknown as NV3;
+    // far-grazing facet sheen on SSR hits (WaterMaterial derivation: past
+    // ~150 m the mips have flattened the facet ensemble whose upper half
+    // clears the blocker into the haze band — the plunge-pools bright rim)
+    const sheen = grazing.mul(smoothstep(150, 600, dist)).mul(0.45) as unknown as NF;
+    const hitCol = mix(
+      scene as unknown as NV3,
+      horizonSky.mul(0.55) as unknown as NV3,
+      sheen,
+    ) as unknown as NV3;
+    return mix(fallback, hitCol, hit.mul(edgeFade) as unknown as NF) as unknown as NV3;
   })();
   const skyRefl = reflection as unknown as NV3;
   const nFres = vec3(n.x.mul(0.3), n.y, n.z.mul(0.3)).normalize() as unknown as NV3;
   const cosT = clamp(viewDir.dot(nFres), 0.0, 1.0) as unknown as NF;
-  const fres = float(0.02).add(float(0.98).mul(cosT.oneMinus().pow(5))) as unknown as NF;
+  // Toksvig slope-variance budget (WaterMaterial derivation) — shared by
+  // the far roughness ramp below and the fresnel floor: at distance the
+  // facet ensemble, not the mip-flattened mean normal, sets effective
+  // reflectance, raising the steep-view floor ≈2–3× over F0 = 0.02.
+  const distRough = smoothstep(40, 600, dist).mul(0.23) as unknown as NF;
+  const f0 = float(0.02).add(distRough.mul(0.3)) as unknown as NF;
+  const fres = f0.add(f0.oneMinus().mul(cosT.oneMinus().pow(5))) as unknown as NF;
 
   // ---- foam: shore feather + authored plunge churn (two-phase pattern) --------
   const foamUv = (off: NV2, s: number): NV2 =>
@@ -257,15 +313,35 @@ export function crystalSurfaceMaterial(
     .add(vec3(0.012, 0.028, 0.036)) as unknown as typeof mat.emissiveNode;
   // SUN-PATH RECOVERY (same derivation as WaterMaterial): mips flatten the
   // ripple slopes past a few hundred metres, so fold the lost slope
-  // variance into roughness and let the scene sun paint the far glitter
-  // path. Near water keeps the approved glassy crystal read (0.05).
-  const distRough = smoothstep(40, 600, dist).mul(0.23) as unknown as NF;
+  // variance into roughness (distRough, defined at the fresnel) and let the
+  // scene sun paint the far glitter path. Near water keeps the approved
+  // glassy crystal read (0.05).
   mat.roughnessNode = mix(
     float(0.05).add(distRough),
     float(0.55),
     foam,
   ) as unknown as typeof mat.roughnessNode;
   mat.opacityNode = smoothstep(0.004, 0.05, vDepth).mul(0.985) as unknown as typeof mat.opacityNode;
+
+  // ?cwdbg=N — component probe ladder for the authored crystal reaches
+  // (mirror of WaterMaterial's ?waterdbg): 1 foam, 2 fresnel, 3 refraction,
+  // 4 reflection, 5 column thickness
+  const dbg = Number(new URLSearchParams(window.location.search).get('cwdbg') ?? '0');
+  if (dbg > 0) {
+    const paint =
+      dbg === 1
+        ? (vec3(foam) as unknown as NV3)
+        : dbg === 2
+          ? (vec3(fres) as unknown as NV3)
+          : dbg === 3
+            ? refr
+            : dbg === 4
+              ? skyRefl
+              : (vec3(thick.mul(0.25), vDepth.mul(0.25), 0) as unknown as NV3);
+    mat.colorNode = vec3(0) as unknown as typeof mat.colorNode;
+    mat.emissiveNode = paint as unknown as typeof mat.emissiveNode;
+    mat.opacityNode = float(1) as unknown as typeof mat.opacityNode;
+  }
 
   return mat;
 }
@@ -408,6 +484,17 @@ export function crystalFallMaterialWorld(
     texture(noiseA, vec2(u.div(0.14 * PERIOD_FBM), 0.317)) as unknown as NV4
   ).y as unknown as NF;
 
+  // FREE-FALL STRETCH (round-3 critic: "identical at lip and base — no
+  // streak acceleration"): v(d) = √(v0² + 2g·d) with entry 9–17 m/s reaches
+  // the aerated-ribbon terminal (~2× entry) well before a 260 m base, so
+  // streak features and their phase speed should both stretch ~×2 down the
+  // drop. Dividing the sampled v-coordinate by stretch = √(1 + 3·drop)
+  // does exactly that (offsets are added after the divide, so the pattern
+  // also SCROLLS ×stretch faster in world terms near the base).
+  const dropN = float(1).sub(yNorm) as unknown as NF; // 0 lip → 1 base
+  const stretch = dropN.mul(3).add(1).sqrt() as unknown as NF;
+  const vW = v.div(stretch) as unknown as NF;
+
   // two advection speeds, each inside its own two-phase pair (every
   // advected octave must live inside the blend — WaterMaterial contract):
   // 9 / 17 m/s bracket the old single 14 m/s around plausible mid-drop
@@ -417,7 +504,7 @@ export function crystalFallMaterialWorld(
     (
       texture(
         noiseA,
-        vec2(u.mul(xk).div(s * PERIOD_FBM), v.add(off).div(s * PERIOD_FBM * 3.4)),
+        vec2(u.mul(xk).div(s * PERIOD_FBM), vW.add(off).div(s * PERIOD_FBM * 3.4)),
       ) as unknown as NV4
     ).y as unknown as NF;
   const streakPair = (speed: number): NF => {
@@ -435,12 +522,17 @@ export function crystalFallMaterialWorld(
   const streak = mix(streakPair(9), streakPair(17), laneMask) as unknown as NF;
 
   const plunge = smoothstep(0.22, 0.0, yNorm) as unknown as NF;
+  // LIP FEATHER (round-3): a real sheet leaves the lip as a thin glassy
+  // tongue — raise the body threshold over the top ~20% so streaks open
+  // into gauze there (opacity is cut in the same zone below); volume then
+  // builds downward as the water aerates.
+  const lipThin = smoothstep(0.78, 0.98, yNorm) as unknown as NF;
   // the lane also offsets the body threshold ±0.15: sparse lanes open into
   // translucent gauze, dense lanes close into white ropes
   const body = smoothstep(
     0.3,
     0.72,
-    streak.add(plunge.mul(0.25)).add(lane.sub(0.5).mul(0.3)),
+    streak.add(plunge.mul(0.25)).add(lane.sub(0.5).mul(0.3)).sub(lipThin.mul(0.22)),
   ) as unknown as NF;
   // aeration: entrained air accumulates with fall distance — white builds
   // from ~2/3 down and saturates at the plunge (the plunge-pools reference
@@ -471,6 +563,14 @@ export function crystalFallMaterialWorld(
   const sideFade = smoothstep(mL, mL.add(0.07), uEdge).mul(
     smoothstep(float(1).sub(mR), float(1).sub(mR).sub(0.07), uEdge),
   ) as unknown as NF;
+  // spray BROADENS at impact: relax the ragged margins over the bottom
+  // ~20% (0.6 = partial — the silhouette still narrows, mist just bleeds
+  // past it, as in every plunge reference)
+  const sideW = mix(
+    sideFade,
+    float(1),
+    smoothstep(0.2, 0.04, yNorm).mul(0.6) as unknown as NF,
+  ) as unknown as NF;
 
   // grazing fresnel against the sheet's WORLD normal (rim falls face outward
   // at arbitrary azimuths — the local-frame ±Z assumption does not hold here)
@@ -485,40 +585,56 @@ export function crystalFallMaterialWorld(
     sky.mul(0.5).add(vec3(0.5, 0.5, 0.5)),
   ) as unknown as NV3;
   const white = vec3(0.92, 0.95, 0.97) as unknown as NV3;
-  // impact flash: the last ~8% (top boundary raggedized by the streak) goes
-  // full white where the ribbon meets the pool — the contact line is the
-  // brightest churn in every falls reference
-  const impact = smoothstep(streak.mul(0.06).add(0.08), 0.0, yNorm) as unknown as NF;
+  // impact flash (round-3: widened 8→12% + brightened 0.4→0.5): the contact
+  // line is the brightest churn in every falls reference
+  const impact = smoothstep(streak.mul(0.08).add(0.12), 0.0, yNorm) as unknown as NF;
+  // impact MIST: spray brightening above the contact line, clumped by the
+  // streak field so it reads as churn puffs, not a gradient; it also spills
+  // past the ragged margins via sideW. 0.26 ≈ one pool radius of sheet.
+  const mist = smoothstep(0.26, 0.03, yNorm).mul(streak.mul(0.5).add(0.5)) as unknown as NF;
   mat.colorNode = vec3(0.2, 0.24, 0.26).mul(body) as unknown as typeof mat.colorNode;
   // The old constant floors (0.3 emissive, 0.38 opacity) — added so the rim
   // falls survive a ~1 km judge against pale rock — were exactly the
-  // round-2 "translucent glass rectangle" read: 38% uniform alpha wherever
-  // the streaks were NOT. Cut them (0.3→0.12 emissive, 0.38→0.10 opacity)
-  // and carry the ~1 km presence with structure instead: aeration whitening
-  // down-fall + the near-opaque impact band. Peak emissive ≈ 1.4 stays just
-  // under the 1.5 bloom threshold.
+  // round-2 "translucent glass rectangle" read. Round 3 replaces the flat
+  // 0.08 alpha floor with a DOWNWARD BUILD (round-3 critic: "its semi-
+  // transparency lets cliff strata show through … no thinning/feathering,
+  // no mist or spray brightening at impact"): `fill` ramps 0.05 at the lip
+  // → 0.50 low (0.72→0.18 spans the aeration zone), so with body + aer the
+  // lower half saturates near the 0.97 cap and the strata stop ghosting
+  // through, while the lip stays gauze (its opacity further cut ×(1−0.55·
+  // lipThin) — the thin glassy tongue).
+  //
   // aeration must be ADDITIVE white: gated through the body multiply it
   // peaked ~0.3 — dimmer than the sun-lit pale rock behind, so the lower
   // ribbon DARKENED the wall instead of whitening (first-iteration shot).
-  // body-carried glass ~0.75 peak + 0.5 aer + 0.4 impact ≈ 1.6 only where
-  // churn stacks on the contact line — a touch of bloom at the base is the
-  // reference read (falls bases glow white against shadowed rock).
+  // The combined additive churn (aer + impact + mist) is CAPPED at 0.85:
+  // body-carried glass peaks ~0.91, so the emissive tops out ≈ 1.76 only
+  // where all three stack on the contact line — a controlled bloom at the
+  // base is the reference read (falls bases glow against shadowed rock),
+  // but an uncapped sum reached ~2.2 and would halo the whole pool.
+  const churnAdd = aer
+    .mul(0.5)
+    .add(impact.mul(0.5))
+    .add(mist.mul(0.25))
+    .clamp(0, 0.85) as unknown as NF;
   mat.emissiveNode = mix(
     waterCol.mul(0.55),
     white.mul(1.05),
     aer.mul(0.7).add(streak.mul(0.25)).add(fres.mul(0.12)).clamp(0, 1),
   )
     .mul(body.mul(0.75).add(0.12))
-    .add(white.mul(aer.mul(0.5)))
-    .add(white.mul(impact.mul(0.4))) as unknown as typeof mat.emissiveNode;
+    .add(white.mul(churnAdd)) as unknown as typeof mat.emissiveNode;
+  const fill = smoothstep(0.72, 0.18, yNorm).mul(0.45).add(0.05) as unknown as NF;
   mat.opacityNode = body
-    .mul(0.55)
-    .add(aer.mul(0.45))
-    .add(impact.mul(0.35))
-    .add(0.08)
-    .clamp(0, 0.96)
+    .mul(0.5)
+    .add(aer.mul(0.4))
+    .add(impact.mul(0.3))
+    .add(mist.mul(0.2))
+    .add(fill)
+    .clamp(0, 0.97)
+    .mul(float(1).sub(lipThin.mul(0.55)))
     .mul(edge)
-    .mul(sideFade) as unknown as typeof mat.opacityNode;
+    .mul(sideW) as unknown as typeof mat.opacityNode;
 
   return mat;
 }
@@ -547,8 +663,21 @@ export function riverBedMaterial(flow: Vector2, depthM: number): MeshStandardNod
   const w2 = abs(ph1.sub(0.5)).mul(2) as unknown as NF;
   const flowU = uniform(flow.clone());
   const vel = vec2(flowU as unknown as NV2).mul(0.8) as unknown as NV2;
+  // STATIC domain warp before the tile lookup (round-3 critic: the approach
+  // channel read as "a repeating checkerboard caustic texture"): causticTint
+  // relabels space with ±0.45·fbm-gradient offsets so the 11 m tile repeat
+  // never lines up — this authored-bed path sampled the tile RAW and the
+  // repeat stacked visibly down the long straight channel. Same constants
+  // as Caustics.ts (~±0.9 m over ~31 m features), time-invariant so the
+  // advection still flows through it.
+  let uvW = positionWorld.xz as unknown as NV2;
+  const nA = c.hf.noiseA;
+  if (nA) {
+    const wgrad = (texture(nA, positionWorld.xz.div(31 * PERIOD_FBM), 0) as unknown as NV4).zw;
+    uvW = positionWorld.xz.add(wgrad.clamp(-2, 2).mul(0.45)) as unknown as NV2;
+  }
   const uvAt = (ph: NF): NV2 =>
-    positionWorld.xz.sub(vel.mul(ph.div(FLOW_CYC))).div(CAUSTIC_TILE) as unknown as NV2;
+    uvW.sub(vel.mul(ph.div(FLOW_CYC))).div(CAUSTIC_TILE) as unknown as NV2;
   const tA = (texture(c.bake.tex, uvAt(ph1)) as unknown as NV4).x as unknown as NF;
   const tB = (texture(c.bake.tex, uvAt(ph2).add(vec2(0.37, 0.19)) as unknown as NV2) as unknown as NV4)
     .x as unknown as NF;
@@ -562,8 +691,20 @@ export function riverBedMaterial(flow: Vector2, depthM: number): MeshStandardNod
   // Fade the gain out over 140→520 m (one 11 m tile ≈ 40 px → 10 px at
   // 1080p / 55° fov); the far channel then reads by its water surface
   // (fresnel sky + sun path), which is what distance actually shows.
-  const bedDist = cameraPosition.sub(positionWorld).length() as unknown as NF;
-  const causFade = smoothstep(520, 140, bedDist) as unknown as NF;
+  // GRAZING GATE (round-3): the 140 m budget assumed a steepish view — a
+  // walker-height eye skimming the channel foreshortens the tile's screen
+  // HEIGHT by sin(view elevation), so at <~3° the pattern still aliased
+  // into a checkerboard well inside 140 m. Fade on elevation too: 0.05→0.22
+  // spans "tiles collapse to lines" → "projection near-isotropic"; the
+  // near-field sparkle at walking angles (elev > ~0.25) is untouched.
+  // Physically consistent: at those grazing angles fresnel (measured ≥0.5)
+  // hands the surface to reflection anyway.
+  const toCamB = cameraPosition.sub(positionWorld) as unknown as NV3;
+  const bedDist = toCamB.length() as unknown as NF;
+  const vElev = toCamB.y.div(bedDist.max(1e-4)).abs() as unknown as NF;
+  const causFade = smoothstep(520, 140, bedDist).mul(
+    smoothstep(0.05, 0.22, vElev),
+  ) as unknown as NF;
   const gain = tint.mul(1.5).mul(focal).mul(sunUp).mul(causFade).add(1) as unknown as NF;
   mat.colorNode = vec3(0.851, 0.643, 0.255).mul(gain) as unknown as typeof mat.colorNode;
   return mat;

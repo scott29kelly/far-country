@@ -377,11 +377,21 @@ export class Clouds {
             const lp = sp.add(sunDir.mul(ls * 165));
             lTau.addAssign(this.sampleDensity(lp, false).mul(165));
           }
-          // −0.04 → −0.055: deepen in-cloud sun occlusion so shadowed cores
-          // and bases separate from lit tops (Trail Ridge two-stop split);
-          // at the new low 17:00 sun the 3-step light march runs nearly
-          // horizontally through neighbouring mass, which this scales.
-          const sunVis = exp(lTau.mul(-0.055));
+          // GA-3 r3, on top of r1's −0.04 → −0.055 deepening: the single
+          // exponential crushed everything ≥ one light-march step behind the
+          // sun-facing rind to phase-black — the blind critic's #1 gap:
+          // "undersides go sooty gray-to-near-black while the sky stays
+          // bright blue ... darkening is radially inside each puff". Keep
+          // r1's extinction for the first octave (it carries the lit-side /
+          // shadow-side DIRECTION toward the 17:00 western sun) and add
+          // Wrenninge-style multiple-scatter octaves at extinction ×¼ and
+          // ×¹⁄₁₆ (weights 0.60/0.28/0.12, Σ=1): the sunward rind still
+          // reads 1.0, but the far/shadow side floors near ~0.05·direct —
+          // in-cloud multi-scatter never lets a real cumulus go black.
+          const sunVis = exp(lTau.mul(-0.055))
+            .mul(0.6)
+            .add(exp(lTau.mul(-0.055 / 4)).mul(0.28))
+            .add(exp(lTau.mul(-0.055 / 16)).mul(0.12));
           const powder = float(1).sub(exp(dens.mul(-22)));
           // ambient sees less sky toward the cloud base
           const hn = clamp(
@@ -389,21 +399,32 @@ export class Clouds {
             0,
             1,
           );
-          // source radiance: sun (phase-weighted, self-occluded) + sky ambient.
-          // Ambient height ramp 0.45+0.55·hn → 0.16+0.84·hn: a cloud base sees
-          // almost no sky dome (self-occluded from above), so bases must fall
-          // well below lit tops per the Trail Ridge reference (~two stops) —
-          // the old 0.45 floor held the whole underside within a quarter stop
-          // of the tops (measured r0: base/top 187/226). Ours lands ~1.3-1.5
-          // stops, deliberately short of the ref's two: Trail Ridge is a
-          // midday frame, and at this scene's low 17:00 sun real bases catch
-          // warm raking light — a full two-stop base would read overcast.
-          const S = sunT
+          // Direct sun: phase-weighted, self-occluded, Beer–Powder gated.
+          // r3 moves the powder gate HERE (r1 multiplied it into the whole
+          // sum): back-scatter darkening is a direct-light phenomenon, and
+          // applying it to the ambient term charred every thin fringe into
+          // the "soft-edged sooty blob" rims the critic flagged.
+          const direct = sunT
             .mul(sunVis)
             .mul(phase)
             .mul(SUN_E * 3.4)
-            .add(ambient.mul(hn.mul(0.84).add(0.16)).mul(0.38))
             .mul(powder.mul(0.75).add(0.25));
+          // Sky ambient, height-ramped. r1's 0.16+0.84·hn floor was derived
+          // against the MIDDAY Trail Ridge two-stop split; the r3 critic
+          // judges that overcorrected for this scene's low warm sun — every
+          // evening reference keeps bases LIGHTER than the terrain mid-tones.
+          // 0.30+0.70·hn lands bases ~1 stop under the lit tops (use Trail
+          // Ridge for form only, not for its midday value split).
+          const skyAmb = ambient.mul(hn.mul(0.7).add(0.3)).mul(0.38);
+          // Evening base glow — warm ground/atmosphere bounce raking the
+          // underside, the refs' pink-gold bases (evening-rim-panorama,
+          // late-sun-canyon-haze). Magnitude: ground irradiance SUN_E·T·sinE
+          // ≈ 8·T·0.20, × albedo 0.25/π ≈ 0.13·T radiance, ×~3 in-cloud
+          // multi-scatter buildup ≈ 0.42·T, strongest at the base (1−hn).
+          // The tint IS the sun transmittance — pink-gold at 17:00 and
+          // self-adapting at any other hour, never a hard-coded color.
+          const baseGlow = sunT.mul(float(1).sub(hn)).mul(0.42);
+          const S = direct.add(skyAmb).add(baseGlow);
           const stepT = exp(dens.mul(seg).mul(-0.052));
           light.addAssign(S.mul(trans).mul(float(1).sub(stepT)));
           trans.mulAssign(stepT);

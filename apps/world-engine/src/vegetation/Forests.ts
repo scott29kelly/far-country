@@ -120,9 +120,23 @@ const MAIN_GROUPS = 170;
 const CASC_LOCALS = 142;
 const CASCADES = 4;
 const GROUPS = MAIN_GROUPS + CASCADES * CASC_LOCALS;
-/** crown-proxy shadows fade out across this band (m from camera) */
-const IMP_CAST_FADE0 = 620;
-const IMP_CAST_FAR = 1100;
+/**
+ * Crown-proxy shadows fade out across this band (m from camera).
+ * GA-3 round 3 (620/1100 → 1000/1800): the round-2 critic's "trees cast no
+ * long shadows at 17:00 in the rim vista" was this pair — every vista cam
+ * lost ALL tree shadows past ~1 km while the CSM far cascade covers 3200 m,
+ * and at the pinned 11.7° sun a 20 m crown throws a ~95 m shadow, the
+ * dominant depth cue in the evening references (shots/ref/sky/). Balance
+ * measured at the valley vista cam (gpusample medians, 6 samples): old
+ * 620/1100 → 6.5 ms GPU total; 1400/2600 → 18.6 ms (+12 — at this low sun
+ * every cascade's light-space box stretches ~km sunward, so band casters
+ * land in ALL cascades, not just the far one); 1000/1800 → 8.6 ms (+2.1)
+ * with the vista's readable crown shadows visually indistinguishable from
+ * the 2600 version — past ~1.8 km individual ~10 m shadow blobs drop under
+ * the far cascade's texel + haze floor anyway.
+ */
+const IMP_CAST_FADE0 = 1000;
+const IMP_CAST_FAR = 1800;
 
 function groupOf(cls: number, variant: number, ring: 0 | 1 | 2 | 3): number {
   if (cls < 6) {
@@ -163,7 +177,12 @@ function capOf(g: number): number {
     // caster regions: a cascade box covers a slice of the frustum, so the
     // worst case is well under the main-view caps
     const local = (g - MAIN_GROUPS) % CASC_LOCALS;
-    if (local >= 136) return 8192; // impostor-band crown proxies (per cls)
+    // impostor-band crown proxies (per cls): 8192 → 16384 with the GA-3 r3
+    // IMP_CAST_FAR extension (1100 → 1800 m) — the band's annulus area grew
+    // ~3×, and a saturated append list drops casters SILENTLY (patchy,
+    // camera-order-dependent missing shadows). u32 indices: +6 cls × 4 casc
+    // × 8192 × 4 B ≈ 0.8 MB.
+    if (local >= 136) return 16384;
     if (local < 48) return local % 2 === 0 ? 3072 : 6144; // tree r1/r2
     if (local < 72) return CAP_HERO;
     const pe = (local - 72) >> 1;

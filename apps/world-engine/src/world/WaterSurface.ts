@@ -1,7 +1,7 @@
 /**
  * WaterSurface — camera-following water clipmap (Phase 6).
  *
- * Six concentric square grids (128×128 cells, cell 1.5 m → 48 m) share one
+ * Seven concentric square grids (128×128 cells, cell 1.5 m → 96 m) share one
  * geometry; each level snaps to a 2-cell lattice and renders the hydrology
  * water surface (Heightfield.waterY) through WaterMaterial. A level discards
  * fragments inside the next-finer level's exact world rect, so coverage is
@@ -25,7 +25,14 @@ import type { Heightfield } from './Heightfield';
 import { runiform } from '../gpu/RenderUniform';
 
 const CELLS = 128; // cells per level edge (verts = CELLS+1)
-const LEVEL_CELL = [1.5, 3, 6, 12, 24, 48]; // m — outermost spans ±3.07 km
+// m — outermost level spans 64·96 = ±6.14 km = the full NJ detailed domain
+// (WORLD_HALF 6144). The old ±3.07 km cap left every water body more than
+// ~3 km from the camera with NO surface mesh at all: the round-3 aerial
+// (cam 3.4 km up over the south rim) showed the plateau ponds as bare dark
+// bed terrain — the critic's "flat matte-black inkblots". One extra 128²
+// level (~32 k tris) closes the gap; the material's inWorld mask already
+// clips the new level at the domain border.
+const LEVEL_CELL = [1.5, 3, 6, 12, 24, 48, 96];
 
 function gridGeometry(): BufferGeometry {
   const n = CELLS + 1;

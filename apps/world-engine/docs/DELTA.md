@@ -70,33 +70,44 @@ Ranked deltas, round-1 critique additions:
 Ranked deltas, round-2 critique additions (r2 critic; lake.png "might
 buy a one-second pause", rest still identified instantly):
 
-11. Clouds are now the #1 gap — sooty gray-to-near-black undersides
-    against bright blue, darkening RADIAL inside each puff (no lit-side/
-    shadow-side direction), reading as "smoke or ink drops in milk"; at
-    a 17:00 sun bases should be warm-tinted and lighter than midtones.
-    Supersedes delta 8. [r2 critic]
-12. Water, remaining bodies: gate channel repeating checkerboard caustic
-    with no sky mirror or Fresnel falloff; aerial ponds matte-black
-    inkblots (from altitude water mirrors sky); valley river matte
-    brown. The r2 lake fix itself reads close. [r2 critic]
-13. Falls ribbons still constant-width/constant-texture lip-to-base,
-    semi-transparent "ghost decal" letting strata show through — wants
-    streak acceleration, lip thinning, impact brightening, more body.
+11. ~~Clouds sooty, darkening radial~~ → FIXED r3: multi-scatter octaves
+    replace the single light-march exponential (the phase-black rind was
+    the "ink drop" read), powder term restricted to the direct-sun term,
+    ambient floor raised, warm base glow from ground bounce (tint = sun
+    transmittance, self-adapting). Await r3 critic. [r2 critic]
+12. ~~Water, remaining bodies~~ → FIXED r3 (FC-0016): the aerial ponds
+    were never water — the clipmap stopped at ±3.07 km; 7th level added.
+    Gate channel gained a real horizon-occlusion reflection march +
+    Fresnel falloff + caustic de-tiling; valley pool Fresnel floor +
+    grazing rescue widened. KNOWN LIMIT: distant narrow river threads
+    have no water surface by design — terrain wet-bed paint wish stands.
     [r2 critic]
-14. Cliff banding too regular — evenly spaced horizontal striping
-    visibly tiles along the wall; vertical varnish/drainage streaks and
-    intra-face hue range still too weak vs the varnish refs; talus color
-    break weak. [r2 critic]
-15. Vegetation shading: crowns are identical dark-green cauliflowers
-    (no hue/value spread within or between crowns) and trees cast no
-    long shadows at 17:00 (rim meadow shadowless under trees); green
-    bench patches render as flat unlit decals with screen-door edges.
+13. ~~Falls ghost-decal~~ → FIXED r3: streak stretch/acceleration toward
+    the base, lip feathering, 0.05→0.50 downward opacity build (strata
+    stop showing through), brighter clumped impact mist. Await r3 critic.
     [r2 critic]
-16. A huge diagonal darkening with a perfectly straight edge crosses
-    the cliff in falls-w1305/w3561 (plus rectangular dark patches in
-    grass at falls-e339) — reads as an unlit polygon or projection
-    seam. DIAGNOSE before obeying (cloud shadow? CSM cascade? city
-    shadow?). [r2 critic]
+14. ~~Cliff banding too regular / varnish too weak~~ → FIXED r3: band
+    phase warp + bed-persistence panels + lane drift (beds die out and
+    reshuffle), varnish variance-collapse root-caused (averaging four
+    noises) and rebuilt as vertical column fields with a three-stop
+    ochre→rust→purple-black ramp, talus fan mottle, near-only ~1 m
+    lamination band for detail-frequency LOD. Await r3 critic. [r2]
+15. ~~Vegetation flat + shadowless~~ → FIXED r3 (FC-0015): crown shadow
+    proxies inside every crown occluded all foliage at the 11.7° sun —
+    sun-facing shell shadow relief restores the intact variance
+    machinery; impostor caster fade extended 620/1100 → 1000/1800 m
+    (+2.1 ms measured) so vistas keep long tree shadows; CanopyShell
+    dither band was parked on the bench faces by a y=0 distance bug —
+    fixed, plus a crown-cell hue mosaic. Await r3 critic. [r2 critic]
+16. ~~Diagonal "unlit polygon" on the rim face~~ → DIAGNOSED r3 as THREE
+    things (ablation bisect): (a) FIXED — ShadowProxy false shadow
+    (FC-0014: 24 m proxy quads stood sunward of the real cliff);
+    (b) OPEN — the falls-w3561 dark wedge is a LANDFORM material read
+    (smooth talus/landslide apron with a straight break line at its
+    top) — terrain owner, next round; (c) OPEN — the falls-e339 grass
+    rectangles are axis-aligned macro-texel patches in the grass color
+    (splat/moisture/zone-mask sampling artifact) — terrain/veg owner,
+    next round. [r2 critic + r3 bisect]
 
 Critic misread, noted not actioned: the aerial "repeated rectangular
 patch grid with hard seams" is the authored Allotment farmland north of

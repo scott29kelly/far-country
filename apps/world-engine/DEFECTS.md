@@ -8,7 +8,64 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0014.
+THE NEXT FREE NUMBER IS FC-0017.
+
+## FC-0014 — the terrain shadow proxy cast kilometre-scale false shadows on the rim face
+
+Believed: the big straight-edged diagonal darkening across the rim wall
+in falls stills was "a cloud shadow" (round-2 reading) or "an unlit
+polygon" (round-2 critic). Measured (GA-3 round 3, ablation bisect with
+A/B shots): it survives --cov 0 (not clouds) and disappears with
+--ablate proxy alone. Root cause: ShadowProxy is a fixed 512-square grid
+— 8 m quads in the 4 km demo world it was written for, but 24 m quads on
+New Jerusalem's 12288 m domain; its coarse triangulated mesa lip stands
+metres sunward of the real cliff, so the whole face behind it fails the
+depth compare, with perfectly straight triangle-edge boundaries.
+Resolution (2026-08-19): each proxy vertex eroded to the minimum height
+over its quad neighborhood, so the proxy sits at-or-below the real
+surface between samples; error direction honest (shadows recede by at
+most one quad). Verified by A/B; legitimate bench shading and long
+terrain shadows remain. Full GRID rescaling rejected on cascade raster
+cost (~4x).
+
+## FC-0015 — crown shadow proxies flattened all foliage to one dark green at the low sun
+
+Believed: tree crowns lacked hue/value variance (two critics: "identical
+dark-green cauliflower clusters"); the per-instance variance machinery
+was assumed missing or unwired. Measured (GA-3 round 3): the machinery
+was intact (species hueVar 0.22-0.34, per-card jitter, per-instance
+tints); but the crown shadow PROXIES — solid dithered ellipsoids at
+74-92% density inside every crown — mean that at the 11.7-degree sun
+every foliage fragment sits behind some proxy along the sun ray. The
+cascades report 60-90% occlusion across whole crowns; direct sun never
+reached a leaf, and ambient-only shading collapsed every species to one
+value. Proven by ?ablate=casters A/B (variance appears with zero
+material changes). Generalises to: a caster placed INSIDE the thing it
+shadows will always shadow the thing itself at grazing sun.
+Resolution (2026-08-19): receivedShadowNode relief on sun-facing crown
+shells (VegMaterials.foliageSunShadowRelief, mirrored in the impostor
+runtime) — the outermost leaf along the sun ray is lit by definition;
+shade shells and ground shadows untouched.
+
+## FC-0016 — the water clipmap never covered the band: distant ponds rendered as bare bed
+
+Believed: the aerial cam's "matte-black inkblot ponds" were a shading
+failure (round-2 critic: "no sky term"). Measured (GA-3 round 3,
+waterdbg=4 forced-emissive probe): the ponds stayed black under forced
+water emissive — there was NO water fragment there. The water surface
+clipmap's outermost level spanned +/-3.07 km around the camera; the
+plateau ponds sat 3-5 km out and were bare dark bed terrain. A shading
+argument about pixels that are not water.
+Resolution (2026-08-19): a 7th clipmap level (96 m cells, +/-6.14 km =
+the full NJ domain, ~32k tris), plus an analytic far-level wet gate on
+waterY minus ground (the buried dry-sheet sentinel poked through
+terraced terrain at 4 km where screen-depth z precision cannot reject
+it). Turbidity in-scatter rescaled (the old coefficients scaled zenith
+radiance where downwelling irradiance is the physical quantity, ~2.2x).
+KNOWN LIMIT (by design, documented in the round-3 water report): narrow
+river channels past ~400 m have no water surface at any clipmap level
+(min-reduction drops them deliberately); their distant read is wet-bed
+terrain paint — a terrain-owner wish, not a water bug.
 
 ## FC-0012 — terrain detail octaves collapse to vertical fibers on walls (XZ-plane sampling)
 

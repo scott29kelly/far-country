@@ -10,6 +10,7 @@
 import { Color, DoubleSide, type DirectionalLight, type Texture, Vector3 } from 'three';
 import { MeshPhysicalNodeMaterial, MeshStandardNodeMaterial } from 'three/webgpu';
 import {
+  Fn,
   attribute,
   cameraPosition,
   clamp,
@@ -65,6 +66,60 @@ export function grassTranslucency(albedo: NV3, tipT: NF): NV3 {
 
 function vdata(): NV4 {
   return attribute('vdata', 'vec4') as unknown as NV4;
+}
+
+/**
+ * Sun-side self-shadow relief for crown foliage (GA3 r2 "identical
+ * dark-green cauliflower clusters" fix).
+ *
+ * The crown shadow casters (Forests.proxyCasterMat) are solid dithered
+ * ellipsoids INSIDE each crown. At a low sun (~12° at T=17) every foliage
+ * fragment sits behind some proxy along the sun ray — its own crown's core
+ * or a neighbor's — so the cascade maps report 60–90% occlusion across
+ * ENTIRE crowns and direct sun never reaches a leaf: crowns collapse to
+ * ambient-only flat dark green, erasing the per-card hue variance and the
+ * lit/shade separation. ?ablate=casters A/B (shots/wip/ga3/work-veg/
+ * rim-zoom-base vs -nocast) confirms the variance is fully present without
+ * veg casters.
+ *
+ * Receiver-side correction, not a caster change: the OUTERMOST leaf along
+ * the sun ray is lit by definition — a bulk-occlusion blob cannot express
+ * that. Card normals are bent to the crown sphere (radially outward, see
+ * VegInstance header), so dot(N, sunDir) says which shell a fragment is on.
+ * Lift the received shadow toward 1 on the sun shell; keep full shadow on
+ * the shade shell. Interior cards keep their baked-AO darkening (vdata.w),
+ * so crowns read lit-rim / dark-core instead of uniformly flat, and the
+ * ground keeps its full-strength long shadows (ground materials untouched).
+ *
+ * `normalWorld` (raw interpolated normal, NOT face-flipped) keeps the term
+ * stable for DoubleSide cards regardless of which side faces the camera.
+ */
+export function foliageSunShadowRelief(
+  mat: MeshStandardNodeMaterial,
+  k: number,
+  /** override the shell normal (impostors relight via captured normals) */
+  shellNormal?: NV3,
+): void {
+  const n = shellNormal ?? (normalWorld as unknown as NV3);
+  const facing = n.normalize().dot(vec3(sunU.dir) as unknown as NV3);
+  (mat as unknown as { receivedShadowNode: unknown }).receivedShadowNode = Fn(
+    (args: unknown) => {
+      const shadow = (args as NF[])[0] as NF;
+      // ramp eases in just past tangent so the terminator stays soft
+      const lift = smoothstep(-0.08, 0.55, facing).mul(k);
+      return mix(shadow, float(1), lift);
+    },
+  );
+  // warm forward-scatter on the sun shell: leaves transmit + inter-reflect
+  // the low warm sun, so lit crown sides skew golden at 17:00 (plateau refs)
+  // while shade shells keep the cool ambient green — scaled by the same k
+  const prev = mat.colorNode as unknown as NV3 | null;
+  if (prev) {
+    const warm = smoothstep(0.0, 0.6, facing).mul(0.7 * k);
+    mat.colorNode = prev.mul(
+      mix(vec3(1, 1, 1), vec3(1.16, 1.05, 0.78), warm),
+    ) as unknown as typeof mat.colorNode;
+  }
 }
 
 /** hue jitter: rotate albedo toward yellow (+) / blue-green (−) */
@@ -281,6 +336,9 @@ export function foliageMaterial(p: FoliageMatParams): MeshStandardNodeMaterial {
   mat.roughness = 0.8; // real leaves keep a little sheen, far less than default
   mat.metalness = 0;
   mat.side = DoubleSide;
+  // hero crowns receive card-level casters (ring-0 real geometry), so the
+  // blob-occlusion error is smaller — modest relief only
+  foliageSunShadowRelief(mat, 0.45);
   return mat;
 }
 
@@ -334,5 +392,8 @@ export function foliageCardMaterial(
   mat.roughness = 0.92;
   mat.metalness = 0;
   mat.side = DoubleSide;
+  // R1/R2 crowns are shadowed almost entirely by the solid crown proxies —
+  // full-strength sun-shell relief or they flatten to one dark green
+  foliageSunShadowRelief(mat, 0.75);
   return mat;
 }

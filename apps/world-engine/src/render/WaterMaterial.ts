@@ -158,6 +158,15 @@ export function waterMaterial(
   const viewDir = toCam.div(dist.max(1e-4));
   const fragZ = positionView.z; // negative
 
+  // Toksvig slope-variance budget (shared): the ripple slopes come from a
+  // mip-mapped gradient texture, so past a few hundred metres they average
+  // to zero. This term re-injects the lost variance — as microfacet
+  // roughness at the roughnessNode (sun glitter path, round-2) and as a
+  // fresnel floor below (round-3). 40→600 m spans "detail ring resolved"
+  // to "mips fully flat"; 0.23 ≈ √(√2·σ) − 0.05 for Cox–Munk light-breeze
+  // rms slope σ ≈ 0.08–0.14 rad.
+  const distRough = smoothstep(40, 600, dist).mul(0.23);
+
   // refraction uv: ripple-driven, shrinking with distance, depth-validated
   const refrK = clamp(float(9).div(dist.max(1)), 0.04, 1).mul(0.055);
   const ruv = screenUV.add(n.xz.mul(refrK));
@@ -189,8 +198,15 @@ export function waterMaterial(
     exp(absorb.mul(-SIGMA.g)),
     exp(absorb.mul(-SIGMA.b)),
   );
-  // turbidity in-scatter follows the zenith sky → tracks time-of-day
-  const inscat = atm.skyColor(vec3(0, 1, 0)).mul(vec3(0.013, 0.036, 0.032));
+  // turbidity in-scatter follows the zenith sky → tracks time-of-day.
+  // MAGNITUDE (round-3 critic: steep-viewed ponds read as "flat matte-black
+  // inkblots"): upwelling scatter is a few % of the downwelling IRRADIANCE,
+  // E_d ≈ 2–2.5 × zenith radiance for a clear sky — the old 0.013/0.036
+  // coefficients scaled zenith RADIANCE directly, undershooting the water's
+  // body color ~2× and leaving deep water pitch black wherever fresnel is
+  // low. R_diffuse ≈ 3–4% of E_d → ~0.08 of zenith in the green channel;
+  // spectral shape (g > b ≫ r) unchanged — clear alpine teal.
+  const inscat = atm.skyColor(vec3(0, 1, 0)).mul(vec3(0.028, 0.08, 0.071));
   const refr = sceneCol.mul(T).add(inscat.mul(vec3(1, 1, 1).sub(T)));
 
   // ---- reflection: screen-space march with sky fallback ---------------------------
@@ -246,18 +262,33 @@ export function waterMaterial(
     // far-lake band to black). Occluded rays fall back to the probe field
     // toward the ray — it already encodes wall/canopy brightness.
     const horizonVis = float(1).toVar();
-    for (const dRay of [9, 24, 65, 180]) {
+    // canopy is POROUS and the density map coarse: for rays above ~25°
+    // elevation the crown lift falsely occluded pond interiors (a 0.5-up
+    // ray is 12 m up at the 24 m tap — under a 16 m crown wall that isn't
+    // really there). Fade the crown term out for steep rays; bare terrain
+    // (real gorge walls) still tests at full strength via rayY − hQ.
+    const steepFade = smoothstep(0.45, 0.15, rdir.y);
+    // ranges extended past the old 180 m bank cap (round-3 critic: "no
+    // reflection of the mountains it points at"): a grazing ray aimed at a
+    // massif kilometres away tested only flat foreground and fell through
+    // to bright sky. 550/1600 continue the ~e-spaced ladder and catch the
+    // massif profile per-pixel along each ray's own azimuth.
+    for (const dRay of [9, 24, 65, 180, 550, 1600]) {
       const q = positionWorld.xz.add(rdir.xz.mul(dRay));
       const rayY = positionWorld.y.add(rdir.y.mul(dRay));
       let hQ = hf.sampleHeightNearest(q) as NF;
       if (canopyTex) {
-        hQ = hQ.add(canopyAt(canopyTex, q).mul(16)) as NF;
+        hQ = hQ.add(canopyAt(canopyTex, q).mul(16).mul(steepFade)) as NF;
       }
       // wide knee — a hard threshold printed razor-edged reflection bands
       horizonVis.mulAssign(smoothstep(-16, 7, rayY.sub(hQ)));
     }
+    // sky floor on the probe ambient: L1 probes under dense crowns (or mid
+    // round-robin refresh) can undershoot to ~0, and 0 × anything printed
+    // ink-black water. Occluded water still sees ~10% sky via inter-
+    // reflection — same physical floor as the no-GI branch's 0.18.
     const wallAmbGi = gi
-      ? (gi.irradiance(positionWorld, rdir).mul(0.65) as unknown as NV3)
+      ? (gi.irradiance(positionWorld, rdir).mul(0.65).max(sky.mul(0.1)) as unknown as NV3)
       : (sky.mul(0.18) as unknown as NV3);
     // GRAZING RESCUE (round-2 critic: far lakes read as flat matte sheets):
     // a grazing reflected ray that fails BOTH the SSR march and the horizon
@@ -267,9 +298,14 @@ export function waterMaterial(
     // rock). Blend a horizon-band sky sample in as the ray flattens: it
     // varies with azimuth (warm toward the sun), so the sheet picks up a
     // sun-ward gradient instead of one flat value. 0.06 ray height ≈ the
-    // haze band; 0.18→0.03 ramp spans "wall mirror" to "near-horizontal".
+    // haze band. RAMP WIDENED 0.18→0.35 (round 3): the valley cam sits
+    // ~140 m over its river at ~1 km — rdir.y ≈ 0.16 — and the 0.18 onset
+    // left the whole reach matte ("matte brown", critic). The facet spread
+    // σ ≈ 0.1 rad means rays within ~2σ of the old cutoff still put a large
+    // ensemble fraction into the haze band, so the soft onset belongs near
+    // 0.35, full effect by 0.05.
     const horizonSky = atm.skyColor(vec3(rdir.x, float(0.06), rdir.z).normalize());
-    const grazing = smoothstep(0.18, 0.03, rdir.y);
+    const grazing = smoothstep(0.35, 0.05, rdir.y);
     const wallAmb = mix(wallAmbGi, horizonSky.mul(0.55) as unknown as NV3, grazing.mul(0.6));
     // ripple-jittered blend breaks the residual banding at the transition
     const vJit = n.x.add(n.z).mul(0.18);
@@ -278,7 +314,17 @@ export function waterMaterial(
     const e = hitUv.sub(0.5).abs().mul(2);
     const edgeFade = smoothstep(1.0, 0.82, e.x.max(e.y));
     const scene = (viewportSharedTexture(hitUv) as unknown as NV4).rgb;
-    return mix(fallback, scene, hit.mul(edgeFade));
+    // FACET SHEEN on far grazing hits (round-3 critic: "even a dark pool
+    // carries a bright specular rim" — plunge-pools reference): once the
+    // mips flatten the ripples (>~150 m, same budget as distRough), the
+    // mean ray is all that marches — but the real facet ensemble (σ≈0.1)
+    // around a grazing ray puts roughly half its members ABOVE the far-bank
+    // silhouette into the haze band. An SSR bank hit at far grazing range
+    // should therefore carry a sky sheen, not pure bank color; 0.45 ≈ that
+    // ensemble fraction × the 0.55 horizon-band weight used elsewhere.
+    const sheen = grazing.mul(smoothstep(150, 600, dist)).mul(0.45);
+    const hitCol = mix(scene, horizonSky.mul(0.55), sheen);
+    return mix(fallback, hitCol, hit.mul(edgeFade));
   })();
   const skyRefl = reflection as unknown as NV3;
   // fresnel on a FLATTENED normal (standard water practice): per-pixel
@@ -287,7 +333,16 @@ export function waterMaterial(
   // reflected (rdir above keeps the full normal)
   const nFres = vec3(n.x.mul(0.3), n.y, n.z.mul(0.3)).normalize();
   const cosT = clamp(viewDir.dot(nFres), 0.0, 1.0);
-  const fres = float(0.02).add(float(0.98).mul(cosT.oneMinus().pow(5)));
+  // fresnel floor rides the same Toksvig budget: at distance the facet
+  // ensemble (not the flattened mean normal) sets effective reflectance —
+  // facets tilted up to ~2σ, plus the glitter sparkle the mips can no
+  // longer render, raise the effective steep-view reflectance ≈3–4× over
+  // F0 = 0.02 (→ ~0.09 fully far). The round-3 valley pool measured a
+  // BRIGHT blue reflection term (?waterdbg=4) that a 0.02 floor reduced to
+  // invisibility — the "matte" read. Near water keeps the physical 0.02 so
+  // shallows stay transparent.
+  const f0 = float(0.02).add(distRough.mul(0.3));
+  const fres = f0.add(f0.oneMinus().mul(cosT.oneMinus().pow(5)));
 
   // ---- foam ----------------------------------------------------------------------
   // Two-phase advection like the ripple normals — a linearly time-advected
@@ -334,15 +389,11 @@ export function waterMaterial(
   mat.colorNode = vec3(0.74, 0.76, 0.74).mul(foam);
   mat.emissiveNode = mix(refr, skyRefl, fres).mul(foam.oneMinus());
   // SUN-PATH RECOVERY (round-2 critic: "no specular sun path even when the
-  // sun is in frame"): the ripple slopes come from a mip-mapped gradient
-  // texture, so past a few hundred metres they average to zero — far water
-  // went mirror-flat and the roughness-0.05 sun lobe missed every pixel.
-  // Fold the lost slope variance into microfacet roughness (Toksvig):
-  // Cox–Munk light-breeze rms slope is ~0.08–0.14 rad, and GGX α ≈ √2·σ
-  // puts perceptual roughness √α near 0.28 — reached where the mips have
-  // fully flattened the ripples (~600 m; onset past the 40 m detail ring).
-  // The scene sun (CSM-shadowed) then paints the glitter path for free.
-  const distRough = smoothstep(40, 600, dist).mul(0.23);
+  // sun is in frame"): fold the mip-lost slope variance into microfacet
+  // roughness — GGX α ≈ √2·σ puts perceptual roughness √α near 0.28 where
+  // the mips have fully flattened the ripples. The scene sun (CSM-shadowed)
+  // then paints the glitter path for free. (distRough derivation at its
+  // definition beside dist, where the fresnel floor shares it.)
   mat.roughnessNode = mix(float(0.05).add(distRough), float(0.55), foam);
   // shoreline feather: mm-deep water fades out over the bed. ALSO fade
   // steep surface RAMPS: the field dives ~2 m to the dry sentinel past
@@ -363,7 +414,19 @@ export function waterMaterial(
   const rampK = lvl.far
     ? float(1)
     : smoothstep(0.55, 0.3, vec2(gWx, gWz).length());
-  mat.opacityNode = smoothstep(0.004, 0.05, vDepth).mul(rampK).mul(0.985);
+  // FAR-LEVEL WET GATE (round-3): the coarse levels' bilinear waterY sheet
+  // (dry sentinel only ~2 m under the bed) cuts through terrain steps its
+  // cell size cannot resolve — over the plaza's terraced plots the buried
+  // sheet poked through as rows of blue slivers once the new 96 m level
+  // reached them. The vDepth feather can't reject them at range (screen-
+  // depth precision at ~4 km dwarfs the sliver's true column), so gate the
+  // far levels ANALYTICALLY on the field column waterY − ground instead:
+  // 0.25→0.8 m spans "bilinear graze over a step" → "genuinely wet cell".
+  // Near levels keep the pure vDepth shoreline feather (their slivers are
+  // resolved away by the fine cells).
+  const wetCol = sampleY(positionWorld.xz).sub(hf.sampleHeight(positionWorld.xz));
+  const farGate = lvl.far ? smoothstep(0.25, 0.8, wetCol) : float(1);
+  mat.opacityNode = smoothstep(0.004, 0.05, vDepth).mul(rampK).mul(farGate).mul(0.985);
 
   // ?waterdbg=N — component probe ladder (1 foam, 2 fresnel, 3 refraction,
   // 4 reflection, 5 column thickness, 6 SSR hit/horizon mix)

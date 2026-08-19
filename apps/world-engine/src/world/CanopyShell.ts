@@ -38,7 +38,10 @@ import { WORLD_SIZE } from './WorldConst';
 
 const GRID = 512;
 const FADE_IN = 620;
-const FADE_BAND = 90;
+// 90 m band read as a 180 m-wide screen-door wash at the rim framings (half
+// the pixels mid-dither); 55 m keeps the pop hidden while TRAA can still
+// resolve the dither
+const FADE_BAND = 55;
 
 export function buildCanopyShell(
   hf: Heightfield,
@@ -121,13 +124,24 @@ export function buildCanopyShell(
     macro,
   ) as unknown as NV3;
   albedo = mix(albedo, vec3(0.1, 0.13, 0.045), cov.mul(0.4)) as unknown as NV3;
-  const distV = varying(
-    vec3(positionLocal.x, 0, positionLocal.z).sub(cameraPosition).length(),
-  ) as unknown as NF;
+  // per-crown-cell hue/value mosaic on the SAME 7 m cells as the bump field,
+  // so color follows the lumps: without it the shell is one flat green sheet
+  // (r2 critic: "green bench patches render as flat unlit decals") while the
+  // ref forest masses at this range are a mosaic of warm/cool crown colors.
+  // Amplitude matches the near-field spread (species hueVar ~0.25 + instance
+  // tint) so the impostor→shell band doesn't flatten with distance.
+  const crownCell = cellHash2(positionWorld.xz.div(7).floor(), 613);
+  albedo = albedo
+    .mul(mix(vec3(1.22, 1.06, 0.72), vec3(0.78, 0.96, 1.14), crownCell.x))
+    .mul(crownCell.y.mul(0.44).add(0.78)) as unknown as NV3;
+  // fade distance from the DISPLACED position: the old varying pinned y=0,
+  // inflating the distance from any elevated camera (~+18% at y≈510) and
+  // parking the dither band exactly on the rim-view bench faces
+  const distF = positionWorld.sub(cameraPosition).length();
   mat.colorNode = Fn(() => {
     // dither IN beyond the impostor mid-band
     Discard(
-      smoothstep(FADE_IN - FADE_BAND, FADE_IN + FADE_BAND, distV).lessThanEqual(
+      smoothstep(FADE_IN - FADE_BAND, FADE_IN + FADE_BAND, distF).lessThanEqual(
         interleavedGradientNoise(screenCoordinate.xy),
       ),
     );
