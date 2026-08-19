@@ -1,5 +1,24 @@
 # DELTA log — reference-gap tracking (newest phase first)
 
+## GA-3 (2026-08-19..) — wilderness band vs the shots/ref/ photo bar
+
+First Gauntlet Loop run (docs/plans/gauntlet-adoption-far-country.md §GA-3).
+Scope: canyonlands band z 4400-6144; materials/lighting/atmosphere/water/
+vegetation SHADING only; macro anchors and content frozen. Cams: the five
+canonical wild-ring framings (tools/ga3-cams.sh — coordinate provenance
+in the script header). Critic protocol: fresh-context blind subagent per
+round (standing brief: tools/ga3-critic-prompt.md); claims measured
+before obeyed. Round stills + verdicts: shots/wip/ga3/progress.html (local,
+disposable). Content wishes are LOGGED FOR SCOTT here, never built.
+
+Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
+
+- (rounds land here)
+
+Logged for Scott (content-gated critic wishes):
+
+- (none yet)
+
 ## Phase 2 close (2026-06-11) — light/atmosphere/clouds/post vs Witcher golden frame
 
 Shots: `shots/wip/gateA4.png` (golden vista), `gate-cmp3.png` (side-by-side),
