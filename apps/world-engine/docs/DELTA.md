@@ -18,21 +18,26 @@ Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
    dark varnish streaks running DOWN faces, and talus a value step apart
    from the cliff. Worst: valley + lake stills. [r0 critic; measured:
    wall midtones near-achromatic, structure incoherent]
-2. Light reads noon-neutral, not the stated 17:00 — lit midtones R/B
-   ≈ 1.11 (should push well warmer under a low sun), shadows short,
-   no violet-gray fill. [r0 critic; measured]
+2. ~~Light reads noon-neutral, not the stated 17:00~~ → FIXED r1: the
+   hour-to-sun mapping put 17.0 at 34.7° elevation; physical equinox path
+   at the refs' 38.5° N renders 11.7°, plus an explicit 17.0 ColorScript
+   keyframe (warm gold highlights, violet-gray shadows). Lit-wall R/B
+   1.157 → 1.34-1.41 (owner + lead measured independently).
 3. Water never reflects the scene — gate channel one repeated sparkle
    tile + blown glare; band lakes flat near-black, no sky sheen, no wet
    margin. [r0 critic]
-4. Haze is a milky neutral blanket — no hue shift with depth (warm lit
-   faces → blue-violet shadow air → pink horizon in the Shafer ref).
-   [r0 critic]
-5. Clouds/snow "marshmallow" — no gray cloud undersides (Trail Ridge ref
-   bases are two stops darker), snow shows repeating dimples, snow-rock
-   transition smears. [r0 critic]
-6. Artifacts: vertical sky seam at exact half-width in gate cam
-   (FC-0011, predates GA-3); aerial shows marbled swirls + checkerboard
-   patch tiling at altitude. [r0 critic + measured]
+4. ~~Haze is a milky neutral blanket~~ → FIXED r1 by the physical low
+   sun: warm horizon band toward the sun, blue-violet shadow air away.
+   Re-judge under the r2 critic before closing for good.
+5. Clouds/snow "marshmallow" — cloud undersides FIXED r1 (0.55 → ~1.25
+   stops below tops, deliberately short of the midday ref's 2 stops at a
+   12° sun); snow dimples + snow-rock smear remain (terrain material,
+   later round). [r0 critic; partial]
+6. Artifacts: ~~vertical sky seam (FC-0011)~~ → FIXED r1: non-periodic
+   cloud noise bakes stepped on world planes x,z = k·period; gate cam
+   projects x=0 onto screen centre. Bakes made periodic + RepeatWrapping;
+   re-measured 4/255 → 1.4/255 max (indistinguishable from cloud
+   content). Aerial marbled swirls + checkerboard tiling REMAIN. [r0]
 
 Round-0 critic verdict: "a stranger would not hesitate" — the plaster
 rock, noon light, and dead lakes each give it away alone.
