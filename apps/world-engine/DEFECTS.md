@@ -8,7 +8,60 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0019.
+THE NEXT FREE NUMBER IS FC-0020.
+
+## FC-0019 — the "grass rectangles" are contact-shadow SELF-intersection; FC-0018 was also wrong
+
+Corrects FC-0018, which called the axis-aligned dark patches by the lone
+tree at falls-e339 crown-shadow proxy BOXES and left "soften the proxy
+shape" open as a Forests.ts task. That reading came from a single
+`--ablate=casters` A/B whose difference was read as removal. Re-measured
+(2026-08-21) at the same cam: the rectangles SURVIVE `--ablate casters`
+unchanged — what casters removed was the lone tree's real, soft, organic
+shadow sitting beside them. They also survive `--ablate proxy`, `--cov 0`
+(clouds), `gi`, `canopygi`, `canopy`, `grass`, `shell`, `froxels`, `veg`
+(ALL vegetation), and `mat` (neutral-clay terrain, no splat). They are
+absent from a straight-down shot of the very same ground.
+
+That last fact is the one that broke it open: the artifact is VIEW
+dependent, so no world-space field or caster can be the cause. The
+bisect ended at `--ablate ao`, which the code notes also drops contact
+shadows; `--ablate contact` alone removes the rectangles completely.
+
+Root cause: the screen-space contact-shadow march (PostStack.ts, 12
+steps, ≤1.7 m toward the sun) accepted a hit whenever the depth-buffer
+delta `dz` fell in a FIXED window (0.05, 1.4) m. At a grazing camera one
+depth texel already spans metres of view depth, so across a wide band of
+ground the march never leaves the surface it started on and the fixed
+0.05 m floor cannot separate "an occluder is above me" from "this is my
+own surface, one texel along". Whether the self-delta lands inside the
+window depends on which texel the sample quantises to — a binary test on
+a texel-quantised quantity — so the decision flips on and off along the
+integer lattice and prints hard screen-axis-aligned rectangles. The
+11.7-degree sun makes it worse: the march runs nearly parallel to the
+ground, maximising the self-intersection band.
+Resolution (2026-08-21): slope-scaled bias. Two-sided min-magnitude view
+depth gradients (view metres per pixel, both axes) are measured once per
+pixel, and the hit window floor becomes `1.4 × expected-self-delta +
+0.05` over the screen distance the march has travelled — anything
+shallower is the surface itself. Min-magnitude across the two sides
+keeps a real silhouette from inflating the bias, so contact shadows
+survive exactly where they matter. Measured over the artifact patch:
+base sat 11.6 luma BELOW contact-off (the false darkening); the fix
+recovers 9.9 of that and still sits 1.7 below contact-off, i.e. genuine
+contact occlusion is intact (full-frame max local delta vs contact-off
+155). Post-pass cost 0.79 ms vs 0.85 ms with contact ablated — inside
+timing noise.
+Generalises twice over. First: an ablation lever is only as specific as
+its implementation — `ablate=ao` silently dropped TWO effects, and the
+one that mattered was the one not named. Second, and this is the same
+lesson FC-0014 taught in world space: a binary test on a quantised
+quantity prints the quantisation grid. Both the fixed-window contact
+test here and the floored same-texel guard in Gtao.ts are that shape.
+The Gtao guard was NOT the cause (proven: the rectangles persist with
+its sampling forced off AND with a constant AO normal) and was left
+alone, but it is the same hazard and worth a look if lattice edges ever
+show up in AO.
 
 ## FC-0017 — the far-vista shell chorded ABOVE the wild-ring canyon, rendering giant false wedges
 

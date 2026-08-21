@@ -138,7 +138,36 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-19, latest) GA-3 SHIPPED — Scott called the stop after round
+**(2026-08-21, latest) The falls-e339 "grass rectangles" are CLOSED at the
+third attempt — they were screen-space contact shadows intersecting the
+ground they stand on (FC-0019).** GA-3 round 3 called them a splat
+artifact; round 4 (FC-0018) called them crown-shadow proxy boxes and
+left a Forests.ts task open. Both were wrong. Re-measured at the same
+cam, the rectangles survive `--ablate casters` untouched — the thing
+casters removed was the lone tree's real soft shadow standing beside
+them — and they also survive proxy, clouds, gi, canopygi, canopy, grass,
+shell, froxels, ALL vegetation, and neutral-clay terrain. The fact that
+broke it open: they are absent from a straight-down shot of the same
+ground, so no world-space field or caster could be responsible. The
+bisect ended at `--ablate ao`, which the code notes ALSO drops contact
+shadows; `--ablate contact` alone removes them completely. Root cause:
+the 12-step sun-ward depth march accepted a hit on a FIXED (0.05, 1.4) m
+depth window, but at a grazing camera one depth texel already spans
+metres of view depth, so the march never left its own surface and a
+binary test on a texel-quantised delta printed the integer lattice as
+hard rectangles. Fixed with a slope-scaled bias built from two-sided
+min-magnitude per-pixel depth gradients. Over the artifact patch the
+base sat 11.6 luma below contact-off; the fix recovers 9.9 of that and
+still sits 1.7 below, so genuine contact occlusion is intact. Post-pass
+cost 0.79 ms vs 0.85 ms contact-ablated — inside noise. New
+`?view=moist|flow|rdep|slope` raw-field debug views landed with it (they
+did the negative half: the moisture field renders smooth from above).
+Two lessons, both in DEFECTS.md: an ablation lever is only as specific
+as its implementation (`ablate=ao` silently dropped two effects), and a
+binary test on a quantised quantity prints the quantisation grid — the
+same shape as FC-0014 in world space.
+
+**(2026-08-19) GA-3 SHIPPED — Scott called the stop after round
 4 ("Things are looking awesome"); folded to main with a re-vendored
 engine bundle.** Round 4 (three builders): layer-parallel beds + crack
 micro-shadow (an exact fall-line correction was tried and REJECTED —

@@ -403,6 +403,26 @@ export class PostStack {
       const viewPos = getViewPosition(screenUV, d, uProjInv);
       const dist = viewPos.length();
       If(isSky.not().and(dist.lessThan(240)), () => {
+        // per-pixel view-depth gradient, in view metres per PIXEL (FC-0019).
+        // The march below compares a sample's depth against the depth buffer;
+        // on grazing ground one pixel already spans metres of view depth, so
+        // a FIXED minimum-dz bias cannot tell "something occludes me" from
+        // "this is my own surface, one texel along". Below, the bias is
+        // scaled by this gradient so the test clears the surface's own slope.
+        // Two-sided, min-magnitude per axis: at a real silhouette one side
+        // blows up, and taking the smaller keeps contact shadows alive
+        // exactly where they matter (one-sided suppressed them there).
+        const dTx = vec2(1, 0).div(screenSize);
+        const dTy = vec2(0, 1).div(screenSize);
+        const zAt = (uvG: NV2): NF =>
+          getViewPosition(uvG, texture(depthTex.value, uvG).x, uProjInv).z as unknown as NF;
+        const gAxis = (dT: NV2): NF => {
+          const zp = zAt(screenUV.add(dT) as unknown as NV2).sub(viewPos.z);
+          const zm = viewPos.z.sub(zAt(screenUV.sub(dT) as unknown as NV2));
+          return zp.abs().min(zm.abs()) as unknown as NF;
+        };
+        const gradX = gAxis(dTx as unknown as NV2).toVar();
+        const gradY = gAxis(dTy as unknown as NV2).toVar();
         const sunW = vec3(atmosphere.sunDir).normalize();
         const sunV = uView.mul(vec4(sunW, 0)).xyz;
         const jit = hash12(screenUV.mul(vec2(517.7, 893.3)).add(float(frameU).mul(0.7548)))
@@ -429,7 +449,16 @@ export class PostStack {
             const dS = texture(depthTex.value, uvS).x;
             const bufV = getViewPosition(uvS, dS, uProjInv);
             const dz = bufV.z.sub(sampleV.z); // >0: buffer closer to camera
-            const hit = dz.greaterThan(0.05).and(dz.lessThan(1.4)).and(inFrame);
+            // slope-scaled bias: how much this surface's OWN depth changes
+            // over the screen distance the march has travelled. Anything
+            // shallower than that is self-intersection, not an occluder.
+            const dPix = uvS.sub(screenUV).mul(screenSize);
+            const selfDz = gradX.mul(dPix.x.abs()).add(gradY.mul(dPix.y.abs()));
+            const minDz = selfDz.mul(1.4).add(0.05);
+            const hit = dz
+              .greaterThan(minDz)
+              .and(dz.lessThan(minDz.add(1.35)))
+              .and(inFrame);
             If(hit, () => {
               hitF.assign(f);
             });

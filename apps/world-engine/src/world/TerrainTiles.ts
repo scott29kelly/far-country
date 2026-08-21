@@ -297,6 +297,28 @@ export class TerrainTiles {
       const ch = debugView === 'bioR' ? b.r : debugView === 'bioB' ? b.b : b.g;
       mat.emissiveNode = vec3(ch);
     }
+    // raw hydrology-field views — the biome channels are DERIVED fields, so
+    // when a classification artifact shows up in bioR/bioB these say whether
+    // the blame is the classifier or its input. Added during FC-0019, where
+    // they did the negative half of the work: the moisture field renders
+    // SMOOTH from straight above, which is what ruled the world-space fields
+    // out and turned the hunt toward view-dependent (screen-space) causes.
+    // moist/flow/rdep = fieldsTex xyz; slope = normalTex.w.
+    if (
+      (debugView === 'moist' || debugView === 'flow' || debugView === 'rdep') &&
+      hf.fieldsTex
+    ) {
+      const f = texture(hf.fieldsTex, positionWorld.xz.div(WORLD_SIZE).add(0.5));
+      mat.colorNode = vec3(0.02);
+      mat.emissiveNode = vec3(
+        debugView === 'moist' ? f.x : debugView === 'flow' ? f.y : f.z,
+      );
+    }
+    if (debugView === 'slope' && hf.normalTex) {
+      const n = texture(hf.normalTex, positionWorld.xz.div(WORLD_SIZE).add(0.5));
+      mat.colorNode = vec3(0.02);
+      mat.emissiveNode = vec3(n.w);
+    }
     if (opts.neutral) {
       // neutral clay shading for the erosion split view: fragment-space
       // finite-difference normals from the bound height buffer
