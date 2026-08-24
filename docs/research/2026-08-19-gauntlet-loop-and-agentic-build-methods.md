@@ -562,6 +562,82 @@ world near-plane 0.05 → 0.15 for 3x depth precision.
 - Transformation-of-existing-code is proven (Der Koloss v1 → v2), not just
   greenfield — the more relevant mode for an existing engine.
 
+## 6b. X sweep follow-up (2026-08-24)
+
+The X half of the original research was owed and is now done — a sweep of
+the same eight accounts, logged out, five days after the doc was written.
+Anything already covered above is omitted; this is only what is NEW or
+what changes a conclusion. Logged-out X shows roughly the five most recent
+posts per profile and truncates reply threads, so treat this as a
+recency skim, not an exhaustive read.
+
+**The loop has left games, which matters for us.** Shumer posted a call
+(Aug 21) for prompts modified for non-game work; the visible replies
+include a browser paludarium (a living-terrarium sim), and one user who
+pointed the loop at an existing mobile app and "had it catch like 40
+bugs". @Ryancampbell used it on a fishing knowledge app (Aug 20) with no
+game in sight. This is the first outside evidence that the loop's value
+is the CRITIC-AND-MEASURE cycle rather than anything game-specific — which
+is what GA-3 assumed when we pointed it at a world model rather than a
+game, and the assumption now has company.
+
+**Cross-model handoff is being used in the wild.** @Ryancampbell's
+MoonBase One was started with Opus 5, then handed to Grok 4.6 to run
+gauntlet-loop visual improvement passes for two days; he separately ran
+a three.js FPS through Grok's Build CLI for ~25 hours / 15.6M tokens.
+Unverified beyond his own posts, and no quality comparison is offered, so
+treat as "people are doing it", not "it works better".
+
+**Two operational cautions, both from @aipulseda1ly.**
+1. (Aug 24) Opus 5 and Fable 5 were returning 529 overload errors and
+   "errored out after the default 10 retries", which he notes defeats the
+   point of leaving a loop running overnight or away from the desk. Any
+   unattended Far Country loop needs to assume the run can die on
+   provider overload and leave the tree mid-edit — our per-round commit
+   discipline already covers this, and should stay.
+2. (Aug 22) Grok 4.6 had been building one project for 92 hours,
+   "iteration pass 502 on what it thinks a realistic zombie looks like…
+   I keep telling it more realism. It keeps making it more cursed." This
+   is the failure mode our doctrine already names — after two rounds on
+   one axis the next move is an instrument, not a third argument — seen
+   in the wild at pass 502. Worth keeping as the cautionary datapoint
+   against "just let it run".
+
+**Two tools worth tracking, neither adopted.**
+- `kimodo.cpp` (announced Aug 22 via @jichiep, boosted by
+  @majidmanzarpour): animate a skeleton by DESCRIBING the motion. If it
+  holds up, it is a fourth candidate for the M4.4 worship-motion source
+  alongside Quaternius CC0, NVIDIA ARDy, and pure procedural — and the
+  only one that is text-driven. NOT evaluated: no licence check, no
+  quality check, no look at whether it exports anything our rig can eat.
+  Those are the gates before it goes near the roadmap.
+- ThreeJS Super Terrain (vibe-stack.github.io/super-terrain, released
+  ~Aug 23): mesh terrain with non-destructive CSG — diggable holes and
+  caves. Not directly usable (we are WebGPU/TSL with our own clipmap, not
+  three's mesh terrain) but it is the first public three.js terrain doing
+  volumetric cuts, which is the one thing our heightfield structurally
+  cannot express.
+
+**Independent convergence on our own harness.** @majidmanzarpour (Aug 22)
+described his setup as building "a multi-view visual harness page for
+debugging in Chrome so the agent can" see its own output — arrived at
+independently, and the same idea as `tools/shoot.ts` plus the round
+contact sheets. Mild confirmation that agent-visible rendering is the
+load-bearing piece, not a convenience.
+
+**Scale datapoint.** @0xRishi's Modern Claudefare (Aug 3, predates this
+doc but was not in it): 84,100 lines built with Opus 5 High Mode over a
+few days on Gauntlet Loop principles, four Call of Duty map remakes, and
+gamepad support added on request — he plays it on a TV over HDMI with a
+wireless PS5 controller. Relevant twice over: it is a browser three.js
+title at a scale comparable to ours, and it is prior art that
+browser+gamepad+TV is a real delivery path (our own pad support is built
+but hardware-unverified).
+
+Nothing in this sweep changes a GA-3 conclusion or the instrument
+doctrine in §4. Two accounts (@markgadala, @suriadesign) had nothing
+method-relevant since Aug 19.
+
 ## 7. Tools inventory
 
 - **workbench.md** — hosted, free, no account; agent-first Markdown docs
