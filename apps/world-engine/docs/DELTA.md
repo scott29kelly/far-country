@@ -137,13 +137,35 @@ MEASURED by the lead before acceptance — three were part-refuted):
     impostor/shell parity, backlit warm rim fringe, grass per-clump
     value jitter + contact ramp. An engine landmine (vdata in lighting-
     context slots = garbage) is documented in code. [r3 critic]
-21. OPEN (r4 finding, FC-0018): the falls-e339 "grass rectangles" are
-    crown-shadow proxy BOX shadows (Forests.ts) — the r3 "splat
-    artifact" diagnosis was wrong (its ablation list missed the veg
-    casters). Needs a proxy shape/softness pass by a Forests.ts owner.
+21. ~~The falls-e339 "grass rectangles"~~ → FIXED 2026-08-21 (FC-0019),
+    on the THIRD diagnosis. Not a splat artifact (r3) and not crown-proxy
+    box shadows either (r4, FC-0018 — those rectangles survive
+    `--ablate casters` untouched; what casters removed was the lone
+    tree's real soft shadow beside them). They survive every world-space
+    ablation and vanish from straight above, i.e. they are VIEW
+    dependent: screen-space contact shadows self-intersecting. The march
+    tested its depth delta against a FIXED 0.05 m floor, but at a grazing
+    camera one depth texel spans metres of view depth, so the ray kept
+    "hitting" its own surface and the binary test printed the texel
+    lattice. Fixed by a slope-scaled bias (measured two-sided per-pixel
+    depth gradient). Recovers 9.9 of the 11.6 luma the artifact was
+    wrongly subtracting while genuine contact occlusion stays (still 1.7
+    below contact-off). Cost inside timing noise.
 22. OPEN (r4 residual): the far-shell ring still wastes ~40% of its
     triangles underground in the corners — the honest fix is clipping
     the ring to the square detail domain.
+23. ~~FC-0012's geometric half — vertex micro-displacement still sampled
+    world XZ~~ → FIXED 2026-08-21 (FC-0020). Deferred as
+    "collision-adjacent"; it is not — ground physics reads the
+    UNDISPLACED CPU field, so the displacement is purely visual. It was
+    also invisible at every cam being judged from (DISP fades out past
+    85 m; the standing wall framings are >100 m out, where it
+    contributes 0.4 luma). From a cam ON the rim it contributes 16.7
+    luma, all combed one way. Now takes the same wall parameterisation
+    as the shading layer; ground bit-identical; battery 18/18. The
+    streak that REMAINS on that face is the splat's downslope
+    streaking, which is partly deliberate — an art call for Scott, not
+    a defect.
 
 Claims REFUTED by measurement, closed without action (instrument beats
 prose after two fix rounds on the same axis):

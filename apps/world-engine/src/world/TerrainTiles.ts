@@ -137,7 +137,12 @@ export class TerrainTiles {
 
     // instance + object matrices are identity → positionNode is world space
     const skirtDrop = isSkirt.mul(tileSize.mul(0.045).add(2.5));
-    const hSample = hf.sampleHeightFrom(heightBuf, wpos).sub(skirtDrop);
+    // the UNDROPPED field height — the displacement below keys its wall
+    // ordinate off this, not off hSample: skirt verts carry an artificial
+    // drop, and a field keyed to that would differ between a skirt vert and
+    // the neighbouring tile's matching edge vert, cracking the displacement.
+    const hField = hf.sampleHeightFrom(heightBuf, wpos).toVar();
+    const hSample = hField.sub(skirtDrop);
 
     // --- micro-displacement (5×-detail / Pillar A): geometric relief ≤85 m.
     // The splat's bump normals imply 10–35 cm of relief the silhouette never
@@ -157,21 +162,47 @@ export class TerrainTiles {
     const gravelK = smoothstep(0.32, 0.7, fldV.y)
       .max(smoothstep(0.02, 0.2, fldV.z))
       .mul(float(DISP.gravel));
+    // ?ablate=disp — zero the micro-displacement so an A/B isolates what the
+    // VERTEX relief contributes from what the splat's bump normals only imply.
+    // Needed because the neutral-clay view (?ablate=mat) recomputes its
+    // normals from the undisplaced height buffer and therefore cannot show
+    // displacement at all. Purely visual either way: ground physics reads
+    // hf.heightAtCpu (the undisplaced field), so this moves no collision.
     const dispAmp = mix(float(DISP.base), float(DISP.rock), rockK)
       .max(gravelK)
       .mul(bioV.g.mul(0.75).oneMinus())
-      .mul(clamp(float(DISP.fade1).sub(camD).div(DISP.fade1 - DISP.fade0), 0, 1));
+      .mul(clamp(float(DISP.fade1).sub(camD).div(DISP.fade1 - DISP.fade0), 0, 1))
+      .mul(ablate.has('disp') ? float(0) : float(1));
     const noiseA = hf.noiseA as NonNullable<typeof hf.noiseA>;
     const noiseB = hf.noiseB as NonNullable<typeof hf.noiseB>;
-    const f1 = texture(noiseA, wpos.div(DISP.sF1 * PERIOD_FBM), 0)
+    // WALL PARAMETERIZATION (FC-0012's open geometric half, closed 2026-08-21).
+    // These octaves sampled the world XZ plane, so on a near-vertical face the
+    // field is constant along y and the relief degenerates into vertical
+    // grooves — the same flaw the SHADING layer fixed in GA-3 round 2, still
+    // live in the vertex displacement and measurably reinforcing the streak
+    // (16.7 luma of local variation on the rim face, all combed one way).
+    // Same scheme as TerrainMaterial.buildTerrainShading: a 45-degree
+    // horizontal diagonal as abscissa and elevation as ordinate, blended in by
+    // slope so the swap never pops, with the same (1,-1)-strike degeneracy
+    // fallback to XZ (where x+z is constant along strike the wall domain would
+    // collapse to 1-D). Ground stays bit-identical: steepKd = 0 there.
+    const wallDiag = wpos.x.add(wpos.y).mul(0.7071);
+    const wallP = vec2(wallDiag, hField);
+    const dSteepK = smoothstep(0.5, 0.85, nsV.w);
+    const dnSum = nsV.x.add(nsV.z);
+    const dnxz2 = nsV.x.mul(nsV.x).add(nsV.z.mul(nsV.z));
+    const dDegK = smoothstep(1.45, 1.85, dnSum.mul(dnSum).div(dnxz2.max(1e-5)));
+    const steepKd = dSteepK.mul(dDegK.oneMinus()).toVar();
+    const detailP = mix(wpos, wallP, steepKd).toVar();
+    const f1 = texture(noiseA, detailP.div(DISP.sF1 * PERIOD_FBM), 0)
       .y.mul(2)
       .sub(1);
-    const f2 = texture(noiseA, wpos.div(DISP.sF2 * PERIOD_VAL).add(vec2(0.31, 0.77)), 0)
+    const f2 = texture(noiseA, detailP.div(DISP.sF2 * PERIOD_VAL).add(vec2(0.31, 0.77)), 0)
       .x.mul(2)
       .sub(1);
     // ridged creases (1−|n| sharp valleys) carry the "rock" read — weighted
     // toward rock faces, soft elsewhere
-    const r1 = texture(noiseB, wpos.div(DISP.sRid * PERIOD_RID), 0)
+    const r1 = texture(noiseB, detailP.div(DISP.sRid * PERIOD_RID), 0)
       .z.mul(2)
       .sub(1);
     const disp = f1
@@ -296,6 +327,28 @@ export class TerrainTiles {
       mat.colorNode = vec3(0.02);
       const ch = debugView === 'bioR' ? b.r : debugView === 'bioB' ? b.b : b.g;
       mat.emissiveNode = vec3(ch);
+    }
+    // raw hydrology-field views — the biome channels are DERIVED fields, so
+    // when a classification artifact shows up in bioR/bioB these say whether
+    // the blame is the classifier or its input. Added during FC-0019, where
+    // they did the negative half of the work: the moisture field renders
+    // SMOOTH from straight above, which is what ruled the world-space fields
+    // out and turned the hunt toward view-dependent (screen-space) causes.
+    // moist/flow/rdep = fieldsTex xyz; slope = normalTex.w.
+    if (
+      (debugView === 'moist' || debugView === 'flow' || debugView === 'rdep') &&
+      hf.fieldsTex
+    ) {
+      const f = texture(hf.fieldsTex, positionWorld.xz.div(WORLD_SIZE).add(0.5));
+      mat.colorNode = vec3(0.02);
+      mat.emissiveNode = vec3(
+        debugView === 'moist' ? f.x : debugView === 'flow' ? f.y : f.z,
+      );
+    }
+    if (debugView === 'slope' && hf.normalTex) {
+      const n = texture(hf.normalTex, positionWorld.xz.div(WORLD_SIZE).add(0.5));
+      mat.colorNode = vec3(0.02);
+      mat.emissiveNode = vec3(n.w);
     }
     if (opts.neutral) {
       // neutral clay shading for the erosion split view: fragment-space

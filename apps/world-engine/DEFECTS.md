@@ -8,7 +8,115 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0019.
+THE NEXT FREE NUMBER IS FC-0021.
+
+## FC-0020 — FC-0012's open geometric half: the vertex displacement still sampled world XZ
+
+Closes the OPEN RESIDUAL logged under FC-0012, which fixed the XZ-plane
+collapse in the terrain SHADING but left the same flaw live in the vertex
+micro-displacement (DISP table, TerrainTiles) and deferred it as
+"collision-adjacent, needs care".
+
+Two things were measured before touching it. First, the care warning is
+unfounded as stated: ground physics reads `hf.heightAtCpu`, the
+UNDISPLACED CPU field (TerrainScene.ts groundProbe), so the displacement
+is purely visual and cannot move collision — changing its pattern at
+constant amplitude leaves the existing by-design visual/physical offset
+exactly as it was. Second, the residual is real but was invisible at the
+cams anyone had been judging from: DISP fades out entirely past 85 m, and
+at the standing falls/wall framings the face is >100 m away, where the
+whole displacement contributes 0.4 luma (indistinguishable from nothing).
+A camera set ON the rim (339, 415, 4432, looking east along the face)
+puts the wall inside the fade, and there it contributes 16.7 luma of
+local variation — all of it combed one way, reinforcing rather than
+breaking up the streak.
+A new `?ablate=disp` lever made that measurable. It is needed because the
+neutral-clay view (`?ablate=mat`) recomputes its normals from the
+undisplaced height buffer and so cannot show displacement at all — the
+obvious instrument for "is this geometry or paint?" is blind to exactly
+the thing in question.
+Resolution (2026-08-21): the three displacement octaves take the same
+wall parameterisation TerrainMaterial already uses — 45-degree horizontal
+diagonal as abscissa, elevation as ordinate, blended by slope, with the
+same (1,-1)-strike degeneracy fallback to XZ. Ground is bit-identical
+(steepKd = 0 there). The wall ordinate keys off the UNDROPPED field
+height, not the skirt-dropped one: a field keyed to the skirt drop would
+differ between a skirt vert and the neighbouring tile's matching edge
+vert and crack the displacement. Crack-free because detailP stays a pure
+function of world position. Verified: battery ALL 18 PASS (walkfling,
+wallcollide, cityfloors, templecollide, dwellingscollide, ascent all
+green), no seams or LOD popping at the rim cam, relief reads lumpy and
+cross-cut instead of combed.
+NOTE the remaining streak is NOT this: the splat's own downslope
+streaking still dominates that face and is partly deliberate (FC-0012's
+degeneracy fallback documents XZ foreshortening there as "gravity-sorted
+downslope talus streaking, which is the right look anyway"). Whether it
+is too strong is an art call for Scott, not a defect.
+
+## FC-0019 addendum — gamepad-live L9 is FLAKY, not a standing failure
+
+FC-0019's resolution note recorded the battery as 17/18 with
+gamepad-live check L9 ("guided capture records A/B/Y on standard
+indices") failing, and reported it as pre-existing on the evidence that
+it failed identically after `git stash` on pristine cc5a86e. The
+pre-existing part stands. The characterisation does not: a later run on
+the FC-0020 tree came back ALL 18 MEMBERS PASS, L9 included. So L9 is
+INTERMITTENT — it is a timing-sensitive UI capture, and a red L9 is not
+by itself evidence of a regression, nor is a green one evidence of a fix.
+Re-run before drawing any conclusion from it.
+
+## FC-0019 — the "grass rectangles" are contact-shadow SELF-intersection; FC-0018 was also wrong
+
+Corrects FC-0018, which called the axis-aligned dark patches by the lone
+tree at falls-e339 crown-shadow proxy BOXES and left "soften the proxy
+shape" open as a Forests.ts task. That reading came from a single
+`--ablate=casters` A/B whose difference was read as removal. Re-measured
+(2026-08-21) at the same cam: the rectangles SURVIVE `--ablate casters`
+unchanged — what casters removed was the lone tree's real, soft, organic
+shadow sitting beside them. They also survive `--ablate proxy`, `--cov 0`
+(clouds), `gi`, `canopygi`, `canopy`, `grass`, `shell`, `froxels`, `veg`
+(ALL vegetation), and `mat` (neutral-clay terrain, no splat). They are
+absent from a straight-down shot of the very same ground.
+
+That last fact is the one that broke it open: the artifact is VIEW
+dependent, so no world-space field or caster can be the cause. The
+bisect ended at `--ablate ao`, which the code notes also drops contact
+shadows; `--ablate contact` alone removes the rectangles completely.
+
+Root cause: the screen-space contact-shadow march (PostStack.ts, 12
+steps, ≤1.7 m toward the sun) accepted a hit whenever the depth-buffer
+delta `dz` fell in a FIXED window (0.05, 1.4) m. At a grazing camera one
+depth texel already spans metres of view depth, so across a wide band of
+ground the march never leaves the surface it started on and the fixed
+0.05 m floor cannot separate "an occluder is above me" from "this is my
+own surface, one texel along". Whether the self-delta lands inside the
+window depends on which texel the sample quantises to — a binary test on
+a texel-quantised quantity — so the decision flips on and off along the
+integer lattice and prints hard screen-axis-aligned rectangles. The
+11.7-degree sun makes it worse: the march runs nearly parallel to the
+ground, maximising the self-intersection band.
+Resolution (2026-08-21): slope-scaled bias. Two-sided min-magnitude view
+depth gradients (view metres per pixel, both axes) are measured once per
+pixel, and the hit window floor becomes `1.4 × expected-self-delta +
+0.05` over the screen distance the march has travelled — anything
+shallower is the surface itself. Min-magnitude across the two sides
+keeps a real silhouette from inflating the bias, so contact shadows
+survive exactly where they matter. Measured over the artifact patch:
+base sat 11.6 luma BELOW contact-off (the false darkening); the fix
+recovers 9.9 of that and still sits 1.7 below contact-off, i.e. genuine
+contact occlusion is intact (full-frame max local delta vs contact-off
+155). Post-pass cost 0.79 ms vs 0.85 ms with contact ablated — inside
+timing noise.
+Generalises twice over. First: an ablation lever is only as specific as
+its implementation — `ablate=ao` silently dropped TWO effects, and the
+one that mattered was the one not named. Second, and this is the same
+lesson FC-0014 taught in world space: a binary test on a quantised
+quantity prints the quantisation grid. Both the fixed-window contact
+test here and the floored same-texel guard in Gtao.ts are that shape.
+The Gtao guard was NOT the cause (proven: the rectangles persist with
+its sampling forced off AND with a constant AO normal) and was left
+alone, but it is the same hazard and worth a look if lattice edges ever
+show up in AO.
 
 ## FC-0017 — the far-vista shell chorded ABOVE the wild-ring canyon, rendering giant false wedges
 
