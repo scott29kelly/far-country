@@ -8,7 +8,62 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0020.
+THE NEXT FREE NUMBER IS FC-0021.
+
+## FC-0020 — FC-0012's open geometric half: the vertex displacement still sampled world XZ
+
+Closes the OPEN RESIDUAL logged under FC-0012, which fixed the XZ-plane
+collapse in the terrain SHADING but left the same flaw live in the vertex
+micro-displacement (DISP table, TerrainTiles) and deferred it as
+"collision-adjacent, needs care".
+
+Two things were measured before touching it. First, the care warning is
+unfounded as stated: ground physics reads `hf.heightAtCpu`, the
+UNDISPLACED CPU field (TerrainScene.ts groundProbe), so the displacement
+is purely visual and cannot move collision — changing its pattern at
+constant amplitude leaves the existing by-design visual/physical offset
+exactly as it was. Second, the residual is real but was invisible at the
+cams anyone had been judging from: DISP fades out entirely past 85 m, and
+at the standing falls/wall framings the face is >100 m away, where the
+whole displacement contributes 0.4 luma (indistinguishable from nothing).
+A camera set ON the rim (339, 415, 4432, looking east along the face)
+puts the wall inside the fade, and there it contributes 16.7 luma of
+local variation — all of it combed one way, reinforcing rather than
+breaking up the streak.
+A new `?ablate=disp` lever made that measurable. It is needed because the
+neutral-clay view (`?ablate=mat`) recomputes its normals from the
+undisplaced height buffer and so cannot show displacement at all — the
+obvious instrument for "is this geometry or paint?" is blind to exactly
+the thing in question.
+Resolution (2026-08-21): the three displacement octaves take the same
+wall parameterisation TerrainMaterial already uses — 45-degree horizontal
+diagonal as abscissa, elevation as ordinate, blended by slope, with the
+same (1,-1)-strike degeneracy fallback to XZ. Ground is bit-identical
+(steepKd = 0 there). The wall ordinate keys off the UNDROPPED field
+height, not the skirt-dropped one: a field keyed to the skirt drop would
+differ between a skirt vert and the neighbouring tile's matching edge
+vert and crack the displacement. Crack-free because detailP stays a pure
+function of world position. Verified: battery ALL 18 PASS (walkfling,
+wallcollide, cityfloors, templecollide, dwellingscollide, ascent all
+green), no seams or LOD popping at the rim cam, relief reads lumpy and
+cross-cut instead of combed.
+NOTE the remaining streak is NOT this: the splat's own downslope
+streaking still dominates that face and is partly deliberate (FC-0012's
+degeneracy fallback documents XZ foreshortening there as "gravity-sorted
+downslope talus streaking, which is the right look anyway"). Whether it
+is too strong is an art call for Scott, not a defect.
+
+## FC-0019 addendum — gamepad-live L9 is FLAKY, not a standing failure
+
+FC-0019's resolution note recorded the battery as 17/18 with
+gamepad-live check L9 ("guided capture records A/B/Y on standard
+indices") failing, and reported it as pre-existing on the evidence that
+it failed identically after `git stash` on pristine cc5a86e. The
+pre-existing part stands. The characterisation does not: a later run on
+the FC-0020 tree came back ALL 18 MEMBERS PASS, L9 included. So L9 is
+INTERMITTENT — it is a timing-sensitive UI capture, and a red L9 is not
+by itself evidence of a regression, nor is a green one evidence of a fix.
+Re-run before drawing any conclusion from it.
 
 ## FC-0019 — the "grass rectangles" are contact-shadow SELF-intersection; FC-0018 was also wrong
 

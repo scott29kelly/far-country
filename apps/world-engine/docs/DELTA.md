@@ -154,6 +154,18 @@ MEASURED by the lead before acceptance — three were part-refuted):
 22. OPEN (r4 residual): the far-shell ring still wastes ~40% of its
     triangles underground in the corners — the honest fix is clipping
     the ring to the square detail domain.
+23. ~~FC-0012's geometric half — vertex micro-displacement still sampled
+    world XZ~~ → FIXED 2026-08-21 (FC-0020). Deferred as
+    "collision-adjacent"; it is not — ground physics reads the
+    UNDISPLACED CPU field, so the displacement is purely visual. It was
+    also invisible at every cam being judged from (DISP fades out past
+    85 m; the standing wall framings are >100 m out, where it
+    contributes 0.4 luma). From a cam ON the rim it contributes 16.7
+    luma, all combed one way. Now takes the same wall parameterisation
+    as the shading layer; ground bit-identical; battery 18/18. The
+    streak that REMAINS on that face is the splat's downslope
+    streaking, which is partly deliberate — an art call for Scott, not
+    a defect.
 
 Claims REFUTED by measurement, closed without action (instrument beats
 prose after two fix rounds on the same axis):

@@ -138,7 +138,28 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-21, latest) The falls-e339 "grass rectangles" are CLOSED at the
+**(2026-08-21, later) FC-0012's geometric half is closed too (FC-0020):
+the vertex micro-displacement still sampled world XZ.** It had been
+deferred as "collision-adjacent" — it is not. Ground physics reads
+`hf.heightAtCpu`, the UNDISPLACED CPU field, so the displacement is
+purely visual and changing its pattern moves no collision. It was also
+invisible from every camera anyone had judged it at: DISP fades out past
+85 m and the standing wall framings sit >100 m out, where the entire
+displacement is worth 0.4 luma. From a camera ON the rim (339, 415, 4432
+looking east) it is worth 16.7 luma, all combed one direction. It now
+takes the same wall parameterisation as the shading layer (45-degree
+diagonal abscissa, elevation ordinate, slope-blended, same
+(1,-1)-strike degeneracy fallback), keyed to the UNDROPPED field height
+so skirt verts cannot crack it. Ground is bit-identical. Battery ALL 18
+PASS. A new `?ablate=disp` lever made this measurable at all — the
+neutral-clay view recomputes normals from the undisplaced buffer and is
+blind to displacement by construction. The streak still visible on that
+face is the splat's downslope streaking, partly deliberate per FC-0012 —
+an art call for Scott, not a defect. ALSO CORRECTED: gamepad-live check
+L9 is FLAKY, not a standing failure — a later full run came back 18/18
+with L9 green, so re-run before concluding anything from it.
+
+**(2026-08-21) The falls-e339 "grass rectangles" are CLOSED at the
 third attempt — they were screen-space contact shadows intersecting the
 ground they stand on (FC-0019).** GA-3 round 3 called them a splat
 artifact; round 4 (FC-0018) called them crown-shadow proxy boxes and
