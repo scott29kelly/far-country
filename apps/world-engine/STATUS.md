@@ -138,7 +138,24 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-24, latest) FC-0009 CLOSED — the mutation battery ran, and three
+**(2026-08-24, latest) The three unfailable probes can now fail — FC-0021,
+FC-0022, FC-0023 all RESOLVED, watched refusing both ways.** probe-mousesteer
+pins absolute steer direction per axis (cursor right → dYaw < 0, top →
+dPitch > 0, convention provenance in its header); an inverted pitch OR yaw
+axis now fails where both used to stay green. probe-entitypick carries the
+twelve foundation stones transcribed from Rev 21:19-20 (ESV) as an
+independent anchor — A2 checks scene labels against it and new A2b checks
+the engine table itself, so the ZZTMP rename that survived the mutation run
+now fails both. probe-rimfalls no longer replays its own copy of the scan:
+NewJerusalemScene exposes the site set it ACTUALLY built
+(`__laasDbg.rimFalls`), the probe reads that, and a new R0 asserts the
+emergent scan (not the anchor fallback) produced it — a gutted
+findRimFallSites now fails R0/R1/R2 where it used to pass untouched. That
+last fix touched engine src, so the bundle was re-vendored. Full battery
+18/18 on the fixed tree; every red case re-run and observed failing before
+being believed. Evidence: DEFECTS.md FC-0021/22/23 Resolution blocks.
+
+**(2026-08-24, earlier) FC-0009 CLOSED — the mutation battery ran, and three
 of the eighteen probes cannot fail.** The last GA-1 instrument debt is paid.
 Predictions for all 18 members were pre-registered in their own commit before
 any mutation was applied (tools/MUTATION-2026-08-24.md); baseline was 18/18

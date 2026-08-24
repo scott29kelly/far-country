@@ -40,6 +40,18 @@ const { formatCitation } = await import('../src/core/EntityHud');
 
 const c = makeChecker();
 
+/** Rev 21:19-20 (ESV), first through twelfth foundation: jasper, sapphire,
+ *  agate, emerald, onyx, carnelian, chrysolite, beryl, topaz, chrysoprase,
+ *  jacinth, amethyst. Transcribed from the TEXT, deliberately NOT imported
+ *  from cityModel — FC-0022: the old A2 compared the scene labels against
+ *  FOUNDATION_GEMS itself, so an engine-side gem rename moved both sides of
+ *  the assertion and the check could not fail. This list is the independent
+ *  anchor; capitalisation matches the engine's display style. */
+const ESV_FOUNDATION_ORDER = [
+  'Jasper', 'Sapphire', 'Agate', 'Emerald', 'Onyx', 'Carnelian',
+  'Chrysolite', 'Beryl', 'Topaz', 'Chrysoprase', 'Jacinth', 'Amethyst',
+] as const;
+
 // ---- fixture: flat meadow below a plaza at 470 -----------------------------
 const PLAZA_Y = 470;
 const GROUND = 460;
@@ -68,11 +80,17 @@ const gemVols = vols.filter((v) => v.slug === 'twelve-jeweled-foundations');
 const gemLabelOrder = [...new Set(gemVols.map((v) => v.label))];
 const spansPerSide = foundationCourseSpans().length;
 c.check(
-  'A2 foundation course: gate-notched spans, twelve gems in ESV order',
+  'A2 foundation course: gate-notched spans, twelve gems in Rev 21:19-20 ESV order',
   gemVols.length === 4 * spansPerSide &&
     gemLabelOrder.length === 12 &&
-    gemLabelOrder.every((l, i) => l === `Foundation · ${FOUNDATION_GEMS[i].name}`),
+    gemLabelOrder.every((l, i) => l === `Foundation · ${ESV_FOUNDATION_ORDER[i]}`),
   `${gemVols.length} spans (${spansPerSide}/side), first=${gemLabelOrder[0]} last=${gemLabelOrder[11]}`,
+);
+c.check(
+  'A2b engine gem table matches the Rev 21:19-20 ESV order',
+  FOUNDATION_GEMS.length === 12 &&
+    FOUNDATION_GEMS.every((g, i) => g.name === ESV_FOUNDATION_ORDER[i]),
+  `table: ${FOUNDATION_GEMS.map((g) => g.name).join(', ')}`,
 );
 
 const riverVols = vols.filter((v) => v.slug === 'river-of-the-water-of-life');

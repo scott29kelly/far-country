@@ -439,8 +439,15 @@ never verifies which way is up. The header asserts an absolute the code never
 checks — the same "title claims more than the assertion" shape as FC-0022.
 Weight: inverted mouse-look is one of the most user-visible control
 regressions there is, and it is squarely against the standing preference for
-approachable, non-gamer navigation. OPEN — the fix is to pin absolute sign
-per axis against a stated convention, and to make the header quote it.
+approachable, non-gamer navigation. OPEN as found; fixed same day.
+Resolution (2026-08-24): all three steer checks now pin ABSOLUTE sign —
+cursor right → dYaw < 0, left → dYaw > 0, top → dPitch > 0, bottom →
+dPitch < 0 — with the convention's provenance quoted in the header (design:
+"view eases toward the cursor"; FlyCamera.ts applies `-=` on both
+screen-normalised axes; pitch > 0 = up per probe-gamepad B3). Watched
+refusing both ways: the pitch flip that beat the old probe now fails the
+pitch check (dPitchTop -1.17), and a yaw flip fails both yaw checks
+(dYawR +1.75). Green on correct code (dYawR -1.99, dPitchTop +1.01).
 
 ## FC-0022 — probe-entitypick mirror-pins the twelve foundation gems against the table it is checking
 
@@ -457,9 +464,13 @@ mirror-pin / self-referential pair) landing on a doctrinal invariant: nothing
 in the probe knows the ESV order of Rev 21:19-20, and "ESV order" is whatever
 cityModel.ts happens to say today. Note the probe is not inert — the same run
 (#5) showed entitypick B1 correctly failing when the gate notch was deleted.
-The gap is specific to the gem NAMES. OPEN — the honest fix pins the list
-against the canonical dataset rather than against engine source, per the
-project's every-claim-carries-a-citation rule.
+The gap is specific to the gem NAMES. OPEN as found; fixed same day.
+Resolution (2026-08-24): the probe now carries ESV_FOUNDATION_ORDER, the
+twelve names transcribed from Rev 21:19-20 (ESV) as an independent anchor.
+A2 checks the scene labels against it, and a new A2b checks the engine
+FOUNDATION_GEMS table against it directly, so a table edit fails with the
+table printed. Watched refusing: the ZZTMP rename that stayed green in the
+mutation run now fails A2 and A2b. Green on the correct table (45 checks).
 
 ## FC-0023 — probe-rimfalls replays its own copy of the scanner and never executes RimFalls.ts
 
@@ -487,9 +498,19 @@ Important qualification: the probe is not worthless. It was built to answer
 "after a terrain change near the rim, WHERE did the falls land?" and it still
 does that honestly, because it runs against the live CPU hydrology mirrors.
 It guards the TERRAIN. It does not guard the CODE, which is what its battery
-membership implies. OPEN — the fix is to import and call `findRimFallSites`
-rather than replay it, keeping the mirrors only for values the page cannot
-export.
+membership implies. OPEN as found; fixed same day.
+Resolution (2026-08-24): stronger than the fix proposed above — instead of
+re-invoking the function, NewJerusalemScene now exposes the site set it
+ACTUALLY built (`__laasDbg.rimFalls = { emergent, sites }`) at the
+buildRimFalls call, and the probe reads that. The replayed scan is deleted;
+the only mirror left is the +60 m pool offset, report-only. A new R0 check
+asserts the sites came from the emergent scan, not the anchor fallback.
+Watched refusing: findRimFallSites gutted to `return []` now fails R0
+("anchor fallback engaged"), R1 (got 2 anchor sites) and all three R2 rows.
+Green on correct code with numbers identical to the old replay's (-1305 /
+339 / -3561, drops 245.9/244.1/252.3) — the mirror had been faithful; it
+just was not the shipped code path. Engine src changed → bundle re-vendored
+in the same commit.
 
 ## FC-0024 — a mutation is not valid until the probe's output is shown to move
 

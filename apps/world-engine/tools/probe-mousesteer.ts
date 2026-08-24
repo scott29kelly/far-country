@@ -6,11 +6,22 @@
  *
  * Boots ?scene=newjerusalem un-frozen at the walk spawn, then:
  *   1. parks the cursor dead-center (dead zone) — yaw/pitch must hold still;
- *   2. holds the cursor at the right edge — yaw must ease one way;
- *   3. holds it at the left edge — yaw must ease the other way;
- *   4. holds it near the top — pitch must ease upward (opposite sign of a
- *      bottom hold).
+ *   2. holds the cursor at the right edge — the view must ease RIGHT;
+ *   3. holds it at the left edge — the view must ease LEFT;
+ *   4. holds it near the top — pitch must ease UP; near the bottom — DOWN.
  * Prints deltas and PASS/FAIL per check.
+ *
+ * Sign convention, pinned ABSOLUTELY (FC-0021 — the old checks asserted
+ * magnitude and relative opposition only, so a full axis inversion stayed
+ * green). The design is "view eases toward the cursor"
+ * (2026-07-01 rework, header above). In FlyCamera.ts (~l.544) both axes
+ * apply `-= steerResponse(n)` with screen-normalised n growing right/down,
+ * and pitch > 0 = looking up (probe-gamepad B3: stick down → pitch
+ * negative). Therefore:
+ *   cursor RIGHT  → dYaw   < 0   (three.js Y-up yaw is CCW-positive;
+ *   cursor LEFT   → dYaw   > 0    easing right is clockwise from above)
+ *   cursor TOP    → dPitch > 0
+ *   cursor BOTTOM → dPitch < 0
  *
  * Usage: npx tsx tools/probe-mousesteer.ts
  */
@@ -71,8 +82,8 @@ async function main(): Promise<void> {
   const r1 = await pose();
   const dYawR = r1.yaw - r0.yaw;
   results.push({
-    check: 'right-edge steer',
-    pass: Math.abs(dYawR) > 0.05,
+    check: 'right-edge steer eases RIGHT (dYaw < 0)',
+    pass: dYawR < -0.05,
     detail: `dYaw=${dYawR.toFixed(4)}`,
   });
 
@@ -83,8 +94,8 @@ async function main(): Promise<void> {
   const l1 = await pose();
   const dYawL = l1.yaw - l0.yaw;
   results.push({
-    check: 'left-edge steer (opposite)',
-    pass: Math.abs(dYawL) > 0.05 && Math.sign(dYawL) === -Math.sign(dYawR),
+    check: 'left-edge steer eases LEFT (dYaw > 0)',
+    pass: dYawL > 0.05,
     detail: `dYaw=${dYawL.toFixed(4)} (right pass was ${dYawR.toFixed(4)})`,
   });
 
@@ -100,11 +111,8 @@ async function main(): Promise<void> {
   const b1 = await pose();
   const dPitchB = b1.pitch - b0.pitch;
   results.push({
-    check: 'top/bottom pitch steer',
-    pass:
-      Math.abs(dPitchT) > 0.03 &&
-      Math.abs(dPitchB) > 0.03 &&
-      Math.sign(dPitchT) === -Math.sign(dPitchB),
+    check: 'top hold eases UP, bottom hold eases DOWN (dPitch signs pinned)',
+    pass: dPitchT > 0.03 && dPitchB < -0.03,
     detail: `dPitchTop=${dPitchT.toFixed(4)} dPitchBottom=${dPitchB.toFixed(4)}`,
   });
 

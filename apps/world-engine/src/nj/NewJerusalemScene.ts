@@ -276,6 +276,14 @@ export async function buildNewJerusalemScene(ctx: WorldContext): Promise<void> {
     const emergent = findRimFallSites(hf);
     const sites = emergent.length > 0 ? emergent : anchorFallSites(hf);
     engine.scene.add(buildRimFalls(sites, hf, sunSky.atmosphere, gi));
+    // FC-0023: probe-rimfalls used to replay its own copy of the scan and
+    // never executed this code — a gutted findRimFallSites stayed green.
+    // Expose the set the scene ACTUALLY built so the probe reads the shipped
+    // outcome. buildTerrainScene assigned __laasDbg earlier in this await
+    // chain, so the handle exists here.
+    const dbg = (window as unknown as { __laasDbg?: Record<string, unknown> })
+      .__laasDbg;
+    if (dbg) dbg.rimFalls = { emergent: emergent.length > 0, sites };
   }
 
   // Walkable city floors (the debt cityCollide's header used to declare):
