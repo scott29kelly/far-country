@@ -8,7 +8,9 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0019.
+THE NEXT FREE NUMBER IS FC-0025. (FC-0019 and FC-0020 are allocated on the
+unmerged branch claude/far-country-post-ga3-e09adc; the numbers were reserved
+rather than reused so the two branches cannot collide on merge.)
 
 ## FC-0017 — the far-vista shell chorded ABOVE the wild-ring canyon, rendering giant false wedges
 
@@ -269,6 +271,14 @@ of cheapest deliberate breakages (with predictions to record BEFORE
 running) is in tools/AUDIT-2026-08-19.md. OPEN — needs a quiet dev-server
 window (deliberate scene breakage would hot-reload into any open tab);
 scheduled with Scott.
+Resolution (2026-08-24): run. Predictions pre-registered in a separate commit
+before the first mutation; full ledger in tools/MUTATION-2026-08-24.md.
+Baseline 18/18 PASS, tree verified clean after every mutation. 15 of 18
+members caught their deliberate break. Three did not: probe-mousesteer
+(FC-0021), probe-entitypick (FC-0022) and probe-rimfalls (FC-0023). One
+prediction was importantly wrong — probe-wildwater was predicted unfailable
+per audit finding F1 and instead failed W3/W6/W8, so F1 is STALE and the seed
+list in AUDIT-2026-08-19.md needs that correction. Method finding: FC-0024.
 
 ## FC-0010 — the four FC-0005 vacuous-pass paths are closed
 
@@ -302,3 +312,92 @@ All mutations reverted. NOT yet observed: find-water's hook-missing exit 2
 Noted in passing: find-water's scan window is ±2040 m, so on newjerusalem
 it cannot see the wilderness-band water at z 4400-6144 — a coverage
 limitation of the report tool, not a verdict bug.
+
+## FC-0021 — probe-mousesteer cannot tell up from down: every steer check is relative
+
+Found by the FC-0009 mutation battery (tools/MUTATION-2026-08-24.md, #16).
+Believed: probe-mousesteer verifies the mouse-steer navigation, and its own
+header says step 4 is "pitch must ease UPWARD (opposite sign of a bottom
+hold)". Measured: inverting the pitch sign at FlyCamera.ts:545
+(`this.pitch -= steerResponse(...)` → `+=`) flipped both measured deltas —
+`dPitchTop +1.0191 → -1.1796`, `dPitchBottom -1.1796 → +1.1689` — and the
+probe still printed ALL PASS. The mutation demonstrably reached the running
+page (the numbers moved), so this is not a stale-bundle artifact; the same
+batch's #15 edit to GamepadInput.ts was picked up by Vite the same way.
+Means: all three steer checks assert magnitude and RELATIVE opposition only.
+Right-edge is `Math.abs(dYawR) > 0.05`; left-edge asserts the opposite sign
+*to the right hold*; pitch asserts top and bottom oppose *each other*. Invert
+both yaw signs, both pitch signs, or both axes together and the probe stays
+green. The probe verifies the controls respond and are not stuck together; it
+never verifies which way is up. The header asserts an absolute the code never
+checks — the same "title claims more than the assertion" shape as FC-0022.
+Weight: inverted mouse-look is one of the most user-visible control
+regressions there is, and it is squarely against the standing preference for
+approachable, non-gamer navigation. OPEN — the fix is to pin absolute sign
+per axis against a stated convention, and to make the header quote it.
+
+## FC-0022 — probe-entitypick mirror-pins the twelve foundation gems against the table it is checking
+
+Found by the FC-0009 mutation battery (tools/MUTATION-2026-08-24.md, #13).
+Believed: probe-entitypick check A2 is named "foundation course: gate-notched
+spans, twelve gems in ESV order" and was expected to catch a wrong gem.
+Measured: renaming the first gem in `cityModel.FOUNDATION_GEMS` to `ZZTMP`
+left all 14 CPU members PASS, and A2 itself passed while printing
+`first=Foundation · ZZTMP`. Means: A2's third clause is
+`gemLabelOrder.every((l, i) => l === 'Foundation · ' + FOUNDATION_GEMS[i].name)`
+— it compares the scene labels against the very table the mutation edited, so
+both sides of the assertion move together. This is audit finding F6 (the
+mirror-pin / self-referential pair) landing on a doctrinal invariant: nothing
+in the probe knows the ESV order of Rev 21:19-20, and "ESV order" is whatever
+cityModel.ts happens to say today. Note the probe is not inert — the same run
+(#5) showed entitypick B1 correctly failing when the gate notch was deleted.
+The gap is specific to the gem NAMES. OPEN — the honest fix pins the list
+against the canonical dataset rather than against engine source, per the
+project's every-claim-carries-a-citation rule.
+
+## FC-0023 — probe-rimfalls replays its own copy of the scanner and never executes RimFalls.ts
+
+Found by the FC-0009 mutation battery (tools/MUTATION-2026-08-24.md, #18/18b/
+18c). The most severe instrument finding of the run, and a correction to the
+assumption behind adding rimfalls to the battery at all (see the manifest note
+in tools/battery.ts, 2026-08-19).
+Believed: probe-rimfalls audits the emergent rim-fall site set produced by
+`findRimFallSites()` in src/nj/RimFalls.ts.
+Measured, in three steps. (a) `CLUSTER_M` 260 → 130 produced output
+BYTE-IDENTICAL to baseline — same three lips, same scores 28.6/5.4/2.3, same
+drops. Scored void, not blind: a mutation that changes no behaviour tests
+nothing. (b) `MAX_SITES` 4 → 2 also changed nothing, which is impossible if
+the probe read that constant. (c) `findRimFallSites()` gutted to `return []`
+— the shipped scanner emits NOTHING and every waterfall disappears from the
+world — and the probe still reported "3 emergent site(s)" with R1, R2 and R3
+all PASS.
+Means: at probe-rimfalls.ts:94-97 the probe declares its OWN `MAX_SITES = 4`
+and `CLUSTER_M = 260` under the comment "exact mirrors of RimFalls.ts
+constants", then at :115 runs an "exact replay of findRimFallSites" inside
+`page.evaluate`. It never calls the shipped function. This is FC-0007's
+mirror-literal hazard escalated from a mirrored THRESHOLD to a mirrored
+IMPLEMENTATION.
+Important qualification: the probe is not worthless. It was built to answer
+"after a terrain change near the rim, WHERE did the falls land?" and it still
+does that honestly, because it runs against the live CPU hydrology mirrors.
+It guards the TERRAIN. It does not guard the CODE, which is what its battery
+membership implies. OPEN — the fix is to import and call `findRimFallSites`
+rather than replay it, keeping the mirrors only for values the page cannot
+export.
+
+## FC-0024 — a mutation is not valid until the probe's output is shown to move
+
+Method finding from the FC-0009 run, logged so the next mutation battery does
+not repeat it. Mutation #18 passed a careful pre-flight (the sed was verified
+to land its replacement text in the file) and still tested nothing, because
+halving `CLUSTER_M` happened not to change any cluster: the three sites sit
+~1600 m apart, far outside either lattice. A "the edit landed" check proves
+the FILE changed; it does not prove BEHAVIOUR changed. Had #18b and #18c not
+been run out of suspicion, FC-0023 would have been recorded as "rimfalls
+CAUGHT" — the exact opposite of the truth.
+Rule, joining the two already in this file (an ablation lever is only as
+specific as its implementation; a binary test on a quantised quantity prints
+the quantisation grid): **before scoring a mutation, diff the probe's own
+output against baseline. Identical output means the mutation is void, not
+that the probe is blind — and a probe cannot be credited with catching
+anything until something moved.**

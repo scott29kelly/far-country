@@ -138,7 +138,34 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-19, latest) GA-3 SHIPPED — Scott called the stop after round
+**(2026-08-24, latest) FC-0009 CLOSED — the mutation battery ran, and three
+of the eighteen probes cannot fail.** The last GA-1 instrument debt is paid.
+Predictions for all 18 members were pre-registered in their own commit before
+any mutation was applied (tools/MUTATION-2026-08-24.md); baseline was 18/18
+PASS and the tree was verified clean after every mutation. **15 members caught
+their deliberate break.** Three did not, and each is a different shape of the
+same disease:
+- **probe-mousesteer (FC-0021)** passes with the pitch sign inverted. Every
+  steer check asserts magnitude and RELATIVE opposition only, so inverted
+  mouse-look ships green — the worst case for a navigation scheme that is
+  meant to stay approachable to non-gamers.
+- **probe-entitypick (FC-0022)** passes with a foundation stone renamed
+  `ZZTMP`, because the check named "twelve gems in ESV order" compares the
+  scene labels against the same `FOUNDATION_GEMS` table the mutation edited.
+  A doctrinal invariant (Rev 21:19-20) guarded by a self-referential assertion.
+- **probe-rimfalls (FC-0023)** passes with `findRimFallSites()` gutted to
+  `return []` — every waterfall gone from the world, R1/R2/R3 all green. The
+  probe replays its own copy of the scanner inside `page.evaluate` and never
+  executes RimFalls.ts. It guards the terrain, not the code.
+One prediction was importantly WRONG in the good direction: probe-wildwater
+was predicted unfailable per audit finding F1 and instead failed W3/W6/W8, so
+F1 is stale and AUDIT-2026-08-19.md has been corrected. A method rule came out
+of it too (FC-0024): a mutation whose edit lands in the file but leaves the
+probe's output byte-identical is VOID, not evidence of blindness — that nearly
+recorded rimfalls as passing honestly. All three blind probes are OPEN; no
+probe was modified in this run.
+
+**(2026-08-19) GA-3 SHIPPED — Scott called the stop after round
 4 ("Things are looking awesome"); folded to main with a re-vendored
 engine bundle.** Round 4 (three builders): layer-parallel beds + crack
 micro-shadow (an exact fall-line correction was tried and REJECTED —
