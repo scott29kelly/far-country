@@ -611,6 +611,33 @@ treat as "people are doing it", not "it works better".
   only one that is text-driven. NOT evaluated: no licence check, no
   quality check, no look at whether it exports anything our rig can eat.
   Those are the gates before it goes near the roadmap.
+
+  **Gate check run 2026-08-27 (desk evaluation — licence and format only;
+  quality still needs hands-on).** kimodo.cpp is a C++/GGML port
+  (github.com/localai-org/kimodo.cpp) of NVIDIA's Kimodo kinematic motion
+  diffusion model (github.com/nv-tlabs/kimodo); runs local on CPU or
+  Vulkan, text prompt in, 30 fps motion out, ≤10 s per clip.
+  - LICENCE, split by checkpoint: the port's code is Apache-2.0. The
+    SMPL-X 22-joint checkpoint is "NVIDIA Internal Scientific Research
+    and Development Model License" — R&D only, the same weights posture
+    that gated ARDy. The SOMA (30-joint humanoid control skeleton) and
+    G1 (robot) checkpoints are NVIDIA Open Model License, explicitly
+    "ready for commercial use". So the usable humanoid option is SOMA.
+  - EXPORT, the pleasant surprise: skeleton-only GLB, documented as
+    "ready to copy into a Three.js project" — our engine's native
+    format. Raw per-frame root translation + joint rotation matrices are
+    also available. No FBX/BVH, no skinned-mesh export yet.
+  - THE GAP: no retargeting. Output is SMPL-X/SOMA/G1 joint sets, not
+    our figureModel archetype rig — adopting it means writing a
+    SOMA→archetype joint map (a bounded, one-time mapping, same class of
+    work as the mhclo hair seating) or re-rigging archetypes onto the
+    SOMA control skeleton.
+  - VERDICT: passes the licence gate (SOMA checkpoint only) and the
+    format gate; the remaining gates are motion QUALITY on worship-
+    adjacent prompts (kneeling, bowing, lifted hands — hands-on test,
+    ~an afternoon, fully local) and the retarget cost. Still a
+    candidate, not a choice — Scott owns the M4.4 source call
+    ([[m44-dynamism-scoping]]).
 - ThreeJS Super Terrain (vibe-stack.github.io/super-terrain, released
   ~Aug 23): mesh terrain with non-destructive CSG — diggable holes and
   caves. Not directly usable (we are WebGPU/TSL with our own clipmap, not

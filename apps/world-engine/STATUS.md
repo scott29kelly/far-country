@@ -155,8 +155,12 @@ refuses the run if it goes uncaught. (4) FC-0017's residual closed: the far
 ring is clipped to the square detail domain at build time (FC-0027) —
 measured 4.1% of ring triangles, not the recorded "~40%"; A/B inert
 (aerial 0.16% changed pixels), battery 18/18, bundle re-vendored
-(index-a2QpM2pK.js). Ledger: tools/MUTATION-2026-08-24.md (2026-08-27
-sections); evidence: DEFECTS.md FC-0025/26/27.
+(index-a2QpM2pK.js). (5) FC-0007 resolved with an FC-0022 amendment to its
+own fix shape: only PLUMBING is imported (entitypick NJ_SCALE; the 470
+fixture in seven probes now imports PLATEAU_Y), while asserted values are
+labeled DELIBERATE CONTRACT PINS with their derivations — importing those
+would mirror-pin them. Ledger: tools/MUTATION-2026-08-24.md (2026-08-27
+sections); evidence: DEFECTS.md FC-0025/26/27 + FC-0007/0008 Resolutions.
 
 **(2026-08-24) The three unfailable probes can now fail — FC-0021,
 FC-0022, FC-0023 all RESOLVED, watched refusing both ways.** probe-mousesteer
