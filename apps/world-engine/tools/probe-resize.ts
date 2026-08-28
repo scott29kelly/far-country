@@ -239,7 +239,14 @@ async function main(): Promise<void> {
   page.on('console', (message) => {
     const text = message.text();
     if (text.startsWith('[diag]')) console.log(text);
-    if (message.type() === 'error' && text.includes(DESTROYED_TEXTURE)) failures.push(text);
+    // both types, deliberately: the engine's onuncapturederror handler
+    // (Engine.ts) re-logs the first 8 errors via console.error, but Dawn's
+    // OWN default logging for uncaptured errors surfaces as console type
+    // 'warning' (measured 2026-08-27, FC-0026) — an error-only listener
+    // covers only the re-logged path and goes blind past the 8-error cap or
+    // if the engine handler is ever removed
+    const type = message.type();
+    if ((type === 'error' || type === 'warning') && text.includes(DESTROYED_TEXTURE)) failures.push(text);
   });
 
   try {
@@ -309,6 +316,41 @@ async function main(): Promise<void> {
     console.log(
       `PASS resize did not submit a destroyed texture (ablate="${ablate}", cycles=${cycles})`,
     );
+
+    // FC-0008 sentinel self-test, every run: this probe can only fail when a
+    // console message contains DESTROYED_TEXTURE, which is Dawn's wording,
+    // not ours — a Dawn reword would disarm it silently. So provoke the real
+    // error on a scratch device (encode a copy, destroy the source, submit)
+    // and require the listener to catch it. The scratch device deliberately
+    // has NO uncapturederror handler, so this exercises the weakest surfacing
+    // path (Dawn's default console logging). Runs AFTER the resize verdict is
+    // taken from a snapshot, so the deliberate error cannot pollute it.
+    const preSelftest = failures.length;
+    await page.evaluate(async () => {
+      const adapter = await navigator.gpu.requestAdapter();
+      if (!adapter) throw new Error('selftest: no adapter');
+      const device = await adapter.requestDevice();
+      const usage = GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST;
+      const a = device.createTexture({ size: [4, 4], format: 'rgba8unorm', usage });
+      const b = device.createTexture({ size: [4, 4], format: 'rgba8unorm', usage });
+      const enc = device.createCommandEncoder();
+      enc.copyTextureToTexture({ texture: a }, { texture: b }, [4, 4]);
+      const cb = enc.finish();
+      a.destroy();
+      device.queue.submit([cb]);
+      // give the uncaptured-error path a tick to surface on the console
+      await new Promise((r) => setTimeout(r, 300));
+    });
+    await new Promise((r) => setTimeout(r, 500));
+    if (failures.length === preSelftest) {
+      throw new Error(
+        `FC-0008 sentinel self-test FAILED: a deliberate destroyed-texture submit produced no ` +
+          `console error containing "${DESTROYED_TEXTURE}" — either Dawn reworded the message ` +
+          `(update the sentinel) or the console listener is broken. The resize PASS above is ` +
+          `not trustworthy until this is fixed.`,
+      );
+    }
+    console.log(`PASS sentinel self-test — Dawn still says "${DESTROYED_TEXTURE}"`);
   } finally {
     await browser.close();
   }

@@ -558,3 +558,30 @@ measure 0.000 m because the shaped input is exactly zero). Threshold
 provenance in the probe comment. Watched refusing: with the deadzone zeroed,
 L15 fails at 3.065 m drift (predicted ~3.4 m from mag 0.14 × 24 m/s) and is
 the only failure. Green on correct code, full live suite 15/15.
+
+## FC-0026 — probe-resize's sentinel rests on one engine handler: Dawn's own logging is a console WARNING
+
+Found while closing FC-0008 (the sentinel-drift hazard): the first run of the
+new sentinel self-test FAILED on correct code, which was the instrument
+working. Believed: a destroyed-texture submit surfaces as a console ERROR
+containing Dawn's "Destroyed texture", which is what probe-resize listened
+for (`message.type() === 'error'`). Measured (scratch device, no handler,
+this Chromium): Dawn's default logging for an uncaptured error arrives as
+console type **warning** — `[console:warning] Destroyed texture [Texture
+(unlabeled 4x4 px, ...)] used in a submit.` The only reason the probe ever
+caught the real regression is Engine.ts's `onuncapturederror` handler, which
+re-logs the message via console.error — and that handler stops after 8
+errors. So the probe's armed state silently depended on one engine-side
+handler staying present and the error count staying under its cap; remove
+the handler (or overflow it) and a real resize regression prints warnings
+the probe ignores. This is FC-0008's predicted failure mode arriving via
+the message TYPE instead of the wording.
+Resolution (2026-08-27): two changes to probe-resize, verified both ways.
+(1) The listener now accepts the sentinel at console type error OR warning,
+so both surfacing paths (engine re-log, Dawn default) are covered. (2) Every
+run ends with a sentinel self-test: provoke a real destroyed-texture submit
+on a scratch device with NO handler — the weakest path — and refuse the
+whole run if the listener did not catch it, so a future Dawn reword or type
+change fails loudly instead of disarming silently. Watched refusing: with
+the sentinel changed to a string Dawn never says, the self-test exits 1.
+Green on correct code: resize PASS + "Dawn still says 'Destroyed texture'".
