@@ -528,3 +528,33 @@ the quantisation grid): **before scoring a mutation, diff the probe's own
 output against baseline. Identical output means the mutation is void, not
 that the probe is blind — and a probe cannot be credited with catching
 anything until something moved.**
+
+## FC-0025 — probe-gamepad-live only presents axes at 0 or ±1, so the deadzone is invisible to it
+
+Found by the cross-coverage debt left open in the FC-0009 run
+(tools/MUTATION-2026-08-24.md: "#14 gamepad was run CPU-only"). Pre-registered
+2026-08-27 in the same ledger, prediction BLIND — confirmed by run.
+Believed: gamepad-live proves the browser-side gamepad seam, so a zeroed
+radial deadzone (`GamepadInput.ts PAD_DEADZONE 0.15 → 0`) should fail it the
+way it failed the CPU member (A, C2).
+Measured: with the deadzone zeroed, all 14 live checks PASS, output
+numerically indistinguishable from baseline (L3 21.5 vs 21.6 m; L4 Δyaw 1.20
+vs 1.21 rad). The mutation was NOT a no-op (FC-0024 rule): the CPU member,
+run inside the same mutation window, failed A and C2 exactly as in run #14.
+Means: every live stimulus is an axis at exactly 0 or ±1, and `shapeStick()`
+is deadzone-invariant at both magnitudes — at mag 0 it returns zero under any
+deadzone, and at mag 1 the normalised t is 1 for every deadzone < 1. The
+deadzone exists ONLY for partial deflections (resting-pad drift, analog
+fractions), and the live probe never presented one. Same shape as FC-0021:
+the suite's own description ("proves the browser-side seam") claims a
+property the stimulus set cannot reach.
+Weight: a lost deadzone means every idle controller on a desk slowly flies
+the camera — squarely against the approachable-navigation preference — and
+the live layer would have shipped it green.
+Resolution (2026-08-27): new live check L15 — present drift-level axes
+[0.1, 0.1, 0.1, 0.1] (per-stick mag 0.14, under the 0.15 deadzone) for ~1 s
+and assert the pose holds exactly still (< 0.05 m, < 0.01 rad; clean runs
+measure 0.000 m because the shaped input is exactly zero). Threshold
+provenance in the probe comment. Watched refusing: with the deadzone zeroed,
+L15 fails at 3.065 m drift (predicted ~3.4 m from mag 0.14 × 24 m/s) and is
+the only failure. Green on correct code, full live suite 15/15.

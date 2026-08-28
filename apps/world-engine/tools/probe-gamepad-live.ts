@@ -123,6 +123,34 @@ const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms)
   check('L4 right stick yaws gently (~1.2 rad/s)', dyaw > 0.7 && dyaw < 1.7, `Δyaw ${dyaw.toFixed(2)} rad in ~1 s`);
 }
 
+// ---- 4b: drift-level deflection holds the camera exactly still -------------
+// Live analogue of CPU probe-gamepad check A (the radial-deadzone contract).
+// A pad resting on the desk drifts a little on every axis: hypot(0.1, 0.1)
+// = 0.14 sits under the 0.15 radial deadzone, so shapeStick returns exact
+// zero and the camera must not move at all. Threshold provenance: with the
+// deadzone intact the shaped input is exactly 0 and the pose reads are
+// deterministic, so clean runs measure 0.000 m; with the deadzone zeroed
+// this drift flies at mag 0.14 x 24 m/s ~ 3.4 m/s (~0.9 m even if GPU
+// contention caps the window at 0.25 s of sim time). 0.05 m / 0.01 rad
+// separates the two states by more than an order of magnitude either way.
+// Added 2026-08-27 (FC-0025): the zeroed-deadzone mutation left every prior
+// live check green because they only present axes at exactly 0 or +/-1,
+// where shapeStick is deadzone-invariant.
+{
+  const before = await pose();
+  await setPad({ axes: [0.1, 0.1, 0.1, 0.1] });
+  await wait(1000);
+  await setPad({});
+  const after = await pose();
+  const moved = Math.hypot(after.p[0] - before.p[0], after.p[1] - before.p[1], after.p[2] - before.p[2]);
+  const dyaw = Math.abs(after.yaw - before.yaw);
+  check(
+    'L15 drift-level axes leave the camera exactly still (deadzone)',
+    moved < 0.05 && dyaw < 0.01,
+    `moved ${moved.toFixed(3)} m, |Δyaw| ${dyaw.toFixed(4)} rad in ~1 s of drift`,
+  );
+}
+
 // ---- 5: RB steps the fly speed (pill reflects it) --------------------------
 {
   await setPad({ pressed: [5] });
