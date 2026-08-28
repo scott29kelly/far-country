@@ -360,6 +360,24 @@ rate tables mirroring FlyCamera/GamepadInput as unlabeled contract pins.
 OPEN. Fix shape: import where an export exists; label deliberate contract
 pins as such; derivation comment for the rest. Full inventory in
 tools/AUDIT-2026-08-19.md.
+Resolution (2026-08-27), with one amendment to the fix shape: after
+FC-0022, "import where an export exists" applies ONLY to plumbing —
+importing a value the probe ASSERTS creates the mirror-pin (both sides
+move together) that made entitypick blind. So: (a) imported as plumbing —
+probe-entitypick B4/B5 now use the exported NJ_SCALE, and the 470 fixture
+in seven probes (wallcollide, walkfling, cityfloors, arrival, entitypick,
+population, visualkey) now imports PLATEAU_Y (rimModel, ADR 0015), since a
+fixture SHOULD track the world it stands in for; (b) labeled as deliberate
+contract pins with derivations — wallcollide's four faces (each derived in
+the comment from CITY_HALF / FOUNDATION_COURSE / PLINTH_HALF /
+TIER_GLASS_PROUD), the gamepad and navigation rate tables, walkfling's
+wade expectation, population's bloom 1.5, ascent's slope/ring bounds,
+templecollide's stop bands. Verified: CPU battery 14/14, probe-visualkey
+8/8, tsc clean. NOT touched, deliberately: tolerance widths the probes own
+(framings 3.5+1.7, mousesteer 0.01/0.05/0.03, visualkey PLACE_TOL_M 120,
+dwellingscollide 3000-solid floor, crowd part ceilings) — bounds, not
+mirrors, most already derivation-commented — and bare literals in
+report-only diagnostics, which have no verdict to disarm.
 
 ## FC-0008 — probe-resize passes on the absence of a foreign string
 

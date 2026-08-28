@@ -39,6 +39,7 @@ Object.defineProperty(globalThis, 'window', { value: windowShim, configurable: t
 const { PerspectiveCamera } = await import('three');
 const { FlyCamera } = await import('../src/core/FlyCamera');
 const { easeInOutCubic } = await import('../src/core/Easing');
+const { PLATEAU_Y } = await import('../src/nj/rimModel');
 
 const press = (code: string): void => {
   for (const h of keydownHandlers) h({ code, repeat: false } as KeyboardEvent);
@@ -54,8 +55,12 @@ const DT = 1 / 60;
 const STEP_MS = 1000 / 60;
 const { check, finish } = makeChecker();
 
-// the NJ arrival geometry: aloft +120 y / +260 z behind the walk spawn
-const GROUND_Y = 470;
+// the NJ arrival geometry: aloft +120 y / +260 z behind the walk spawn.
+// GROUND_Y is fixture plumbing — imported so the flat stand-in tracks the
+// real plateau elevation (rimModel, ADR 0015). The TARGET/ALOFT offsets are
+// DELIBERATE CONTRACT PINS (FC-0007) mirroring main.ts's arrival constants:
+// kept independent so an arrival retune fails here and is acknowledged.
+const GROUND_Y = PLATEAU_Y;
 const TARGET = { p: [350, GROUND_Y + 1.7, 4150] as [number, number, number], yaw: 0, pitch: 0.22 };
 const ALOFT = { p: [350, TARGET.p[1] + 120, 4150 + 260] as [number, number, number], yaw: 0, pitch: -0.1 };
 const DUR_MS = 5000;

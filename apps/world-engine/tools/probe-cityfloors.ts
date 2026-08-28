@@ -32,7 +32,7 @@ const { FlyCamera } = await import('../src/core/FlyCamera');
 const { wrapGroundProbeWithRiver } = await import('../src/nj/RiverOfLife');
 const { wrapGroundProbeWithCityFloors, cityFloorLocalY } = await import('../src/nj/cityCollide');
 const { CITY_SUMMIT_Y, CITY_TIERS, cityTierBottoms } = await import('../src/nj/cityModel');
-const { NJ_SCALE } = await import('../src/nj/rimModel');
+const { NJ_SCALE, PLATEAU_Y } = await import('../src/nj/rimModel');
 const { makeChecker } = await import('./check');
 
 const press = (code: string): void => {
@@ -45,7 +45,9 @@ const release = (code: string): void => {
 const c = makeChecker();
 
 // ---- world stand-in: flat core + the real river + floors wraps -------------
-const GROUND_Y = 470;
+// GROUND_Y is fixture plumbing — imported so the flat stand-in tracks the
+// real plateau elevation (rimModel, ADR 0015).
+const GROUND_Y = PLATEAU_Y;
 const PLAZA_TOP_Y = GROUND_Y + 2.8; // the scene's coreY + 2.8
 const base = (_x: number, _z: number): { ground: number; water: number } => ({
   ground: GROUND_Y,

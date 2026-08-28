@@ -50,7 +50,7 @@ const { figureModelInvariants } = await import('../src/nj/figureModel');
 const { cityFloorLocalY } = await import('../src/nj/cityCollide');
 const { CITY_SUMMIT_Y, CITY_TIERS } = await import('../src/nj/cityModel');
 const { buildEntityPicks, nearestEntityAt, pickEntityAt } = await import('../src/nj/entityPicks');
-const { NJ_SCALE } = await import('../src/nj/rimModel');
+const { NJ_SCALE, PLATEAU_Y } = await import('../src/nj/rimModel');
 
 const c = makeChecker();
 
@@ -99,6 +99,8 @@ c.check(
 // bloom contract: luminance of every population emissive stays under 1.5.
 // The multitude's per-region emissives live in figureModel (ADR 0019) —
 // its invariants cover palette-worst-case luminance; the hosts' stay here.
+// 1.5 is a DELIBERATE CONTRACT PIN (FC-0007) mirroring PostStack's bloom
+// threshold — kept independent so a threshold retune fails here consciously.
 const lum = (r: number, g: number, b: number, k: number): number =>
   (0.2126 * r + 0.7152 * g + 0.0722 * b) * k;
 const fInv = figureModelInvariants();
@@ -130,9 +132,11 @@ c.check(
 );
 
 // ---- B: pick-registry integration (probe-entitypick's fixture) --------------
+// PLAZA_Y is fixture plumbing — imported so the stand-in tracks the real
+// plateau elevation (rimModel, ADR 0015); GROUND is the meadow 10 m below.
 
-const PLAZA_Y = 470;
-const GROUND = 460;
+const PLAZA_Y = PLATEAU_Y;
+const GROUND = PLAZA_Y - 10;
 const flat = (): number => GROUND;
 const vols = buildEntityPicks(PLAZA_Y, flat);
 const S = NJ_SCALE;

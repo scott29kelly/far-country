@@ -41,7 +41,7 @@ const { PerspectiveCamera } = await import('three');
 const { FlyCamera } = await import('../src/core/FlyCamera');
 const { riverSurfaceLocalY, wrapGroundProbeWithRiver } = await import('../src/nj/RiverOfLife');
 const { CITY_TIERS, cityTierBottoms } = await import('../src/nj/cityModel');
-const { NJ_SCALE } = await import('../src/nj/rimModel');
+const { NJ_SCALE, PLATEAU_Y } = await import('../src/nj/rimModel');
 
 const press = (code: string): void => {
   for (const h of keydownHandlers) h({ code, repeat: false } as KeyboardEvent);
@@ -51,8 +51,9 @@ const release = (code: string): void => {
 };
 
 // ---- world stand-in: flat plateau top + the real river wrap ---------------
-// (values match the NJ scene: plateau meadow ~470, plazaTopY = coreY + 2.8)
-const GROUND_Y = 470;
+// GROUND_Y is fixture plumbing — imported so the flat stand-in tracks the
+// real plateau elevation (rimModel, ADR 0015); plazaTopY = coreY + 2.8.
+const GROUND_Y = PLATEAU_Y;
 const PLAZA_TOP = GROUND_Y + 2.8;
 const terrainProbe = (_x: number, _z: number): { ground: number; water: number } => ({
   ground: GROUND_Y,
@@ -102,6 +103,9 @@ const freshCam = (): InstanceType<typeof FlyCamera> => {
     if (p[1] > maxY) maxY = p[1];
   }
   release('KeyW');
+  // 0.1·NJ_SCALE + 0.45 is a DELIBERATE CONTRACT PIN (FC-0007) mirroring
+  // FlyCamera's wade constants (channel depth 0.1 local, wade eye +0.45) —
+  // kept independent so a wade retune fails here, not silently tracks.
   check(
     'A1 wade floor holds at the channel',
     Math.abs(wadeEye - (PLAZA_TOP + 0.1 * NJ_SCALE + 0.45)) < 0.3,

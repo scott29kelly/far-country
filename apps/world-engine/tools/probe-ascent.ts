@@ -57,6 +57,10 @@ c.check(
       west[i].x0 === -r.x1 && west[i].x1 === -r.x0 && west[i].zA === r.zA && west[i].zB === r.zB,
   ),
 );
+// 1.05 and 95.5 are DELIBERATE CONTRACT PINS (FC-0007): the walkable-slope
+// ceiling and the inside-the-wall-ring bound (CITY_HALF 100 − gallery
+// margin), hand-derived from ascentModel/cityModel — kept independent so a
+// route or wall retune fails here and is acknowledged consciously.
 const maxSlope = Math.max(...ramps.map((r) => (r.y1 - r.y0) / Math.abs(r.zB - r.zA)));
 c.check('A5 slopes stay below 1.05 rise per run', maxSlope <= 1.05, `max=${maxSlope.toFixed(3)}`);
 const inside = ramps.every((r) => {

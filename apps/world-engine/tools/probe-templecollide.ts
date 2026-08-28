@@ -126,6 +126,11 @@ c.check(
   run(cam, 2000);
   release('KeyW');
   const x = cam.camera.position.x;
+  // the 120/140 stop band (and T7's core-face equivalents) are DELIBERATE
+  // CONTRACT PINS (FC-0007) hand-derived from the templeModel layout — kept
+  // independent of the model so a compound retune fails here consciously
+  // (the FC-0022 mirror-pin rule; note this probe's T6-vs-stepRise pair is
+  // the audit's F6 example of the opposite failure).
   c.check(
     'T1 a walker stops at the east perimeter wall',
     x > C.x + 120 && x < C.x + 140,

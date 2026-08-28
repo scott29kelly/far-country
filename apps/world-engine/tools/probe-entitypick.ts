@@ -33,6 +33,11 @@ Object.defineProperty(globalThis, 'window', {
 });
 
 const { buildEntityPicks, nearestEntityAt, pickEntityAt } = await import('../src/nj/entityPicks');
+// NJ_SCALE and PLATEAU_Y here are PLUMBING (city-local units → world metres
+// for aiming test rays; the fixture elevation), not asserted contracts —
+// importing them is correct (FC-0007). Contract values stay independent
+// literals (see ESV_FOUNDATION_ORDER below, FC-0022).
+const { NJ_SCALE, PLATEAU_Y } = await import('../src/nj/rimModel');
 const { FOUNDATION_GEMS, GATES, SIDE_COMPASS, CITY_SUMMIT_Y, foundationCourseSpans } =
   await import('../src/nj/cityModel');
 const { riverReaches } = await import('../src/nj/RiverOfLife');
@@ -52,9 +57,11 @@ const ESV_FOUNDATION_ORDER = [
   'Chrysolite', 'Beryl', 'Topaz', 'Chrysoprase', 'Jacinth', 'Amethyst',
 ] as const;
 
-// ---- fixture: flat meadow below a plaza at 470 -----------------------------
-const PLAZA_Y = 470;
-const GROUND = 460;
+// ---- fixture: flat meadow below the plaza ----------------------------------
+// PLAZA_Y is fixture plumbing — imported so the stand-in tracks the real
+// plateau elevation (rimModel, ADR 0015); GROUND is the meadow 10 m below.
+const PLAZA_Y = PLATEAU_Y;
+const GROUND = PLAZA_Y - 10;
 const flat = (): number => GROUND;
 const vols = buildEntityPicks(PLAZA_Y, flat);
 
@@ -138,11 +145,11 @@ c.check(
   `got ${b3?.label ?? 'null'}`,
 );
 
-const gloryY = PLAZA_Y + (CITY_SUMMIT_Y + 10) * 20;
+const gloryY = PLAZA_Y + (CITY_SUMMIT_Y + 10) * NJ_SCALE;
 const b4 = pick([0, gloryY, 2000], north);
 c.check('B4 summit glory picks the throne', b4?.slug === 'throne-of-god', `got ${b4?.slug}`);
 
-const seaY = PLAZA_Y + CITY_SUMMIT_Y * 20;
+const seaY = PLAZA_Y + CITY_SUMMIT_Y * NJ_SCALE;
 const b5 = pick([2000, seaY + 10, 0], [-1, 0, 0]);
 c.check('B5 sea of glass from the side', b5?.slug === 'sea-of-glass', `got ${b5?.slug}`);
 

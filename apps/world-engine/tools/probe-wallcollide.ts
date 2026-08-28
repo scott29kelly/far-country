@@ -47,7 +47,7 @@ const { wrapGroundProbeWithRiver } = await import('../src/nj/RiverOfLife');
 const { cityBlockedLocal, resolveCityMoveLocal, wrapMoveWithCityCollision } = await import(
   '../src/nj/cityCollide'
 );
-const { NJ_SCALE } = await import('../src/nj/rimModel');
+const { NJ_SCALE, PLATEAU_Y } = await import('../src/nj/rimModel');
 const { makeChecker } = await import('./check');
 
 const press = (code: string): void => {
@@ -58,8 +58,9 @@ const release = (code: string): void => {
 };
 
 // ---- world stand-in: flat plateau top + the real wraps ---------------------
-// (values match the NJ scene: plateau meadow ~470, plazaTopY = coreY + 2.8)
-const GROUND_Y = 470;
+// GROUND_Y is fixture plumbing — imported so the flat stand-in tracks the
+// real plateau elevation (rimModel, ADR 0015); plazaTopY = coreY + 2.8.
+const GROUND_Y = PLATEAU_Y;
 const PLAZA_TOP = GROUND_Y + 2.8;
 const terrainProbe = (_x: number, _z: number): { ground: number; water: number } => ({
   ground: GROUND_Y,
@@ -70,7 +71,15 @@ const probe = wrapGroundProbeWithRiver(terrainProbe, PLAZA_TOP, NJ_SCALE);
 const movePr = wrapMoveWithCityCollision(PLAZA_TOP, NJ_SCALE);
 
 // world-space reference faces (local × NJ_SCALE): gem course outer 103.4,
-// wall plane 100, plinth 88, tier-2 glass 60.5 — plus the 0.6 m skin
+// wall plane 100, plinth 88, tier-2 glass 60.5 — plus the 0.6 m skin.
+// DELIBERATE CONTRACT PINS (FC-0007): hand-derived from cityModel.ts
+// geometry — 103.4 = CITY_HALF 100 + FOUNDATION_COURSE.thick 4 − inset
+// 0.6; 88 = PLINTH_HALF (tier-1 half 82 + 6); 60.5 = tier-2 half 60 +
+// TIER_GLASS_PROUD 0.5 — and kept as independent literals ON PURPOSE:
+// importing them would move both sides of the assertion together and the
+// probe could not catch a face retune (the FC-0022 mirror-pin failure).
+// If cityModel legitimately retunes a face, this probe SHOULD go red and
+// be updated consciously.
 const GEM_FACE = 103.4 * NJ_SCALE + 0.6; // 2068.6
 const WALL_FACE = 100 * NJ_SCALE; // 2000
 const PLINTH_FACE = 88 * NJ_SCALE + 0.6; // 1760.6

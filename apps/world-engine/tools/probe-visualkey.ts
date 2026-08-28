@@ -32,14 +32,16 @@ Object.defineProperty(globalThis, 'window', {
 const { keyMarkers } = await import('../src/nj/keyModel');
 const { buildEntityPicks } = await import('../src/nj/entityPicks');
 const { CITY_HALF, GATES } = await import('../src/nj/cityModel');
-const { NJ_SCALE } = await import('../src/nj/rimModel');
+const { NJ_SCALE, PLATEAU_Y } = await import('../src/nj/rimModel');
 type PickShape = import('../src/nj/entityPicks').PickShape;
 
 const c = makeChecker();
 
-// ---- fixture: flat meadow below a plaza at 470 (probe-entitypick's) --------
-const PLAZA_Y = 470;
-const GROUND = 460;
+// ---- fixture: flat meadow below the plaza (probe-entitypick's) -------------
+// PLAZA_Y is fixture plumbing — imported so the stand-in tracks the real
+// plateau elevation (rimModel, ADR 0015); GROUND is the meadow 10 m below.
+const PLAZA_Y = PLATEAU_Y;
+const GROUND = PLAZA_Y - 10;
 const flat = (): number => GROUND;
 const markers = keyMarkers(PLAZA_Y, flat);
 const vols = buildEntityPicks(PLAZA_Y, flat);

@@ -107,6 +107,13 @@ const step = (cam: InstanceType<typeof FlyCamera>, frames: number): void => {
   );
 }
 
+// Rate/step expectations below (1.2 and 0.9 rad/s steer, speeds 24/60/150,
+// trigger idle 0.08) are DELIBERATE CONTRACT PINS (FC-0007): independent
+// copies of the FlyCamera/GamepadInput tuning, kept as literals ON PURPOSE
+// so a retune fails here and gets acknowledged consciously — importing them
+// would move both sides of every assertion together (the FC-0022 mirror-pin
+// failure) and a deliberate retune, or a typo, would ship green.
+
 // ---- B: right-stick steer — gentle rates, expo curve -----------------------
 {
   const pad = makePad();

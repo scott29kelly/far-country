@@ -47,6 +47,11 @@ const fresh = (): InstanceType<typeof FlyCamera> => {
 };
 
 // A: speed steps are mode-aware and remain inside the public safety bounds.
+// The expected values (walk scales 4/2, fly speed 60, clamp 0.5..2000) are
+// DELIBERATE CONTRACT PINS (FC-0007): independent copies of the FlyCamera
+// speed table, kept as literals ON PURPOSE so a retune fails here and gets
+// acknowledged consciously — importing them would move both sides of the
+// assertion together (the FC-0022 mirror-pin failure).
 {
   const cam = fresh();
   cam.setMode('walk');
