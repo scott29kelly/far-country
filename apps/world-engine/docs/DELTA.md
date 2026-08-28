@@ -151,9 +151,17 @@ MEASURED by the lead before acceptance — three were part-refuted):
     depth gradient). Recovers 9.9 of the 11.6 luma the artifact was
     wrongly subtracting while genuine contact occlusion stays (still 1.7
     below contact-off). Cost inside timing noise.
-22. OPEN (r4 residual): the far-shell ring still wastes ~40% of its
-    triangles underground in the corners — the honest fix is clipping
-    the ring to the square detail domain.
+22. ~~OPEN (r4 residual): the far-shell ring still wastes ~40% of its
+    triangles underground in the corners~~ → FIXED 2026-08-27 (FC-0027):
+    the ring is now clipped to the square detail domain (triangles whose
+    whole footprint sits at Chebyshev norm < 0.94·WORLD_HALF are dropped
+    at build time — that region is convex and the seam band keeps a
+    ~61 m margin before the 0.95 blend start). Correction: the "~40%"
+    was an unmeasured estimate; the measured count is 4.1% (556 of
+    13,440 triangles), so the win is hygiene plus a little vertex work
+    (13 height samples + macro fbm per vertex), not a frame-rate change.
+    A/B verified inert: aerial diff 0.16% changed pixels, falls diff
+    entirely on animated water/wind/crowd; battery 18/18.
 23. ~~FC-0012's geometric half — vertex micro-displacement still sampled
     world XZ~~ → FIXED 2026-08-21 (FC-0020). Deferred as
     "collision-adjacent"; it is not — ground physics reads the

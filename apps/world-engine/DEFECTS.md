@@ -585,3 +585,29 @@ whole run if the listener did not catch it, so a future Dawn reword or type
 change fails loudly instead of disarming silently. Watched refusing: with
 the sentinel changed to a string Dawn never says, the self-test exits 1.
 Green on correct code: resize PASS + "Dawn still says 'Destroyed texture'".
+
+## FC-0027 — FC-0017's residual closed: the far ring is clipped to the square detail domain, and the "~40%" was wrong
+
+Closes the OPEN RESIDUAL recorded in FC-0017. Believed (FC-0017's own
+text): ~40% of ring triangles waste vertices underground in the corners.
+Measured (three.js RingGeometry rebuilt with the shipped parameters and the
+shipped filter): 556 of 13,440 triangles — 4.1%. The estimate was recorded
+without measurement, against the instrument doctrine; corrected here rather
+than edited in place.
+The fix (TerrainTiles.ts, build-time): drop a ring triangle only when ALL
+THREE vertices sit at Chebyshev norm max(|x|,|z|) < 0.94·WORLD_HALF. That
+region is convex, so vertices-inside implies the whole footprint is inside;
+edgeBlend there is exactly 0 (the blend starts at 0.95), which puts every
+dropped vertex on the min-baked-minus-14-m branch — guaranteed under the
+detail tiles. The seam band that hugs the terrain from below keeps a
+~61 m margin, and the vista beyond the world edge keeps every triangle.
+XZ footprints are fixed (the shader displaces vertices only vertically),
+so the CPU-side test is exact.
+Verified: aerial A/B (the framing that sees the shell and world edge)
+0.16% changed pixels, mean max-channel delta 0.79 — noise; falls A/B diff
+concentrated entirely on animated content (waterfall spray, wind-swayed
+crowns, crowd), terrain and horizon black. Full battery 18/18 after the
+change. Honest weight: this is hygiene plus saved per-vertex work (13
+height samples + macro fbm evaluations per shaded ring vertex), not a
+frame-rate win — the 556 triangles are noise against an 18M-triangle
+frame.

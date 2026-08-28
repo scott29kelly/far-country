@@ -383,6 +383,38 @@ export class TerrainTiles {
     // --- far shell -----------------------------------------------------------------
     const ring = new RingGeometry(WORLD_HALF * 0.952, FAR_RADIUS, 160, 42);
     ring.rotateX(-Math.PI / 2);
+    // FC-0017 residual (the honest fix): the annulus overlaps the SQUARE
+    // detail domain in four corner wedges (inner radius 0.952·WORLD_HALF,
+    // but the square's corners reach √2·WORLD_HALF), and every shell
+    // triangle in there is sunk ≥14 m underground by the min-baked branch —
+    // pure wasted vertex work (13 height samples + macro fbm per vertex).
+    // Drop a triangle only when ALL THREE vertices sit at Chebyshev norm
+    // max(|x|,|z|) < 0.94·WORLD_HALF: that region is convex, so the whole
+    // footprint is inside it, edgeBlend there is exactly 0 (blend starts at
+    // 0.95), and the seam band that hugs the terrain from below is kept
+    // with a 0.01·WORLD_HALF (~61 m) margin. XZ footprints are fixed — the
+    // shader only displaces vertices vertically — so this CPU-side test is
+    // exact. The vista beyond the world edge keeps every triangle.
+    {
+      const clip = WORLD_HALF * 0.94;
+      const rp = ring.attributes.position;
+      const ri = ring.index;
+      if (ri) {
+        const kept: number[] = [];
+        for (let t = 0; t < ri.count; t += 3) {
+          let buried = true;
+          for (let k = 0; k < 3; k++) {
+            const v = ri.getX(t + k);
+            if (Math.max(Math.abs(rp.getX(v)), Math.abs(rp.getZ(v))) >= clip) {
+              buried = false;
+              break;
+            }
+          }
+          if (!buried) kept.push(ri.getX(t), ri.getX(t + 1), ri.getX(t + 2));
+        }
+        ring.setIndex(kept);
+      }
+    }
     const farMat = new MeshPhysicalNodeMaterial();
     farMat.specularIntensity = 0.35;
     const fxz = positionLocal.xz;

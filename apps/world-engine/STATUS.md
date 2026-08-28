@@ -138,7 +138,27 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-24, latest) The three unfailable probes can now fail — FC-0021,
+**(2026-08-27, latest) Instrument sweep + the FC-0017 residual: FC-0025,
+FC-0026, FC-0027.** Every remaining row of the AUDIT-2026-08-19 seed list is
+now exercised. (1) gamepad-live was BLIND to a zeroed deadzone (predicted,
+then measured — its stimuli are only 0/±1 where shapeStick is
+deadzone-invariant); new check L15 presents drift-level axes and demands the
+pose hold exactly still — watched refusing at 3.065 m (FC-0025). (2) The
+two non-members were watched refusing: probe-bootui exits 1 on a no-op
+hide(); the shoot.ts frame gate rejects an all-black frame (mean 0.13) and
+renames it -SUSPECT. (3) FC-0008 closed with a real find: Dawn's own
+uncaptured-error logging is a console WARNING, so probe-resize's error-only
+listener was armed solely through Engine.ts's 8-error re-log handler
+(FC-0026) — the listener now takes both types and every run ends with a
+sentinel self-test that provokes a real destroyed-texture submit and
+refuses the run if it goes uncaught. (4) FC-0017's residual closed: the far
+ring is clipped to the square detail domain at build time (FC-0027) —
+measured 4.1% of ring triangles, not the recorded "~40%"; A/B inert
+(aerial 0.16% changed pixels), battery 18/18, bundle re-vendored
+(index-a2QpM2pK.js). Ledger: tools/MUTATION-2026-08-24.md (2026-08-27
+sections); evidence: DEFECTS.md FC-0025/26/27.
+
+**(2026-08-24) The three unfailable probes can now fail — FC-0021,
 FC-0022, FC-0023 all RESOLVED, watched refusing both ways.** probe-mousesteer
 pins absolute steer direction per axis (cursor right → dYaw < 0, top →
 dPitch > 0, convention provenance in its header); an inverted pitch OR yaw
