@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>kimodo GLB bone viewer</title>
+<style>
+  body { margin: 0; background: #14161a; color: #cfd3da; font: 13px/1.4 monospace; }
+  #hud { position: fixed; top: 8px; left: 8px; background: rgba(0,0,0,.55); padding: 6px 10px; border-radius: 4px; white-space: pre; }
+</style>
+</head>
+<body>
+<div id="hud">loading…</div>
+<script type="module">
+// Scratch evaluation viewer for kimodo.cpp skeleton-only GLB clips (M4.4 source
+// call). Not part of the engine build; served only by the dev server.
+// Usage: /glbview.html?glb=shots/wip/kimodo/<id>.glb[&speed=1]
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+
+const params = new URLSearchParams(location.search);
+const glbPath = params.get("glb");
+const speed = Number(params.get("speed") ?? "1");
+const follow = params.get("follow") === "1"; // keep the orbit target on the root joint
+const hud = document.getElementById("hud");
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x14161a);
+scene.add(new THREE.GridHelper(4, 8, 0x3a3f47, 0x262a30));
+scene.add(new THREE.AxesHelper(0.5));
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 100);
+camera.position.set(2.2, 1.4, 2.8);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.9, 0);
+
+let mixer = null, clipDuration = 0, nodes = [], lines = null, joints = null;
+
+if (!glbPath) {
+  hud.textContent = "pass ?glb=<path relative to server root>";
+} else {
+  new GLTFLoader().load("/" + glbPath, (gltf) => {
+    scene.add(gltf.scene);
+    gltf.scene.traverse((o) => { if (o.isObject3D && o !== gltf.scene) nodes.push(o); });
+
+    // one segment per node that has a parent inside the hierarchy
+    const segs = nodes.filter((n) => nodes.includes(n.parent));
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(segs.length * 6), 3));
+    lines = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0x6ec6ff }));
+    lines.frustumCulled = false;
+    scene.add(lines);
+
+    const jointGeo = new THREE.SphereGeometry(0.015, 8, 8);
+    joints = new THREE.InstancedMesh(jointGeo, new THREE.MeshBasicMaterial({ color: 0xffd166 }), nodes.length);
+    joints.frustumCulled = false;
+    scene.add(joints);
+
+    mixer = new THREE.AnimationMixer(gltf.scene);
+    const clip = gltf.animations[0];
+    clipDuration = clip ? clip.duration : 0;
+    if (clip) mixer.clipAction(clip).play();
+    window.__viewerReady = true;
+    window.__segs = segs;
+  }, undefined, (err) => { hud.textContent = "load failed: " + err; });
+}
+
+const tmp = new THREE.Vector3();
+const m = new THREE.Matrix4();
+const clock = new THREE.Clock();
+let elapsed = 0;
+
+// deterministic scrub hook for screenshot tooling: __seek(t) pins the clip time
+window.__seek = (t) => { if (mixer) { mixer.setTime(t); elapsed = t; } };
+
+renderer.setAnimationLoop(() => {
+  const dt = clock.getDelta() * speed;
+  if (mixer && !window.__paused) { mixer.update(dt); elapsed += dt; }
+  if (lines) {
+    const pos = lines.geometry.attributes.position;
+    const segs = window.__segs;
+    for (let i = 0; i < segs.length; i++) {
+      segs[i].getWorldPosition(tmp); pos.setXYZ(i * 2, tmp.x, tmp.y, tmp.z);
+      segs[i].parent.getWorldPosition(tmp); pos.setXYZ(i * 2 + 1, tmp.x, tmp.y, tmp.z);
+    }
+    pos.needsUpdate = true;
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].getWorldPosition(tmp);
+      joints.setMatrixAt(i, m.makeTranslation(tmp.x, tmp.y, tmp.z));
+    }
+    joints.instanceMatrix.needsUpdate = true;
+    if (follow && nodes.length) {
+      nodes[0].getWorldPosition(tmp);
+      const dx = tmp.x - controls.target.x, dz = tmp.z - controls.target.z;
+      controls.target.x = tmp.x; controls.target.z = tmp.z;
+      camera.position.x += dx; camera.position.z += dz;
+    }
+    hud.textContent = `${glbPath}\nnodes ${nodes.length}  clip ${clipDuration.toFixed(2)}s  t ${(elapsed % Math.max(clipDuration, 0.001)).toFixed(2)}s`;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

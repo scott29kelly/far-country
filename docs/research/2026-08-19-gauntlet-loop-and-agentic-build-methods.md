@@ -638,6 +638,58 @@ treat as "people are doing it", not "it works better".
     ~an afternoon, fully local) and the retarget cost. Still a
     candidate, not a choice — Scott owns the M4.4 source call
     ([[m44-dynamism-scoping]]).
+
+  **Hands-on quality test run 2026-08-29 (the remaining gates).** Built
+  and run fully local in a Docker Ubuntu 24.04 container (Scott's
+  machine has no native C++ toolchain; the port's instructions are
+  Linux-only anyway). Five clips generated on the SOMA RP v1.1
+  checkpoint, seed 7, 100 diffusion steps, judged frame-by-frame in a
+  new scratch viewer (`apps/world-engine/glbview.html`, dev-server-only,
+  draws the animated node hierarchy as joints+segments, `?follow=1`
+  tracks root translation).
+  - QUALITY GATE: PASS. kneel-prayer (stand → one knee → deep prayer
+    bow, held with natural drift), bow-deep (waist bow, hold, straighten
+    — textbook), hands-lifted (wide-V overhead hold, stable),
+    sway-arms-raised (gentle weight shifts, arms stay up), and a
+    two-segment walk→kneel (90+150 frames, transition_frames 15): real
+    root-translation locomotion, no snap or limb popping at the segment
+    boundary. No jitter, foot-slide, or self-intersection seen in any
+    clip. One BIAS to steer by prompt wording: "bows their head" /
+    "kneels" resolves very deep — prostration-adjacent — on this seed.
+  - FORMAT GATE (hands-on confirmation): every animation.glb loads in
+    three r184 (the engine's pinned version) with zero console errors;
+    30 nodes, standard Mixamo-style names (Hips, Spine1/2, Chest,
+    Neck1/2, Head, Jaw, eyes, Arm/ForeArm/Hand + thumb/middle end
+    markers, Leg/Shin/Foot/ToeBase). All five GLBs byte-equal in size
+    (fixed layout) but hash-distinct.
+  - PERFORMANCE, CPU-only (20-container-cores, no Vulkan device): first
+    clip ~29 min wall (one-time 15 GB text-encoder cold load dominates);
+    warm clips ~2.5–4 min per 5 s clip. The advertised ≤10 s clearly
+    assumes a GPU; native Vulkan on the RTX is untested.
+  - BUILD NOTES (repeatable): weights = SOMA motion GGUF 1.1 GB + Llama-3
+    LLM2Vec text bundle 15 GB, SHA-256-verified installer (script needs a
+    `python`→python3 symlink). CPU-only configure is BROKEN upstream
+    (`KIMODO_ENABLE_VULKAN=OFF` leaves unguarded `ggml_backend_vk_*`
+    calls in llm_text_encoder.cpp → 17 link failures); build WITH Vulkan
+    instead, which needs libvulkan-dev + glslc + glslang-tools +
+    spirv-headers, and falls back to CPU at runtime when no device
+    exists. Demo server needs Go ≥1.26 and `-generator
+    build/release/kmd-generate` (default points at the debug preset).
+    Clone must happen on the Linux side (Windows CRLF checkout breaks
+    every shebang). Repo cloned at `C:\Users\scott\Documents\Repos\
+    kimodo.cpp`; container `kimodo` (Docker) holds the toolchain,
+    weights, and built tree at `/work`.
+  - RETARGET-COST CORRECTION to the 2026-08-27 gate check: figureModel
+    has NO skeleton to map onto. The crowd figures are procedural
+    archetypes; worship motion is authored parameter CURVES
+    (`WORSHIP` bow/kneel/arm + `HEAD_IDLE`), not joint transforms. So
+    "SOMA→archetype joint map" understates the runtime-adoption cost —
+    that path first requires a jointed/skinned figure representation
+    (new work, ADR-worthy). The CHEAP path that needs no rig: use
+    kimodo clips as authoring reference — fit/verify the procedural
+    curve shapes (timing, depth, hold character) against generated
+    worship motion. Evidence: five GLBs + frame captures in
+    `apps/world-engine/shots/wip/kimodo/` (gitignored).
 - ThreeJS Super Terrain (vibe-stack.github.io/super-terrain, released
   ~Aug 23): mesh terrain with non-destructive CSG — diggable holes and
   caves. Not directly usable (we are WebGPU/TSL with our own clipmap, not
