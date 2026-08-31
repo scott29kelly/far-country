@@ -37,6 +37,48 @@ This spec is a placeholder. Its purpose right now is to record the goals, the th
 
 ---
 
+## Backlog — adopted from Persepolis Reimagined (added 2026-08-31)
+
+Source: [`../research/2026-08-30-persepolis-reimagined-getty.md`](../research/2026-08-30-persepolis-reimagined-getty.md)
+(§6, notes 1–4) — Getty/Media.Monks' guided browser reconstruction of
+Persepolis. Four patterns were approved for adoption on 2026-08-31. None are
+scheduled; each becomes real work only when picked up and scoped against the
+current milestone state in [`../roadmap.md`](../roadmap.md).
+
+1. **Evidence lens ("show the text").** At any cited entity, one interaction
+   crossfades the rendered interpretation into its evidence layer — the
+   descriptor statement, tier badge, citations, and symbolic referent (the
+   data `src/core/EntityHud.ts` already fetches) — and/or dims what the
+   render adds *beyond* the citations (the interpretive architecture
+   `RENDERING-DECISIONS.md` already flags as uncited, e.g. the ramp chains).
+   Persepolis' camera-matched "click to reveal present-day view" is the
+   reference interaction. Composes with the M3.5 reading key rather than
+   replacing it; governed by ADR 0009.
+2. **Index-to-world deep links.** From each entity page in the browse UI, a
+   "See it in the world" link that opens `/world-preview` and flies to that
+   entity on arrival. Both halves exist — the browse UI and
+   `src/nj/entityPicks.ts` consume the same `/data/entities/*.json`; the
+   missing piece is a fly-to-entity arrival parameter. Persepolis' Art Index
+   "See it in [location]" is the reference. Low risk, and it strengthens the
+   citation-per-claim posture: the dataset becomes the index of the world.
+3. **Authored pilgrimage tour (optional mode).** A fixed camera rail through
+   the gates, up the processional ramps, to the summit — advancing on scroll
+   or a single key, pausing at cited entities, with explicit "scroll to
+   continue" prompts and a progress indicator. Free roam is untouched; the
+   rail is one more mode beside walk/fly/quick-travel in
+   `core/NavigationUI.ts`, and it satisfies the approachable-navigation
+   requirement (mouse-driven, visible cursor, no pointer lock) with zero
+   tutorial. Because visibility on a rail is authored, the tour may run a
+   heavier visual tier than free roam allows. On-screen tour text stays
+   inside cited descriptors ([`../hermeneutics.md`](../hermeneutics.md));
+   role-framing may cast the visitor as entering with the pilgrim nations
+   (Rev 21:24–26) as a narrative device, not a content claim.
+4. **District streaming behind a masked transition.** Engine-side work;
+   specced in [`phase-3-engine-integration.md`](phase-3-engine-integration.md)
+   §10.
+
+---
+
 ## Done-when
 
 To be defined at the start of Phase 3. Initial sketch in [`../prd.md`](../prd.md) §5.

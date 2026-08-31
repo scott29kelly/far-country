@@ -229,3 +229,26 @@ separate concern. Plan:
 - Scale: confirm the ~200 m placeholder reads well sited in a ~4 km world, or
   scale the city up. (Deferred per ADR 0009 rule 6, but the engine invites it.)
 - HUD: bundle the dataset into the engine build vs. fetch at runtime (§6).
+
+---
+
+## 10. Backlog — quick-travel district streaming (added 2026-08-31)
+
+Adopted from the Persepolis Reimagined research
+([`../research/2026-08-30-persepolis-reimagined-getty.md`](../research/2026-08-30-persepolis-reimagined-getty.md)
+§6, note 4; companion visitor-facing backlog in
+[`phase-3-3d-world.md`](phase-3-3d-world.md)). Persepolis splits its city
+into per-district scene files (0.5–10 MB geometry + 2.5–4.4 MB baked
+lightmap), prefetches the next district while the visitor is still in the
+current one, and hides each swap behind a short (~1–2 s) fog transition.
+
+At our citywide scale (ADR 0014) the same shape fits `NavigationUI.ts`
+quick-travel: when a destination is picked, prefetch or build that
+district's heavy content (dressing, crowd assemblies, impostor atlases)
+while masking the jump with a live glory-light/cloud transition rendered by
+the engine — not a canned video. Their numbers are a budget reference: a
+convincing scholarly city district reads at under 15 MB because lighting is
+baked and parts are instanced and reused.
+
+Unscheduled. Scope it when quick-travel hitching or memory pressure at full
+city scale makes it worth the complexity.
