@@ -195,8 +195,8 @@ export const WORSHIP = {
   modeKneel: 0.34,
   modeBow: 0.32,
   /** channel ceilings */
-  bowAmp: 0.3, // rad — torso pitch, a deliberate bow, not a collapse
-  kneelDrop: 0.26, // ×height — vertical drop of the upper body at full kneel
+  bowAmp: 0.45, // rad — torso pitch, a deliberate bow, not a collapse (kimodo fit 2026-09-03: reference bows 1.05 rad; held at the reverent cap)
+  kneelDrop: 0.34, // ×height — upper-body drop at full kneel (kimodo fit: upright thighs-vertical kneel = 0.33 H)
   kneelFlare: 0.14, // robe radial flare toward the hem as it pools
   armAmp: 0.07, // rad — extra lift of the raised (frond) arm
   /** kneel compression line (×height): below compresses, above translates */
@@ -219,33 +219,37 @@ export const WORSHIP = {
 } as const;
 
 /** one authored worship cycle — per-channel keyframes over t ∈ [0,1],
- *  smoothstep-interpolated; a closed loop (0 at both ends) */
+ *  smoothstep-interpolated; a closed loop (0 at both ends). Shapes fitted
+ *  2026-09-03 against kimodo.cpp reference clips
+ *  (docs/research/2026-09-03-m44-worship-curve-fit.md): the bow is ONE arc
+ *  with the rise ~1.3x slower than the descent (no half-bow plateau), the
+ *  kneel drops faster than it rises with a landing settle and a gather
+ *  beat before standing, the arm is one lift + long hold (no mid dip). */
 const WORSHIP_KEYS = {
   bow: [
     [0, 0],
     [0.14, 0],
-    [0.24, 1],
-    [0.3, 1],
-    [0.4, 0.35],
-    [0.7, 0.35],
-    [0.8, 0.15],
-    [0.9, 0],
+    [0.25, 1],
+    [0.33, 1],
+    [0.47, 0],
     [1, 0],
   ],
   kneel: [
     [0, 0],
     [0.26, 0],
-    [0.4, 1],
+    [0.33, 1],
+    [0.36, 0.94],
+    [0.7, 0.94],
     [0.72, 1],
-    [0.84, 0],
+    [0.81, 0],
     [1, 0],
   ],
   arm: [
     [0, 0],
     [0.2, 0],
-    [0.35, 1],
-    [0.55, 0.4],
-    [0.7, 1],
+    [0.3, 1],
+    [0.34, 0.94],
+    [0.75, 0.94],
     [0.88, 0],
     [1, 0],
   ],

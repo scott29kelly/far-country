@@ -1,7 +1,8 @@
 # M4.4 worship-curve fit against kimodo.cpp reference clips
 
-Date: 2026-09-03. Status: proposal for Scott's eye. No runtime constant
-has been changed; this note holds the evidence and the proposed values.
+Date: 2026-09-03. Status: tier A values APPLIED to `figureModel.ts` the same
+day on Scott's go-ahead after the close-up review; tier B items remain
+open. This note holds the evidence and the numbers.
 
 Context: the M4.4 source call (2026-08-31) keeps procedural worship
 motion as the runtime and uses kimodo.cpp (SOMA RP v1.1, NVIDIA Open

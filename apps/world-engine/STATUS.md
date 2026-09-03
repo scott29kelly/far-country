@@ -138,7 +138,32 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-08-27, latest) Instrument sweep + the FC-0017 residual: FC-0025,
+**(2026-09-03, latest) M4.4 worship curves FITTED to kimodo.cpp reference
+clips and APPLIED (Scott's go-ahead).** Source call 2026-08-31 stands:
+procedural runtime, kimodo clips as authoring reference only. An
+eleven-clip SOMA RP v1.1 matrix (seeds 3/11/21 + the five seed-7 clips) was
+measured in the WORSHIP curve units by `tools/kimodo-metrics.ts` (standing
+reference = tallest sample; last sample no longer wraps the looping mixer),
+`tools/kimodo-shape.ts` (onset/ramp/hold/release in WORSHIP_KEYS terms) and
+`tools/kimodo-frames.ts` (glbview captures). Findings + comparison table:
+`docs/research/2026-09-03-m44-worship-curve-fit.md`. Applied in
+`figureModel.ts`: bowAmp 0.30 -> 0.45 (reference bows 1.05 rad on EVERY
+wording; held at the reverent invariant cap), kneelDrop 0.26 -> 0.34 (the
+upright thighs-vertical kneel), bow keys = one arc with the rise 1.3x
+slower than the descent (the 0.35 half-bow plateau had no counterpart in
+any clip), kneel keys = fast drop + landing settle + gather beat, arm keys
+= one lift + long hold (no mid dip). Periods unchanged (unhurried by
+design). HEAD_IDLE pitch already matched (0.04-0.07 rad in the clips).
+Verified: tsc clean, probe-crowd ALL PASS (15, A2 invariants under the new
+values), probe-population ALL PASS (14); peak-pose A/B renders at ?shot=10
+and a kneeler+bower close-up (`tools/kimodo-closeup.ts --front`, cam
+496.57,485.15,1822.06,0.166,-0.165,50) in `shots/wip/kimodo/fit/`
+(gitignored) — kneeler a head lower, bower folds further, both still
+reverent. Deferred (Scott's call, need shader constants): bow-coupled head
+drop (~0.6 rad/rad in every clip), kneelers bowing less than standers
+(x0.35), a deeper sit-on-heels kneel variant, life-speed periods.
+
+**(2026-08-27) Instrument sweep + the FC-0017 residual: FC-0025,
 FC-0026, FC-0027.** Every remaining row of the AUDIT-2026-08-19 seed list is
 now exercised. (1) gamepad-live was BLIND to a zeroed deadzone (predicted,
 then measured — its stimuli are only 0/±1 where shapeStick is
