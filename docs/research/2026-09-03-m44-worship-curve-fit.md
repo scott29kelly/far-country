@@ -162,8 +162,18 @@ and the crop sheet `peak-ab-crops.png`. The curve tables were restored
 after the render; nothing in the repo changed.
 At the crowd-annex distance the depth change reads as subtle: the
 kneelers sit visibly lower and the bowers fold further, but a near
-framing on one kneeler and one bower would show it better. That framing
-is worth adding if Scott wants a closer look.
+framing on one kneeler and one bower shows it better, so one was added:
+`tools/kimodo-closeup.ts` reads the engine's resolved shot-10 pose, finds
+a kneel-mode figure and a bow-mode figure standing about a metre apart
+by that spot (slots 5006 and 5001), and prints a camera three metres
+away at a 1.3 m eye height. `--front` stands on the far side, because
+the figures face the summit and the shot-10 side sees their backs.
+Renders (peak pose, gitignored): `closeup-front-current.png`,
+`closeup-front-proposed.png` and the stacked sheet `closeup-front-ab.png`,
+plus the same from behind without the `front` infix. Camera used:
+`496.57,485.15,1822.06,0.166,-0.165,50`. In the proposed set the kneeler's
+head sits a full head lower and the bower folds visibly further; both
+still read as reverent, not collapsed.
 
 ## 5. Tier B: needs new shader constants (Scott's call first)
 
