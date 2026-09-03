@@ -154,6 +154,17 @@ images pose-deterministic): `shots/wip/kimodo/fit/current-shot10.png`,
 2.4% of pixels change; the visible differences are deeper kneelers and
 a higher frond arm on the bowers.
 
+Because a frozen clock leaves most figures between poses, a second pair
+was rendered with every channel pinned at 1 (every kneel-mode figure at
+full kneel, every bow-mode figure at full bow) so the two DEPTHS can be
+judged directly: `peak-current-shot10.png`, `peak-proposed-shot10.png`
+and the crop sheet `peak-ab-crops.png`. The curve tables were restored
+after the render; nothing in the repo changed.
+At the crowd-annex distance the depth change reads as subtle: the
+kneelers sit visibly lower and the bowers fold further, but a near
+framing on one kneeler and one bower would show it better. That framing
+is worth adding if Scott wants a closer look.
+
 ## 5. Tier B: needs new shader constants (Scott's call first)
 
 1. Bow-coupled head drop. Every bow clip flexes the neck about 0.6 rad
