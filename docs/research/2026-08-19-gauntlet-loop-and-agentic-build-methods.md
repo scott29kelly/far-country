@@ -690,6 +690,9 @@ treat as "people are doing it", not "it works better".
     curve shapes (timing, depth, hold character) against generated
     worship motion. Evidence: five GLBs + frame captures in
     `apps/world-engine/shots/wip/kimodo/` (gitignored).
+    DONE 2026-09-03: eleven-clip matrix measured and compared, tier A
+    constants proposed for Scott's eye -- see
+    `docs/research/2026-09-03-m44-worship-curve-fit.md`.
 - ThreeJS Super Terrain (vibe-stack.github.io/super-terrain, released
   ~Aug 23): mesh terrain with non-destructive CSG — diggable holes and
   caves. Not directly usable (we are WebGPU/TSL with our own clipmap, not

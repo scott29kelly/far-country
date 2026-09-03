@@ -4,14 +4,14 @@
  * REFERENCE). Samples a skeleton-only animation GLB and emits per-frame
  * scalar channels comparable to the figureModel WORSHIP curves:
  *
- *   hipsY        world Y of Hips (metres)
+ *   hipsX/Y      world X (lateral, sway) and Y of Hips (metres)
  *   torsoPitch   angle of Hips->Chest off vertical (rad) ~ WORSHIP bow
  *   neckPitch    angle of Chest->Head off vertical (rad) ~ HEAD_IDLE pitch
  *   armElevL/R   shoulder->hand elevation above horizontal (rad) ~ arm lift
  *   footYmin     lower of the two feet (grounding check)
  *
- * The first sample is the normalization reference (clips start standing):
- * the summary reports hip drop as a fraction of standing HEAD height so it
+ * The tallest sample is the standing reference (some seeds start the clip
+ * already in the pose): the summary reports hip drop as a fraction of standing HEAD height so it
  * reads against WORSHIP.kneelDrop (x figure height) directly.
  *
  * Usage:
@@ -26,12 +26,14 @@ import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 interface Row {
   t: number;
+  hipsX: number;
   hipsY: number;
   torsoPitch: number;
   neckPitch: number;
   armElevL: number;
   armElevR: number;
   footYmin: number;
+  headY: number;
 }
 
 function findNode(root: Object3D, ...names: string[]): Object3D | null {
@@ -106,7 +108,7 @@ async function main(): Promise<void> {
   }
 
   const csvLines: string[] = [
-    'clip,t,hipsY,torsoPitchRad,neckPitchRad,armElevLRad,armElevRRad,footYmin',
+    'clip,t,hipsX,hipsY,torsoPitchRad,neckPitchRad,armElevLRad,armElevRRad,footYmin,headY',
   ];
 
   for (const file of files) {
@@ -143,7 +145,9 @@ async function main(): Promise<void> {
 
     const rows: Row[] = [];
     for (let i = 0; i < samples; i++) {
-      const t = (i / (samples - 1)) * clip.duration;
+      // stop a hair short of the end: sampling exactly at clip.duration wraps
+      // the (looping) mixer back to t=0 and fakes a return-to-standing sample
+      const t = (i / (samples - 1)) * clip.duration * (1 - 1e-4);
       mixer.setTime(t);
       root.updateMatrixWorld(true);
       const pHips = worldPos(hips!);
@@ -151,42 +155,55 @@ async function main(): Promise<void> {
       const pHead = worldPos(head!);
       rows.push({
         t,
+        hipsX: pHips.x,
         hipsY: pHips.y,
         torsoPitch: pitchOffVertical(pHips, pChest),
         neckPitch: pitchOffVertical(pChest, pHead),
         armElevL: elevation(worldPos(shL!), worldPos(handL!)),
         armElevR: elevation(worldPos(shR!), worldPos(handR!)),
         footYmin: Math.min(worldPos(footL!).y, worldPos(footR!).y),
+        headY: pHead.y,
       });
     }
 
     const name = basename(file, '.glb');
     for (const r of rows) {
       csvLines.push(
-        `${name},${r.t.toFixed(3)},${r.hipsY.toFixed(4)},${r.torsoPitch.toFixed(4)},` +
+        `${name},${r.t.toFixed(3)},${r.hipsX.toFixed(4)},${r.hipsY.toFixed(4)},${r.torsoPitch.toFixed(4)},` +
           `${r.neckPitch.toFixed(4)},${r.armElevL.toFixed(4)},${r.armElevR.toFixed(4)},` +
-          `${r.footYmin.toFixed(4)}`,
+          `${r.footYmin.toFixed(4)},${r.headY.toFixed(4)}`,
       );
     }
 
-    // summary against the WORSHIP constants' units
-    const stand = rows[0];
-    mixer.setTime(0);
-    root.updateMatrixWorld(true);
-    const headY0 = worldPos(head!).y;
-    const foot0 = Math.min(worldPos(footL!).y, worldPos(footR!).y);
-    const heightApprox = headY0 - foot0;
+    // summary against the WORSHIP constants' units. Standing reference =
+    // the TALLEST sample (head above lowest foot), not the first: some
+    // seeds start the clip already in the pose.
+    let heightApprox = 0;
+    let iTall = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const h = rows[i].headY - rows[i].footYmin;
+      if (h > heightApprox) {
+        heightApprox = h;
+        iTall = i;
+      }
+    }
+    const stand = rows[iTall];
+    const h0 = rows[0].headY - rows[0].footYmin;
+    const startsStanding = h0 / heightApprox > 0.9;
     const maxBow = Math.max(...rows.map((r) => r.torsoPitch)) - stand.torsoPitch;
     const maxNeck = Math.max(...rows.map((r) => r.neckPitch)) - stand.neckPitch;
     const minHips = Math.min(...rows.map((r) => r.hipsY));
     const dropFrac = (stand.hipsY - minHips) / heightApprox;
     const maxArm = Math.max(...rows.map((r) => Math.max(r.armElevL, r.armElevR)));
+    const swayX = (Math.max(...rows.map((r) => r.hipsX)) - Math.min(...rows.map((r) => r.hipsX))) / 2;
     console.log(
-      `${name}: dur ${clip.duration.toFixed(2)}s height~${heightApprox.toFixed(2)}m | ` +
+      `${name}: dur ${clip.duration.toFixed(2)}s height~${heightApprox.toFixed(2)}m` +
+        `${startsStanding ? '' : ' [STARTS IN POSE @' + stand.t.toFixed(1) + 's]'} | ` +
         `bow +${maxBow.toFixed(3)} rad (${((maxBow * 180) / Math.PI).toFixed(1)} deg) | ` +
         `neck +${maxNeck.toFixed(3)} rad | ` +
-        `hipDrop ${(stand.hipsY - minHips).toFixed(3)}m = ${dropFrac.toFixed(3)} x height | ` +
-        `armElev max ${maxArm.toFixed(3)} rad (${((maxArm * 180) / Math.PI).toFixed(1)} deg)`,
+        `hips ${stand.hipsY.toFixed(2)}->${minHips.toFixed(2)}m drop ${(stand.hipsY - minHips).toFixed(3)}m = ${dropFrac.toFixed(3)} x height | ` +
+        `armElev max ${maxArm.toFixed(3)} rad (${((maxArm * 180) / Math.PI).toFixed(1)} deg) | ` +
+        `swayX ±${swayX.toFixed(3)}m = ${(swayX / heightApprox).toFixed(3)} x height`,
     );
   }
 
