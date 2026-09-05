@@ -108,9 +108,11 @@ const run = (cam: InstanceType<typeof FlyCamera>, frames: number): void => {
   for (let i = 0; i < frames; i++) cam.update(DT);
 };
 
+// upper bound: the six cloister colonnades alone record ~260 column solids
+// (2026-09-05 material/tone pass), on top of the ~190 masses before them
 c.check(
   'S0 buildTemple recorded a plausible solid set',
-  solids.length > 30 && solids.length < 200,
+  solids.length > 30 && solids.length < 700,
   `${solids.length} solids, bounds x ${bounds.x0.toFixed(1)}..${bounds.x1.toFixed(1)}, y ${bounds.y0.toFixed(1)}..${bounds.y1.toFixed(1)}`,
 );
 

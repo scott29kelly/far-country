@@ -16,7 +16,20 @@
  * altar with eastward steps (Ezek 43:13-17), the western building, and the
  * two priests' chamber blocks (Ezek 42:1-14). Crenellations and corner
  * towers are art direction; window glow renders Ezek 40:16's windows within
- * the base-tier bloom contract (< 1.5 luminance).
+ * the base-tier bloom contract (< 1.5 luminance); Ezek 40:16's palm trees
+ * "on the jambs" render as stylised trunk-and-frond reliefs at every gate
+ * mouth.
+ *
+ * Material/tone pass (2026-09-05, RENDERING-DECISIONS #7 point 8): walls are
+ * DEEP RED coursed ashlar (stoneDetail — analytic world-space courses with a
+ * grooved shading normal, per-block tone, weathering tint), every court
+ * floor is PALE LIMESTONE paving, so floors and walls separate by tone as
+ * the reference compound's do. The perimeter wall wears a battered base
+ * course and a string course; the gatehouses a footing; the outer-court
+ * chambers stand behind a colonnaded CLOISTER walk (USER-REFS #5) with
+ * framed doorways; the house core takes pilasters and a cornice, and the
+ * three-story shoulder and priests' chamber blocks show their story lines
+ * as ledges (Ezek 41:6; 42:3, 5-6 — the counted galleries).
  *
  * Court dressing (the CITY-QUALITY-BAR walking-range pass, temple half): the
  * outer court carries Ezekiel's own LOWER PAVEMENT — a pavement "all around
@@ -48,19 +61,27 @@ import {
   InstancedMesh,
   Matrix4,
   Mesh,
+  RingGeometry,
   Vector3,
 } from 'three';
 import { IrradianceNode, MeshStandardNodeMaterial } from 'three/webgpu';
 import {
+  abs as tslAbs,
   cameraPosition,
   float,
   floor as tslFloor,
   fract,
   max as tslMax,
+  min as tslMin,
   mix,
+  mx_noise_float,
   normalWorld,
+  normalize,
   positionWorld,
+  sign,
   smoothstep,
+  step,
+  transformNormalToView,
   vec3,
 } from 'three/tsl';
 
@@ -70,9 +91,17 @@ import type { Heightfield } from '../world/Heightfield';
 import { PLATEAU_Y } from './rimModel';
 import { INTERP, LONG_CUBIT_M, TEMPLE_SITE, count, meters } from './templeModel';
 
-const SAND = new Color(0.4, 0.225, 0.14); // warm red sandstone (USER-REFS #5)
-const SAND_DARK = new Color(0.32, 0.165, 0.1);
+// Palette (the material/tone pass, RENDERING-DECISIONS #7 point 8): the
+// WALLS are deep warm red sandstone — the reference compound's identity
+// (USER-REFS #5, temple-complex-wide/-medium) — while every court FLOOR is a
+// pale buff limestone, so floors separate from walls by tone the way the
+// references' courts do, instead of the whole compound reading as one
+// pink-tan mass. The pale TRIM family carries the course banding between.
+const SAND = new Color(0.36, 0.145, 0.088); // deep warm red sandstone (USER-REFS #5)
+const SAND_DARK = new Color(0.26, 0.1, 0.062);
 const TRIM = new Color(0.68, 0.56, 0.44); // pale course banding
+const COURT = new Color(0.33, 0.29, 0.245); // court field: buff limestone (paler than the walls, not white)
+const COURT_PALE = new Color(0.44, 0.395, 0.34); // the lower pavement / thresholds / aprons
 
 function patchGI(mat: MeshStandardNodeMaterial, gi: ProbeGI | null): void {
   if (!gi) return;
@@ -84,51 +113,150 @@ function patchGI(mat: MeshStandardNodeMaterial, gi: ProbeGI | null): void {
     new IrradianceNode(irr as unknown as ConstructorParameters<typeof IrradianceNode>[0]);
 }
 
-function stoneMaterial(gi: ProbeGI | null, color: Color, rough = 0.85): MeshStandardNodeMaterial {
-  const m = new MeshStandardNodeMaterial();
-  m.color.copy(color);
-  m.roughness = rough;
-  m.metalness = 0;
-  patchGI(m, gi);
-  return m;
+/** Cheap integer-cell hash (the pavingDetail idiom) — deterministic, no texture. */
+function hash2(a: NF, b: NF): NF {
+  return fract(
+    a.mul(0.1031).add(b.mul(0.1741)).add(a.mul(b).mul(0.0973)).sin().mul(43758.5453),
+  ) as unknown as NF;
+}
+
+/** What a stone material's surfaces carry — see stoneDetail. */
+interface StoneOpts {
+  /** the SIDE-face stone (walls, risers, jambs) */
+  side: Color;
+  /** the UP-face stone when it differs (a paved court on a red-walled slab) */
+  up?: Color;
+  /** slab-joint paving pitch (m) on up faces; omit for plain tops */
+  pavePitch?: number;
+  /** ashlar coursing on the side faces (default on; off for the pale trim) */
+  ashlar?: boolean;
+  rough?: number;
 }
 
 /**
- * Slab-joint articulation for the compound's pavements — the city terraces'
- * pavingDetail idiom (CityMassing.ts) at the temple's 1:1 world scale. A
- * floor is looked ALONG, so its near read comes from centimetre joints and
- * per-slab tone, not modeled relief (Pillar A's 0.3 m reveal clause is
- * written for walls you look ACROSS). World-space, so the grid stays put
- * under a walking camera; masked to up-facing surfaces so terrace risers and
- * slab edges stay clean stone; faded with distance before the fixed-width
- * grid can alias into TRAA shimmer.
+ * The compound's stone, articulated analytically in world space (no textures
+ * — the same posture as the city terraces' pavingDetail, extended to walls):
+ *
+ *  - SIDE faces carry ASHLAR COURSING: 0.6 m courses of 1.25 m blocks, half-
+ *    bond staggered, centimetre mortar joints with a bevelled shoulder that
+ *    tilts the shading normal into the groove (so sun and shadow READ the
+ *    coursing, not just a painted line), and a per-block tone hash. A wall is
+ *    looked ACROSS, so this is the relief Pillar A asks for, at the scale a
+ *    walker beside a 26 m gatehouse flank actually sees.
+ *  - UP faces carry the slab-joint PAVING (the city terraces' idiom at the
+ *    temple's 1:1 scale): a floor is looked ALONG, so its near read comes
+ *    from the joints and per-slab tone, not relief.
+ *  - EVERYWHERE, at every distance: a low-frequency weathering tint (patches
+ *    of the stone run warmer/redder or cooler) and a fine grain — this is
+ *    what breaks the "monotone by identity" read from across the court and
+ *    from the city, where the joints have faded out.
+ *
+ * World-space, so nothing swims under a walking camera; the joint work fades
+ * with distance before the fixed-width lines can alias into TRAA shimmer;
+ * masked by face orientation so risers stay coursed stone and floors stay
+ * paving. Instanced boxes (treads, chambers, merlons) inherit it unchanged.
  */
-function pavingDetail(m: MeshStandardNodeMaterial, base: Color, pitch: number): void {
-  const p = positionWorld.xz.div(pitch);
-  const g = fract(p) as unknown as { x: NF; y: NF };
-  const dx = g.x.sub(0.5).abs() as unknown as NF;
-  const dz = g.y.sub(0.5).abs() as unknown as NF;
-  // 0 across a slab face, 1 in the joint
-  const joint = smoothstep(0.465, 0.5, tslMax(dx, dz) as unknown as NF) as unknown as NF;
-  // per-slab tone: a cheap hash of the slab's integer cell
-  const cell = tslFloor(p) as unknown as { x: NF; y: NF };
-  const h = fract(
-    cell.x
-      .mul(0.1031)
-      .add(cell.y.mul(0.1741))
-      .add(cell.x.mul(cell.y).mul(0.0973))
-      .sin()
-      .mul(43758.5453),
+function stoneDetail(m: MeshStandardNodeMaterial, o: StoneOpts): void {
+  const rough = o.rough ?? 0.85;
+  const upC = o.up ?? o.side;
+  const ashlar = o.ashlar ?? true;
+  const p = positionWorld as unknown as NV3;
+  const n = normalWorld as unknown as NV3;
+  const near = p.distance(cameraPosition) as unknown as NF;
+  const fade = smoothstep(190, 60, near) as unknown as NF;
+  const up = smoothstep(0.55, 0.8, n.y as unknown as NF) as unknown as NF;
+  const side = float(1).sub(smoothstep(0.3, 0.6, tslAbs(n.y as unknown as NF) as unknown as NF)) as unknown as NF;
+  const kSide = fade.mul(side) as unknown as NF;
+  const kUp = fade.mul(up) as unknown as NF;
+
+  // weathering: patches of warmer/cooler stone, plus a fine grain
+  const wn = mx_noise_float(p.mul(0.19) as unknown as NV3) as unknown as NF;
+  const gr = mx_noise_float(p.mul(2.7) as unknown as NV3).mul(0.035) as unknown as NF;
+  const tint = vec3(
+    float(1).add(wn.mul(0.09)),
+    float(1).add(wn.mul(0.02)),
+    float(1).sub(wn.mul(0.07)),
+  ) as unknown as NV3;
+
+  // ashlar coursing (side faces): face-plane coords from the axis normal
+  const COURSE = 0.6;
+  const BLOCK = 1.4;
+  const JOINT = 0.03;
+  const ax = tslAbs(n.x as unknown as NF) as unknown as NF;
+  const az = tslAbs(n.z as unknown as NF) as unknown as NF;
+  const u = p.x.mul(az).add(p.z.mul(ax)) as unknown as NF;
+  const v = p.y as unknown as NF;
+  const row = tslFloor(v.div(COURSE)) as unknown as NF;
+  const stag = fract(row.mul(0.5)).mul(BLOCK) as unknown as NF;
+  const cu = u.add(stag).div(BLOCK) as unknown as NF;
+  const fu = fract(cu) as unknown as NF;
+  const fv = fract(v.div(COURSE)) as unknown as NF;
+  const dV = float(0.5).sub(fu.sub(0.5).abs()).mul(BLOCK) as unknown as NF; // m to the vertical joint
+  const dH = float(0.5).sub(fv.sub(0.5).abs()).mul(COURSE) as unknown as NF; // m to the bed joint
+  const d = tslMin(dV, dH) as unknown as NF;
+  const joint = float(1).sub(smoothstep(JOINT * 0.5, JOINT * 0.5 + 0.02, d)) as unknown as NF;
+  const bevel = float(1).sub(smoothstep(JOINT * 0.5, JOINT * 0.5 + 0.08, d)) as unknown as NF;
+  const bh = hash2(tslFloor(cu) as unknown as NF, row);
+  // per-block tone stays subtle: ashlar reads as one stone with the joints
+  // drawn on it, not as a checker of bricks
+  const bTone = bh.mul(0.11).add(0.945) as unknown as NF;
+  const kA = ashlar ? kSide : (float(0) as unknown as NF);
+
+  // slab-joint paving (up faces)
+  let pj: NF = float(0) as unknown as NF;
+  let pTone: NF = float(1) as unknown as NF;
+  if (o.pavePitch) {
+    const pp = p.xz.div(o.pavePitch) as unknown as { x: NF; y: NF };
+    const g = fract(pp as unknown as NF) as unknown as { x: NF; y: NF };
+    const jd = tslMax(g.x.sub(0.5).abs() as unknown as NF, g.y.sub(0.5).abs() as unknown as NF) as unknown as NF;
+    pj = smoothstep(0.465, 0.5, jd) as unknown as NF;
+    const cell = tslFloor(pp as unknown as NF) as unknown as { x: NF; y: NF };
+    pTone = hash2(cell.x, cell.y).mul(0.12).add(0.94) as unknown as NF;
+  }
+
+  const base = mix(
+    vec3(o.side.r, o.side.g, o.side.b),
+    vec3(upC.r, upC.g, upC.b),
+    up,
+  ) as unknown as NV3;
+  const tone = (mix(float(1), bTone, kA) as unknown as NF).mul(
+    mix(float(1), pTone, kUp) as unknown as NF,
   ) as unknown as NF;
-  const tone = h.mul(0.12).add(0.94) as unknown as NF;
-  const near = positionWorld.distance(cameraPosition) as unknown as NF;
-  const fade = smoothstep(170, 55, near) as unknown as NF;
-  const up = smoothstep(0.55, 0.8, normalWorld.y as unknown as NF) as unknown as NF;
-  const k = fade.mul(up) as unknown as NF;
-  const j = joint.mul(k) as unknown as NF;
-  m.colorNode = vec3(base.r, base.g, base.b)
-    .mul(mix(float(1.0), tone, k) as unknown as NF)
-    .mul(mix(float(1.0), float(0.68), j) as unknown as NF) as unknown as NV3;
+  const jointK = joint.mul(kA).add(pj.mul(kUp)) as unknown as NF;
+  // mortar joints darken more on a floor (looked along, they are the only
+  // read) than on a wall (where the groove normal carries the shading)
+  const jointDark = mix(float(0.74), float(0.64), up) as unknown as NF;
+  m.colorNode = base
+    .mul(tint)
+    .mul(tone)
+    .mul(float(1).add(gr.mul(fade)) as unknown as NF)
+    .mul(mix(float(1), jointDark, jointK) as unknown as NF) as unknown as NV3;
+
+  // groove shoulders: tilt the normal toward the nearer joint
+  const wV = step(dV, dH) as unknown as NF; // 1 when the vertical joint is nearer
+  const su = sign(fu.sub(0.5) as unknown as NF) as unknown as NF;
+  const sv = sign(fv.sub(0.5) as unknown as NF) as unknown as NF;
+  const amp = bevel.mul(kA).mul(0.6) as unknown as NF;
+  const gu = su.mul(wV).mul(amp) as unknown as NF;
+  const gv = sv.mul(float(1).sub(wV)).mul(amp) as unknown as NF;
+  const tan = vec3(az, float(0), ax) as unknown as NV3; // +u direction on the face
+  const nW = normalize(
+    n.add(tan.mul(gu) as unknown as NV3).add(vec3(0, 1, 0).mul(gv) as unknown as NV3) as unknown as NV3,
+  ) as unknown as NV3;
+  m.normalNode = transformNormalToView(nW as never) as unknown as typeof m.normalNode;
+  m.roughnessNode = float(rough)
+    .add(bh.sub(0.5).mul(0.12).mul(kA))
+    .add(jointK.mul(0.1)) as unknown as typeof m.roughnessNode;
+}
+
+function stoneMaterial(gi: ProbeGI | null, o: StoneOpts): MeshStandardNodeMaterial {
+  const m = new MeshStandardNodeMaterial();
+  m.color.copy(o.side);
+  m.roughness = o.rough ?? 0.85;
+  m.metalness = 0;
+  stoneDetail(m, o);
+  patchGI(m, gi);
+  return m;
 }
 
 function glowMaterial(k: number): MeshStandardNodeMaterial {
@@ -210,13 +338,49 @@ function solidBox(
   return box(g, mat, w, h, d, x, y, z);
 }
 
+/**
+ * Ezek 40:16's palm trees "on the jambs": a stylised relief — trunk strip
+ * and a fan of fronds — set proud of each jamb's mouth face (both mouths,
+ * both jambs, every gate). Pieces are pale-trim boxes appended to a shared
+ * instance list as WORLD matrices (the gatehouse frame composed in), so all
+ * six gates' motifs draw once. Filigree: nothing recorded.
+ */
+function palmMotif(out: Matrix4[], frame: Matrix4, lx: number, ly: number, lz: number, faceSign: number): void {
+  const local = new Matrix4();
+  const put = (w: number, h: number, d: number, x: number, y: number, z: number, rollDeg: number): void => {
+    local.makeRotationX((rollDeg * Math.PI) / 180);
+    local.scale(new Vector3(w, h, d));
+    local.setPosition(x, y, z);
+    out.push(new Matrix4().multiplyMatrices(frame, local));
+  };
+  const proud = faceSign * 0.06;
+  // trunk
+  put(0.1, 3.2, 0.26, lx + proud, ly + 1.6, lz, 0);
+  // fronds fanning from the crown
+  const crown = ly + 3.15;
+  for (const [deg, len] of [
+    [0, 1.35],
+    [-32, 1.25],
+    [32, 1.25],
+    [-64, 1.05],
+    [64, 1.05],
+  ] as const) {
+    const r = (deg * Math.PI) / 180;
+    // a frond is a slat of `len` standing up from the crown, rolled about the
+    // face normal (local X); its centre sits half its length along the roll
+    put(0.09, len, 0.16, lx + proud, crown + (len / 2) * Math.cos(r), lz + (len / 2) * Math.sin(r), deg);
+  }
+}
+
 /** A tower-gatehouse with an arched, glowing portal through its long axis. */
 function gatehouse(
   g: Group,
   out: TempleAabb[],
   sand: MeshStandardNodeMaterial,
+  sandDark: MeshStandardNodeMaterial,
   trim: MeshStandardNodeMaterial,
   glow: MeshStandardNodeMaterial,
+  palms: Matrix4[],
   cx: number,
   baseY: number,
   cz: number,
@@ -229,6 +393,7 @@ function gatehouse(
   const gh = new Group();
   gh.position.set(cx, baseY, cz);
   gh.rotation.y = yaw;
+  const frame = new Matrix4().makeRotationY(yaw).setPosition(cx, baseY, cz);
   // local frame: portal runs along +X (depth), width along Z
   const jambW = (width - openW) / 2;
   const openH = h * 0.62;
@@ -258,21 +423,55 @@ function gatehouse(
   // the lintel spans the portal ABOVE the opening — recorded so a flier
   // cannot pass through the masonry over a walker's head
   worldSolid(depth, h - openH, openW, 0, openH + (h - openH) / 2);
-  // arch heads + glow planes at both mouths
+  // arch heads + glow planes at both mouths; the palm reliefs on the jambs
+  // (Ezek 40:16) flank each mouth
   for (const e of [-1, 1] as const) {
-    const arch = new Mesh(new CircleGeometry(openW / 2, 16, 0, Math.PI), trim);
+    // the mouth reads as an ARCHED opening: a pale archivolt ring round the
+    // head and the glow filling the arch (a half-disc over the pane) — a
+    // square pane under a solid pale half-disc read as a fanlight over a
+    // square door
+    const arch = new Mesh(new RingGeometry(openW / 2, openW / 2 + 0.55, 20, 1, 0, Math.PI), trim);
     arch.position.set(e * (depth / 2 + 0.05), openH, 0);
     arch.rotation.y = e > 0 ? Math.PI / 2 : -Math.PI / 2;
     gh.add(arch);
+    const head = new Mesh(new CircleGeometry(openW / 2, 20, 0, Math.PI), glow);
+    head.position.set(e * (depth / 2 + 0.03), openH, 0);
+    head.rotation.y = e > 0 ? Math.PI / 2 : -Math.PI / 2;
+    gh.add(head);
     const light = new Mesh(new BoxGeometry(0.15, openH * 0.92, openW * 0.86), glow);
     light.position.set(e * (depth / 2 - 1.2), openH * 0.46, 0);
     gh.add(light);
+    for (const s of [-1, 1] as const) {
+      palmMotif(palms, frame, e * (depth / 2), 1.7, s * (openW / 2 + jambW / 2), e);
+    }
   }
   // cornice + parapet
   const cor = new Mesh(new BoxGeometry(depth + 0.8, 0.5, width + 0.8), trim);
   cor.position.set(0, h + 0.25, 0);
   cor.castShadow = true;
   gh.add(cor);
+  // battered base course: a darker plinth band round the foot of the tower
+  // (the references' gate towers sit on a heavier footing) — proud 0.3 m, so
+  // it is massing and records with the jambs (no coplanar fight: it wraps
+  // the whole footprint as one ring of four)
+  const bT = 0.3;
+  const bH = 1.4;
+  for (const s of [-1, 1] as const) {
+    const flank = new Mesh(new BoxGeometry(depth + 2 * bT, bH, bT), sandDark);
+    flank.position.set(0, bH / 2, s * (width / 2 + bT / 2));
+    flank.castShadow = true;
+    flank.receiveShadow = true;
+    gh.add(flank);
+    worldSolid(depth + 2 * bT, bH, bT, s * (width / 2 + bT / 2), bH / 2);
+  }
+  for (const e of [-1, 1] as const) {
+    for (const s of [-1, 1] as const) {
+      const end = new Mesh(new BoxGeometry(bT, bH, jambW), sandDark);
+      end.position.set(e * (depth / 2 + bT / 2), bH / 2, s * (openW / 2 + jambW / 2));
+      end.castShadow = true;
+      gh.add(end);
+    }
+  }
   // flank dressing — the 26 m side faces are the tallest planes a walker
   // stands beside, and they were single unbroken boxes (Pillar A). String
   // courses at the lintel line and below the cornice, corner pilaster
@@ -360,22 +559,30 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   }
   const plinthTop = gMax + 0.8;
 
-  const sand = stoneMaterial(gi, SAND);
-  const sandDark = stoneMaterial(gi, SAND_DARK, 0.9);
-  const trim = stoneMaterial(gi, TRIM, 0.7);
+  const sand = stoneMaterial(gi, { side: SAND });
+  const sandDark = stoneMaterial(gi, { side: SAND_DARK, rough: 0.9 });
+  const trim = stoneMaterial(gi, { side: TRIM, rough: 0.7, ashlar: false });
   const glow = glowMaterial(1.25);
   const glowSoft = glowMaterial(0.85);
-  // pavement materials: the field is coursed sandstone on a three-cubit slab
-  // grid; the pale border (Ezek 40:17-18's lower pavement, the altar apron,
-  // the thresholds) courses tighter, so border and field read as different
-  // work even where the tones sit close
-  const pavedField = stoneMaterial(gi, SAND);
-  pavingDetail(pavedField, SAND, 3 * LONG_CUBIT_M);
-  const PALE = new Color().copy(TRIM).lerp(SAND, 0.25);
-  const pavedPale = stoneMaterial(gi, PALE, 0.8);
-  pavingDetail(pavedPale, PALE, 2 * LONG_CUBIT_M);
-  const pavedPlinth = stoneMaterial(gi, SAND_DARK, 0.9);
-  pavingDetail(pavedPlinth, SAND_DARK, 3 * LONG_CUBIT_M);
+  const glowDoor = glowMaterial(1.15);
+  // pavement materials: every raised slab is red coursed masonry on its
+  // RISERS and pale limestone paving on its TOP — the field on a three-cubit
+  // slab grid, the pale border (Ezek 40:17-18's lower pavement, the altar
+  // apron, the thresholds) coursing tighter, so border and field read as
+  // different work
+  const pavedField = stoneMaterial(gi, { side: SAND, up: COURT, pavePitch: 3 * LONG_CUBIT_M });
+  const pavedPale = stoneMaterial(gi, {
+    side: SAND,
+    up: COURT_PALE,
+    pavePitch: 2 * LONG_CUBIT_M,
+    rough: 0.8,
+  });
+  const pavedPlinth = stoneMaterial(gi, {
+    side: SAND_DARK,
+    up: SAND_DARK,
+    pavePitch: 3 * LONG_CUBIT_M,
+    rough: 0.9,
+  });
 
   // ---------------------------------------------------------------- plinth
   const plinthPad = half + INTERP.plinthMargin;
@@ -400,6 +607,34 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   // south wall (gap at x=0)
   wallSeg(sideRun, wallT, -(gateW / 2 + sideRun / 2), half - wallT / 2);
   wallSeg(sideRun, wallT, gateW / 2 + sideRun / 2, half - wallT / 2);
+  // exterior dressing on the one-reed wall (art direction, USER-REFS #5 —
+  // the reference walls carry both): a battered BASE COURSE in the darker
+  // stone (proud 0.3 m — massing, recorded) and a pale STRING COURSE under
+  // the merlons (filigree). The bare face was one plane from plinth to
+  // crenellation line. Both follow the wall's own seven segments, so they
+  // break at the three gate gaps exactly where the wall does.
+  const wallCourse = (
+    mat: MeshStandardNodeMaterial,
+    yC: number,
+    hC: number,
+    proud: number,
+    solid: boolean,
+  ): void => {
+    const seg = (w: number, d: number, x: number, z: number): void => {
+      if (solid) solidBox(g, solids, mat, w, hC, d, c.x + x, yC, c.z + z);
+      else box(g, mat, w, hC, d, c.x + x, yC, c.z + z);
+    };
+    const o = half + proud / 2; // course centre line, just outside the face
+    seg(proud, sideRun, o, -(gateW / 2 + sideRun / 2));
+    seg(proud, sideRun, o, gateW / 2 + sideRun / 2);
+    seg(proud, half * 2 + 2 * proud, -o, 0);
+    seg(sideRun, proud, -(gateW / 2 + sideRun / 2), -o);
+    seg(sideRun, proud, gateW / 2 + sideRun / 2, -o);
+    seg(sideRun, proud, -(gateW / 2 + sideRun / 2), o);
+    seg(sideRun, proud, gateW / 2 + sideRun / 2, o);
+  };
+  wallCourse(sandDark, y0 + 0.7, 1.4, 0.3, true);
+  wallCourse(trim, y0 + wallH - 0.32, 0.3, 0.16, false);
   // corner towers (art direction — USER-REFS #5)
   for (const sx of [-1, 1] as const) {
     for (const sz of [-1, 1] as const) {
@@ -465,9 +700,10 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   // 50 x 25 cu tower-gatehouses projecting inward from the wall line
   // (Ezek 40:6-16, 20-27), standing at court level — their seven-step
   // flights descend outside the wall face (built below with the inner ones)
-  gatehouse(g, solids, sand, trim, glow, c.x + half - gateL / 2, courtTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, solids, sand, trim, glow, c.x, courtTop, c.z - (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, solids, sand, trim, glow, c.x, courtTop, c.z + (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  const palmM: Matrix4[] = [];
+  gatehouse(g, solids, sand, sandDark, trim, glow, palmM, c.x + half - gateL / 2, courtTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, sandDark, trim, glow, palmM, c.x, courtTop, c.z - (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, sandDark, trim, glow, palmM, c.x, courtTop, c.z + (half - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
 
   // ------------------------------------------------------------ inner terrace
   // the inner court stands the inner gates' eight-step flight above the
@@ -491,9 +727,9 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   const terrTop = courtTop + innerRise;
 
   // --------------------------------------------------------- inner gatehouses
-  gatehouse(g, solids, sand, trim, glow, c.x + innerSide - gateL / 2, terrTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, solids, sand, trim, glow, c.x, terrTop, c.z - (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
-  gatehouse(g, solids, sand, trim, glow, c.x, terrTop, c.z + (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, sandDark, trim, glow, palmM, c.x + innerSide - gateL / 2, terrTop, c.z, 0, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, sandDark, trim, glow, palmM, c.x, terrTop, c.z - (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
+  gatehouse(g, solids, sand, sandDark, trim, glow, palmM, c.x, terrTop, c.z + (innerSide - gateL / 2), Math.PI / 2, gateL, gateW, gateOpen, INTERP.gatehouseH);
 
   // ------------------------------------------------------------------- altar
   // Ezek 43:13-17: base + two ledges + hearth (11 cu of rise), hearth 12 cu
@@ -603,10 +839,14 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   const portal = new Mesh(new BoxGeometry(0.3, portalH, portalW), glowSoft);
   portal.position.set(c.x + px1 + 0.2, padTop + portalH / 2, c.z);
   g.add(portal);
-  const archHead = new Mesh(new CircleGeometry(portalW / 2, 18, 0, Math.PI), trim);
-  archHead.position.set(c.x + px1 + 0.4, padTop + portalH, c.z);
+  const archHead = new Mesh(new CircleGeometry(portalW / 2, 20, 0, Math.PI), glowSoft);
+  archHead.position.set(c.x + px1 + 0.35, padTop + portalH, c.z);
   archHead.rotation.y = Math.PI / 2;
   g.add(archHead);
+  const archRing = new Mesh(new RingGeometry(portalW / 2, portalW / 2 + 0.6, 20, 1, 0, Math.PI), trim);
+  archRing.position.set(c.x + px1 + 0.4, padTop + portalH, c.z);
+  archRing.rotation.y = Math.PI / 2;
+  g.add(archRing);
   for (const s of [-1, 1] as const) {
     const pillar = new Mesh(new CylinderGeometry(0.65, 0.75, 8.5, 12), trim);
     pillar.position.set(c.x + px1 + 1.6, padTop + 4.25, c.z + s * (portalW / 2 + 1.6));
@@ -685,7 +925,7 @@ export function buildTemple(deps: TempleDeps): TempleResult {
     }
     merSites.push([c.x - (half - wallT / 2), y0 + wallH + INTERP.merlonH / 2, c.z + d, Math.PI / 2]); // west (solid)
   }
-  const mers = new InstancedMesh(merGeo, stoneMaterial(gi, SAND_DARK, 0.9), merSites.length);
+  const mers = new InstancedMesh(merGeo, sandDark, merSites.length);
   merSites.forEach(([x, y, z, yaw], i) => {
     mtx.makeRotationY(yaw);
     mtx.setPosition(new Vector3(x, y, z));
@@ -809,6 +1049,8 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   // massing (solidPut), the warm door panes and trim caps are filigree.
   const chamberM: Matrix4[] = [];
   const doorM: Matrix4[] = [];
+  const colM: Matrix4[] = [];
+  const pilM: Matrix4[] = [];
   {
     const totalCh = count('ezt-outer-court-chambers');
     const perFlank = Math.floor(totalCh / 6);
@@ -835,16 +1077,69 @@ export function buildTemple(deps: TempleDeps): TempleResult {
           const w = ux !== 0 ? chD : chW;
           const d = ux !== 0 ? chW : chD;
           solidPut(chamberM, w, chH, d, x, courtTop + lip + chH / 2, z);
-          put(
-            doorM,
-            ux !== 0 ? 0.08 : 1.15,
-            2.0,
-            ux !== 0 ? 1.15 : 0.08,
-            x - ux * (chD / 2 + 0.04),
-            courtTop + lip + 1.0,
-            z - uz * (chD / 2 + 0.04),
-          );
           put(capM, w + 0.35, 0.14, d + 0.35, x, courtTop + lip + chH + 0.07, z);
+          // the DOORWAY: a warm door pane inside a proud pale frame (jambs,
+          // lintel, threshold) — the flat pane read as a dark rectangle in
+          // daylight; the frame gives it the depth and shadow of an opening.
+          // `along` runs the chamber front, `outN` steps off it toward the
+          // court.
+          const fy = courtTop + lip;
+          const dx0 = x - ux * (chD / 2 + 0.05);
+          const dz0 = z - uz * (chD / 2 + 0.05);
+          const dim = (along: number, tall: number, out: number): [number, number, number] =>
+            ux !== 0 ? [out, tall, along] : [along, tall, out];
+          const at = (offAlong: number, offOut: number): [number, number] =>
+            ux !== 0 ? [dx0 - ux * offOut, dz0 + offAlong] : [dx0 + offAlong, dz0 - uz * offOut];
+          const door = dim(1.25, 2.3, 0.08);
+          put(doorM, door[0], door[1], door[2], dx0, fy + 1.15, dz0);
+          for (const j of [-1, 1] as const) {
+            const jm = dim(0.18, 2.5, 0.12);
+            const [jx, jz] = at(j * (1.25 / 2 + 0.09), 0.06);
+            put(capM, jm[0], jm[1], jm[2], jx, fy + 1.25, jz);
+          }
+          const li = dim(1.25 + 2 * 0.18 + 0.24, 0.24, 0.14);
+          const [lx, lz] = at(0, 0.07);
+          put(capM, li[0], li[1], li[2], lx, fy + 2.5 + 0.12, lz);
+          const th = dim(1.25 + 2 * 0.18 + 0.3, 0.06, 0.6);
+          const [tx, tz] = at(0, 0.3);
+          put(capM, th[0], th[1], th[2], tx, fy + 0.03, tz);
+        }
+        // the CLOISTER: a colonnaded walk along the whole flank run, its roof
+        // slab leaning back to the chamber fronts, columns on a 2.6 m pitch
+        // (USER-REFS #5's "cloistered courts"; the reference compound rings
+        // its courts with arcaded galleries). Interpretive dressing in point
+        // 4's posture; columns and roof are massing (a walker threads the
+        // colonnade, a flier cannot pass the roof), so both record.
+        const roofD = 2.6;
+        const roofT = 0.22;
+        const roofTop = courtTop + lip + chH - 0.06;
+        const frontOff = backOff - chD / 2; // chamber front line (from centre)
+        const runLen = a1 - a0;
+        const runMid = s * (a0 + runLen / 2);
+        const roofC = frontOff - roofD / 2;
+        solidPut(
+          chamberM,
+          ux !== 0 ? roofD : runLen,
+          roofT,
+          ux !== 0 ? runLen : roofD,
+          c.x + ux * roofC + (ux !== 0 ? 0 : runMid),
+          roofTop - roofT / 2,
+          c.z + uz * roofC + (uz !== 0 ? 0 : runMid),
+        );
+        const colC = frontOff - roofD + 0.3;
+        const colH = roofTop - roofT - (courtTop + lip);
+        const nCol = Math.round(runLen / 2.6);
+        for (let k = 0; k <= nCol; k++) {
+          const a = s * (a0 + (k * runLen) / nCol);
+          solidPut(
+            colM,
+            0.42,
+            colH,
+            0.42,
+            c.x + ux * colC + (ux !== 0 ? 0 : a),
+            courtTop + lip + colH / 2,
+            c.z + uz * colC + (uz !== 0 ? 0 : a),
+          );
         }
       }
     }
@@ -873,6 +1168,48 @@ export function buildTemple(deps: TempleDeps): TempleResult {
     }
   }
 
+  // ------------------------------------------------ facade rhythm (filigree)
+  // The house core's 52 m flanks, the chamber blocks and the western
+  // building were single planes. The core takes pilaster strips on a five-
+  // cubit pitch above the side-chamber shoulder and a top cornice; the
+  // shoulder and the priests' chamber blocks take a ledge at each story line
+  // — Ezek 41:6 and 42:3, 5-6 count THREE stories (the chambers' galleries),
+  // so the story lines are the cited part, the ledge profile interpretive;
+  // the western building takes the same ledges; the chamber blocks take
+  // pilasters between their window bays.
+  {
+    const coreX = c.x + (px0 + px1) / 2;
+    const pitch = 5 * LONG_CUBIT_M;
+    const nPil = Math.round((houseL - 2) / pitch);
+    const pilTop = padTop + INTERP.houseWallH - 0.7;
+    const pilBase = padTop + shoulderH;
+    for (let i = 0; i <= nPil; i++) {
+      const x = c.x + px0 + 1 + (i * (houseL - 2)) / nPil;
+      for (const s of [-1, 1] as const) {
+        put(pilM, 0.9, pilTop - pilBase, 0.34, x, (pilTop + pilBase) / 2, c.z + s * (coreW / 2 + 0.12));
+      }
+    }
+    put(capM, houseL + 0.9, 0.5, coreW + 0.9, coreX, padTop + INTERP.houseWallH + 0.25, c.z);
+    for (let k = 1; k < count('ezt-side-chamber-stories'); k++) {
+      put(capM, houseL + 0.4, 0.22, houseW + 0.4, coreX, padTop + k * INTERP.storyH, c.z);
+    }
+    put(capM, houseL + 0.5, 0.35, houseW + 0.5, coreX, padTop + shoulderH + 0.17, c.z);
+    for (const s of [-1, 1] as const) {
+      for (let k = 1; k < count('ezt-priest-chambers-stories'); k++) {
+        put(capM, cbL + 0.4, 0.22, cbW + 0.4, coreX, terrTop + k * INTERP.storyH, c.z + s * cbZ);
+      }
+      for (let i = 0; i <= 12; i++) {
+        const wx = coreX - cbL / 2 + 4 + (i - 0.5) * ((cbL - 8) / 11);
+        if (i === 0 || i === 12) continue;
+        for (const f of [-1, 1] as const) {
+          put(pilM, 0.7, cbH - 0.1, 0.3, wx, terrTop + (cbH - 0.1) / 2, c.z + s * cbZ + f * (cbW / 2 + 0.1));
+        }
+      }
+    }
+    put(capM, wbL + 0.4, 0.22, wbW + 0.4, c.x + px0 - 2 - wbL / 2, terrTop + INTERP.storyH, c.z);
+    put(capM, wbL + 0.5, 0.35, wbW + 0.5, c.x + px0 - 2 - wbL / 2, terrTop + wbH + 0.17, c.z);
+  }
+
   const inst = (mats: Matrix4[], m: MeshStandardNodeMaterial, shadow: boolean): void => {
     const im = new InstancedMesh(new BoxGeometry(1, 1, 1), m, mats.length);
     mats.forEach((mm, i) => im.setMatrixAt(i, mm));
@@ -886,7 +1223,10 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   inst(capM, trim, true);
   inst(noseM, trim, false);
   inst(chamberM, sand, true);
-  inst(doorM, glowSoft, false);
+  inst(doorM, glowDoor, false);
+  inst(colM, trim, true);
+  inst(pilM, sand, true);
+  inst(palmM, trim, true);
 
   return { group: g, solids };
 }
