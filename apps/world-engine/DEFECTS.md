@@ -8,7 +8,7 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0028. (Header corrected 2026-09-05: it still
+THE NEXT FREE NUMBER IS FC-0035. (Header corrected 2026-09-05: it still
 read FC-0025 while entries FC-0025..FC-0027 had already been appended.)
 
 ## FC-0020 — FC-0012's open geometric half: the vertex displacement still sampled world XZ
@@ -630,3 +630,244 @@ change. Honest weight: this is hygiene plus saved per-vertex work (13
 height samples + macro fbm evaluations per shaded ring vertex), not a
 frame-rate win — the 556 triangles are noise against an 18M-triangle
 frame.
+
+## FC-0028 — GA-8 round 1: the material pass (dd4b074) beats main 43cd9ab on all three temple views, blind
+
+The first temple gauntlet round (docs/plans/gauntlet-adoption-far-country.md
+§GA-8). Packet: shots/wip/ga8/r1/{outer,pavement,inner}/{a,b}.png — ?shot=12
+outer court, 13 lower pavement, 14 inner court, 1280x720, freeze on, near-noon
+light; a/b sides randomized per view, the mapping held in the session
+scratchpad until this entry was written. Critic: one fresh-context subagent
+given ONLY tools/ga8-critic-prompt.md v1, the packet and its LIMITS.md (no
+builder notes, no scores, no model identity, no repo access). No material
+reference photographs existed (shots/ref/temple-material/ absent); the
+brief told the critic to say so, and it did.
+
+MAPPING (revealed after the verdict): outer a = CANDIDATE, b = baseline;
+pavement a = CANDIDATE, b = baseline; inner a = baseline, b = CANDIDATE.
+So the candidate won every view: outer 80, pavement 70, inner 85 confidence.
+The critic's own overall read — "the same look wins in every view: the side
+with visible coursing, distinct cream trims and a cool grey paving beats
+the side where one warm value floods walls, floor and haze" — matches the
+mapping exactly; it identified the candidate by its look without knowing
+which side it was.
+
+Verdicts stay separate: this is the VISUAL verdict only. Collision +
+framings probes were green at dd4b074 (probe-templecollide ALL PASS,
+probe-framings ALL PASS 65); the PERFORMANCE gate G6 is FC-0034; domain
+correctness (citations) is RENDERING-DECISIONS #7 point 8; delivery
+(vendor + prod) has not happened.
+
+Tells the critic enumerated are logged as FC-0029..FC-0033. Honest weight:
+the candidate reaches "a stylised model of a stone compound", not a
+photograph — "No image in this packet would make a stranger hesitate
+against a real photograph."
+
+The critic's deliverable, verbatim:
+
+> **1. RECOGNITION**
+> No. I do not recognize these specific images or their source. The corner overlays (fps counter, "FLY 24 m/s | N NAV", "KEYS | H") show they are captures from a live interactive viewer, but I cannot name the tool. The reference folder `apps/world-engine/shots/ref/temple-material/` does not exist; the bar was not in the packet. I judged against my own knowledge of coursed red-sandstone masonry and limestone-paved courts.
+>
+> **2. PER VIEW**
+>
+> **outer/**
+> | axis | a | b |
+> |---|---|---|
+> | Whole-frame read | 5 | 3 |
+> | Material response to light | 5 | 3 |
+> | Tone separation | 6 | 2 |
+> | Massing depth | 4 | 3 |
+> | Tells | 4 | 3 |
+>
+> VERDICT: a. CONFIDENCE: 80.
+> In a, the facades carry visible coursing, the cream string-courses and pale palm reliefs sit on a distinct red-brown body, and the pale grey paving separates from the maroon parapet wall, so the frame reads as several materials. In b, one warm salmon value floods the paving, the lit facade faces and the sky haze, and the shaded facade faces drop to a near-featureless dark brown, so nothing reads as stone in particular.
+>
+> Tells:
+> - a, whole lower half: paving is a single flat value crossed by dark, uniform-width joint lines; no per-slab variation, no wear. AESTHETIC
+> - a, lower right and right edge of paving: paving climbs to a near-white, feature-free region. AESTHETIC
+> - a, centre building, the arched doorway: opening is a flat cream pane with no reveal, no interior shadow. AESTHETIC
+> - a, foreground parapet across the frame: one flat maroon band, no coursing, no top-edge highlight. AESTHETIC
+> - a, left building: string-course bands are a single flat cream value with no shadow beneath them. AESTHETIC
+> - b, whole lower half: paving is one flat salmon value; joints are faint and the same width everywhere. AESTHETIC
+> - b, centre and right buildings: lit faces are a flat tan with no coursing visible at all. AESTHETIC
+> - b, all shaded facade faces: crushed to one dark brown, no detail. AESTHETIC
+> - b, centre doorway: flat cream pane, no depth. AESTHETIC
+> - b, foreground parapet: flat maroon band as in a. AESTHETIC
+> - both, the whole compound: no weathering, staining or drip lines anywhere on any surface. AESTHETIC
+>
+> **pavement/**
+> | axis | a | b |
+> |---|---|---|
+> | Whole-frame read | 5 | 3 |
+> | Material response to light | 5 | 3 |
+> | Tone separation | 6 | 3 |
+> | Massing depth | 6 | 2 |
+> | Tells | 3 | 3 |
+>
+> VERDICT: a. CONFIDENCE: 70.
+> a shows a pier row with real cast shadow on the paving and a coursed wall behind it, so the right side of the frame has depth and material; b's right side is a smooth tan box with a flat door pane and no coursing, and the floor and the box share almost the same hue. a loses points because its blocks are very large in frame with hard, high-contrast bevelled joints that read closer to moulded plastic than dressed sandstone.
+>
+> Tells:
+> - a, right third, wall behind the piers: block pattern is oversized and high contrast; every block has the same bevel, and the pattern repeats visibly along the wall. AESTHETIC
+> - a, right third, the piers: single flat cream value on every face; lit and shaded pier faces barely differ. AESTHETIC
+> - a, right edge, top: roof slab has a hard, bright orange lit edge with no thickness read. AESTHETIC
+> - a, whole lower half: flat lilac-grey paving with uniform dark joint lines. AESTHETIC
+> - a, far centre, the mid-distance wall: reads as one flat red value with a single bright band. AESTHETIC
+> - b, right third: the chambers appear as one smooth tan box; no pier row or coursing is visible where a shows a colonnade. Closing this gap would add content. CONTENT-GATED
+> - b, right third: the box's lit face and the floor are almost the same salmon value; the door is a flat cream pane. AESTHETIC
+> - b, whole lower half: flat salmon-grey paving; joints fade to nothing in the middle distance. AESTHETIC
+> - b, centre-right mid-distance: a crenellated wall is a flat mid-brown silhouette with no face detail. AESTHETIC
+> - both, right edge: the roof slab is a plain flat plane with a lighter top edge. AESTHETIC
+>
+> **inner/**
+> | axis | a | b |
+> |---|---|---|
+> | Whole-frame read | 3 | 5 |
+> | Material response to light | 3 | 5 |
+> | Tone separation | 2 | 6 |
+> | Massing depth | 3 | 4 |
+> | Tells | 3 | 4 |
+>
+> VERDICT: b. CONFIDENCE: 85.
+> In a, the paving, the stair block, the left building, the right building and the sky haze all sit in one salmon-tan band; the big centre building is a dark, detail-free silhouette and the whole frame reads as a clay model. In b, the coursing on the stair block, the left kiosk and the right building reads as laid stone, the cream trims and palm reliefs hold their own value, and the cool grey paving separates cleanly from the warm walls.
+>
+> Tells:
+> - a, whole frame: one warm hue floods paving, walls, stairs and haze; almost no tone separation. AESTHETIC
+> - a, centre building: a flat dark silhouette with a flat cream door pane; no coursing, no reveal. AESTHETIC
+> - a, centre-left, the stair block: flat tan faces with no coursing; the steps read as a single stepped extrusion. AESTHETIC
+> - a, right building: flat tan lit face; the arch tympanum and door are one flat cream pane. AESTHETIC
+> - a, left kiosk: flat tan, no relief on the facade. AESTHETIC
+> - b, right building: block joints are high contrast and the blocks are large; the pattern reads as a repeating tile at the lower right. AESTHETIC
+> - b, centre building: the face toward the camera is still a near-uniform dark silhouette; only the string-courses break it. AESTHETIC
+> - b, centre building, doorway: flat cream pane with no depth behind the arch. AESTHETIC
+> - b, whole lower half: paving is one cool grey value with uniform dark joints. AESTHETIC
+> - b, foreground paving, lower centre: a faint grey shadow band with no visible caster. AESTHETIC
+> - both, all roof slabs: a thin bright top edge on a flat slab. AESTHETIC
+>
+> **3. OVERALL**
+> a wins on count (outer a, pavement a, inner b), but the more useful statement is that the same *look* wins in every view: the side with visible coursing, distinct cream trims and a cool grey paving beats the side where one warm value floods walls, floor and haze. The flat-flood side fails the whole-frame read outright; it looks like an unpainted clay massing model, not stone. The coursed side gets to "a stylised model of a stone compound" but not to "a photograph": its block joints are too hard and too uniform, the paving is one value crossed by a ruled grid, no surface carries any weathering, and every doorway and arch is a flat cream pane. No image in this packet would make a stranger hesitate against a real photograph.
+>
+> **4. THE HIGHEST-IMPACT NEXT FIX**
+> On the coursed side, the paving. It fills 40 to 60 percent of every frame, and in all three views it is a single flat value cut by joint lines of one width and one darkness. Real limestone paving reads as a field of slabs that each differ a little in value and warmth, with joints that vary in width and depth, and with worn, lighter traffic zones and darker margins near walls. Giving each slab its own slight value and hue, breaking the joint width and darkness, and adding low-frequency wear and staining would change the read of half of every frame at once, and would also make the walls look more like stone by contrast. AESTHETIC.
+>
+> **5. WHAT THE EVIDENCE CANNOT ESTABLISH**
+> - Whether the masonry matches real red-sandstone coursing: the reference folder was absent, so the bar was not in the packet.
+> - How the stone responds at a low sun: near noon, lit and shaded faces show only a value drop, so warm/cool shift and roughness could not be scored honestly.
+> - Whether the surfaces shimmer, swim or alias under motion: single frozen frames.
+> - Whether the block pattern repeats at a fixed period: only one wall in each view is close enough to test.
+> - Whether doorways hide interior depth that a different angle would show: every opening was viewed nearly head on.
+> - The pavement view pairs differ in visible content (colonnade versus solid box), so part of that comparison is not a rendering difference.
+> - Whether the material differences between a and b are true material changes or partly exposure or time-of-day drift, since the captures were made on different days.
+
+Note on the one CONTENT-GATED tell: the pavement view's "colonnade versus
+solid box" is the candidate's cloister (RENDERING-DECISIONS #7 point 8, an
+approved rendering choice), not a content wish — the critic was right that
+it is not a pure rendering difference, and the packet should have said so
+in LIMITS.md. Carried as a note for the round-2 LIMITS.md (the brief itself
+is unchanged).
+
+## FC-0029 — Court paving is one flat value cut by a ruled grid (critic's highest-impact fix, GA-8 r1)
+
+From FC-0028, on the candidate in all three views: the paving fills 40-60%
+of every frame and reads as "a single flat value cut by joint lines of one
+width and one darkness"; in the outer view it "climbs to a near-white,
+feature-free region" at the right (the builder's own pre-round tell — the
+courts key the auto-exposure). Named the highest-impact next fix: per-slab
+value and hue variation, joint width/darkness variation, low-frequency
+wear (lighter traffic zones, darker margins by walls) and staining.
+AESTHETIC; touches stoneDetail's up-face branch only. Tactic count: 0.
+OPEN.
+
+## FC-0030 — Every doorway and arch is a flat cream pane with no reveal (GA-8 r1)
+
+From FC-0028, on both sides in all three views: gate mouths, the house
+portal and the chamber doorways read as "a flat cream pane with no depth
+behind the arch", "no reveal, no interior shadow". The builder's
+pre-round self-review said the same of the gate panes at noon light. The
+archivolt gave the mouth an outline, not depth. AESTHETIC. Candidate
+directions (not yet chosen): recess the pane one reveal deeper with dark
+jamb returns, or trade the emissive pane for a shaded interior volume with
+the glow deeper inside. OPEN.
+
+## FC-0031 — Ashlar joints are too hard and too uniform; the block pattern reads as a repeating tile (GA-8 r1)
+
+From FC-0028, on the candidate: "blocks are very large in frame with hard,
+high-contrast bevelled joints that read closer to moulded plastic than
+dressed sandstone"; "every block has the same bevel, and the pattern
+repeats visibly"; at the inner view's lower right "the pattern reads as a
+repeating tile". The critic could not establish whether the pattern
+repeats at a fixed period — it does (analytic half-bond at fixed COURSE /
+BLOCK), so this is a real risk, not a suspicion. AESTHETIC; stoneDetail's
+side-face branch: soften the joint/bevel contrast, vary joint width and
+block length per course, widen the per-block tone range. OPEN.
+
+## FC-0032 — No weathering, staining or drip lines on any surface (GA-8 r1)
+
+From FC-0028, on both sides in the outer view and implied everywhere:
+"no weathering, staining or drip lines anywhere on any surface". The
+mx_noise weathering tint (p*0.19) is too subtle to register at these
+framings. AESTHETIC. Pairs with FC-0029 (wear on floors) and FC-0031
+(walls). OPEN.
+
+## FC-0033 — Flat filigree: cloister piers one value on every face, roof slabs a thin bright top edge, string courses without shadow, a shadow band with no caster (GA-8 r1)
+
+Collected small tells from FC-0028: (a) cloister piers "single flat cream
+value on every face; lit and shaded pier faces barely differ"; (b) roof
+slabs "a hard, bright orange lit edge with no thickness read" / "a thin
+bright top edge on a flat slab"; (c) string-course bands "a single flat
+cream value with no shadow beneath them"; (d) inner view, foreground
+paving, lower centre: "a faint grey shadow band with no visible caster"
+(UNMEASURED — could be an off-frame caster or a shadow-cascade edge);
+(e) the foreground parapet "one flat maroon band, no coursing" (the
+terrace lip kerb — check which stoneDetail branch its side faces take).
+AESTHETIC. Each is a separate small fix; (d) needs a measurement before
+any change. OPEN.
+
+## FC-0034 — GA-8 gate G6: the candidate is within 8% on fps; shoot.ts's single-frame drawCalls/triangles sample is bimodal and cannot serve as a perf gate
+
+Believed (the GA-8 contract as written): compare the candidate's shoot.ts
+[stats] fps / frameMsP95 / drawCalls at ?shot=12,13,14 against the
+43cd9ab baseline numbers recorded on 2026-09-03 (fps 35.3/31.1/25.2,
+drawCalls 916/1196/885, tris 13.79M/16.25M/14.02M), tolerance 15%.
+
+Measured (2026-09-08, one session, same machine, dev server for the
+candidate, `--base https://far-country.vercel.app/laas/` = production
+43cd9ab for the baseline):
+
+| shot | baseline fps | cand fps | delta | baseline draws / tris | cand draws / tris |
+| --- | --- | --- | --- | --- | --- |
+| 12 | 47.6 | 45.3 | -5% | 916 / 13.79M | 2117 / 21.10M |
+| 13 | 53.3 | 50.0 | -6% | 1794 / 20.90M | 1300 / 15.98M |
+| 14 | 51.7 | 47.7 | -8% | 885 / 14.02M | 960 / 14.03M |
+
+Then the candidate at shot 12 with `--stages=-temple` (no temple geometry
+at all): fps 43.4, drawCalls 2117, triangles 21,101,740 — the SAME draw
+and triangle counts as with the temple on, and a lower fps than with it.
+
+What it means. (1) fps: the candidate is inside the 15% tolerance on all
+three shots; the -temple run shows the fps sample's own noise is ~5%, so
+the -5..-8% is at the edge of what one sample can resolve and is NOT a
+demonstrated regression. Note the confound: dev-server candidate vs
+production-bundle baseline. (2) drawCalls / triangles: the counter is
+sampled on ONE frame (frame 55-59 after ready) and flips between two
+states on the same code — shot 13 baseline read 1196/16.25M on 09-03 and
+1794/20.90M today; shot 12 read 916/13.79M on both days for the baseline
+but 2117/21.10M for the candidate WITH OR WITHOUT the temple. The temple's
+own contribution (a few hundred instanced draws at most — every new
+dressing element goes through the matrix-list InstancedMesh flush) is
+invisible under that swing. Likely a frame-cadence effect (shadow cascade
+or vegetation LOD refresh landing on the sampled frame) — UNMEASURED,
+not diagnosed here. (3) frameMsP95 (2.2-2.7 s in every run) still holds
+the scene-build stall inside its window and is meaningless as a gate.
+The 09-03 baseline fps values (35/31/25) are from a different session and
+are NOT comparable to today's; only same-session pairs count.
+
+G6 verdict: PASS on fps (the only usable member), with the caveat above.
+Instrument finding, FC-0024's shape: the gate cited a number no one had
+shown to be stable. Resolution for the contract: G6 is restated as
+same-session fps pairs (candidate vs `--base` production) within 15%,
+with drawCalls / triangles reported but not gated until shoot.ts samples
+them over a window (or `--framealign` pins the cadence) and the swing is
+explained. Contract text updated in docs/plans/gauntlet-adoption-
+far-country.md §GA-8 with this entry cited. OPEN: explain the bimodal
+draw-call sample.

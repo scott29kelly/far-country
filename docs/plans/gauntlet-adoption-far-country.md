@@ -237,8 +237,11 @@ Contract (the GA-3 mechanics apply unchanged; only the subject differs).
   G3 gate mouths, cloister and doorways read as openings with depth;
   G4 the aerial reads as a red compound with buff courts, not white;
   G5 probe battery green (minimum probe-templecollide + probe-framings);
-  G6 candidate fps / frameMsP95 / drawCalls at shots 12-14 within 15% of
-  the 43cd9ab baseline (fps 35.3/31.1/25.2, drawCalls 916/1196/885);
+  G6 candidate fps at shots 12-14 within 15% of the baseline shot in the
+  SAME session via `--base https://far-country.vercel.app/laas/`
+  (production = the accepted baseline); drawCalls / triangles reported,
+  not gated — shoot.ts's single-frame sample is bimodal on unchanged
+  code (DEFECTS FC-0034; restated 2026-09-08);
   G7 every new element cited or recorded in RENDERING-DECISIONS #7.
 - CONSTRAINTS: measurements only via EZT/cu()/meters(); Ezekiel's silent
   dimensions go to INTERP + a dated #7 addendum; altar furniture = tables

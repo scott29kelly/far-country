@@ -171,7 +171,13 @@ from the aerial (auto-exposure keys on the floor); gate glow panes are
 flat cream rectangles at noon light. The compound being a thin plate
 behind a 3.15 m wall is the literal one reed — correct, not a defect.
 Gauntlet: workstream GA-8 in `docs/plans/gauntlet-adoption-far-country.md`;
-evidence in `DEFECTS.md` (FC-0028 on) and `docs/DELTA.md`.
+evidence in `DEFECTS.md` (FC-0028 on) and `docs/DELTA.md`. ROUND 1
+(2026-09-08, FC-0028): blind fresh-context critic, no material photo bar
+yet — the candidate won all three views (confidence 80/70/85); tells
+logged FC-0029..FC-0033, highest-impact next fix = the flat court paving
+(FC-0029). Perf gate G6 (FC-0034): fps within 8% of production in the
+same session, PASS; the drawCalls sample proved bimodal on unchanged
+code and is no longer gated.
 
 **(2026-09-03) M4.4 worship curves FITTED to kimodo.cpp reference
 clips and APPLIED (Scott's go-ahead).** Source call 2026-08-31 stands:
