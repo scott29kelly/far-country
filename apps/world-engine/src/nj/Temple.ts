@@ -100,7 +100,10 @@ import { INTERP, LONG_CUBIT_M, TEMPLE_SITE, count, meters } from './templeModel'
 const SAND = new Color(0.36, 0.145, 0.088); // deep warm red sandstone (USER-REFS #5)
 const SAND_DARK = new Color(0.26, 0.1, 0.062);
 const TRIM = new Color(0.68, 0.56, 0.44); // pale course banding
-const COURT = new Color(0.33, 0.29, 0.245); // court field: buff limestone (paler than the walls, not white)
+// COURT sits a step below its first value (0.33,0.29,0.245): the huge floor
+// was keying the auto-exposure and climbing to near-white at the right of
+// the outer-court framing (GA-8 r1 critic tell, FC-0029 / DELTA #1)
+const COURT = new Color(0.3, 0.265, 0.225); // court field: buff limestone (paler than the walls, not white)
 const COURT_PALE = new Color(0.44, 0.395, 0.34); // the lower pavement / thresholds / aprons
 
 function patchGI(mat: MeshStandardNodeMaterial, gi: ProbeGI | null): void {
@@ -131,6 +134,13 @@ interface StoneOpts {
   /** ashlar coursing on the side faces (default on; off for the pale trim) */
   ashlar?: boolean;
   rough?: number;
+  /**
+   * Low-frequency WEAR on the paving (up faces only): lighter traffic lines
+   * along the compound's two gate axes (the x and z lines through cx,cz),
+   * a darker margin inside the perimeter wall (half = the wall's inner
+   * face from the centre), and staining. Omit for plinths and plain tops.
+   */
+  wear?: { cx: number; cz: number; half: number };
 }
 
 /**
@@ -202,16 +212,70 @@ function stoneDetail(m: MeshStandardNodeMaterial, o: StoneOpts): void {
   const bTone = bh.mul(0.11).add(0.945) as unknown as NF;
   const kA = ashlar ? kSide : (float(0) as unknown as NF);
 
-  // slab-joint paving (up faces)
+  // slab-joint paving (up faces) — FC-0029 (GA-8 r2): a real paved court is
+  // not one value cut by a ruled grid. Each slab takes its own VALUE and a
+  // slight warm/cool HUE; each joint segment takes its own WIDTH and
+  // DARKNESS (a joint is hashed by the line it lies on and the slab row it
+  // crosses, so the grid stops reading as ruled); and over the whole floor
+  // a low-frequency WEAR field — lighter traffic lines on the gate axes, a
+  // darker margin inside the walls, staining — that does not fade with
+  // distance, because that is exactly the read a floor gives from afar.
   let pj: NF = float(0) as unknown as NF;
   let pTone: NF = float(1) as unknown as NF;
+  let pHue: NV3 = vec3(1, 1, 1) as unknown as NV3;
+  let pJointDark: NF = float(0.64) as unknown as NF;
   if (o.pavePitch) {
     const pp = p.xz.div(o.pavePitch) as unknown as { x: NF; y: NF };
     const g = fract(pp as unknown as NF) as unknown as { x: NF; y: NF };
-    const jd = tslMax(g.x.sub(0.5).abs() as unknown as NF, g.y.sub(0.5).abs() as unknown as NF) as unknown as NF;
-    pj = smoothstep(0.465, 0.5, jd) as unknown as NF;
     const cell = tslFloor(pp as unknown as NF) as unknown as { x: NF; y: NF };
-    pTone = hash2(cell.x, cell.y).mul(0.12).add(0.94) as unknown as NF;
+    // per-slab value and hue
+    const h0 = hash2(cell.x, cell.y);
+    const h1 = hash2(cell.x.add(7.3) as unknown as NF, cell.y.add(3.1) as unknown as NF);
+    pTone = h0.mul(0.24).add(0.88) as unknown as NF;
+    const hs = h1.sub(0.5).mul(0.09) as unknown as NF; // + = warmer slab, - = cooler
+    pHue = vec3(float(1).add(hs), float(1), float(1).sub(hs)) as unknown as NV3;
+    // per-edge joints: the joint line at integer pp.x (index ex) crossing
+    // slab row cell.y, and the line at integer pp.y (ez) crossing cell.x
+    const ex = tslFloor(pp.x.add(0.5) as unknown as NF) as unknown as NF;
+    const ez = tslFloor(pp.y.add(0.5) as unknown as NF) as unknown as NF;
+    const hx = hash2(ex.mul(1.7).add(11) as unknown as NF, cell.y.add(5) as unknown as NF);
+    const hz = hash2(cell.x.add(13) as unknown as NF, ez.mul(1.3).add(2) as unknown as NF);
+    const wx = hx.mul(0.028).add(0.012) as unknown as NF; // joint half-width, cell fraction
+    const wz = hz.mul(0.028).add(0.012) as unknown as NF;
+    const ax0 = g.x.sub(0.5).abs() as unknown as NF;
+    const az0 = g.y.sub(0.5).abs() as unknown as NF;
+    const jx = smoothstep(float(0.485).sub(wx), float(0.515).sub(wx), ax0) as unknown as NF;
+    const jz = smoothstep(float(0.485).sub(wz), float(0.515).sub(wz), az0) as unknown as NF;
+    pj = tslMax(jx, jz) as unknown as NF;
+    const hd = mix(hz, hx, step(jz, jx) as unknown as NF) as unknown as NF; // the joint that owns this pixel
+    pJointDark = hd.mul(0.2).add(0.54) as unknown as NF; // 0.54 (silted, dark) .. 0.74 (open, pale)
+  }
+  // low-frequency wear over the whole floor (masked by `up` only — no fade)
+  let wearTone: NF = float(1) as unknown as NF;
+  let wearHue: NV3 = vec3(1, 1, 1) as unknown as NV3;
+  if (o.wear) {
+    const dx = p.x.sub(o.wear.cx).abs() as unknown as NF;
+    const dz = p.z.sub(o.wear.cz).abs() as unknown as NF;
+    // traffic lines on the gate axes, broken up so they are not ruled bands
+    const brk = mx_noise_float(p.mul(0.31) as unknown as NV3).mul(0.5).add(0.5) as unknown as NF;
+    const lineEW = float(1).sub(smoothstep(2.5, 8, dz)) as unknown as NF;
+    const lineNS = float(1).sub(smoothstep(2.5, 8, dx)) as unknown as NF;
+    const traffic = tslMax(lineEW, lineNS).mul(brk.mul(0.5).add(0.5)) as unknown as NF;
+    // margin: the floor within ~1.5 m of the perimeter wall's inner face
+    const edge = float(o.wear.half).sub(tslMax(dx, dz)) as unknown as NF;
+    const margin = float(1).sub(smoothstep(0.3, 2.2, edge)) as unknown as NF;
+    // staining: broad dark, slightly warm patches
+    const st = mx_noise_float(p.mul(0.05) as unknown as NV3) as unknown as NF;
+    const stain = smoothstep(0.02, 0.32, st) as unknown as NF;
+    wearTone = float(1)
+      .add(traffic.mul(0.07))
+      .sub(margin.mul(0.13))
+      .sub(stain.mul(0.14)) as unknown as NF;
+    wearHue = vec3(
+      float(1).add(stain.mul(0.04)),
+      float(1),
+      float(1).sub(stain.mul(0.06)),
+    ) as unknown as NV3;
   }
 
   const base = mix(
@@ -219,15 +283,19 @@ function stoneDetail(m: MeshStandardNodeMaterial, o: StoneOpts): void {
     vec3(upC.r, upC.g, upC.b),
     up,
   ) as unknown as NV3;
-  const tone = (mix(float(1), bTone, kA) as unknown as NF).mul(
-    mix(float(1), pTone, kUp) as unknown as NF,
-  ) as unknown as NF;
+  const tone = (mix(float(1), bTone, kA) as unknown as NF)
+    .mul(mix(float(1), pTone, kUp) as unknown as NF)
+    .mul(mix(float(1), wearTone, up) as unknown as NF) as unknown as NF;
+  const hue = (mix(vec3(1, 1, 1), pHue, kUp) as unknown as NV3).mul(
+    mix(vec3(1, 1, 1), wearHue, up) as unknown as NV3,
+  ) as unknown as NV3;
   const jointK = joint.mul(kA).add(pj.mul(kUp)) as unknown as NF;
   // mortar joints darken more on a floor (looked along, they are the only
   // read) than on a wall (where the groove normal carries the shading)
-  const jointDark = mix(float(0.74), float(0.64), up) as unknown as NF;
+  const jointDark = mix(float(0.74), pJointDark, up) as unknown as NF;
   m.colorNode = base
     .mul(tint)
+    .mul(hue)
     .mul(tone)
     .mul(float(1).add(gr.mul(fade)) as unknown as NF)
     .mul(mix(float(1), jointDark, jointK) as unknown as NF) as unknown as NV3;
@@ -570,12 +638,16 @@ export function buildTemple(deps: TempleDeps): TempleResult {
   // slab grid, the pale border (Ezek 40:17-18's lower pavement, the altar
   // apron, the thresholds) coursing tighter, so border and field read as
   // different work
-  const pavedField = stoneMaterial(gi, { side: SAND, up: COURT, pavePitch: 3 * LONG_CUBIT_M });
+  // the wear field (FC-0029) is keyed to the compound: gate axes through the
+  // centre, the perimeter wall's inner face at half - wallT
+  const wear = { cx: c.x, cz: c.z, half: half - wallT };
+  const pavedField = stoneMaterial(gi, { side: SAND, up: COURT, pavePitch: 3 * LONG_CUBIT_M, wear });
   const pavedPale = stoneMaterial(gi, {
     side: SAND,
     up: COURT_PALE,
     pavePitch: 2 * LONG_CUBIT_M,
     rough: 0.8,
+    wear,
   });
   const pavedPlinth = stoneMaterial(gi, {
     side: SAND_DARK,
