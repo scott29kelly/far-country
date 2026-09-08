@@ -8,7 +8,7 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0035. (Header corrected 2026-09-05: it still
+THE NEXT FREE NUMBER IS FC-0036. (Header corrected 2026-09-05: it still
 read FC-0025 while entries FC-0025..FC-0027 had already been appended.)
 
 ## FC-0020 — FC-0012's open geometric half: the vertex displacement still sampled world XZ
@@ -871,3 +871,16 @@ them over a window (or `--framealign` pins the cadence) and the swing is
 explained. Contract text updated in docs/plans/gauntlet-adoption-
 far-country.md §GA-8 with this entry cited. OPEN: explain the bimodal
 draw-call sample.
+
+## FC-0035 — Scott's verdict on GA-8 round 1, and the direction call
+
+Scott (2026-09-08), shown the outer-court pair (main 43cd9ab, then the
+dd4b074 material pass), verbatim: "the second one looks better." On
+tune / ship / start content he deferred to the lead's recommendation:
+"Whatever will give us the best looking and operating outcome ... whatever
+will make the game, the 3D environment look and play the best."
+Direction taken (lead's call under that mandate): TUNE first — FC-0029
+(flat court paving) as round 2's single change, then re-vendor and push
+the compound once round 2 holds, then content. The reference-photo set
+(shots/ref/temple-material/) remains Scott-gated: not approved yet, not
+fetched.
