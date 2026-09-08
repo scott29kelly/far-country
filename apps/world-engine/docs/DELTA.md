@@ -1,5 +1,34 @@
 # DELTA log — reference-gap tracking (newest phase first)
 
+## GA-8 (2026-09-05..) — temple compound vs a red-sandstone masonry bar
+
+Contract: docs/plans/gauntlet-adoption-far-country.md §GA-8. Baseline =
+main 43cd9ab; candidate = dd4b074 (material and tone pass). Cams: ?shot=12
+outer court, 13 lower pavement, 14 inner court, plus the east-gate
+exterior and the aerial (coordinates in the contract). Critic brief:
+tools/ga8-critic-prompt.md v1. Blind packets: shots/wip/ga8/rN/{outer,
+pavement,inner}/{a,b}.png with the a/b mapping kept outside the repo
+until the verdict is recorded in DEFECTS.md. Reference bar: NONE yet —
+shots/ref/temple-material/ is owed (3-5 real photographs of coursed red
+sandstone walls and a limestone-paved court, Scott-approved, GA-2
+pattern). Mood renders (MOOD-REFS.md) set feel only and never enter a
+packet. Content wishes are LOGGED FOR SCOTT here, never built.
+
+Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
+
+1. Courts read near-white from the aerial; auto-exposure keys on the
+   huge floor. Candidate fix: COURT ~(0.30,0.265,0.225) and/or stronger
+   floor weathering. [builder self-review, pre-r1; awaits the critic]
+2. Gate glow panes are flat cream rectangles behind the arch at noon
+   light. [builder self-review, pre-r1; carried as an FC work order]
+3. No temple-material photographs in shots/ref/ — the bar itself is
+   missing; round 1 runs without it and says so. [pre-r1; Scott-gated]
+
+Content wishes for Scott (CONTENT-GATED, never built here): the 55 unused
+EZT ids (gatehouse interiors, house interior incl. the Ezek 41:22 wood
+altar, inner-court chambers, altar horns/rims, the tables set, chamber
+passages, west-building galleries).
+
 ## GA-3 (2026-08-19..) — wilderness band vs the shots/ref/ photo bar
 
 First Gauntlet Loop run (docs/plans/gauntlet-adoption-far-country.md §GA-3).

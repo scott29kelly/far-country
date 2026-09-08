@@ -8,7 +8,8 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0025.
+THE NEXT FREE NUMBER IS FC-0028. (Header corrected 2026-09-05: it still
+read FC-0025 while entries FC-0025..FC-0027 had already been appended.)
 
 ## FC-0020 — FC-0012's open geometric half: the vertex displacement still sampled world XZ
 

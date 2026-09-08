@@ -207,6 +207,50 @@ beds where generation disappoints. Standing cautions: relative-only
 audio metrics are gameable by silence (F1 §II) — include absolute SPL
 floors; and voiced ESV still requires the Crossway licensing check first.
 
+### GA-8. Temple compound visual fidelity (roadmap M4.1; opened 2026-09-05)
+
+Contract (the GA-3 mechanics apply unchanged; only the subject differs).
+
+- GOAL: the Ezekiel temple compound (`src/nj/Temple.ts`, TEMPLE_SITE
+  (0,-5600)) reads as a real fortified red-sandstone compound with buff
+  limestone courts at walking range and from the air. Scott signs off.
+- QUALITY TARGET: a stranger flipping between our still and a photograph
+  of coursed red-sandstone masonry (Agra Fort / Fatehpur Sikri class)
+  should hesitate before saying which is the render. Materials, tone,
+  massing depth, light response only.
+- REFERENCES: MATERIAL photographs go in `shots/ref/temple-material/`
+  (3-5 real photos of coursed red sandstone walls and a limestone-paved
+  court, licence + provenance in SOURCES.md; Scott approves the set before
+  a round uses it — GA-2 pattern). MOOD = Scott's temple-complex-wide/
+  medium renders (MOOD-REFS.md): feel only, never in a critic packet,
+  never a controlled A/B win. Round 1 runs WITHOUT material photos and
+  says so in the packet.
+- BASELINE: main 43cd9ab (production). Candidate: the dd4b074 material
+  pass. Cams: ?shot=12 outer court, 13 lower pavement, 14 inner court
+  (1280x720, freeze on), plus the east-gate exterior
+  (`--cam "175,473.5,-5570,0.927,0,60"`) and the aerial
+  (`--cam "260,560,-5380,0.868,-0.245,55"`).
+- NEXT MILESTONE — "temple compound at walking range accepted":
+  G1 walls vs floors separate by tone in shots 12-14 and the aerial;
+  G2 coursing reads at <= 10 m with no TRAA shimmer (two consecutive
+  unfrozen frames differ under tolerance);
+  G3 gate mouths, cloister and doorways read as openings with depth;
+  G4 the aerial reads as a red compound with buff courts, not white;
+  G5 probe battery green (minimum probe-templecollide + probe-framings);
+  G6 candidate fps / frameMsP95 / drawCalls at shots 12-14 within 15% of
+  the 43cd9ab baseline (fps 35.3/31.1/25.2, drawCalls 916/1196/885);
+  G7 every new element cited or recorded in RENDERING-DECISIONS #7.
+- CONSTRAINTS: measurements only via EZT/cu()/meters(); Ezekiel's silent
+  dimensions go to INTERP + a dated #7 addendum; altar furniture = tables
+  only, no offerings, addendum first; every mass is a solid (collider set
+  = geometry), filigree proud < 0.1 m excepted; content additions are
+  CONTENT-GATED and logged in DELTA.md for Scott; the compound as a thin
+  plate behind a one-reed wall is literal and never "fixed"; critic brief
+  frozen at `tools/ga8-critic-prompt.md` (version bump only at a round
+  boundary); three ties/rejections on one tactic end it; two failed
+  attempts on one issue end that retry; verdicts stay separate (visual /
+  collision / perf / citations / delivery); no push without Scott.
+
 ## Explicitly rejected / deferred
 
 - Ultracode-by-default: even Shumer reserves it for foundations. Our
