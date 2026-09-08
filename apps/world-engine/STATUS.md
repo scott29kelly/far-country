@@ -138,7 +138,42 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-09-03, latest) M4.4 worship curves FITTED to kimodo.cpp reference
+**(2026-09-05, latest) M4.1 temple compound: material and tone pass
+(commit dd4b074, RENDERING-DECISIONS #7 point 8). NOT vendored, NOT
+pushed; awaiting the GA-8 gauntlet round 1 and Scott's verdict.** Scott's
+2026-09-05 calls: the visual-fidelity pass comes before content
+completion, the Ezek 47 river (M4.3) and the M4.2 placement fix; the altar
+furniture (Ezek 40:39-43) will render as "tables only, no offerings" with
+a RENDERING-DECISIONS addendum before that geometry. What changed
+(`src/nj/Temple.ts`): new palette (SAND deep red walls, SAND_DARK, TRIM,
+COURT buff limestone floors, COURT_PALE lower pavement/thresholds);
+`stoneDetail(m, StoneOpts)` replaces pavingDetail — side faces get an
+analytic world-space ashlar (course 0.6 m, block 1.4 m, joint 0.03 m,
+half-bond, per-block tone 0.945-1.055, grooved shading normal, roughness
+variation), up faces keep the slab-joint paving, all faces take a noise
+weathering tint + grain, fading out over 60-190 m; `stoneMaterial(gi,
+opts)` wraps it. Dressing: perimeter base course (1.4 m, proud 0.3 m,
+solid) + string course via `wallCourse()`; gatehouse footing ring; arched
+gate mouths and house portal (archivolt + glow head + recessed pane);
+`palmMotif()` palm reliefs on every jamb face (Ezek 40:16 — the header's
+old claim is now true); a cloister colonnade in front of each court
+chamber run (0.42 m columns, 2.6 m pitch, 2.6 x 0.22 m roof slab, both
+solid); framed chamber doorways with a warm glow pane; house-core
+pilasters on a five-cubit pitch + cornice; story ledges on the shoulder
+(Ezek 41:6) and the priests' chamber blocks (Ezek 42:3, 5-6); pilasters
+between chamber-block window bays. `probe-templecollide` S0 solid bound
+raised 200 -> 700 (454 solids). Verified: tsc clean, probe-templecollide
+ALL PASS, probe-framings ALL PASS (65). Captures (gitignored,
+`shots/wip/temple2/`): base-shot12/13/14 = main 43cd9ab; pass2-shot12/13,
+pass3-shot14, pass3-eastgate-ext, pass3-aerial = dd4b074. Builder
+self-review tells (not an independent verdict): courts read near-white
+from the aerial (auto-exposure keys on the floor); gate glow panes are
+flat cream rectangles at noon light. The compound being a thin plate
+behind a 3.15 m wall is the literal one reed — correct, not a defect.
+Gauntlet: workstream GA-8 in `docs/plans/gauntlet-adoption-far-country.md`;
+evidence in `DEFECTS.md` (FC-0028 on) and `docs/DELTA.md`.
+
+**(2026-09-03) M4.4 worship curves FITTED to kimodo.cpp reference
 clips and APPLIED (Scott's go-ahead).** Source call 2026-08-31 stands:
 procedural runtime, kimodo clips as authoring reference only. An
 eleven-clip SOMA RP v1.1 matrix (seeds 3/11/21 + the five seed-7 clips) was

@@ -408,6 +408,40 @@ Both reasons point the same direction, so the engine's default terrain is used a
      interpretive dressing in point 4's posture. The gatehouse flank
      window slits render 40:16's windows in the gates ("windows all
      around inside"), within the base-tier bloom contract.
+  8. **(Added 2026-09-05) The material and tone pass; the compound's
+     dressing splits grounded from interpretive:** walls render as DEEP
+     RED coursed ashlar (analytic world-space courses 0.6 m high, blocks
+     1.4 m long, 0.03 m joints, half-bond, per-block tone variation, a
+     grooved shading normal, and a noise weathering tint), every court
+     floor as BUFF LIMESTONE slab-joint paving, so walls and floors
+     separate by tone the way the reference compound's do (USER-REFS #5).
+     Grounded elements that this pass renders: the palm reliefs on every
+     gate jamb face (Ezek 40:16 — "on the jambs were palm trees"; 41:18-20
+     supplies the motif's simplified form), the THREE story lines on the
+     house's side-chamber shoulder (Ezek 41:6) and on the two priests'
+     chamber blocks (Ezek 42:3, 5-6 — the counted galleries), the chamber
+     doorways (Ezek 42:4, 11-12 — "entrances", rendered as framed openings
+     with a warm interior glow, dimensions interpretive). Rendering
+     choices in point 4's posture: the palette itself (deep red walls,
+     darker base tone, pale trim, buff court field, paler lower pavement),
+     the ashlar course/block sizes, the perimeter wall's battered base
+     course and string course, the gatehouse footing ring, the arched gate
+     mouths and house portal (Ezekiel gives openings' breadth, never an
+     arch), the colonnaded cloister walk in front of the thirty court
+     chambers (columns 0.42 m square on a 2.6 m pitch, 2.6 m roof slab),
+     the house-core pilasters on a five-cubit pitch and its cornice, and
+     the pilasters between the chamber-block window bays. None of these
+     add a measured dimension; all of them are collidable masses (the
+     collider set equals the geometry).
+     **Altar-function note (Scott's decision, 2026-09-05, gating future
+     geometry):** the altar's FUNCTION in the millennial temple is held
+     `debated` (see Entry #6's posture and ADR 0012). When the Ezek
+     40:39-43 furniture is built, it renders as "tables only, no
+     offerings": the eight stone tables, their measured dimensions, and
+     the hooks (40:42-43) as furniture — never animals, fire, blood or
+     smoke. The eleven-cubit altar (43:13-17) already renders as measured
+     masonry, unlit and unattended. That geometry MUST NOT land before a
+     dated addendum here records it.
 
 ### What is grounded vs. a rendering choice
 
@@ -416,13 +450,17 @@ Both reasons point the same direction, so the engine's default terrain is used a
   40:48–41:15; 42:1–20; 43:13–17), gate/steps counts, eastward altar steps
   (43:17), three outer + three inner gates (E/N/S; none on the west), the
   lower pavement ringing the outer court at the gates' breadth (40:17–18),
-  the thirty court chambers' count (40:17), gate windows (40:16).
+  the thirty court chambers' count (40:17), gate windows (40:16), palm
+  jamb reliefs (40:16), three stories on the shoulder and chamber blocks
+  (41:6; 42:3, 5-6), chamber entrances (42:4, 11-12).
 - **Rendering choice:** house/gatehouse heights, step risers and tread
   depth, the stair parapet dressing, red-sandstone palette, crenellations
   and corner towers, window glow intensity, the plinth that seats the
   literal-scale compound on the rolling meadow, court-chamber dimensions
   and placement, the slab-joint paving grids, altar apron, terrace kerb,
-  and gatehouse flank courses/pilasters.
+  gatehouse flank courses/pilasters, and (point 8) the ashlar coursing,
+  base/string courses, footing ring, arched mouths, cloister colonnade,
+  doorway frames, house pilasters and cornice, chamber-block pilasters.
 
 ### Governing sources
 
