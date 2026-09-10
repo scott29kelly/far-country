@@ -8,7 +8,7 @@ forward. STATUS.md stays the narrative; this file is the evidence trail.
 Convention imported from the f1-round2 project's DEFECT-LOG-R2 (see
 docs/research/2026-08-19-gauntlet-loop-and-agentic-build-methods.md §4e).
 
-THE NEXT FREE NUMBER IS FC-0036. (Header corrected 2026-09-05: it still
+THE NEXT FREE NUMBER IS FC-0039. (Header corrected 2026-09-05: it still
 read FC-0025 while entries FC-0025..FC-0027 had already been appended.)
 
 ## FC-0020 — FC-0012's open geometric half: the vertex displacement still sampled world XZ
@@ -884,3 +884,194 @@ Direction taken (lead's call under that mandate): TUNE first — FC-0029
 the compound once round 2 holds, then content. The reference-photo set
 (shots/ref/temple-material/) remains Scott-gated: not approved yet, not
 fetched.
+
+## FC-0036 — GA-8 round 2: the paving pass (b84c416) beats dd4b074 on all three temple views, blind
+
+The second temple gauntlet round; the ONE change was FC-0029 (court
+paving). Packet: shots/wip/ga8/r2/{outer,pavement,inner}/{a,b}.png —
+?shot=12 outer court, 13 lower pavement, 14 inner court, 1280x720, freeze
+on, near-noon light; a/b sides randomized per view (node Math.random, one
+roll per view), mapping held in the session scratchpad until this entry
+was written. LIMITS.md = round 1's plus the cloister-colonnade sentence
+(FC-0028's note). Critic: one fresh-context subagent given ONLY
+tools/ga8-critic-prompt.md v1 (unchanged), the packet and its LIMITS.md;
+told to open nothing else. No material reference photographs existed
+(shots/ref/temple-material/ still absent); the critic said so.
+
+Candidate = b84c416 (paving: per-slab value 0.88-1.12 and a slight
+warm/cool hue per slab; joint width and darkness hashed per joint
+segment; a wear field on the two court materials — lighter traffic lines
+on the gate axes, a darker margin inside the perimeter wall, noise
+staining — that does not fade with distance; COURT stepped down to
+(0.30,0.265,0.225)). Baseline = dd4b074 captures pass2-shot12,
+pass2-shot13, pass3-shot14 (the round-1 candidate).
+
+MAPPING (revealed after the verdict): outer a = CANDIDATE, pavement a =
+CANDIDATE, inner a = CANDIDATE (the random roll put the candidate on a in
+every view). The critic picked a in every view: outer 70, pavement 80,
+inner 65 confidence. Its overall: "Every difference I can find between
+the two sides lives in the floor: a's paving carries a slab-to-slab
+value and hue spread that separates it from a grid-on-a-plane ... The gap
+is real but narrow: a is a floor that starts to read as stones; neither
+side is yet a floor a stranger would hesitate over, and neither side's
+walls are close." It located the change correctly (floor only, walls
+"the same pixels") without knowing which side carried it.
+
+Verdicts stay separate. VISUAL: win (this entry). COLLISION + FRAMINGS:
+probe-templecollide ALL PASS (23), probe-framings ALL PASS (65) at
+b84c416; the full battery ALL 18 MEMBERS PASS. PERF G6, same session,
+candidate (dev server, this worktree) vs production 43cd9ab via
+`--base https://far-country.vercel.app/laas/` (shots/wip/temple2/
+g6-r2-stats.txt): shot12 47.8 vs 52.0 fps (-8.1%), shot13 48.5 vs 55.3
+(-12.2%), shot14 46.5 vs 51.3 (-9.4%) — PASS within 15%. The shot-13 gap
+is wider than round 1's (-6%); the candidate runs unbundled on the dev
+server while the base is the production bundle, so part of every gap is
+the dev-server cost, not the shader — the same caveat as FC-0034.
+drawCalls / triangles reported, not gated: cand 1407/16.4M, 948/13.6M,
+2123/21.6M; base 1215/16.1M, 1794/20.9M, 1185/16.3M — bimodal again on
+both sides (FC-0034 still OPEN). CITATIONS: RENDERING-DECISIONS #7 point
+8 addendum dated 2026-09-10 (the wear field is a rendering choice).
+DELIVERY: re-vendor follows this entry; push awaits Scott.
+
+The critic's deliverable, verbatim:
+
+> **1. RECOGNITION**
+> No. I do not recognize these images, their source, or the tool. The HUD chips ("48 fps", "FLY 24 m/s | N NAV", "KEYS | H") say only that it is a real-time engine; they say nothing about which one.
+>
+> Note on the bar: `shots/ref/temple-material/` does not exist in the packet. I judged against my own knowledge of coursed red-sandstone masonry and limestone-paved courts. The bar was not present.
+>
+> **2. PER VIEW**
+>
+> **outer/** (court seen from its floor)
+>
+> | axis | a | b |
+> |---|---|---|
+> | Whole-frame read | 5 | 4 |
+> | Material response to light | 4 | 4 |
+> | Tone separation | 5 | 4 |
+> | Massing depth | 4 | 4 |
+> | Tells | 4 | 3 |
+>
+> VERDICT: **a**. CONFIDENCE: 70.
+> The built stone in the two frames is identical except for the floor: a's paving carries a faint slab-to-slab warm/cool shift and a slightly warmer overall cast, while b's floor is one grey-pink value with a grid of soft dark lines drawn over it. Neither floor has any joint depth or edge wear, so the win is small; the buildings behind score the same because they are the same pixels.
+>
+> Tells:
+> - (b) whole lower two thirds: the floor is a single flat value from foreground to horizon; only the joint lines change. AESTHETIC
+> - (a) lower half: slab variation is present but so low-contrast it reads as vignetting rather than as different stones. AESTHETIC
+> - (a, b) all joints: uniform-width soft dark lines, no shadow lip, no chipped or rounded slab edges; reads as a grid overlaid on a plane. AESTHETIC
+> - (a, b) horizon band left to right at ~y=330: the perimeter wall is one flat dark brown value with no visible coursing or top-edge highlight. AESTHETIC
+> - (a, b) centre building, lit south face: coursing reads only as faint horizontal hairlines over a fine speckle; the speckle is the same frequency near and far. AESTHETIC
+> - (a, b) centre building doorway: the door opening is a flat cream rectangle with no interior gradient; reads as painted. AESTHETIC
+> - (a vs b) arch tympanum above the main door: a shows it as a lit cream fill, b as a dark grey fill; one of the two is inconsistent with the open, sunlit doorway directly under it. Which is wrong cannot be settled from these frames. AESTHETIC
+> - (a, b) far left at ~x=100, y=300: a blurred, featureless grey-pink block sits on the horizon with no edge definition. AESTHETIC
+> - (a, b) the white string courses and palm glyphs on every façade sit on the wall with no shadow line beneath them; they read as decals. AESTHETIC
+> - (a, b) the horizontal cornice band on every building is a hard, unbroken, single-value strip. AESTHETIC
+>
+> **pavement/** (paved border walk with small chambers)
+>
+> | axis | a | b |
+> |---|---|---|
+> | Whole-frame read | 5 | 4 |
+> | Material response to light | 5 | 4 |
+> | Tone separation | 6 | 4 |
+> | Massing depth | 5 | 5 |
+> | Tells | 4 | 3 |
+>
+> VERDICT: **a**. CONFIDENCE: 80.
+> This is the clearest split in the packet: a's slabs alternate between warm tan and cool grey-mauve at roughly the contrast real limestone paving shows, and the floor stops reading as a single sheet; b's floor is one mauve-grey value edge to edge. The colonnade wall and pillars are pixel-identical between the two and carry the same problems in both.
+>
+> Tells:
+> - (b) whole lower half: one flat mauve-grey floor value; the grid lines are the only detail. AESTHETIC
+> - (a) lower half: the per-slab variation is a two-tone checker rather than a random spread; a few slabs repeat the same tan value in a visible rhythm. AESTHETIC
+> - (a, b) right wall, sunlit face: the blocks are oversized, deeply bevelled, and every block has the same bevel width and the same clean edge; reads as cast foam or toy brick, not dressed sandstone. AESTHETIC
+> - (a, b) right wall: the lit face is a saturated flat orange with no warm/cool shift into the bevel shadows; shaded bevel faces are the same hue only darker. AESTHETIC
+> - (a, b) colonnade roof edge, upper right: a bright orange coping strip runs unbroken to the frame edge with a hard flat top and no weathering. AESTHETIC
+> - (a, b) pillars: uniform cream on all faces with no value break between lit and shaded sides beyond a soft gradient; the far pillars fade into the same value as the sky haze. AESTHETIC
+> - (a, b) chamber door at ~x=1000, y=300: a flat cream rectangle with the same value as the pillars; no depth into the opening. AESTHETIC
+> - (a, b) far court beyond the colonnade, left of centre: a very bright, near-white plane with no texture at all. AESTHETIC
+> - (a, b) mid-frame wall at ~x=520–680, y=265–345: reads as one flat red value with two hairline string courses; no coursing visible at this distance. AESTHETIC
+>
+> **inner/** (inner court with large building)
+>
+> | axis | a | b |
+> |---|---|---|
+> | Whole-frame read | 5 | 4 |
+> | Material response to light | 4 | 4 |
+> | Tone separation | 5 | 4 |
+> | Massing depth | 4 | 4 |
+> | Tells | 4 | 4 |
+>
+> VERDICT: **a**. CONFIDENCE: 65.
+> Under this backlit camera the floor is in shadow and cool blue-grey in both; a keeps a slab-to-slab spread of blue-grey and warm grey that reads as separate stones, b is a single cool value. The margin is narrower here because the shadow flattens a's variation and everything above the floor is again identical.
+>
+> Tells:
+> - (b) lower half: one flat blue-grey floor value under the grid. AESTHETIC
+> - (a) lower half: per-slab variation reads well in the mid-ground but collapses to noise in the far court by the stair. AESTHETIC
+> - (a, b) centre building: entire façade is one dark brown value with a fine speckle; the coursing is invisible on the shaded face. AESTHETIC
+> - (a, b) centre building arch: the arched opening is a flat tan fill with a flat grey ring around it; the ring has no shadow side, so the arch reads as a painted rectangle with a rounded top. AESTHETIC
+> - (a, b) stair block, lower left of centre: every step face is the same pink value, no riser/tread break, no shadow under nosings. AESTHETIC
+> - (a, b) gap between centre building and right wall, ~x=830–880, y=320–360: a blown, structureless white-gold region with a hard horizontal cut where it meets the floor. AESTHETIC
+> - (a, b) right building: the white string courses and palm glyphs float on the wall with no shadow line; the arch soffit is a single cream value. AESTHETIC
+> - (a, b) right building: brick-scale coursing is visible here but each course is a perfectly even band; no block-to-block value change, no mortar recess. AESTHETIC
+> - (a, b) left building: the doorway is a cream flat fill brighter than anything in shade around it, with no depth gradient. AESTHETIC
+>
+> **3. OVERALL**
+> **a** wins across the packet. Every difference I can find between the two sides lives in the floor: a's paving carries a slab-to-slab value and hue spread that separates it from a grid-on-a-plane, and that alone moves the whole-frame read up a notch in all three views. Walls, trims, openings, stairs and colonnade are the same pixels on both sides and carry the same set of tells, so they neither help nor hurt either candidate. The gap is real but narrow: a is a floor that starts to read as stones; neither side is yet a floor a stranger would hesitate over, and neither side's walls are close.
+>
+> **4. THE HIGHEST-IMPACT NEXT FIX**
+> On side a, the masonry walls are now the weakest surface in every frame. All three views show the same failure: a lit sandstone face reads as a single value with a fine, distance-invariant speckle, and its coursing shows only as hairline strokes or, on the pavement wall, as oversized identical bevels. Real coursed sandstone reads first as individual blocks that differ from each other in value by a visible step and drift warm-to-cool across a face, with a mortar joint that is a recess (darker, and with a lit lower lip) rather than a line. The fix is a per-block value/hue spread on the wall surfaces at the same order of contrast the paving now has, with joints that read as recessed rather than drawn, and a bevel that is smaller and varies from block to block. That change touches every wall in every view at once, and it is what would first let the walls and a's floor read as the same family of stone. Tag: AESTHETIC.
+>
+> **5. WHAT THE EVIDENCE CANNOT ESTABLISH**
+> - Whether a's slab variation holds up in motion or shimmers; single frozen frames only.
+> - How the stone responds at low sun, in raking light or in overcast; the near-noon hour hides the warm/cool shift and the joint relief that would separate real sandstone from paint.
+> - Which side's arch tympanum in outer/ is correct; the two frames disagree and no reference or third capture settles it.
+> - How far either side sits from the actual bar: no `temple-material/` references were in the packet, so scoring is against memory of such masonry, not against a photograph.
+> - Whether the paving grid repeats at a fixed period; the three cameras do not show enough continuous floor to spot a tile cycle.
+> - Anything about the gate exterior or the aerial; both were excluded this round.
+> - Whether the pavement-view bevelled wall and the outer/inner smooth-coursed walls are meant to be the same stone dressed differently or the same material rendered inconsistently.
+
+Resolution for FC-0029: WON on the first tactic (tactic count 1/1). The
+critic's highest-impact next fix is the wall ashlar — per-block value/hue
+spread at the paving's contrast, joints as recesses with a lit lower lip,
+smaller and varied bevels — which is FC-0031's work order restated with
+more precision; FC-0031 carries it. The residual paving tells are
+FC-0037. Per the direction in FC-0035, the compound is now re-vendored;
+the push awaits Scott.
+
+## FC-0037 — Paving residuals after round 2: variation reads as vignetting or a two-tone checker; no joint lip or edge wear; the wear field did not register (GA-8 r2)
+
+From FC-0036, on the candidate: outer — "slab variation is present but
+so low-contrast it reads as vignetting rather than as different stones";
+pavement — "the per-slab variation is a two-tone checker rather than a
+random spread; a few slabs repeat the same tan value in a visible
+rhythm"; inner — variation "collapses to noise in the far court by the
+stair"; all views — joints are "uniform-width soft dark lines, no shadow
+lip, no chipped or rounded slab edges". The critic saw NO wear ("no edge
+wear", "no ... wear" on either side) even though the candidate carries
+traffic lines, a wall margin and staining: at these three cameras the
+gate-axis lines and the perimeter margin are out of frame or too far,
+and the staining (mx_noise at p*0.05, up to -14%) is under the exposure
+range that the noon floor spans. The "two-tone checker" is the hash: a
+single sin-hash per cell gives a value spread but no spatial
+correlation, so neighbours flip rather than drift. AESTHETIC; up-face
+branch only. Candidate directions (not chosen): mix a low-frequency
+noise into the per-slab tone so runs of slabs drift together; a one-
+sided joint lip (darker on the sun side, a lit lower edge); a wear field
+keyed to the cameras' actual floor (chamber fronts, the pavement walk)
+rather than only the gate axes and the perimeter. Tactic count for this
+residual: 0. OPEN — lower priority than FC-0031 (the critic's next fix)
+and FC-0030.
+
+## FC-0038 — The two outer-court captures disagree on the house-portal tympanum (lit cream vs dark grey); UNMEASURED
+
+From FC-0036: in outer/, the candidate (r2-shot12, 2026-09-10) shows the
+arch head above the main portal as a lit cream fill, the dd4b074 capture
+(pass2-shot12, 2026-09-05) as dark grey. The critic could not say which
+is right and neither can this entry: the paving change touches no arch,
+and pass2 predates the pass-3 dressing commits inside dd4b074's own
+history (the packet's "same day" caveat in LIMITS.md covers exposure and
+weather, not a dressing difference). Either the glow head changed
+between pass 2 and pass 3, or auto-exposure keyed differently on the
+darker COURT. To settle: re-shoot ?shot=12 at dd4b074 and at b84c416 in
+the same session and compare the arch-head pixels. Not a round-2 item.
+OPEN.

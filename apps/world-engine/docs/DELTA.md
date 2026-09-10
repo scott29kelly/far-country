@@ -16,9 +16,17 @@ packet. Content wishes are LOGGED FOR SCOTT here, never built.
 
 Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
 
-1. Courts read near-white from the aerial; auto-exposure keys on the
-   huge floor. Candidate fix: COURT ~(0.30,0.265,0.225) and/or stronger
-   floor weathering. [builder self-review, pre-r1; awaits the critic]
+1. ~~Courts read as one flat value cut by a ruled grid; near-white at
+   the right of the outer view~~ → FIXED r2 (FC-0036): per-slab value
+   and hue, per-segment joints, a wear field, COURT (0.30,0.265,0.225);
+   the blind critic took the paving side 3/3 (70/80/65). Residuals
+   (variation still low-contrast, checker rhythm, no joint lip, wear
+   not visible at the three cameras) = FC-0037. [found pre-r1 / r1
+   FC-0029; fixed r2]
+1b. Walls are now the weakest surface: lit ashlar reads as one value
+   with a distance-invariant speckle; joints are lines, not recesses;
+   the pavement-walk bevels are oversized and identical. [r2 critic's
+   highest-impact next fix; carried by FC-0031]
 2. Gate glow panes are flat cream rectangles behind the arch at noon
    light. [builder self-review, pre-r1; carried as an FC work order]
 3. No temple-material photographs in shots/ref/ — the bar itself is

@@ -138,7 +138,35 @@ feedback comes in chat; the two-frame test is the agent-side acceptance only.
 > in sync with `docs/roadmap.md` and `RENDERING-DECISIONS.md`, which any future
 > session should also read.
 
-**(2026-09-05, latest) M4.1 temple compound: material and tone pass
+**(2026-09-10, latest) M4.1 temple compound: GA-8 ROUND 2 (paving,
+FC-0029) WON blind; compound RE-VENDORED (b84c416 + records), NOT
+pushed — push awaits Scott.** The one change (`src/nj/Temple.ts`,
+stoneDetail's up-face branch only): per-slab value 0.88-1.12 and a
+slight warm/cool hue per slab (hash of the pavePitch cell); joint width
+and darkness hashed per joint segment (the line index x the slab row it
+crosses); a new `StoneOpts.wear {cx, cz, half}` on `pavedField` and
+`pavedPale` — lighter traffic lines on the gate axes, a darker margin
+inside the perimeter wall, mx_noise staining at p*0.05 — masked by the
+up-face weight only, so it does not fade with distance; COURT
+(0.33,0.29,0.245) -> (0.30,0.265,0.225). Side-face ashlar untouched
+(FC-0031). Verified: tsc clean; probe-templecollide ALL PASS (23),
+probe-framings ALL PASS (65); `npm run battery` ALL 18 MEMBERS PASS. G6
+same session vs production (`--base`): 47.8/52.0, 48.5/55.3, 46.5/51.3
+fps at shots 12/13/14 (-8/-12/-9%), PASS; drawCalls reported only (still
+bimodal, FC-0034). Blind critic (FC-0036, brief v1 unchanged, packet
+shots/wip/ga8/r2/): candidate 3/3 at 70/80/65 — "a floor that starts to
+read as stones"; its next fix = the wall ashlar (per-block value/hue at
+the paving's contrast, recessed joints, smaller varied bevels) =
+FC-0031. Residual paving tells FC-0037; a tympanum capture disagreement
+FC-0038 (unmeasured). RENDERING-DECISIONS #7 point 8 addendum
+2026-09-10 (wear = rendering choice). Captures (gitignored,
+`shots/wip/temple2/`): r2-shot12/13/14 (b84c416), r2prodbase-shot12/13/14
+(production 43cd9ab, same session), g6-r2-stats.txt. Next, per FC-0035:
+Scott's push consent; the temple-material photo set (Scott-gated, still
+absent); then round 3 = FC-0031 walls (the critic's call) before
+FC-0030 doorways; content completion after.
+
+**(2026-09-05) M4.1 temple compound: material and tone pass
 (commit dd4b074, RENDERING-DECISIONS #7 point 8). NOT vendored, NOT
 pushed; awaiting the GA-8 gauntlet round 1 and Scott's verdict.** Scott's
 2026-09-05 calls: the visual-fidelity pass comes before content

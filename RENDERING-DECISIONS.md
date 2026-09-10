@@ -442,6 +442,19 @@ Both reasons point the same direction, so the engine's default terrain is used a
      smoke. The eleven-cubit altar (43:13-17) already renders as measured
      masonry, unlit and unattended. That geometry MUST NOT land before a
      dated addendum here records it.
+     **Addendum (2026-09-10) — the court paving's wear:** the buff
+     limestone paving now carries per-slab value and hue variation,
+     joint segments of varied width and darkness, and a low-frequency
+     wear field on the two court materials — lighter traffic lines along
+     the gate axes (east gate to house door; north gate to south gate
+     through the altar court), a darker margin inside the perimeter
+     wall, and staining. All of it is a rendering choice in point 4's
+     posture: Ezekiel measures the courts and names the lower pavement
+     (40:17-18) but says nothing of their stone's condition; the traffic
+     lines follow the gate axes his plan implies (the gates face each
+     other across the courts, 40:23, 27), no more. No dimension changes;
+     the collider set is untouched (shader only). Evidence: DEFECTS
+     FC-0036.
 
 ### What is grounded vs. a rendering choice
 
