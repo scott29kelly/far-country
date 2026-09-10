@@ -1,6 +1,6 @@
 # GA-2 reference set — provenance
 
-Every image here is public domain or CC0 and was license-verified through
+Every image here is public domain, CC0, or (temple-material/ only, from 2026-09-10) CC BY / CC BY-SA with attribution below, and was license-verified through
 the Wikimedia Commons API at download time (2026-08-19). The set is the
 aesthetic bar for gauntlet runs (docs/plans/gauntlet-adoption-far-country.md
 GA-2): critics judge our stills against these for material response,
@@ -72,3 +72,26 @@ meadow, and the Capitol Reef "low clouds" image was winter fog. Several
 kept images show winter conditions or human elements (bikers, quarry
 machinery) — flagged in their role column or visible in _contact.jpg;
 Scott's approval pass decides whether they stay.
+
+## temple-material/ — Ezekiel's temple compound: coursed red sandstone and paved courts (GA-8)
+
+Added 2026-09-10 with Scott's go-ahead (given the same day, after GA-8
+round 2). Licence-verified through the Wikimedia Commons API at download
+time; fetched at 2048 px on the long side and re-encoded JPEG q85 (the
+originals are larger — follow the source link for full resolution). This
+set widens the GA-2 licence posture: three files are CC BY and one is
+CC BY-SA, all with attribution recorded here; they are references for
+critics, never redistributed or composited into shipped artifacts.
+MATERIAL / STRUCTURE references only: all five were shot in daylight
+near midday, not at the scene's fixed 17:00 light.
+
+| file | source | author | license | role |
+| --- | --- | --- | --- | --- |
+| red-fort-walls-from-delhi-gate.jpg | [Commons: The walls of the Red Fort, viewed from Delhi Gate](https://commons.wikimedia.org/wiki/File:The_walls_of_the_Red_Fort,_viewed_from_Delhi_Gate.jpg) | Dgp4004 | CC0 | MATERIAL — a long run of coursed red sandstone curtain wall in raking sun: block-to-block value drift, recessed joints, the batter and the merlon line |
+| red-fort-wall-and-bastion.jpg | [Commons: Walls of Red Fort, Delhi (29653802832)](https://commons.wikimedia.org/wiki/File:Walls_of_Red_Fort,_Delhi_(29653802832).jpg) | Ankur Panchbudhe | CC BY 2.0 | STRUCTURE — wall meeting a round bastion and a domed turret; lit face vs shaded face of the same stone |
+| agra-fort-walls-and-paved-causeway.jpg | [Commons: Agra's Red Fort (2618329406)](https://commons.wikimedia.org/wiki/File:Agra%27s_Red_Fort_(2618329406).jpg) | LASZLO ILYES | CC BY 2.0 | STRUCTURE + MATERIAL — Agra Fort's gate front over a red sandstone paved causeway: walls and a floor of the same stone family read together, with the floor's per-slab variation and wear |
+| fatehpur-sikri-diwan-i-khas-on-paved-court.jpg | [Commons: Fatehpur Sikri Agra India 5](https://commons.wikimedia.org/wiki/File:Fatehpur_Sikri_Agra_India_5.jpg) | Philip Nalangan | CC BY 4.0 | STRUCTURE — a dressed red sandstone chamber block standing on a wide paved court: eaves shadow, string courses with shadow beneath, doorway depth, the court's flat-light value against the walls |
+| temple-mount-limestone-pavement.jpg | [Commons: Ancient Stones Embedded in Pavement, Temple Mount, Jerusalem (panoramio)](https://commons.wikimedia.org/wiki/File:Ancient_Stones_Embedded_in_Pavement,_Temple_Mount,_Jerusalem,_%D7%90%D7%91%D7%A0%D7%99%D7%9D_%D7%A2%D7%AA%D7%99%D7%A7%D7%95%D7%AA_%D7%9E%D7%A9%D7%95%D7%9C%D7%91%D7%95%D7%AA_%D7%91%D7%A8%D7%99%D7%A6%D7%95%D7%A3,_%D7%94%D7%A8_%D7%94%D7%91%D7%99%D7%AA,_%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D_-_panoramio.jpg) | ekeidar | CC BY-SA 3.0 | MATERIAL — worn Jerusalem limestone paving in hard sun: slab value and hue spread, uneven joints, cracks, the polish of foot traffic, steps in the same stone |
+
+Known gap: no close-up (under 2 m) of a single sandstone block face with
+its tooling marks, and no overcast or low-sun capture of either stone.

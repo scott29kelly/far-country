@@ -161,10 +161,16 @@ FC-0031. Residual paving tells FC-0037; a tympanum capture disagreement
 FC-0038 (unmeasured). RENDERING-DECISIONS #7 point 8 addendum
 2026-09-10 (wear = rendering choice). Captures (gitignored,
 `shots/wip/temple2/`): r2-shot12/13/14 (b84c416), r2prodbase-shot12/13/14
-(production 43cd9ab, same session), g6-r2-stats.txt. Next, per FC-0035:
-Scott's push consent; the temple-material photo set (Scott-gated, still
-absent); then round 3 = FC-0031 walls (the critic's call) before
-FC-0030 doorways; content completion after.
+(production 43cd9ab, same session), g6-r2-stats.txt. Same day, later:
+Scott said push — main fast-forwarded to fc06d8b and PUSHED, production
+verified serving index-BlRiiUN8.js; and Scott approved the photo set —
+`shots/ref/temple-material/` now holds five licence-verified photos
+(Red Fort walls x2, Agra Fort walls + causeway, Fatehpur Sikri chamber
+on its court, Temple Mount limestone pavement; provenance and the
+widened CC BY posture in shots/ref/SOURCES.md; DELTA #3 struck). Next:
+round 3 = FC-0031 walls (the critic's call), the first round judged
+against the photo bar, before FC-0030 doorways; content completion
+after.
 
 **(2026-09-05) M4.1 temple compound: material and tone pass
 (commit dd4b074, RENDERING-DECISIONS #7 point 8). NOT vendored, NOT

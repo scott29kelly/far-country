@@ -8,11 +8,12 @@ outer court, 13 lower pavement, 14 inner court, plus the east-gate
 exterior and the aerial (coordinates in the contract). Critic brief:
 tools/ga8-critic-prompt.md v1. Blind packets: shots/wip/ga8/rN/{outer,
 pavement,inner}/{a,b}.png with the a/b mapping kept outside the repo
-until the verdict is recorded in DEFECTS.md. Reference bar: NONE yet —
-shots/ref/temple-material/ is owed (3-5 real photographs of coursed red
-sandstone walls and a limestone-paved court, Scott-approved, GA-2
-pattern). Mood renders (MOOD-REFS.md) set feel only and never enter a
-packet. Content wishes are LOGGED FOR SCOTT here, never built.
+until the verdict is recorded in DEFECTS.md. Reference bar: from
+2026-09-10, shots/ref/temple-material/ — five licence-verified photos of
+coursed red sandstone walls and paved courts, Scott-approved, provenance
+in shots/ref/SOURCES.md; rounds 1-2 ran without it and said so. Mood
+renders (MOOD-REFS.md) set feel only and never enter a packet. Content
+wishes are LOGGED FOR SCOTT here, never built.
 
 Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
 
@@ -29,8 +30,13 @@ Ranked deltas (~~struck~~ = fixed; round tags show when found/fixed):
    highest-impact next fix; carried by FC-0031]
 2. Gate glow panes are flat cream rectangles behind the arch at noon
    light. [builder self-review, pre-r1; carried as an FC work order]
-3. No temple-material photographs in shots/ref/ — the bar itself is
-   missing; round 1 runs without it and says so. [pre-r1; Scott-gated]
+3. ~~No temple-material photographs in shots/ref/ — the bar itself is
+   missing; rounds 1 and 2 ran without it and said so~~ → FIXED
+   2026-09-10 (Scott's go-ahead): five photos in shots/ref/
+   temple-material/ (Red Fort walls x2, Agra Fort walls + causeway,
+   Fatehpur Sikri chamber on its court, Temple Mount limestone
+   pavement), provenance in shots/ref/SOURCES.md. Round 3 is the first
+   round judged against the bar. [pre-r1; fixed before r3]
 
 Content wishes for Scott (CONTENT-GATED, never built here): the 55 unused
 EZT ids (gatehouse interiors, house interior incl. the Ezek 41:22 wood
